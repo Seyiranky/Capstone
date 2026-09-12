@@ -16,6 +16,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const surveyRoutes = require('./routes/surveyRoutes');
+const passportRoutes = require('./routes/passportRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
@@ -41,6 +42,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/surveys', surveyRoutes);
+app.use('/api/passports', passportRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.use(notFound);

@@ -3,8 +3,15 @@ const router = express.Router();
 const skillTaskController = require('../controllers/skillTaskController');
 const { verifyToken } = require('../middleware/authMiddleware');
 const { authorize, requireReviewer } = require('../middleware/roleMiddleware');
+const { uploadEvidence } = require('../middleware/upload');
 
-router.post('/', verifyToken, authorize('worker'), skillTaskController.submitTask);
+router.post(
+  '/',
+  verifyToken,
+  authorize('worker'),
+  uploadEvidence.array('evidence', 5),
+  skillTaskController.submitTask,
+);
 router.get('/', verifyToken, skillTaskController.listTasks);
 // Gated on the reviewer capability, not the role: the controller then checks
 // the caller actually holds an open assignment for this task.

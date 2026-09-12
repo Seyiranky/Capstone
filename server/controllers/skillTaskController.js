@@ -1,12 +1,16 @@
+const fs = require('fs');
+const crypto = require('crypto');
 const { Op } = require('sequelize');
 const {
   SkillTask,
   SkillTaskAssignment,
   SkillTaskAppeal,
+  SkillTaskEvidence,
   UserSkill,
   Skill,
   User,
 } = require('../models');
+const { evidenceKindFor, evidenceLimitFor } = require('../middleware/upload');
 const notify = require('../lib/notify');
 const skillVerificationService = require('../services/skillVerificationService');
 const trustScoreService = require('../services/trustScoreService');
@@ -21,6 +25,7 @@ const TASK_INCLUDES = [
     include: [{ model: User, as: 'reviewer', attributes: ['id', 'name', 'reviewerTier'] }],
   },
   { model: SkillTaskAppeal, as: 'appeal' },
+  { model: SkillTaskEvidence, as: 'evidence' },
 ];
 
 /** Creates an assignment round and notifies the chosen reviewer. */
@@ -54,8 +59,26 @@ const openRound = async (req, { task, skill, round, exclude, reason, relaxPairin
 
 exports.submitTask = async (req, res) => {
   const { skillId, evidenceUrl, notes } = req.body;
-  if (!skillId || !evidenceUrl) {
-    return res.status(400).json({ message: 'skillId and evidenceUrl are required' });
+  const files = req.files || [];
+
+  if (!skillId) {
+    return res.status(400).json({ message: 'skillId is required' });
+  }
+  // A pasted link is still accepted, but it is no longer the only way in: a
+  // photo of finished work or a spoken description is far more reachable for
+  // the workers this is built for.
+  if (!evidenceUrl && files.length === 0) {
+    return res.status(400).json({ message: 'Attach a photo, video or voice note, or provide a link' });
+  }
+
+  const oversized = files.find((file) => file.size > evidenceLimitFor(file.mimetype));
+  if (oversized) {
+    fs.unlinkSync(oversized.path);
+    return res.status(413).json({
+      message: `${oversized.mimetype} evidence may be at most ${Math.round(
+        evidenceLimitFor(oversized.mimetype) / (1024 * 1024),
+      )}MB`,
+    });
   }
 
   const skill = await Skill.findByPk(skillId);
@@ -69,11 +92,28 @@ exports.submitTask = async (req, res) => {
   const task = await SkillTask.create({
     workerId: req.user.id,
     skillId,
-    evidenceUrl,
+    // Kept populated with the first artifact so existing consumers of the
+    // single-link field keep working; SkillTaskEvidences is authoritative.
+    evidenceUrl: evidenceUrl || `/uploads/evidence/${files[0].filename}`,
     notes,
     status: 'pending',
     requiredApprovals,
   });
+
+  const evidenceRows = [
+    ...(evidenceUrl ? [{ taskId: task.id, kind: 'link', url: evidenceUrl }] : []),
+    ...files.map((file) => ({
+      taskId: task.id,
+      kind: evidenceKindFor(file.mimetype),
+      url: `/uploads/evidence/${file.filename}`,
+      mimeType: file.mimetype,
+      sizeBytes: file.size,
+      // Ties a reviewer's decision to the exact bytes they saw.
+      sha256: crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex'),
+      capturedAt: new Date(),
+    })),
+  ];
+  await SkillTaskEvidence.bulkCreate(evidenceRows);
 
   const { reviewer, audit } = await openRound(req, { task, skill, round: 1, reason: 'initial' });
 
