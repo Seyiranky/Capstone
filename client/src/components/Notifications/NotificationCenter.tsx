@@ -124,7 +124,7 @@ const NotificationCenter = () => {
         onChange={(v) => setTab(v as 'messages' | 'updates')}
         style={{ marginBottom: 20 }}
         options={[
-          { label: (<Space size={6}><MessageOutlined />Messages</Space>), value: 'messages' },
+          { label: (<Space size={6}><MessageOutlined />{t('common.messages')}</Space>), value: 'messages' },
           {
             label: (
               <Space size={6}>
@@ -145,7 +145,7 @@ const NotificationCenter = () => {
               {contacts.length === 0 ? (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="No conversations yet."
+                  description={t('common.noConversations')}
                   style={{ padding: '24px 0' }}
                 />
               ) : (
@@ -207,7 +207,7 @@ const NotificationCenter = () => {
           }
         >
           {notifications.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Nothing yet." />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('common.nothingYet')} />
           ) : (
             <List
               dataSource={notifications}

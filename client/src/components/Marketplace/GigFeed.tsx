@@ -85,7 +85,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
         <Input
           allowClear
           prefix={<SearchOutlined style={{ color: '#a1a1aa' }} />}
-          placeholder="Search gigs"
+          placeholder={t('common.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ width: 240 }}

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useTranslation } from 'react-i18next';
 import type { Gig } from '../../types';
 
 // Self-contained monochrome pin — avoids Leaflet's bundler icon-path issues.
@@ -18,7 +19,9 @@ const pinIcon = L.divIcon({
 
 const KIGALI: [number, number] = [-1.9536, 30.0606];
 
-const MarketplaceMap = ({ gigs }: { gigs: Gig[] }) => (
+const MarketplaceMap = ({ gigs }: { gigs: Gig[] }) => {
+  const { t } = useTranslation();
+  return (
   <div
     style={{
       borderRadius: 6,
@@ -43,12 +46,13 @@ const MarketplaceMap = ({ gigs }: { gigs: Gig[] }) => (
             <br />
             {gig.skill?.name} · {Number(gig.budget).toLocaleString()} RWF
             <br />
-            <Link to={`/gigs/${gig.id}`}>View details →</Link>
+            <Link to={`/gigs/${gig.id}`}>{t('common.viewDetails')}</Link>
           </Popup>
         </Marker>
       ))}
     </MapContainer>
   </div>
-);
+  );
+};
 
 export default MarketplaceMap;

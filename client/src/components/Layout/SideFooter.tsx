@@ -77,7 +77,7 @@ const SideFooter = ({ collapsed, dark }: SideFooterProps) => {
                   {profile?.name ?? '…'}
                 </Typography.Text>
                 <Typography.Text style={{ color: subColor, fontSize: 11, textTransform: 'capitalize' }}>
-                  {role}
+                  {role ? t(`common.role.${role}`) : null}
                 </Typography.Text>
               </Space>
               <MoreOutlined style={{ color: subColor }} />

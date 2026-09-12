@@ -45,31 +45,31 @@ const Settings = () => {
       label: (
         <Space size={8}>
           <BgColorsOutlined />
-          Appearance
+          {t('common.appearance')}
         </Space>
       ),
       children: (
-        <Card title="Appearance">
+        <Card title={t('common.appearance')}>
           <Space direction="vertical" size={20} style={{ width: '100%' }}>
             <div>
-              <Typography.Text strong>Theme</Typography.Text>
+              <Typography.Text strong>{t('common.theme')}</Typography.Text>
               <Typography.Paragraph type="secondary" style={{ marginBottom: 8 }}>
-                Match your system, or pick a fixed look.
+                {t('common.themeHint')}
               </Typography.Paragraph>
               <Segmented
                 value={mode}
                 onChange={(v) => setMode(v as 'light' | 'dark' | 'system')}
                 options={[
-                  { label: 'Light', value: 'light' },
-                  { label: 'Dark', value: 'dark' },
-                  { label: 'System', value: 'system' },
+                  { label: t('common.light'), value: 'light' },
+                  { label: t('common.dark'), value: 'dark' },
+                  { label: t('common.system'), value: 'system' },
                 ]}
               />
             </div>
             <div>
-              <Typography.Text strong>Language</Typography.Text>
+              <Typography.Text strong>{t('common.language')}</Typography.Text>
               <Typography.Paragraph type="secondary" style={{ marginBottom: 8 }}>
-                Interface language.
+                {t('common.languageHint')}
               </Typography.Paragraph>
               <Segmented
                 value={lang}

@@ -5,6 +5,7 @@ import {
   SafetyCertificateOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { fromNow } from '../../lib/time';
 import type { Match, SkillTask, Transaction } from '../../types';
 
@@ -22,6 +23,7 @@ interface Event {
 }
 
 const ActivityFeed = ({ role, matches, transactions, tasks }: ActivityFeedProps) => {
+  const { t } = useTranslation();
   const events: Event[] = [];
 
   for (const m of matches) {
@@ -57,9 +59,9 @@ const ActivityFeed = ({ role, matches, transactions, tasks }: ActivityFeedProps)
     .slice(0, 8);
 
   return (
-    <Card title="Recent activity" style={{ height: '100%' }}>
+    <Card title={t('common.recentActivity')} style={{ height: '100%' }}>
       {sorted.length === 0 ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Nothing here yet." />
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('common.nothingHereYet')} />
       ) : (
         <Timeline
           items={sorted.map((e) => ({

@@ -92,7 +92,7 @@ const CommandPalette = ({ open, onClose }: CommandPaletteProps) => {
         ref={inputRef}
         size="large"
         variant="borderless"
-        placeholder="Search gigs and pages…"
+        placeholder={t('common.searchPalette')}
         value={query}
         prefix={<span style={{ color: '#a1a1aa' }}>⌘K</span>}
         onChange={(e) => {

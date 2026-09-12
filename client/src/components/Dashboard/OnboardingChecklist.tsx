@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, Flex, Progress, Typography } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { CheckCircleFilled } from '@ant-design/icons';
 
 export interface ChecklistItem {
@@ -11,12 +12,13 @@ export interface ChecklistItem {
 }
 
 const OnboardingChecklist = ({ items }: { items: ChecklistItem[] }) => {
+  const { t } = useTranslation();
   const doneCount = items.filter((i) => i.done).length;
   const pct = Math.round((doneCount / items.length) * 100);
   if (doneCount === items.length) return null;
 
   return (
-    <Card title="Get set up" style={{ marginBottom: 16 }}>
+    <Card title={t('common.getSetUp')} style={{ marginBottom: 16 }}>
       <Flex align="center" gap={20} wrap="wrap">
         <Progress
           type="circle"

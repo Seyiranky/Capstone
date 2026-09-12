@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card, Empty, Table } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -8,6 +9,7 @@ import { fromNow } from '../../lib/time';
 import type { GigApplication } from '../../types';
 
 const MyApplications = () => {
+  const { t } = useTranslation();
   const [apps, setApps] = useState<GigApplication[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +53,7 @@ const MyApplications = () => {
   if (!loading && apps.length === 0) {
     return (
       <Card>
-        <Empty description="You haven't applied to any gigs yet." />
+        <Empty description={t('common.noApplications')} />
       </Card>
     );
   }

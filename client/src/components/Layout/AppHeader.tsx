@@ -103,7 +103,7 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
             }}
           >
             <SearchOutlined />
-            <span>Search</span>
+            <span>{t('common.searchLabel')}</span>
             <kbd
               style={{
                 fontSize: 11,

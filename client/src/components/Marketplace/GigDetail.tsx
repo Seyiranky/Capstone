@@ -247,7 +247,7 @@ const GigDetail = () => {
             </div>
           )}
 
-          <Card title="About this gig">
+          <Card title={t('common.about')}>
             <Typography.Paragraph style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7 }}>
               {gig.description}
             </Typography.Paragraph>
@@ -349,8 +349,8 @@ const GigDetail = () => {
 
               <Divider style={{ margin: '14px 0' }} />
 
-              <MetaRow label="Category">{gig.skill?.name}</MetaRow>
-              <MetaRow label="Location">{loc ?? '—'}</MetaRow>
+              <MetaRow label={t('common.category')}>{gig.skill?.name}</MetaRow>
+              <MetaRow label={t('common.location')}>{loc ?? '—'}</MetaRow>
               <MetaRow label={t('marketplace.gigDetail.postedBy')}>
                 {gig.client ? (
                   <IdentityLink id={gig.client.id} name={gig.client.name} size={20} />
@@ -397,7 +397,7 @@ const GigDetail = () => {
       </Row>
 
       <Drawer
-        title="Edit gig"
+        title={t('common.editGig')}
         width={480}
         open={editOpen}
         onClose={() => setEditOpen(false)}

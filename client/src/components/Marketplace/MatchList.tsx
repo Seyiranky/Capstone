@@ -33,6 +33,7 @@ const ReviewModal = ({
   onClose: () => void;
   onSubmitted: () => void;
 }) => {
+  const { t } = useTranslation();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -51,20 +52,20 @@ const ReviewModal = ({
   return (
     <Modal
       open
-      title={`Review “${match.gig?.title ?? 'gig'}”`}
-      okText="Leave review"
+      title={t('common.reviewTitle', { title: match.gig?.title ?? '' })}
+      okText={t('common.leaveReview')}
       confirmLoading={submitting}
       onOk={handleSubmit}
       onCancel={onClose}
     >
       <Space direction="vertical" size="middle" style={{ width: '100%' }}>
         <div>
-          <Typography.Text type="secondary">Rating</Typography.Text>
+          <Typography.Text type="secondary">{t('common.rating')}</Typography.Text>
           <br />
           <Rate value={rating} onChange={setRating} />
         </div>
         <div>
-          <Typography.Text type="secondary">Comment (optional)</Typography.Text>
+          <Typography.Text type="secondary">{t('common.commentOptional')}</Typography.Text>
           <Input.TextArea
             rows={3}
             value={comment}
@@ -138,7 +139,7 @@ const MatchList = () => {
   if (matches.length === 0) {
     return (
       <Card>
-        <Empty description="No matches yet — post or get matched to a gig first." />
+        <Empty description={t('common.noMatches')} />
       </Card>
     );
   }
@@ -162,7 +163,7 @@ const MatchList = () => {
                   {counterparty ? (
                     <IdentityLink id={counterparty.id} name={counterparty.name} size={24} />
                   ) : (
-                    <Typography.Text type="secondary">Unknown counterparty</Typography.Text>
+                    <Typography.Text type="secondary">{t('common.unknownCounterparty')}</Typography.Text>
                   )}
                 </div>
 

@@ -55,7 +55,7 @@ const WorkerProfile = () => {
 
   if (loading) return <Skeleton active avatar paragraph={{ rows: 6 }} />;
   if (notFound || !profile)
-    return <Result status="404" title="This profile could not be found." />;
+    return <Result status="404" title={t('common.profileNotFound')} />;
 
   const showMessageButton =
     viewerProfile && viewerProfile.id !== profile.id && canMessage(viewerRole, profile.role);
@@ -90,7 +90,7 @@ const WorkerProfile = () => {
               <Typography.Title level={4} style={{ margin: 0 }}>
                 {profile.name}
               </Typography.Title>
-              <Tag style={{ textTransform: 'capitalize' }}>{profile.role}</Tag>
+              <Tag>{t(`common.role.${profile.role}`)}</Tag>
               <Progress
                 type="dashboard"
                 size={120}
