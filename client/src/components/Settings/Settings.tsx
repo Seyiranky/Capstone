@@ -5,6 +5,7 @@ import {
   BgColorsOutlined,
   DownloadOutlined,
   LockOutlined,
+  SafetyCertificateOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
@@ -12,6 +13,7 @@ import { useThemeMode } from '../../theme/ThemeProvider';
 import PageContainer from '../Layout/PageContainer';
 import ProfileEditor from './ProfileEditor';
 import ExportDataButton from './ExportDataButton';
+import PassportPanel from '../Profile/PassportPanel';
 
 const Settings = () => {
   const { t, i18n } = useTranslation();
@@ -116,6 +118,20 @@ const Settings = () => {
       ),
     },
   ];
+
+  // Only workers hold a skill passport or earn through the platform.
+  if (role === 'worker') {
+    items.splice(1, 0, {
+      key: 'passport',
+      label: (
+        <Space>
+          <SafetyCertificateOutlined />
+          {t('passport.title')}
+        </Space>
+      ),
+      children: <PassportPanel />,
+    });
+  }
 
   return (
     <PageContainer title={t('settings.title')} subtitle={t('settings.subtitle')}>

@@ -271,5 +271,66 @@
     "noReviews": "No reviews yet.",
     "messageButton": "Message {{name}}",
     "notFound": "That profile could not be found."
+  },
+  "verification": {
+    "skillLabel": "Skill category",
+    "evidenceLabel": "Show your work",
+    "captureHint": "Take a photo of finished work, or record yourself describing what you did.",
+    "addPhoto": "Take photo",
+    "recordVoice": "Record voice note",
+    "stopRecording": "Stop ({{seconds}}s)",
+    "micDenied": "Microphone unavailable. Check your browser permissions, or attach a photo instead.",
+    "tooManyFiles": "You can attach up to {{max}} items.",
+    "needEvidence": "Attach a photo or voice note, or paste a link.",
+    "linkLabel": "Or paste a link (optional)",
+    "linkInvalid": "That does not look like a valid link.",
+    "notesLabel": "Notes (optional)",
+    "submit": "Submit for review",
+    "submitFailed": "Could not submit. Please try again.",
+    "yourSubmissions": "Your submissions",
+    "noSubmissions": "No submissions yet.",
+    "reviewerUnassigned": "Awaiting a reviewer",
+    "kind": {
+      "photo": "Photo",
+      "video": "Video",
+      "voice": "Voice",
+      "link": "Link"
+    },
+    "noEvidence": "No evidence attached.",
+    "evidenceFingerprint": "Each file is fingerprinted on upload, so evidence cannot be swapped after a decision."
+  },
+  "passport": {
+    "title": "Skill passport",
+    "explainer": "A link and QR code that prove your verified skills to anyone, even people not on Isoko. Show it to a client and they can check it on the spot.",
+    "issue": "Create my passport",
+    "issued": "Passport created.",
+    "issueFailed": "Could not create your passport.",
+    "revoke": "Revoke this passport",
+    "revoked": "Passport revoked.",
+    "copied": "Link copied.",
+    "shareNote": "Anyone with this link can see your verified skills and job history. Revoke it any time.",
+    "verifiedNow": "Verified: these details match the record right now.",
+    "recordChanged": "This record has changed since the passport was created. The current details are shown below.",
+    "checkedAt": "Checked {{time}}",
+    "memberSince": "On Isoko since {{date}}",
+    "completedJobs": "Jobs completed",
+    "reviews": "Reviews",
+    "verifiedSkills": "Verified skills",
+    "level": "Level {{level}}",
+    "approvals": "Approved by {{count}} independent reviewer",
+    "approvals_plural": "Approved by {{count}} independent reviewers",
+    "footer": "Verified skills were each approved by reviewers assigned automatically, who cannot be chosen by the worker. Reviewers are not named, to keep them independent.",
+    "invalidHelp": "Ask the worker for a current link.",
+    "invalid": {
+      "unknownPassport": "This passport could not be found.",
+      "invalidSignature": "This link is not a valid passport.",
+      "revoked": "This passport has been revoked by its holder.",
+      "unknownHolder": "The holder of this passport no longer has an account."
+    }
+  },
+  "income": {
+    "title": "Income statement",
+    "explainer": "A signed record of what you have actually been paid through Isoko. Lenders and mobile-money providers can check it, which cash work cannot prove.",
+    "download": "Download statement (CSV)"
   }
 }

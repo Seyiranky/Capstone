@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button, Empty, List, Space, Typography } from 'antd';
 import { skillTaskApi } from '../../api/skillTaskApi';
+import EvidenceViewer from './EvidenceViewer';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import type { SkillTask } from '../../types';
@@ -68,12 +69,7 @@ const AdminReviewQueue = ({ tasks, onReviewed }: AdminReviewQueueProps) => {
                     ) : null
                   }
                 />
-                <Typography.Paragraph style={{ marginBottom: task.notes ? 4 : 0 }}>
-                  Evidence:{' '}
-                  <a href={task.evidenceUrl} target="_blank" rel="noreferrer">
-                    {task.evidenceUrl}
-                  </a>
-                </Typography.Paragraph>
+                <EvidenceViewer evidence={task.evidence} />
                 {task.notes && (
                   <Typography.Text type="secondary">{task.notes}</Typography.Text>
                 )}

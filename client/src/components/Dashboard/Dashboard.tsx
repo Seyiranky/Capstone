@@ -14,6 +14,7 @@ import {
   Space,
   Statistic,
   Tag,
+  Typography,
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -190,14 +191,31 @@ const Dashboard = () => {
           <>
             <Col xs={12} lg={8}>
               <Card size="small" style={{ height: '100%' }}>
-                <Statistic title={t('dashboard.trustScore')} value={profile.trustScore.toFixed(1)} suffix="/ 5" />
-                <Progress
-                  percent={Math.round((profile.trustScore / 5) * 100)}
-                  showInfo={false}
-                  size="small"
-                  strokeColor="#18181b"
-                  style={{ marginTop: 8 }}
-                />
+                {/* An unrated worker must not be shown a mid-scale number as
+                    though it were a verdict on them. */}
+                {profile.trustScoreBreakdown?.isProvisional ? (
+                  <>
+                    <Statistic title={t('dashboard.trustScore')} value="—" />
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('match.reason.trustProvisional')}
+                    </Typography.Text>
+                  </>
+                ) : (
+                  <>
+                    <Statistic
+                      title={t('dashboard.trustScore')}
+                      value={profile.trustScore.toFixed(1)}
+                      suffix="/ 5"
+                    />
+                    <Progress
+                      percent={Math.round((profile.trustScore / 5) * 100)}
+                      showInfo={false}
+                      size="small"
+                      strokeColor="#18181b"
+                      style={{ marginTop: 8 }}
+                    />
+                  </>
+                )}
               </Card>
             </Col>
             {kpi(role === 'client' ? t('dashboard.totalPaid') : t('dashboard.totalEarned'), confirmedTotal, 'RWF')}

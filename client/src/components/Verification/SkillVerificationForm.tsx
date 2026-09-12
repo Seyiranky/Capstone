@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Button, Divider, Form, Input, List, Select, Typography } from 'antd';
+import { useTranslation } from 'react-i18next';
+import EvidenceCapture from './EvidenceCapture';
 import { skillApi } from '../../api/skillApi';
 import { skillTaskApi } from '../../api/skillTaskApi';
 import IdentityLink from '../common/IdentityLink';
@@ -13,13 +15,15 @@ interface SkillVerificationFormProps {
 
 interface SubmitValues {
   skillId: string;
-  evidenceUrl: string;
+  evidenceUrl?: string;
   notes?: string;
 }
 
 const SkillVerificationForm = ({ tasks, onSubmitted }: SkillVerificationFormProps) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm<SubmitValues>();
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,17 +33,24 @@ const SkillVerificationForm = ({ tasks, onSubmitted }: SkillVerificationFormProp
 
   const onFinish = async (values: SubmitValues) => {
     setError(null);
+    if (files.length === 0 && !values.evidenceUrl) {
+      setError(t('verification.needEvidence'));
+      return;
+    }
+
     setSubmitting(true);
     try {
       await skillTaskApi.submitTask({
         skillId: values.skillId,
-        evidenceUrl: values.evidenceUrl,
+        evidenceUrl: values.evidenceUrl || undefined,
         notes: values.notes || undefined,
+        files,
       });
       form.resetFields(['evidenceUrl', 'notes']);
+      setFiles([]);
       onSubmitted();
     } catch {
-      setError('Could not submit your task. An admin may not be available right now.');
+      setError(t('verification.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -48,30 +59,35 @@ const SkillVerificationForm = ({ tasks, onSubmitted }: SkillVerificationFormProp
   return (
     <div>
       <Form form={form} layout="vertical" requiredMark={false} onFinish={onFinish}>
-        <Form.Item name="skillId" label="Skill category" rules={[{ required: true }]}>
+        <Form.Item name="skillId" label={t('verification.skillLabel')} rules={[{ required: true }]}>
           <Select options={skills.map((s) => ({ value: s.id, label: s.name }))} />
         </Form.Item>
+
+        <Form.Item label={t('verification.evidenceLabel')}>
+          <EvidenceCapture files={files} onChange={setFiles} />
+        </Form.Item>
+
         <Form.Item
           name="evidenceUrl"
-          label="Evidence (link to photo, video, or file)"
-          rules={[{ required: true, type: 'url' }]}
+          label={t('verification.linkLabel')}
+          rules={[{ type: 'url', message: t('verification.linkInvalid') }]}
         >
           <Input placeholder="https://..." />
         </Form.Item>
-        <Form.Item name="notes" label="Notes">
+        <Form.Item name="notes" label={t('verification.notesLabel')}>
           <Input.TextArea rows={2} />
         </Form.Item>
         {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
         <Button type="primary" htmlType="submit" loading={submitting}>
-          Submit for review
+          {t('verification.submit')}
         </Button>
       </Form>
 
       <Divider />
-      <Typography.Title level={5}>Your submissions</Typography.Title>
+      <Typography.Title level={5}>{t('verification.yourSubmissions')}</Typography.Title>
       <List
         dataSource={tasks}
-        locale={{ emptyText: 'No submissions yet.' }}
+        locale={{ emptyText: t('verification.noSubmissions') }}
         renderItem={(task) => (
           <List.Item actions={[<StatusTag key="s" status={task.status} />]}>
             <List.Item.Meta
@@ -80,7 +96,7 @@ const SkillVerificationForm = ({ tasks, onSubmitted }: SkillVerificationFormProp
                 task.reviewer ? (
                   <IdentityLink id={task.reviewer.id} name={task.reviewer.name} size={20} />
                 ) : (
-                  <Typography.Text type="secondary">Reviewer unassigned</Typography.Text>
+                  <Typography.Text type="secondary">{t('verification.reviewerUnassigned')}</Typography.Text>
                 )
               }
             />

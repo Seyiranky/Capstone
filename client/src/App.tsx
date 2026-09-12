@@ -16,6 +16,7 @@ import AdminUsersPage from './pages/AdminUsersPage';
 import AdminPendingGigsPage from './pages/AdminPendingGigsPage';
 import AdminCompletedGigsPage from './pages/AdminCompletedGigsPage';
 import AdminAuditPage from './pages/AdminAuditPage';
+import PassportPage from './pages/PassportPage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -39,6 +40,8 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      {/* Public by design: a client checks a passport without an account. */}
+      <Route path="/p/:token" element={<PassportPage />} />
       {/* Verification now lives as a section on the Dashboard. */}
       <Route path="/verification" element={<Navigate to="/dashboard" replace />} />
       {/* Mentorship is now folded into the broader Notifications section. */}

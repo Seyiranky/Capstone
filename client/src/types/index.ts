@@ -79,10 +79,23 @@ export interface SkillTask {
   notes?: string | null;
   status: SkillTaskStatus;
   reviewedAt: string | null;
+  requiredApprovals?: number;
+  disagreementFlag?: boolean;
   createdAt: string;
   skill?: Skill;
   worker?: User;
   reviewer?: User;
+  evidence?: SkillTaskEvidence[];
+  assignments?: {
+    id: string;
+    reviewerId: string;
+    round: number;
+    status: string;
+    confidence?: number | null;
+    decidedAt?: string | null;
+    reviewer?: User;
+  }[];
+  appeal?: { id: string; reason: string; status: string } | null;
 }
 
 export type GigStatus = 'pending_review' | 'open' | 'matched' | 'completed' | 'cancelled' | 'rejected';
@@ -179,6 +192,85 @@ export interface PublicProfile {
 }
 
 export type ReviewerTier = 'admin' | 'peer';
+
+export type EvidenceKind = 'photo' | 'video' | 'voice' | 'link';
+
+export interface SkillTaskEvidence {
+  id: string;
+  taskId: string;
+  kind: EvidenceKind;
+  url: string;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
+  durationSec?: number | null;
+  sha256?: string | null;
+  capturedAt?: string | null;
+}
+
+export interface PassportSkillClaim {
+  skill?: string;
+  category?: string;
+  proficiencyLevel: number;
+  verifiedAt: string;
+  /** How many separate reviewers approved it; reviewers are never named. */
+  independentApprovals: number;
+}
+
+export interface PassportClaims {
+  name: string;
+  role: Role;
+  memberSince: string;
+  trustScore: number;
+  trustScoreBreakdown?: TrustScoreBreakdown | null;
+  reviewCount: number;
+  completedJobs: number;
+  skills: PassportSkillClaim[];
+}
+
+export interface PassportRead {
+  valid: boolean;
+  reason?: string;
+  userId?: string;
+  issuedAt?: string;
+  claims?: PassportClaims;
+}
+
+export interface PassportVerification {
+  valid: boolean;
+  reason?: string;
+  /** False means the record changed since issue, not that it was forged. */
+  matches?: boolean;
+  issuedAt?: string;
+  checkedAt?: string;
+  note?: string;
+  current?: { skills: string[]; completedJobs: number; reviewCount: number };
+}
+
+export interface IncomeStatement {
+  holder: { id: string; name: string; memberSince: string };
+  period: { from: string | null; to: string | null };
+  currency: string;
+  summary: {
+    jobsPaid: number;
+    totalEarned: number;
+    averagePerMonth: number;
+    averagePerJob: number;
+    monthsActive: number;
+  };
+  byMonth: { month: string; jobs: number; total: number }[];
+  byCategory: { category: string; jobs: number; total: number }[];
+  entries: {
+    date: string;
+    amount: number;
+    currency: string;
+    provider: string;
+    reference: string;
+    gig: string | null;
+    category: string | null;
+  }[];
+  generatedAt: string;
+  signature: string;
+}
 
 export type CollusionFlagType =
   | 'rubberStamped'

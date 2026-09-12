@@ -271,5 +271,66 @@
     "noReviews": "Nta bitekerezo birahari.",
     "messageButton": "Andikira {{name}}",
     "notFound": "Uyu mwirondoro ntiwabonetse."
+  },
+  "verification": {
+    "skillLabel": "Icyiciro cy’ubumenyi",
+    "evidenceLabel": "Erekana akazi kawe",
+    "captureHint": "Fata ifoto y’akazi warangije, cyangwa wiyandikire ijwi usobanura icyo wakoze.",
+    "addPhoto": "Fata ifoto",
+    "recordVoice": "Fata ijwi",
+    "stopRecording": "Hagarika ({{seconds}}s)",
+    "micDenied": "Mikoro ntiboneka. Reba uburenganzira bwa mushakisha, cyangwa ufate ifoto.",
+    "tooManyFiles": "Ushobora gushyiraho ibintu {{max}} gusa.",
+    "needEvidence": "Shyiraho ifoto cyangwa ijwi, cyangwa wandike umurongo.",
+    "linkLabel": "Cyangwa andika umurongo (si ngombwa)",
+    "linkInvalid": "Uyu murongo ntabwo usa n’uwemewe.",
+    "notesLabel": "Ibisobanuro (si ngombwa)",
+    "submit": "Ohereza kugira ngo bisuzumwe",
+    "submitFailed": "Ntibyashobotse kohereza. Ongera ugerageze.",
+    "yourSubmissions": "Ibyo wohereje",
+    "noSubmissions": "Nta byo wohereje birahari.",
+    "reviewerUnassigned": "Bitegereje usuzuma",
+    "kind": {
+      "photo": "Ifoto",
+      "video": "Videwo",
+      "voice": "Ijwi",
+      "link": "Umurongo"
+    },
+    "noEvidence": "Nta bimenyetso byashyizweho.",
+    "evidenceFingerprint": "Buri dosiye ifite ikimenyetso cyayo bwite, bityo ibimenyetso ntibishobora guhindurwa nyuma y'icyemezo."
+  },
+  "passport": {
+    "title": "Pasiporo y’ubumenyi",
+    "explainer": "Umurongo na kode ya QR byerekana ubumenyi bwawe bwemejwe ku muntu wese, ndetse n’utari kuri Isoko. Wereke umukiriya abashe kubigenzura ako kanya.",
+    "issue": "Kora pasiporo yanjye",
+    "issued": "Pasiporo yakozwe.",
+    "issueFailed": "Ntibyashobotse gukora pasiporo.",
+    "revoke": "Kuraho iyi pasiporo",
+    "revoked": "Pasiporo yakuweho.",
+    "copied": "Umurongo wafashwe.",
+    "shareNote": "Umuntu wese ufite uyu murongo ashobora kubona ubumenyi bwawe n’amateka y’akazi. Ushobora kuwukuraho igihe icyo ari cyo cyose.",
+    "verifiedNow": "Byemejwe: aya makuru ahuye n’ayabitswe ubu.",
+    "recordChanged": "Aya makuru yahindutse kuva pasiporo yakorwa. Ayariho ubu ari hasi.",
+    "checkedAt": "Byagenzuwe {{time}}",
+    "memberSince": "Kuri Isoko kuva {{date}}",
+    "completedJobs": "Akazi karangiye",
+    "reviews": "Ibitekerezo",
+    "verifiedSkills": "Ubumenyi bwemejwe",
+    "level": "Urwego rwa {{level}}",
+    "approvals": "Byemejwe n’usuzuma {{count}} wigenga",
+    "approvals_plural": "Byemejwe n’abasuzuma {{count}} bigenga",
+    "footer": "Ubumenyi bwemejwe bwasuzumwe n’abasuzuma bahawe akazi mu buryo bwikora, umukozi atabashobora gutoranya. Abasuzuma ntibavugwa amazina, kugira ngo bagume bigenga.",
+    "invalidHelp": "Saba umukozi umurongo mushya.",
+    "invalid": {
+      "unknownPassport": "Iyi pasiporo ntiyabonetse.",
+      "invalidSignature": "Uyu murongo si pasiporo yemewe.",
+      "revoked": "Iyi pasiporo yakuweho na nyirayo.",
+      "unknownHolder": "Nyiri iyi pasiporo ntagifite konti."
+    }
+  },
+  "income": {
+    "title": "Icyemezo cy’amafaranga winjije",
+    "explainer": "Inyandiko ishyizweho umukono y’amafaranga wahembwe binyuze kuri Isoko. Ababaguriza na serivisi za mobile money barabigenzura, ibyo akazi k’amafaranga y’intoki kadashobora kwerekana.",
+    "download": "Kuramo icyemezo (CSV)"
   }
 }
