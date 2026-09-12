@@ -198,5 +198,78 @@
     "exportDesc": "Download a copy of everything Isoko Talents holds about your account — your profile, skill submissions, gigs, matches, payments, reviews, and messages — as a JSON file.",
     "exportButton": "Export my data",
     "exporting": "Preparing export..."
+  },
+  "match": {
+    "component": {
+      "distance": "Distance",
+      "trust": "Trust",
+      "skillFit": "Skill match",
+      "availability": "Availability"
+    },
+    "reason": {
+      "distance": "{{km}} km away",
+      "noLocation": "No saved location",
+      "trust": "{{score}} trust from {{reviews}} reviews",
+      "trustProvisional": "New — no reviews yet",
+      "busy": "{{activeMatches}} job in progress",
+      "busy_plural": "{{activeMatches}} jobs in progress",
+      "skill": {
+        "verified": "Verified in this skill",
+        "pending": "Verification in progress",
+        "unverified": "Skill claimed, not yet verified",
+        "absent": "This skill is not on their profile"
+      }
+    },
+    "weightLabel": "{{percent}}% of score",
+    "contributionTooltip": "Scored {{value}} × weight {{weight}} = {{contribution}}",
+    "weightProfileNote": "Ranked using the “{{profile}}” weighting.",
+    "profile": {
+      "balanced": "balanced",
+      "proximity_first": "closest first",
+      "trust_first": "most trusted first"
+    },
+    "explainTitle": "Why this ranking",
+    "rankLabel": "Rank #{{rank}}",
+    "outOfRange": "Outside the service radius for this gig"
+  },
+  "trust": {
+    "title": "Trust score",
+    "provisional": "New to Isoko — no reviews yet. This is not a low score, just an unrated one.",
+    "component": {
+      "rating": "Reviews received",
+      "completion": "Jobs finished once started",
+      "verification": "Verified skills"
+    },
+    "detail": {
+      "rating": "From {{count}} review",
+      "rating_plural": "From {{count}} reviews",
+      "completion": "{{completed}} completed, {{abandoned}} dropped after accepting",
+      "verification": "{{count}} skill verified by a reviewer",
+      "verification_plural": "{{count}} skills verified by a reviewer"
+    },
+    "penalty": "Reduced by {{points}} points: {{count}} job dropped after accepting in the last 90 days.",
+    "formulaNote": "Scoring method {{version}}. Recent reviews count for more, and a long record counts for more than a single rating.",
+    "viewBreakdown": "See how this is calculated"
+  },
+  "matches": {
+    "pendingWorkerPrompt": "You were selected for this gig. Confirm you're still available.",
+    "pendingClientPrompt": "Waiting for the worker to confirm they are available.",
+    "confirm": "Confirm",
+    "decline": "Decline",
+    "declineTitle": "Decline “{{title}}”?",
+    "declineExplainer": "The gig goes back on the marketplace so the client can pick someone else.",
+    "declineReasonPlaceholder": "Reason (optional) — e.g. already booked that week",
+    "markCompleted": "Mark completed",
+    "invitedBadge": "Matched for you"
+  },
+  "profile": {
+    "about": "About",
+    "experience": "Experience",
+    "verifiedSkills": "Verified skills",
+    "noVerifiedSkills": "No verified skills yet.",
+    "reviews": "Reviews ({{count}})",
+    "noReviews": "No reviews yet.",
+    "messageButton": "Message {{name}}",
+    "notFound": "That profile could not be found."
   }
 }

@@ -3,6 +3,43 @@ export type SkillCategory = 'electronics_repair' | 'tailoring' | 'tutoring' | 'd
 
 export type UserStatus = 'active' | 'suspended';
 
+/** One weighted input to a score, carried so the total can be explained. */
+export interface ScoreComponent {
+  key: string;
+  weight: number;
+  value: number;
+  contribution: number;
+  detail?: Record<string, unknown>;
+}
+
+/** An i18n key plus parameters, so explanations render in the viewer's language. */
+export interface ScoreReason {
+  key: string;
+  params: Record<string, string | number>;
+}
+
+export interface TrustScoreBreakdown {
+  formulaVersion: string;
+  score: number;
+  /** True when the user has no reviews yet: unrated, not badly rated. */
+  isProvisional: boolean;
+  components: ScoreComponent[];
+  penalty: { key: string; value: number; detail?: Record<string, unknown> };
+  computedAt: string;
+}
+
+export interface MatchScoreBreakdown {
+  workerId: string;
+  score: number;
+  rank?: number;
+  eligibleForInvite: boolean;
+  beyondRange: boolean;
+  distanceKm: number | null;
+  components: ScoreComponent[];
+  reasons: ScoreReason[];
+  weightProfile: { id: string | null; name: string; weights: Record<string, number> };
+}
+
 export interface User {
   id: string;
   name: string;
@@ -13,6 +50,14 @@ export interface User {
   locationLat?: number | null;
   locationLng?: number | null;
   trustScore: number;
+  trustScoreBreakdown?: TrustScoreBreakdown | null;
+  reviewCount?: number;
+  completedJobCount?: number;
+  preferredLanguage?: 'en' | 'rw';
+  experienceSummary?: string | null;
+  phone?: string | null;
+  smsNotificationsEnabled?: boolean;
+  emailNotificationsEnabled?: boolean;
   createdAt?: string;
 }
 
@@ -66,6 +111,8 @@ export interface GigApplication {
   gigId: string;
   workerId: string;
   status: GigApplicationStatus;
+  rankScore?: number | null;
+  scoreBreakdown?: MatchScoreBreakdown | null;
   createdAt: string;
   gig?: Gig;
   worker?: User;
@@ -73,12 +120,19 @@ export interface GigApplication {
 
 export type MatchStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';
 
+export type MatchOrigin = 'manual' | 'ranked';
+
 export interface Match {
   id: string;
   gigId: string;
   workerId: string;
   status: MatchStatus;
   rankScore: number | null;
+  origin?: MatchOrigin;
+  respondedAt?: string | null;
+  acceptedAt?: string | null;
+  declineReason?: string | null;
+  scoreBreakdown?: MatchScoreBreakdown | null;
   createdAt: string;
   updatedAt: string;
   gig?: Gig;
@@ -116,7 +170,11 @@ export interface PublicProfile {
   name: string;
   role: Role;
   bio?: string | null;
+  experienceSummary?: string | null;
   trustScore: number;
+  trustScoreBreakdown?: TrustScoreBreakdown | null;
+  reviewCount?: number;
+  completedJobCount?: number;
   createdAt: string;
 }
 

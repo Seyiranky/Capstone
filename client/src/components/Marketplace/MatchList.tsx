@@ -13,6 +13,7 @@ import {
   Space,
   Typography,
 } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchMatches } from '../../store/slices/matchSlice';
 import { matchApi } from '../../api/matchApi';
@@ -20,6 +21,7 @@ import { transactionApi } from '../../api/transactionApi';
 import { reviewApi } from '../../api/reviewApi';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
+import MatchExplanation from '../common/MatchExplanation';
 import type { Match, MatchStatus } from '../../types';
 
 const ReviewModal = ({
@@ -75,6 +77,7 @@ const ReviewModal = ({
 };
 
 const MatchList = () => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { profile } = useAppSelector((state) => state.auth);
   const matches = useAppSelector((state) => state.matches.items);
@@ -87,14 +90,36 @@ const MatchList = () => {
 
   const refresh = () => dispatch(fetchMatches());
 
-  const transition = async (matchId: string, status: MatchStatus) => {
+  const transition = async (matchId: string, status: MatchStatus, declineReason?: string) => {
     setBusyId(matchId);
     try {
-      await matchApi.updateMatchStatus(matchId, status);
+      await matchApi.updateMatchStatus(matchId, status, declineReason);
       refresh();
     } finally {
       setBusyId(null);
     }
+  };
+
+  const promptDecline = (match: Match) => {
+    let reason = '';
+    Modal.confirm({
+      title: t('matches.declineTitle', { title: match.gig?.title ?? '' }),
+      content: (
+        <Space direction="vertical" size={8} style={{ width: '100%', marginTop: 8 }}>
+          <Typography.Text type="secondary">{t('matches.declineExplainer')}</Typography.Text>
+          <Input.TextArea
+            rows={2}
+            placeholder={t('matches.declineReasonPlaceholder')}
+            onChange={(e) => {
+              reason = e.target.value;
+            }}
+          />
+        </Space>
+      ),
+      okText: t('matches.decline'),
+      okButtonProps: { danger: true },
+      onOk: () => transition(match.id, 'cancelled', reason || undefined),
+    });
   };
 
   const confirmPayment = async (transactionId: string) => {
@@ -141,6 +166,42 @@ const MatchList = () => {
                   )}
                 </div>
 
+                {match.origin === 'ranked' && match.scoreBreakdown && (
+                  <details style={{ marginBottom: 10 }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 12, opacity: 0.75 }}>
+                      {t('match.explainTitle')}
+                    </summary>
+                    <div style={{ marginTop: 8 }}>
+                      <MatchExplanation breakdown={match.scoreBreakdown} />
+                    </div>
+                  </details>
+                )}
+
+                {match.status === 'pending' && (
+                  <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                    <Typography.Text type="secondary">
+                      {isWorker
+                        ? t('matches.pendingWorkerPrompt')
+                        : t('matches.pendingClientPrompt')}
+                    </Typography.Text>
+                    {isWorker && (
+                      <Flex gap={8}>
+                        <Button
+                          type="primary"
+                          block
+                          loading={busyId === match.id}
+                          onClick={() => transition(match.id, 'accepted')}
+                        >
+                          {t('matches.confirm')}
+                        </Button>
+                        <Button block danger onClick={() => promptDecline(match)}>
+                          {t('matches.decline')}
+                        </Button>
+                      </Flex>
+                    )}
+                  </Space>
+                )}
+
                 {match.status === 'accepted' && (
                   <Button
                     type="primary"
@@ -148,7 +209,7 @@ const MatchList = () => {
                     loading={busyId === match.id}
                     onClick={() => transition(match.id, 'completed')}
                   >
-                    Mark completed
+                    {t('matches.markCompleted')}
                   </Button>
                 )}
 

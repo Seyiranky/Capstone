@@ -17,6 +17,7 @@ import {
   Typography,
 } from 'antd';
 import { MessageOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { userApi } from '../../api/userApi';
 import { reviewApi } from '../../api/reviewApi';
 import { useAppSelector } from '../../store/hooks';
@@ -24,9 +25,11 @@ import { canMessage } from '../../utils/messaging';
 import PageContainer from '../Layout/PageContainer';
 import Avatar from '../common/Avatar';
 import IdentityLink from '../common/IdentityLink';
+import TrustReceipt from '../common/TrustReceipt';
 import type { PublicProfile, Review, UserSkill } from '../../types';
 
 const WorkerProfile = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { role: viewerRole, profile: viewerProfile } = useAppSelector((state) => state.auth);
@@ -74,7 +77,7 @@ const WorkerProfile = () => {
               })
             }
           >
-            Message {profile.name.split(' ')[0]}
+            {t('profile.messageButton', { name: profile.name.split(' ')[0] })}
           </Button>
         )
       }
@@ -91,36 +94,56 @@ const WorkerProfile = () => {
               <Progress
                 type="dashboard"
                 size={120}
-                percent={Math.round((profile.trustScore / 5) * 100)}
-                format={() => (
-                  <span>
-                    <span style={{ fontSize: 22, fontWeight: 700 }}>
-                      {profile.trustScore.toFixed(1)}
+                percent={
+                  profile.trustScoreBreakdown?.isProvisional
+                    ? 0
+                    : Math.round((profile.trustScore / 5) * 100)
+                }
+                format={() =>
+                  profile.trustScoreBreakdown?.isProvisional ? (
+                    // The long explanation lives in the breakdown below; inside
+                    // the dial it would overflow the ring.
+                    <span style={{ fontSize: 24, color: '#a1a1aa' }}>—</span>
+                  ) : (
+                    <span>
+                      <span style={{ fontSize: 22, fontWeight: 700 }}>
+                        {profile.trustScore.toFixed(1)}
+                      </span>
+                      <span style={{ fontSize: 12, color: '#71717a' }}> / 5</span>
                     </span>
-                    <span style={{ fontSize: 12, color: '#71717a' }}> / 5</span>
-                  </span>
-                )}
+                  )
+                }
                 strokeColor="#18181b"
               />
-              <Typography.Text type="secondary">Trust score</Typography.Text>
+              <Typography.Text type="secondary">
+                {profile.trustScoreBreakdown?.isProvisional
+                  ? t('match.reason.trustProvisional')
+                  : t('trust.title')}
+              </Typography.Text>
             </Flex>
           </Card>
+
+          {profile.trustScoreBreakdown && (
+            <Card title={t('trust.viewBreakdown')} style={{ marginTop: 16 }}>
+              <TrustReceipt breakdown={profile.trustScoreBreakdown} />
+            </Card>
+          )}
         </Col>
 
         <Col xs={24} md={16}>
           <Space direction="vertical" size={16} style={{ width: '100%' }}>
             {profile.bio && (
-              <Card title="About">
+              <Card title={t('profile.about')}>
                 <Typography.Paragraph style={{ margin: 0 }}>{profile.bio}</Typography.Paragraph>
               </Card>
             )}
 
             {profile.role === 'worker' && (
-              <Card title="Verified skills">
+              <Card title={t('profile.verifiedSkills')}>
                 {skills.length === 0 ? (
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="No verified skills yet."
+                    description={t('profile.noVerifiedSkills')}
                   />
                 ) : (
                   <Space size={[8, 8]} wrap>
@@ -137,13 +160,13 @@ const WorkerProfile = () => {
             <Card
               title={
                 <Flex align="center" gap={8}>
-                  <span>Reviews ({reviews.length})</span>
+                  <span>{t('profile.reviews', { count: reviews.length })}</span>
                   {reviews.length > 0 && <Rate disabled allowHalf value={avgRating} />}
                 </Flex>
               }
             >
               {reviews.length === 0 ? (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No reviews yet." />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('profile.noReviews')} />
               ) : (
                 <List
                   dataSource={reviews}

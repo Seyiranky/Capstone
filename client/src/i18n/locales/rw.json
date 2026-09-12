@@ -198,5 +198,78 @@
     "exportDesc": "Kuramo kopi y'ibyose Isoko Talents ifite kuri konti yawe — umwirondoro wawe, ubuhanga bwoherejwe, imirimo, imirimo mwahuriyeho, ubwishyu, ibitekerezo, n'ubutumwa — nk'idosiye ya JSON.",
     "exportButton": "Kuramo amakuru yanjye",
     "exporting": "Gutegura gukuramo..."
+  },
+  "match": {
+    "component": {
+      "distance": "Intera",
+      "trust": "Ikizere",
+      "skillFit": "Uko ubumenyi buhuye",
+      "availability": "Kuboneka"
+    },
+    "reason": {
+      "distance": "Ku ntera ya km {{km}}",
+      "noLocation": "Nta hantu habitswe",
+      "trust": "Amanota y’ikizere {{score}} avuye mu bitekerezo {{reviews}}",
+      "trustProvisional": "Mushya — nta bitekerezo birahari",
+      "busy": "Afite akazi {{activeMatches}} agikora",
+      "busy_plural": "Afite akazi {{activeMatches}} agikora",
+      "skill": {
+        "verified": "Ubumenyi bwemejwe",
+        "pending": "Kwemeza biracyakorwa",
+        "unverified": "Yavuze ubu bumenyi ariko ntibwemezwa",
+        "absent": "Ubu bumenyi ntiburi kuri profayili ye"
+      }
+    },
+    "weightLabel": "{{percent}}% by’amanota",
+    "contributionTooltip": "Amanota {{value}} × uburemere {{weight}} = {{contribution}}",
+    "weightProfileNote": "Byashyizwe ku rutonde hakoreshejwe uburemere “{{profile}}”.",
+    "profile": {
+      "balanced": "bunganye",
+      "proximity_first": "abegereye mbere",
+      "trust_first": "abizewe mbere"
+    },
+    "explainTitle": "Impamvu y’uru rutonde",
+    "rankLabel": "Umwanya wa {{rank}}",
+    "outOfRange": "Ari hanze y’intera y’aka kazi"
+  },
+  "trust": {
+    "title": "Amanota y’ikizere",
+    "provisional": "Mushya kuri Isoko — nta bitekerezo birahari. Ntabwo ari amanota make, ni uko atagira isuzuma.",
+    "component": {
+      "rating": "Ibitekerezo yahawe",
+      "completion": "Akazi yarangije amaze kwemera",
+      "verification": "Ubumenyi bwemejwe"
+    },
+    "detail": {
+      "rating": "Bivuye mu gitekerezo {{count}}",
+      "rating_plural": "Bivuye mu bitekerezo {{count}}",
+      "completion": "{{completed}} yarangije, {{abandoned}} yaretse amaze kwemera",
+      "verification": "Ubumenyi {{count}} bwemejwe n’usuzuma",
+      "verification_plural": "Ubumenyi {{count}} bwemejwe n’usuzuma"
+    },
+    "penalty": "Yagabanyijwe amanota {{points}}: akazi {{count}} yaretse amaze kwemera mu minsi 90 ishize.",
+    "formulaNote": "Uburyo bwo kubara {{version}}. Ibitekerezo bya vuba bifite uburemere bwinshi, kandi amateka maremare aruta igitekerezo kimwe.",
+    "viewBreakdown": "Reba uko aya manota abarwa"
+  },
+  "matches": {
+    "pendingWorkerPrompt": "Watoranyijwe kuri aka kazi. Emeza ko uracyaboneka.",
+    "pendingClientPrompt": "Turategereje ko umukozi yemeza ko aboneka.",
+    "confirm": "Emeza",
+    "decline": "Anga",
+    "declineTitle": "Kwanga “{{title}}”?",
+    "declineExplainer": "Aka kazi kazasubira ku isoko kugira ngo umukiriya atoranye undi.",
+    "declineReasonPlaceholder": "Impamvu (si ngombwa) — urugero: nari mfite akandi kazi",
+    "markCompleted": "Emeza ko byarangiye",
+    "invitedBadge": "Twaguhuje na aka kazi"
+  },
+  "profile": {
+    "about": "Ibimuranga",
+    "experience": "Uburambe",
+    "verifiedSkills": "Ubumenyi bwemejwe",
+    "noVerifiedSkills": "Nta bumenyi bwemejwe burahari.",
+    "reviews": "Ibitekerezo ({{count}})",
+    "noReviews": "Nta bitekerezo birahari.",
+    "messageButton": "Andikira {{name}}",
+    "notFound": "Uyu mwirondoro ntiwabonetse."
   }
 }

@@ -29,6 +29,7 @@ import { gigApplicationApi } from '../../api/gigApplicationApi';
 import { adminApi } from '../../api/adminApi';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
+import MatchExplanation from '../common/MatchExplanation';
 import ChatThread from '../common/ChatThread';
 import { gigImageSrc } from '../../utils/gigImage';
 import { locationName } from '../../utils/locationName';
@@ -77,9 +78,17 @@ const GigDetail = () => {
   const isOwner = role === 'client' && profile?.id === gig.clientId;
   const myApplication =
     role === 'worker' ? applications.find((a) => a.workerId === profile?.id) : undefined;
-  const sortedApplicants = [...applications].sort(
-    (a, b) => (b.worker?.trustScore ?? 0) - (a.worker?.trustScore ?? 0),
-  );
+  // Ranked by the combined match score (distance, trust, skill fit,
+  // availability) rather than trust alone, falling back to trust for
+  // applications submitted before scoring existed.
+  const sortedApplicants = [...applications].sort((a, b) => {
+    const aScore = a.rankScore ?? null;
+    const bScore = b.rankScore ?? null;
+    if (aScore !== null && bScore !== null) return bScore - aScore;
+    if (aScore !== null) return -1;
+    if (bScore !== null) return 1;
+    return (b.worker?.trustScore ?? 0) - (a.worker?.trustScore ?? 0);
+  });
   const cover = gigImageSrc(gig);
   const loc = locationName(gig.locationLat, gig.locationLng);
 
@@ -129,7 +138,30 @@ const GigDetail = () => {
       render: (_, a) =>
         a.worker ? <IdentityLink id={a.worker.id} name={a.worker.name} size={26} /> : '—',
     },
-    { title: 'Trust', key: 'trust', width: 80, render: (_, a) => a.worker?.trustScore.toFixed(1) ?? '—' },
+    {
+      title: t('match.component.trust'),
+      key: 'trust',
+      width: 80,
+      render: (_, a) =>
+        a.worker?.reviewCount === 0
+          ? t('match.reason.trustProvisional')
+          : (a.worker?.trustScore.toFixed(1) ?? '—'),
+    },
+    {
+      title: t('match.explainTitle'),
+      key: 'match',
+      render: (_, a) =>
+        a.scoreBreakdown ? (
+          <Space direction="vertical" size={4} style={{ width: '100%' }}>
+            <Typography.Text strong style={{ fontSize: 12 }}>
+              {Math.round(a.scoreBreakdown.score * 100)}%
+            </Typography.Text>
+            <MatchExplanation breakdown={a.scoreBreakdown} compact />
+          </Space>
+        ) : (
+          '—'
+        ),
+    },
     { title: 'Status', key: 'status', width: 110, render: (_, a) => <StatusTag status={a.status} /> },
     {
       title: '',
@@ -290,6 +322,13 @@ const GigDetail = () => {
                   pagination={false}
                   columns={applicantColumns}
                   dataSource={sortedApplicants}
+                  expandable={{
+                    rowExpandable: (a) => Boolean(a.scoreBreakdown),
+                    expandedRowRender: (a) =>
+                      a.scoreBreakdown ? (
+                        <MatchExplanation breakdown={a.scoreBreakdown} />
+                      ) : null,
+                  }}
                 />
               )}
             </Card>
