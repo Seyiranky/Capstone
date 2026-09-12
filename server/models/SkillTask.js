@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       SkillTask.belongsTo(models.Skill, { foreignKey: 'skillId', as: 'skill' });
       SkillTask.hasMany(models.SkillTaskAssignment, { foreignKey: 'taskId', as: 'assignments' });
       SkillTask.hasOne(models.SkillTaskAppeal, { foreignKey: 'taskId', as: 'appeal' });
+      SkillTask.hasMany(models.SkillTaskEvidence, { foreignKey: 'taskId', as: 'evidence' });
     }
   }
   SkillTask.init(
