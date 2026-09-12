@@ -27,6 +27,9 @@ exports.verifyToken = async (req, res, next) => {
       .json({ message: 'This account has been suspended. Contact an administrator.', code: 'ACCOUNT_SUSPENDED' });
   }
 
-  req.user = decoded;
+  // Role and reviewer capability are taken from the record rather than the
+  // token, for the same reason the suspension check is: a change applies to a
+  // session already in flight, and a token issued before enrolment still works.
+  req.user = { ...decoded, role: user.role, reviewerTier: user.reviewerTier };
   next();
 };

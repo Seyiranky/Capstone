@@ -1,7 +1,10 @@
-const { User, Gig, Skill, Match, Transaction } = require('../models');
+const { Op } = require('sequelize');
+const { User, Gig, Skill, Match, Transaction, UserSkill } = require('../models');
 const notify = require('../lib/notify');
 const pilotMetricsService = require('../services/pilotMetricsService');
 const matchScoringService = require('../services/matchScoringService');
+const collusionDetectionService = require('../services/collusionDetectionService');
+const skillVerificationService = require('../services/skillVerificationService');
 
 exports.listUsers = async (req, res) => {
   const users = await User.findAll({ order: [['createdAt', 'DESC']] });
@@ -28,7 +31,64 @@ exports.listGigs = async (req, res) => {
 };
 
 exports.listFlagged = async (req, res) => {
-  res.status(501).json({ message: 'Not implemented' });
+  const report = await collusionDetectionService.report();
+  res.json(report);
+};
+
+/**
+ * Enrols or removes a reviewer.
+ *
+ * Peer reviewers must themselves be verified and well rated: someone with no
+ * verified skill has no standing to certify another worker's.
+ */
+exports.setReviewerTier = async (req, res) => {
+  const { reviewerTier } = req.body;
+  if (![null, 'admin', 'peer'].includes(reviewerTier ?? null)) {
+    return res.status(400).json({ message: "reviewerTier must be 'admin', 'peer' or null" });
+  }
+
+  const user = await User.findByPk(req.params.id);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  if (reviewerTier === 'peer') {
+    if (user.role !== 'worker') {
+      return res.status(400).json({ message: 'Only workers can be enrolled as peer reviewers' });
+    }
+    const verifiedSkills = await UserSkill.count({
+      where: { userId: user.id, verificationStatus: 'verified' },
+    });
+    if (verifiedSkills === 0) {
+      return res
+        .status(409)
+        .json({ message: 'A peer reviewer must have at least one verified skill' });
+    }
+    if (user.trustScore < skillVerificationService.PEER_MIN_TRUST_SCORE) {
+      return res.status(409).json({
+        message: `A peer reviewer needs a trust score of at least ${skillVerificationService.PEER_MIN_TRUST_SCORE}`,
+      });
+    }
+  }
+
+  await user.update({ reviewerTier: reviewerTier ?? null });
+
+  if (reviewerTier) {
+    await notify(req, {
+      userId: user.id,
+      title: 'You are now a skill reviewer',
+      body: 'You can review skill submissions from other workers. Submissions are assigned to you automatically.',
+    });
+  }
+
+  res.json(user);
+};
+
+exports.listReviewers = async (req, res) => {
+  const reviewers = await User.findAll({
+    where: { reviewerTier: { [Op.not]: null } },
+    order: [['name', 'ASC']],
+  });
+  res.json(reviewers);
 };
 
 exports.pilotMetrics = async (req, res) => {
