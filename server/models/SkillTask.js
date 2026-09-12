@@ -7,6 +7,8 @@ module.exports = (sequelize, DataTypes) => {
       SkillTask.belongsTo(models.User, { foreignKey: 'workerId', as: 'worker' });
       SkillTask.belongsTo(models.User, { foreignKey: 'reviewerId', as: 'reviewer' });
       SkillTask.belongsTo(models.Skill, { foreignKey: 'skillId', as: 'skill' });
+      SkillTask.hasMany(models.SkillTaskAssignment, { foreignKey: 'taskId', as: 'assignments' });
+      SkillTask.hasOne(models.SkillTaskAppeal, { foreignKey: 'taskId', as: 'appeal' });
     }
   }
   SkillTask.init(
@@ -45,6 +47,16 @@ module.exports = (sequelize, DataTypes) => {
       reviewedAt: {
         type: DataTypes.DATE,
         allowNull: true,
+      },
+      requiredApprovals: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 1,
+      },
+      disagreementFlag: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
     },
     {

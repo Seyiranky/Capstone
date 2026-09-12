@@ -121,6 +121,14 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: false,
       },
+      // Capability to review skill submissions, independent of `role`. 'peer'
+      // reviewers are verified workers, which is what makes the pool large
+      // enough for rotation to mean anything.
+      reviewerTier: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: { isIn: [['admin', 'peer']] },
+      },
       resetToken: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -133,6 +141,16 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'User',
+      hooks: {
+        // Admins are reviewers by default; without this a newly created admin
+        // would be unable to review anything, since the route is gated on the
+        // capability rather than the role.
+        beforeCreate: (user) => {
+          if (user.role === 'admin' && !user.reviewerTier) {
+            user.reviewerTier = 'admin';
+          }
+        },
+      },
       defaultScope: {
         // resetToken is a bearer credential for resetting a password — never
         // serialize it on a normal query. resetTokenExpiresAt is harmless and
