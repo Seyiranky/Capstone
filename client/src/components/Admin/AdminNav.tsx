@@ -6,6 +6,7 @@ const OPTIONS = [
   { label: 'Users', value: '/admin/users' },
   { label: 'Pending gigs', value: '/admin/gigs/pending' },
   { label: 'Completed gigs', value: '/admin/gigs/completed' },
+  { label: 'Review audit', value: '/admin/audit' },
 ];
 
 const AdminNav = () => {

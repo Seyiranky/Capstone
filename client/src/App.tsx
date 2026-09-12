@@ -15,6 +15,7 @@ import AdminPage from './pages/AdminPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminPendingGigsPage from './pages/AdminPendingGigsPage';
 import AdminCompletedGigsPage from './pages/AdminCompletedGigsPage';
+import AdminAuditPage from './pages/AdminAuditPage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -62,6 +63,7 @@ function App() {
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/gigs/pending" element={<AdminPendingGigsPage />} />
             <Route path="/admin/gigs/completed" element={<AdminCompletedGigsPage />} />
+            <Route path="/admin/audit" element={<AdminAuditPage />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

@@ -1,8 +1,18 @@
 import axiosClient from './axiosClient';
-import type { Gig, User } from '../types';
+import type { CollusionReport, Gig, User } from '../types';
 
 export const adminApi = {
   listUsers: () => axiosClient.get<User[]>('/admin/users').then((res) => res.data),
+
+  collusionReport: () =>
+    axiosClient.get<CollusionReport>('/admin/flagged').then((res) => res.data),
+
+  listReviewers: () => axiosClient.get<User[]>('/admin/reviewers').then((res) => res.data),
+
+  setReviewerTier: (id: string, reviewerTier: 'admin' | 'peer' | null) =>
+    axiosClient
+      .put<User>(`/admin/users/${id}/reviewer-tier`, { reviewerTier })
+      .then((res) => res.data),
 
   listGigs: () => axiosClient.get<Gig[]>('/admin/gigs').then((res) => res.data),
 

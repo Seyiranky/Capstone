@@ -178,6 +178,45 @@ export interface PublicProfile {
   createdAt: string;
 }
 
+export type ReviewerTier = 'admin' | 'peer';
+
+export type CollusionFlagType =
+  | 'rubberStamped'
+  | 'priorGigRelationship'
+  | 'repeatedPairing'
+  | 'approvesEverything'
+  | 'rejectsEverything';
+
+export interface CollusionFlag {
+  type: CollusionFlagType;
+  severity: 'high' | 'medium' | 'low';
+  taskId?: string;
+  workerId?: string;
+  workerName?: string;
+  reviewerId?: string;
+  reviewerName?: string;
+  /** The numbers behind the flag, so a claim can be judged rather than trusted. */
+  evidence: Record<string, string | number>;
+}
+
+export interface CollusionReport {
+  generatedAt: string;
+  summary: {
+    assignments: number;
+    distinctReviewers: number;
+    decided: number;
+    flagged: number;
+    byType: Record<string, number>;
+  };
+  reviewerLoad: {
+    reviewerId: string;
+    reviewerName?: string;
+    assignments: number;
+    share: number;
+  }[];
+  flags: CollusionFlag[];
+}
+
 export interface UserSkill {
   id: string;
   userId: string;
