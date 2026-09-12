@@ -1,0 +1,58 @@
+/* Editorial polish layer on top of Ant Design. */
+
+a {
+  color: var(--ant-color-link, #18181b);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--ant-color-link-hover, #52525b);
+}
+
+/* Cards: hairline border, no ambient shadow. Interactive ones lift a touch. */
+.ant-card {
+  box-shadow: none;
+  border-color: var(--ant-color-border-secondary, #e4e4e7);
+}
+.ant-card-hoverable:hover {
+  border-color: #d4d4d8;
+  box-shadow: 0 2px 8px rgba(24, 24, 27, 0.06);
+}
+:root[data-theme='dark'] .ant-card-hoverable:hover {
+  border-color: #3f3f46;
+  box-shadow: none;
+}
+
+.ant-card-head {
+  min-height: 46px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Header row */
+.ant-layout-header {
+  line-height: normal;
+  display: flex;
+  align-items: center;
+  padding-inline: 18px;
+}
+
+/* Tables: flat, tight, hairline separators. */
+.ant-table-wrapper .ant-table {
+  border-radius: 0;
+}
+.ant-table-wrapper .ant-table-thead > tr > th {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Keep long content from forcing horizontal page scroll. */
+.ant-layout-content {
+  overflow-x: hidden;
+}
+
+/* Page title spacing */
+.ant-typography + .ant-typography {
+  margin-top: 0;
+}
