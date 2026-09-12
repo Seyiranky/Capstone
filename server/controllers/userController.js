@@ -8,7 +8,19 @@ exports.getProfile = async (req, res) => {
   res.json(user);
 };
 
-const UPDATABLE_FIELDS = ['name', 'bio', 'locationLat', 'locationLng'];
+const UPDATABLE_FIELDS = [
+  'name',
+  'bio',
+  'locationLat',
+  'locationLng',
+  'preferredLanguage',
+  'experienceSummary',
+  'cvUrl',
+  'certificateUrl',
+  'phone',
+  'smsNotificationsEnabled',
+  'emailNotificationsEnabled',
+];
 
 exports.updateProfile = async (req, res) => {
   const user = await User.findByPk(req.user.id);
@@ -38,7 +50,13 @@ exports.getPublicProfile = async (req, res) => {
     name: user.name,
     role: user.role,
     bio: user.bio,
+    experienceSummary: user.experienceSummary,
     trustScore: user.trustScore,
+    // Exposed publicly on purpose: a score a client cannot interrogate is the
+    // opaque-reputation problem this platform is meant to avoid.
+    trustScoreBreakdown: user.trustScoreBreakdown,
+    reviewCount: user.reviewCount,
+    completedJobCount: user.completedJobCount,
     createdAt: user.createdAt,
   });
 };

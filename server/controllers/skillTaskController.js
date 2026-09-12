@@ -1,6 +1,7 @@
 const { SkillTask, UserSkill, Skill, User } = require('../models');
 const notify = require('../lib/notify');
 const { assignReviewer } = require('../services/skillVerificationService');
+const trustScoreService = require('../services/trustScoreService');
 
 exports.submitTask = async (req, res) => {
   const { skillId, evidenceUrl, notes } = req.body;
@@ -68,6 +69,10 @@ exports.reviewTask = async (req, res) => {
     if (userSkill.verificationStatus !== 'verified') {
       await userSkill.update({ verificationStatus: 'verified' });
     }
+
+    // Verification is a trust signal in its own right (FR-6), so approving a
+    // skill has to move the score, not just the badge.
+    await trustScoreService.recalculate(task.workerId, { trigger: 'skill:verified' });
   }
 
   await notify(req, {

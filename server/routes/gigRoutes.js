@@ -8,6 +8,7 @@ const { uploadGigImage } = require('../middleware/upload');
 router.post('/', verifyToken, authorize('client'), uploadGigImage.single('image'), gigController.createGig);
 router.get('/', gigController.listGigs);
 router.get('/:id', gigController.getGig);
+router.get('/:id/candidates', verifyToken, gigController.listCandidates);
 router.put('/:id', verifyToken, authorize('client'), gigController.updateGig);
 
 module.exports = router;

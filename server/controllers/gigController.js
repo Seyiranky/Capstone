@@ -1,4 +1,5 @@
 const { Gig, User, Skill } = require('../models');
+const matchScoringService = require('../services/matchScoringService');
 
 const GIG_INCLUDES = [
   { model: User, as: 'client' },
@@ -48,6 +49,36 @@ exports.getGig = async (req, res) => {
     return res.status(404).json({ message: 'Gig not found' });
   }
   res.json(gig);
+};
+
+/**
+ * Ranked candidate workers for a gig, each with the full score breakdown.
+ *
+ * The `profile` query parameter re-ranks with a different weighting, which is
+ * how RQ2 compares proximity-first against trust-first weightings on identical
+ * data.
+ */
+exports.listCandidates = async (req, res) => {
+  const gig = await Gig.findByPk(req.params.id);
+  if (!gig) {
+    return res.status(404).json({ message: 'Gig not found' });
+  }
+  if (req.user.role !== 'admin' && gig.clientId !== req.user.id) {
+    return res.status(403).json({ message: 'Only the posting client or an admin may view candidates' });
+  }
+
+  const limit = req.query.limit ? Number(req.query.limit) : undefined;
+  if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) {
+    return res.status(400).json({ message: 'limit must be a positive integer' });
+  }
+
+  const candidates = await matchScoringService.rankCandidates({
+    gig,
+    profileName: req.query.profile,
+    limit,
+  });
+
+  res.json({ gigId: gig.id, candidates });
 };
 
 const UPDATABLE_FIELDS = ['title', 'description', 'budget', 'locationLat', 'locationLng'];

@@ -1,4 +1,5 @@
 const { GigApplication, Gig, User, Match } = require('../models');
+const matchScoringService = require('../services/matchScoringService');
 const notify = require('../lib/notify');
 
 const APPLICATION_INCLUDES = [
@@ -25,9 +26,32 @@ exports.applyToGig = async (req, res) => {
     return res.status(409).json({ message: 'You have already applied to this gig' });
   }
 
-  const application = await GigApplication.create({ gigId, workerId: req.user.id, status: 'pending' });
+  // A ranked invitation is already an offer to this worker; applying on top of
+  // it would create a second match for the same pair.
+  const invited = await Match.findOne({
+    where: { gigId, workerId: req.user.id, status: 'pending' },
+  });
+  if (invited) {
+    return res
+      .status(409)
+      .json({ message: 'You were already matched to this gig — confirm that invitation instead' });
+  }
 
+  // Score the pair now so the client's review queue is ranked and explainable.
+  // A worker with no record of the skill is still allowed to apply; they simply
+  // score zero on skill fit and the breakdown says so.
   const worker = await User.findByPk(req.user.id);
+  const scored = await matchScoringService.scoreOne({ gig, worker });
+
+  const application = await GigApplication.create({
+    gigId,
+    workerId: req.user.id,
+    status: 'pending',
+    rankScore: scored.score,
+    scoreBreakdown: scored,
+    weightProfileId: scored.weightProfile.id,
+  });
+
   const admins = await User.findAll({ where: { role: 'admin' } });
   await Promise.all(
     admins.map((admin) =>
@@ -91,36 +115,26 @@ exports.reviewApplication = async (req, res) => {
 
   await application.update({ status: 'approved' });
 
+  // Born pending, not accepted: the worker confirms they are still available.
+  // Sibling applications stay pending until that confirmation, so a decline
+  // leaves the gig fillable instead of stranding it with no candidates.
   const match = await Match.create({
     gigId: application.gigId,
     workerId: application.workerId,
-    status: 'accepted',
+    status: 'pending',
+    origin: 'manual',
   });
   await application.gig.update({ status: 'matched' });
-
-  const otherPending = await GigApplication.findAll({
-    where: { gigId: application.gigId, status: 'pending' },
-  });
-  await Promise.all(
-    otherPending.map(async (other) => {
-      await other.update({ status: 'rejected' });
-      await notify(req, {
-        userId: other.workerId,
-        title: 'Application not selected',
-        body: `Your application for "${application.gig.title}" was not selected.`,
-      });
-    }),
-  );
 
   await notify(req, {
     userId: application.workerId,
     title: 'Application approved',
-    body: `Your application for "${application.gig.title}" was approved. You're now assigned to this gig.`,
+    body: `Your application for "${application.gig.title}" was approved. Confirm you're still available to take it.`,
   });
   await notify(req, {
     userId: application.gig.clientId,
-    title: 'Gig assigned',
-    body: `Your gig "${application.gig.title}" has been assigned to a worker.`,
+    title: 'Worker selected',
+    body: `A worker was selected for "${application.gig.title}" and has been asked to confirm.`,
   });
 
   res.json({ application, match });
