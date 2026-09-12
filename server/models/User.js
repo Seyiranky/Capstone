@@ -66,6 +66,61 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      trustScoreBreakdown: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
+      trustScoreUpdatedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      reviewCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      completedJobCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      abandonedJobCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      preferredLanguage: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'en',
+        validate: { isIn: [['en', 'rw']] },
+      },
+      experienceSummary: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      cvUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      certificateUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      phone: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      smsNotificationsEnabled: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      emailNotificationsEnabled: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       resetToken: {
         type: DataTypes.STRING,
         allowNull: true,

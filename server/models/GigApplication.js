@@ -29,6 +29,18 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 'pending',
         validate: { isIn: [['pending', 'approved', 'rejected']] },
       },
+      rankScore: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
+      scoreBreakdown: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
+      weightProfileId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+      },
     },
     {
       sequelize,

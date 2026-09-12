@@ -35,6 +35,32 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.FLOAT,
         allowNull: true,
       },
+      origin: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'manual',
+        validate: { isIn: [['manual', 'ranked']] },
+      },
+      respondedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      acceptedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      declineReason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      scoreBreakdown: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
+      weightProfileId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+      },
     },
     {
       sequelize,
