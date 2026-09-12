@@ -1,0 +1,102 @@
+name: CI
+
+# NFR-5: automated tests run on every commit before any deployment build.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  server:
+    name: Server (lint + tests)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: isoko
+          POSTGRES_PASSWORD: isoko
+          POSTGRES_DB: isoko_talents_test
+        ports: ['5432:5432']
+        # Without this the first migration can race the database accepting
+        # connections, which fails intermittently rather than honestly.
+        options: >-
+          --health-cmd "pg_isready -U isoko"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: isoko
+      DB_PASSWORD: isoko
+      DB_NAME: isoko_talents_test
+      DB_NAME_TEST: isoko_talents_test
+      JWT_SECRET: ci-test-secret
+      JWT_EXPIRES_IN: 7d
+      PASSPORT_SIGNING_SECRET: ci-passport-secret
+
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - run: npm ci
+      - run: npx eslint .
+
+      - name: Migrate test database
+        run: npm run migrate:test
+
+      - name: Seed skill categories
+        # The suite reads real Skill rows rather than inventing them, so an
+        # unseeded database fails in a way that looks like broken code.
+        run: npm run seed:test
+
+      - run: npm test
+
+  client:
+    name: Client (lint + typecheck + build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - run: npm ci
+      - run: npx eslint src
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npm run build
+
+  i18n:
+    name: Translations stay in step
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check locale key parity
+        # NFR-1 promises a bilingual interface. A key added to one locale and
+        # not the other silently ships English to Kinyarwanda users, which no
+        # other check would catch.
+        run: node scripts/check-i18n-parity.mjs
