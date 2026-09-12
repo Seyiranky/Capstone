@@ -3,6 +3,11 @@ const bcrypt = require('bcrypt');
 const app = require('../../app');
 const db = require('../../models');
 
+// This narrative covers the manual arm: a worker applies and is approved.
+// Ranked invitations are exercised separately in rankedMatching.test.js, and
+// would otherwise pre-empt the application under test.
+process.env.RANKED_INVITE_LIMIT = '0';
+
 const stamp = Date.now();
 const emails = {
   client: `api-client-${stamp}@example.com`,
@@ -228,14 +233,15 @@ describe('gigs and applications', () => {
     expect(res.status).toBe(409);
   });
 
-  test('admin approves the application, creating an accepted match and flipping the gig to matched', async () => {
+  test('admin approves the application, creating a pending match and flipping the gig to matched', async () => {
     const res = await request(app)
       .put(`/api/gig-applications/${applicationId}/review`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ decision: 'approved' });
     expect(res.status).toBe(200);
     expect(res.body.application.status).toBe('approved');
-    expect(res.body.match.status).toBe('accepted');
+    expect(res.body.match.status).toBe('pending');
+    expect(res.body.match.origin).toBe('manual');
     matchId = res.body.match.id;
 
     const gigRes = await request(app).get(`/api/gigs/${gigId}`);
@@ -244,6 +250,25 @@ describe('gigs and applications', () => {
 });
 
 describe('match lifecycle and simulated payment', () => {
+  test('the client cannot accept the match on the worker behalf', async () => {
+    const res = await request(app)
+      .put(`/api/matches/${matchId}/status`)
+      .set('Authorization', `Bearer ${clientToken}`)
+      .send({ status: 'accepted' });
+    expect(res.status).toBe(403);
+  });
+
+  test('the worker confirms the match, recording an acceptance timestamp', async () => {
+    const res = await request(app)
+      .put(`/api/matches/${matchId}/status`)
+      .set('Authorization', `Bearer ${workerToken}`)
+      .send({ status: 'accepted' });
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('accepted');
+    expect(res.body.respondedAt).toBeTruthy();
+    expect(res.body.acceptedAt).toBeTruthy();
+  });
+
   test('cannot transition an accepted match backwards to pending', async () => {
     const res = await request(app)
       .put(`/api/matches/${matchId}/status`)
@@ -291,7 +316,36 @@ describe('reviews and trust score', () => {
 
   test("worker's trust score reflects the new review", async () => {
     const res = await request(app).get('/api/users/me').set('Authorization', `Bearer ${workerToken}`);
-    expect(res.body.trustScore).toBe(5);
+    expect(res.body.trustScore).toBeGreaterThan(0);
+    expect(res.body.reviewCount).toBe(1);
+    expect(res.body.trustScoreBreakdown.isProvisional).toBe(false);
+  });
+
+  test('a single 5-star review does not confer a perfect score', async () => {
+    const res = await request(app).get('/api/users/me').set('Authorization', `Bearer ${workerToken}`);
+    // Shrinkage toward the prior: one review is not yet enough evidence to max
+    // out the scale, which is what stops a lone rating outranking a long record.
+    expect(res.body.trustScore).toBeLessThan(5);
+
+    const rating = res.body.trustScoreBreakdown.components.find((c) => c.key === 'rating');
+    expect(rating.detail.rawMean).toBe(5);
+    expect(rating.detail.shrunkMean).toBeLessThan(5);
+  });
+
+  test("the worker's score is explainable, not an opaque number", async () => {
+    const res = await request(app)
+      .get(`/api/users/${workerId}`)
+      .set('Authorization', `Bearer ${clientToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.trustScoreBreakdown.components.map((c) => c.key)).toEqual(
+      expect.arrayContaining(['rating', 'completion', 'verification']),
+    );
+    const summed = res.body.trustScoreBreakdown.components.reduce(
+      (total, c) => total + c.contribution,
+      0,
+    );
+    const { score, penalty } = res.body.trustScoreBreakdown;
+    expect(score).toBeCloseTo(5 * (summed - penalty.value), 6);
   });
 });
 
