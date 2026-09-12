@@ -72,13 +72,18 @@ exports.listCandidates = async (req, res) => {
     return res.status(400).json({ message: 'limit must be a positive integer' });
   }
 
-  const candidates = await matchScoringService.rankCandidates({
+  // Variance is computed over the full ranked set, before any limit, so it
+  // describes the candidate pool rather than the page being shown.
+  const ranked = await matchScoringService.rankCandidates({
     gig,
     profileName: req.query.profile,
-    limit,
   });
 
-  res.json({ gigId: gig.id, candidates });
+  res.json({
+    gigId: gig.id,
+    componentVariance: matchScoringService.componentVariance(ranked),
+    candidates: limit ? ranked.slice(0, limit) : ranked,
+  });
 };
 
 const UPDATABLE_FIELDS = ['title', 'description', 'budget', 'locationLat', 'locationLng'];

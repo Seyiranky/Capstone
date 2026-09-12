@@ -21,6 +21,12 @@ const PAIRING_WINDOW_DAYS = 90;
 // rated; below this they lack the standing to certify someone else.
 const PEER_MIN_TRUST_SCORE = 3.5;
 
+// A track record is required separately from the score. With shrinkage toward
+// a 3.5 prior, an unreviewed worker can clear the floor on the prior alone —
+// which would mean qualifying to judge others through an absence of evidence
+// rather than a record of good work.
+const PEER_MIN_REVIEWS = 2;
+
 /**
  * Deterministic draw from a seed.
  *
@@ -164,6 +170,7 @@ exports.assignReviewer = async (
     if (candidate.reviewerTier === 'peer') {
       if (!competentPeers.has(candidate.id)) return reject('notCategoryCompetent');
       if (candidate.trustScore < PEER_MIN_TRUST_SCORE) return reject('peerTrustTooLow');
+      if ((candidate.reviewCount ?? 0) < PEER_MIN_REVIEWS) return reject('peerNoTrackRecord');
     }
     return true;
   });
@@ -223,6 +230,7 @@ exports.requiredApprovalsFor = async (workerId) => {
 
 exports.LOW_CONFIDENCE_THRESHOLD = 3;
 exports.PEER_MIN_TRUST_SCORE = PEER_MIN_TRUST_SCORE;
+exports.PEER_MIN_REVIEWS = PEER_MIN_REVIEWS;
 exports.RECENT_TASKS_EXCLUDED = RECENT_TASKS_EXCLUDED;
 exports.MAX_PAIRINGS_PER_WINDOW = MAX_PAIRINGS_PER_WINDOW;
 exports.PAIRING_WINDOW_DAYS = PAIRING_WINDOW_DAYS;

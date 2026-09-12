@@ -66,7 +66,10 @@ beforeAll(async () => {
     });
   }
   users.peer = await db.User.create({
-    name: 'SV Peer', email: emails.peer, passwordHash, role: 'worker', trustScore: 4.6,
+    name: 'SV Peer', email: emails.peer, passwordHash, role: 'worker',
+    // A track record, not just a score: shrinkage lets an unreviewed worker
+    // clear the trust floor on the prior alone.
+    trustScore: 4.6, reviewCount: 4,
   });
 
   for (const key of Object.keys(emails)) {
@@ -107,6 +110,30 @@ describe('reviewer enrolment', () => {
       .send({ reviewerTier: 'peer' });
     expect(res.status).toBe(200);
     expect(res.body.reviewerTier).toBe('peer');
+  });
+
+  test('a high score resting on no reviews does not qualify', async () => {
+    const unproven = await db.User.create({
+      name: 'SV Unproven',
+      email: `sv-unproven-${stamp}@example.com`,
+      passwordHash: await bcrypt.hash(password, 10),
+      role: 'worker',
+      trustScore: 4.9,
+      reviewCount: 0,
+    });
+    await db.UserSkill.create({
+      userId: unproven.id, skillId: skill.id,
+      verificationStatus: 'verified', proficiencyLevel: 3,
+    });
+
+    const res = await request(app)
+      .put(`/api/admin/users/${unproven.id}/reviewer-tier`)
+      .set('Authorization', `Bearer ${tokens.admin1}`)
+      .send({ reviewerTier: 'peer' });
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toMatch(/reviews/i);
+    await unproven.destroy();
   });
 
   test('someone not enrolled cannot review at all', async () => {

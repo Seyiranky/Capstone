@@ -68,6 +68,11 @@ exports.setReviewerTier = async (req, res) => {
         message: `A peer reviewer needs a trust score of at least ${skillVerificationService.PEER_MIN_TRUST_SCORE}`,
       });
     }
+    if (user.reviewCount < skillVerificationService.PEER_MIN_REVIEWS) {
+      return res.status(409).json({
+        message: `A peer reviewer needs at least ${skillVerificationService.PEER_MIN_REVIEWS} reviews, not a score resting on the prior`,
+      });
+    }
   }
 
   await user.update({ reviewerTier: reviewerTier ?? null });

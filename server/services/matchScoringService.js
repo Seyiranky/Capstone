@@ -168,6 +168,42 @@ exports.scoreWorkers = async ({ gig, workers, profileName }) => {
     .sort((a, b) => b.score - a.score);
 };
 
+/**
+ * Spread of each component across a candidate set.
+ *
+ * A weight only has ranking influence in proportion to how much its input
+ * actually varies. If trust ranges 0.2 while distance ranges 0.7, then equal
+ * weights do not mean equal influence — so any comparison of weight profiles
+ * (RQ2) has to be read against these figures rather than the weights alone.
+ */
+exports.componentVariance = (scored) => {
+  if (scored.length === 0) return {};
+  const keys = scored[0].components.map((c) => c.key);
+  return Object.fromEntries(
+    keys.map((key) => {
+      const values = scored.map((s) => s.components.find((c) => c.key === key).value);
+      const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+      const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
+      const weight = scored[0].components.find((c) => c.key === key).weight;
+      const range = Math.max(...values) - Math.min(...values);
+      return [
+        key,
+        {
+          min: Number(Math.min(...values).toFixed(3)),
+          max: Number(Math.max(...values).toFixed(3)),
+          range: Number(range.toFixed(3)),
+          mean: Number(mean.toFixed(3)),
+          stdDev: Number(Math.sqrt(variance).toFixed(3)),
+          weight,
+          // How far this component can move a score in practice, as opposed to
+          // how much weight it nominally carries.
+          effectiveInfluence: Number((weight * range).toFixed(3)),
+        },
+      ];
+    }),
+  );
+};
+
 /** Ranks every active worker as a candidate for a gig. */
 exports.rankCandidates = async ({ gig, profileName, limit }) => {
   const workers = await User.findAll({ where: { role: 'worker', status: 'active' } });
