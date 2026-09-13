@@ -45,6 +45,15 @@ const acceptanceFor = (matches) => {
     responseTime: summarise(
       responded.map((match) => (match.respondedAt - match.createdAt) / HOUR_MS),
     ),
+    // Server time measures when the platform heard; actioned time measures when
+    // the worker decided. They diverge exactly as much as connectivity did, so
+    // reporting only the first would attribute network delay to hesitation.
+    responseTimeActioned: summarise(
+      responded.map(
+        (match) => ((match.respondedOccurredAt ?? match.respondedAt) - match.createdAt) / HOUR_MS,
+      ),
+    ),
+    queuedOffline: matches.filter((match) => match.wasQueuedOffline).length,
   };
 };
 

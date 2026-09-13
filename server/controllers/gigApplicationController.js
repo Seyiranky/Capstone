@@ -8,7 +8,7 @@ const APPLICATION_INCLUDES = [
 ];
 
 exports.applyToGig = async (req, res) => {
-  const { gigId } = req.body;
+  const { gigId, occurredAt, queuedOffline } = req.body;
   if (!gigId) {
     return res.status(400).json({ message: 'gigId is required' });
   }
@@ -43,10 +43,19 @@ exports.applyToGig = async (req, res) => {
   const worker = await User.findByPk(req.user.id);
   const scored = await matchScoringService.scoreOne({ gig, worker });
 
+  const now = new Date();
+  const claimed = occurredAt ? new Date(occurredAt) : null;
+  const occurred =
+    queuedOffline && claimed && !Number.isNaN(claimed.getTime()) && claimed <= now
+      ? claimed
+      : null;
+
   const application = await GigApplication.create({
     gigId,
     workerId: req.user.id,
     status: 'pending',
+    occurredAt: occurred ?? now,
+    wasQueuedOffline: Boolean(occurred),
     rankScore: scored.score,
     scoreBreakdown: scored,
     weightProfileId: scored.weightProfile.id,

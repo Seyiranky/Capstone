@@ -132,13 +132,17 @@ module.exports = {
       });
 
       if (status === 'completed') {
+        const providerReference = `MOMO-SIM-${randomUUID()}`;
         transactions.push({
           id: randomUUID(),
           matchId,
           amount,
+          currency: 'RWF',
           status: 'confirmed',
           provider: 'simulated-momo',
-          reference: `MOMO-SIM-${randomUUID()}`,
+          reference: providerReference,
+          providerReference,
+          providerStatus: 'SUCCESSFUL',
           createdAt: finishedAt,
           updatedAt: finishedAt,
         });

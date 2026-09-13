@@ -41,6 +41,8 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: true,
       },
+      occurredAt: { type: DataTypes.DATE, allowNull: true },
+      wasQueuedOffline: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     },
     {
       sequelize,

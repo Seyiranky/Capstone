@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import OfflineBanner from '../common/OfflineBanner';
 import { Link, Outlet } from 'react-router-dom';
 import { Grid, Layout } from 'antd';
 import SideNav from './SideNav';
@@ -108,6 +109,9 @@ const AppLayout = () => {
             onSearch={() => setSearchOpen(true)}
           />
         </Header>
+        {/* Above the content, not inside it: connectivity applies to the whole
+            session, not to whichever screen happens to be open. */}
+        <OfflineBanner />
         <Content style={{ padding: screens.xs ? 16 : 28 }}>
           <div style={{ maxWidth: 1180, margin: '0 auto' }}>
             <Outlet />

@@ -34,7 +34,7 @@ const ALLOWED_TRANSITIONS = {
 };
 
 exports.updateMatchStatus = async (req, res) => {
-  const { status, declineReason } = req.body;
+  const { status, declineReason, occurredAt, queuedOffline } = req.body;
   const match = await Match.findByPk(req.params.id, { include: [{ model: Gig, as: 'gig' }] });
   if (!match) {
     return res.status(404).json({ message: 'Match not found' });
@@ -60,12 +60,23 @@ exports.updateMatchStatus = async (req, res) => {
 
   const wasPending = match.status === 'pending';
   const now = new Date();
+  // When the worker acted, if the client recorded it. Only trusted for actions
+  // that were genuinely queued offline, and never allowed to be in the future
+  // or older than the match itself — a client clock is not an authority.
+  const claimed = occurredAt ? new Date(occurredAt) : null;
+  const occurred =
+    queuedOffline && claimed && !Number.isNaN(claimed.getTime()) &&
+    claimed <= now && claimed >= match.createdAt
+      ? claimed
+      : null;
   await match.update({
     status,
     // respondedAt means specifically "the worker answered". A client cancelling
     // a pending match is a withdrawal, not a decline, and must not land in the
     // denominator of the acceptance rate.
-    ...(wasPending && isWorker ? { respondedAt: now } : {}),
+    ...(wasPending && isWorker
+      ? { respondedAt: now, respondedOccurredAt: occurred ?? now, wasQueuedOffline: Boolean(occurred) }
+      : {}),
     ...(status === 'accepted' ? { acceptedAt: now } : {}),
     ...(status === 'cancelled' && declineReason ? { declineReason } : {}),
   });

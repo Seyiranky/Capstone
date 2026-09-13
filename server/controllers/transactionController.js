@@ -47,6 +47,33 @@ exports.confirmTransaction = async (req, res) => {
   res.json(confirmed);
 };
 
+/**
+ * Records that a payment did not go through.
+ *
+ * paymentService.fail has existed since the first version with no way to reach
+ * it, so a failed payment could only ever be left sitting as 'initiated'.
+ */
+exports.failTransaction = async (req, res) => {
+  const transaction = await Transaction.findByPk(req.params.id, {
+    include: [{ model: Match, as: 'match', include: [{ model: Gig, as: 'gig' }] }],
+  });
+  if (!transaction) {
+    return res.status(404).json({ message: 'Transaction not found' });
+  }
+  if (!isPartyToMatch(transaction.match, req.user.id) && req.user.role !== 'admin') {
+    return res
+      .status(403)
+      .json({ message: 'Only the matched worker, the posting client or an admin may fail a payment' });
+  }
+
+  try {
+    const failed = await paymentService.fail(transaction.id, req.body?.reason);
+    res.json(failed);
+  } catch (error) {
+    res.status(error.status ?? 500).json({ message: error.message });
+  }
+};
+
 exports.listTransactions = async (req, res) => {
   const transactions = await Transaction.findAll({
     include: [

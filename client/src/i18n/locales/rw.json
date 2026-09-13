@@ -459,5 +459,14 @@
     "mySkills": "Ubumenyi bwawe",
     "noSkills": "Nta bumenyi bwongeweho.",
     "honestNotice": "Isoko yemeza ko usuzuma yabonye icyemezo cyawe. Ntiyemeza ko icyemezo ari ukuri, kandi ntiyigera ibivuga."
+  },
+  "offline": {
+    "offline": "Nta murandasi ufite. Igikorwa {{count}} cyabitswe, kizoherezwa nubwo uzagaruka kuri interineti.",
+    "offline_plural": "Nta murandasi ufite. Ibikorwa {{count}} byabitswe, bizoherezwa nubwo uzagaruka kuri interineti.",
+    "syncing": "Kohereza igikorwa {{count}} cyabitswe…",
+    "syncing_plural": "Kohereza ibikorwa {{count}} byabitswe…",
+    "savedOffline": "Byabitswe. Bizoherezwa igihe uzagaruka kuri interineti.",
+    "failed": "Igikorwa {{count}} cyabitswe nticyashoboye koherezwa.",
+    "failed_plural": "Ibikorwa {{count}} byabitswe ntibyashoboye koherezwa."
   }
 }

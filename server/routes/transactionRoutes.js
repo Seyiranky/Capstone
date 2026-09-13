@@ -5,6 +5,7 @@ const { verifyToken } = require('../middleware/authMiddleware');
 
 router.post('/initiate', verifyToken, transactionController.initiateTransaction);
 router.post('/:id/confirm', verifyToken, transactionController.confirmTransaction);
+router.post('/:id/fail', verifyToken, transactionController.failTransaction);
 router.get('/', verifyToken, transactionController.listTransactions);
 
 module.exports = router;

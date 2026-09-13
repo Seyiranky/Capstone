@@ -459,5 +459,14 @@
     "mySkills": "Your skills",
     "noSkills": "No skills added yet.",
     "honestNotice": "Isoko confirms a reviewer saw your certificate. It does not confirm the certificate is genuine, and it never claims to."
+  },
+  "offline": {
+    "offline": "You are offline. {{count}} action saved and will send when you reconnect.",
+    "offline_plural": "You are offline. {{count}} actions saved and will send when you reconnect.",
+    "syncing": "Sending {{count}} saved action…",
+    "syncing_plural": "Sending {{count}} saved actions…",
+    "savedOffline": "Saved. This will be sent when you are back online.",
+    "failed": "{{count}} saved action could not be sent.",
+    "failed_plural": "{{count}} saved actions could not be sent."
   }
 }

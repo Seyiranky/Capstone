@@ -85,6 +85,10 @@ jobs:
       - run: npm ci
       - run: npx eslint src
       - run: npx tsc --noEmit -p tsconfig.app.json
+      # The offline queue decides what may be replayed after a gap in
+      # connectivity. Getting that wrong duplicates a worker's actions, so it
+      # is covered and gated like server logic.
+      - run: npm test
       - run: npm run build
 
   i18n:

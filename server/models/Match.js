@@ -49,6 +49,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      // When the worker actually acted, as opposed to when the server heard
+      // about it. These differ whenever an action was taken offline.
+      respondedOccurredAt: { type: DataTypes.DATE, allowNull: true },
+      wasQueuedOffline: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
       declineReason: {
         type: DataTypes.STRING,
         allowNull: true,
