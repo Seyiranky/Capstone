@@ -6,6 +6,9 @@ const db = require('../../models');
 // The ranked arm: approving a gig invites a scored shortlist rather than
 // waiting for workers to find it themselves.
 process.env.RANKED_INVITE_LIMIT = '2';
+// Pure ranking here. The reserved slot is exercised in explorationSlot.test.js,
+// and leaving it on would make these assertions depend on which suite ran first.
+process.env.EXPLORATION_SLOTS = '0';
 
 const stamp = Date.now();
 const password = 'password123';

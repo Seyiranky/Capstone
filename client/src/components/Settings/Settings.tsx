@@ -14,6 +14,7 @@ import PageContainer from '../Layout/PageContainer';
 import ProfileEditor from './ProfileEditor';
 import ExportDataButton from './ExportDataButton';
 import PassportPanel from '../Profile/PassportPanel';
+import MySkillsPanel from '../Verification/MySkillsPanel';
 
 const Settings = () => {
   const { t, i18n } = useTranslation();
@@ -119,9 +120,19 @@ const Settings = () => {
     },
   ];
 
-  // Only workers hold a skill passport or earn through the platform.
+  // Only workers hold skills, credentials or a passport.
   if (role === 'worker') {
     items.splice(1, 0, {
+      key: 'skills',
+      label: (
+        <Space>
+          <SafetyCertificateOutlined />
+          {t('credentials.title')}
+        </Space>
+      ),
+      children: <MySkillsPanel />,
+    });
+    items.splice(2, 0, {
       key: 'passport',
       label: (
         <Space>

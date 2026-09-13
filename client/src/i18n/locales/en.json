@@ -205,7 +205,8 @@
       "distance": "Distance",
       "trust": "Trust",
       "skillFit": "Skill match",
-      "availability": "Availability"
+      "availability": "Availability",
+      "credentials": "Proof of skill"
     },
     "reason": {
       "distance": "{{km}} km away",
@@ -224,7 +225,13 @@
       "categoryOnly": "Works in this trade, no specialisation listed",
       "level": "Assessed at level {{level}}",
       "levelMeets": "Level {{level}} — meets the level asked for",
-      "levelBelow": "Level {{level}} — below the level {{required}} asked for"
+      "levelBelow": "Level {{level}} — below the level {{required}} asked for",
+      "provenance": {
+        "self_declared": "Says they do this work",
+        "document_sighted": "Certificate seen by a reviewer",
+        "peer_reviewed": "Work checked by independent reviewers",
+        "work_earned": "Proven by completed jobs on Isoko"
+      }
     },
     "weightLabel": "{{percent}}% of score",
     "contributionTooltip": "Scored {{value}} × weight {{weight}} = {{contribution}}",
@@ -232,7 +239,8 @@
     "profile": {
       "balanced": "balanced",
       "proximity_first": "closest first",
-      "trust_first": "most trusted first"
+      "trust_first": "most trusted first",
+      "credential_first": "strongest proof first"
     },
     "explainTitle": "Why this ranking",
     "rankLabel": "Rank #{{rank}}",
@@ -300,7 +308,8 @@
       "photo": "Photo",
       "video": "Video",
       "voice": "Voice",
-      "link": "Link"
+      "link": "Link",
+      "document": "Document"
     },
     "noEvidence": "No evidence attached.",
     "evidenceFingerprint": "Each file is fingerprinted on upload, so evidence cannot be swapped after a decision."
@@ -420,5 +429,35 @@
     "summaryLabel": "What you have worked on",
     "summaryPlaceholder": "For example: five years repairing phones in Nyamirambo, mostly screens and charging ports.",
     "empty": "No experience added yet."
+  },
+  "credentials": {
+    "title": "Proof of skill",
+    "tier": {
+      "self_declared": "Self-declared",
+      "document_sighted": "Certificate seen",
+      "peer_reviewed": "Independently reviewed",
+      "work_earned": "Earned through completed work"
+    },
+    "tierHelp": {
+      "self_declared": "The worker told us they do this. Nobody has checked it yet.",
+      "document_sighted": "A reviewer looked at a certificate the worker provided. That confirms the document was seen — it is not a check of whether the award itself is genuine.",
+      "peer_reviewed": "Independent reviewers examined evidence of the work and approved it. The reviewers are assigned automatically and cannot be chosen by the worker.",
+      "work_earned": "Built from jobs completed and reviewed on Isoko."
+    },
+    "addTitle": "Add a certificate",
+    "addHint": "Photograph a paper certificate or upload a PDF. A reviewer will confirm they have seen it. We cannot verify the award itself.",
+    "certTitleLabel": "What the certificate is for",
+    "certTitlePlaceholder": "For example: TVET Level 3 in Electronics",
+    "issuerLabel": "Who issued it",
+    "issuerPlaceholder": "For example: Workforce Development Authority",
+    "issuedOnLabel": "Year issued (optional)",
+    "submit": "Send for review",
+    "declareTitle": "Add a skill you have",
+    "declareHint": "Tell clients what you do. You can add proof later — a skill with no proof still shows, marked as self-declared.",
+    "declareSubmit": "Add skill",
+    "declared": "Skill added.",
+    "mySkills": "Your skills",
+    "noSkills": "No skills added yet.",
+    "honestNotice": "Isoko confirms a reviewer saw your certificate. It does not confirm the certificate is genuine, and it never claims to."
   }
 }

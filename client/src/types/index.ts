@@ -54,6 +54,8 @@ export interface User {
   reviewCount?: number;
   completedJobCount?: number;
   preferredLanguage?: 'en' | 'rw';
+  /** RQ3 arm. Null for workers, who see their own provenance either way. */
+  experimentArm?: 'provenance' | 'plain' | null;
   experienceSummary?: string | null;
   yearsExperience?: number | null;
   phone?: string | null;
@@ -87,6 +89,8 @@ export interface SkillTask {
   reviewedAt: string | null;
   requiredApprovals?: number;
   disagreementFlag?: boolean;
+  kind?: SkillTaskKind;
+  claim?: { title: string; issuer: string; issuedOn?: string | null } | null;
   createdAt: string;
   skill?: Skill;
   worker?: User;
@@ -202,7 +206,12 @@ export interface PublicProfile {
 
 export type ReviewerTier = 'admin' | 'peer';
 
-export type EvidenceKind = 'photo' | 'video' | 'voice' | 'link';
+export type EvidenceKind = 'photo' | 'video' | 'voice' | 'link' | 'document';
+
+/** How a competence claim was established, ascending in credibility. */
+export type Provenance = 'self_declared' | 'document_sighted' | 'peer_reviewed' | 'work_earned';
+
+export type SkillTaskKind = 'demonstration' | 'certificate';
 
 export interface SkillTaskEvidence {
   id: string;
@@ -324,6 +333,10 @@ export interface UserSkill {
   skillId: string;
   proficiencyLevel: number;
   verificationStatus: 'unverified' | 'pending' | 'verified';
+  provenance?: Provenance;
+  provenanceDetail?: Record<string, unknown> | null;
+  credentialStrength?: number;
+  selfDeclaredAt?: string | null;
   skill?: Skill;
 }
 

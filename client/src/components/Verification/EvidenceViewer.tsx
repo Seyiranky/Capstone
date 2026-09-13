@@ -33,6 +33,19 @@ const EvidenceViewer = ({ evidence }: { evidence?: SkillTaskEvidence[] }) => {
             {item.kind === 'voice' && (
               <audio src={src} controls style={{ width: '100%', maxWidth: 320 }} />
             )}
+            {item.kind === 'document' && (
+              <div>
+                {item.mimeType === 'application/pdf' ? (
+                  <a href={src} target="_blank" rel="noreferrer">
+                    {t('verification.kind.document')}
+                  </a>
+                ) : (
+                  // Most certificates here are photographed paper, so the
+                  // document is an image and should simply be looked at.
+                  <Image src={src} alt="" style={{ maxHeight: 260, borderRadius: 6 }} />
+                )}
+              </div>
+            )}
             {item.kind === 'link' && (
               <div>
                 <a href={src} target="_blank" rel="noreferrer">

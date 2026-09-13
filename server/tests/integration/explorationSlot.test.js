@@ -115,7 +115,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  delete process.env.EXPLORATION_SLOTS;
+  // Restored rather than deleted: deleting reinstates the default, which is not
+  // what a later suite necessarily assumed.
+  process.env.EXPLORATION_SLOTS = '0';
   await db.User.destroy({ where: { email: Object.values(emails) } });
   await db.sequelize.close();
 });

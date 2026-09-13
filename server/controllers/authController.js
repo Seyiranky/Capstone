@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
+const { Op } = require('sequelize');
 const { User } = require('../models');
 
 const SALT_ROUNDS = 10;
@@ -12,6 +13,29 @@ const signToken = (user) =>
   jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
+
+/**
+ * Assigns a client to one side of the RQ3 comparison.
+ *
+ * RQ3 asks whether structured, verified skill-proof raises a client's
+ * willingness to hire a stranger. Answering it needs clients who see how each
+ * claim was established and clients who see only verified-or-not. Assignment
+ * happens at registration because an arm added later cannot describe the
+ * decisions already made without it.
+ *
+ * Alternating rather than a coin flip. With roughly a dozen clients in the
+ * pilot, independent randomisation can easily land 9-3 — eight flips during
+ * testing produced 7-1 — and a between-subjects comparison that lopsided has
+ * little power left. Alternating guarantees the arms stay balanced to within
+ * one participant.
+ *
+ * Workers are unassigned: they see their own provenance either way.
+ */
+const assignExperimentArm = async (role) => {
+  if (role !== 'client') return null;
+  const assigned = await User.count({ where: { experimentArm: { [Op.not]: null } } });
+  return assigned % 2 === 0 ? 'provenance' : 'plain';
+};
 
 exports.register = async (req, res) => {
   const { name, email, password, role } = req.body;
@@ -29,7 +53,13 @@ exports.register = async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = await User.create({ name, email, passwordHash, role });
+  const user = await User.create({
+    name,
+    email,
+    passwordHash,
+    role,
+    experimentArm: await assignExperimentArm(role),
+  });
 
   const token = signToken(user);
   res.status(201).json({ token, userId: user.id, role: user.role });

@@ -6,6 +6,11 @@ const db = require('../../models');
 
 // Rotation is what this suite is checking, so the pool must be big enough for
 // a placement to be a real choice rather than the only option.
+// Stated rather than inherited: process.env is shared across suites, so a
+// value left behind by another file would silently change what is invited here.
+process.env.RANKED_INVITE_LIMIT = '0';
+process.env.EXPLORATION_SLOTS = '0';
+
 const stamp = Date.now();
 const password = 'password123';
 const emails = {

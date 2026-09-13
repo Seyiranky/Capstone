@@ -62,6 +62,19 @@ exports.getGig = async (req, res) => {
 };
 
 /**
+ * Removes provenance detail for the control arm.
+ *
+ * The ranking itself is untouched — both arms are matched identically — so the
+ * comparison isolates what the client was told, not what the algorithm did.
+ */
+const stripProvenance = (candidates) =>
+  candidates.map((candidate) => ({
+    ...candidate,
+    provenance: null,
+    reasons: candidate.reasons.filter((reason) => !reason.key.startsWith('match.reason.provenance.')),
+  }));
+
+/**
  * Ranked candidate workers for a gig, each with the full score breakdown.
  *
  * The `profile` query parameter re-ranks with a different weighting, which is
@@ -89,10 +102,17 @@ exports.listCandidates = async (req, res) => {
     profileName: req.query.profile,
   });
 
+  // RQ3's manipulation is applied here rather than in the UI, so a client in
+  // the plain arm is never sent provenance detail at all and the arm cannot be
+  // defeated by reading the network tab.
+  const viewer = await User.findByPk(req.user.id, { attributes: ['experimentArm'] });
+  const shown = viewer?.experimentArm === 'plain' ? stripProvenance(ranked) : ranked;
+
   res.json({
     gigId: gig.id,
+    experimentArm: viewer?.experimentArm ?? null,
     componentVariance: matchScoringService.componentVariance(ranked),
-    candidates: limit ? ranked.slice(0, limit) : ranked,
+    candidates: limit ? shown.slice(0, limit) : shown,
   });
 };
 

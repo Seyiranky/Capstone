@@ -205,7 +205,8 @@
       "distance": "Intera",
       "trust": "Ikizere",
       "skillFit": "Uko ubumenyi buhuye",
-      "availability": "Kuboneka"
+      "availability": "Kuboneka",
+      "credentials": "Ibimenyetso by’ubumenyi"
     },
     "reason": {
       "distance": "Ku ntera ya km {{km}}",
@@ -224,7 +225,13 @@
       "categoryOnly": "Akora uyu mwuga, nta bwihariye bwatanzwe",
       "level": "Yasuzumwe ku rwego {{level}}",
       "levelMeets": "Urwego {{level}} — ruhuye n’urwasabwe",
-      "levelBelow": "Urwego {{level}} — ruri hasi y’urwego {{required}} rwasabwe"
+      "levelBelow": "Urwego {{level}} — ruri hasi y’urwego {{required}} rwasabwe",
+      "provenance": {
+        "self_declared": "Avuga ko akora aka kazi",
+        "document_sighted": "Icyemezo cyabonywe n’usuzuma",
+        "peer_reviewed": "Akazi kasuzumwe n’abasuzuma bigenga",
+        "work_earned": "Byemejwe n’akazi yarangije kuri Isoko"
+      }
     },
     "weightLabel": "{{percent}}% by’amanota",
     "contributionTooltip": "Amanota {{value}} × uburemere {{weight}} = {{contribution}}",
@@ -232,7 +239,8 @@
     "profile": {
       "balanced": "bunganye",
       "proximity_first": "abegereye mbere",
-      "trust_first": "abizewe mbere"
+      "trust_first": "abizewe mbere",
+      "credential_first": "ibimenyetso bikomeye mbere"
     },
     "explainTitle": "Impamvu y’uru rutonde",
     "rankLabel": "Umwanya wa {{rank}}",
@@ -300,7 +308,8 @@
       "photo": "Ifoto",
       "video": "Videwo",
       "voice": "Ijwi",
-      "link": "Umurongo"
+      "link": "Umurongo",
+      "document": "Inyandiko"
     },
     "noEvidence": "Nta bimenyetso byashyizweho.",
     "evidenceFingerprint": "Buri dosiye ifite ikimenyetso cyayo bwite, bityo ibimenyetso ntibishobora guhindurwa nyuma y'icyemezo."
@@ -420,5 +429,35 @@
     "summaryLabel": "Ibyo wakoze",
     "summaryPlaceholder": "Urugero: imyaka itanu nsana telefoni i Nyamirambo, cyane cyane ibirahure n’aho bashyira umuriro.",
     "empty": "Nta burambe bwatanzwe."
+  },
+  "credentials": {
+    "title": "Ibimenyetso by’ubumenyi",
+    "tier": {
+      "self_declared": "Yivugiye",
+      "document_sighted": "Icyemezo cyabonywe",
+      "peer_reviewed": "Byasuzumwe n’abigenga",
+      "work_earned": "Byabonetse binyuze mu kazi karangiye"
+    },
+    "tierHelp": {
+      "self_declared": "Umukozi yatubwiye ko akora ibi. Nta wurabigenzura.",
+      "document_sighted": "Usuzuma yarebye icyemezo umukozi yatanze. Ibyo byemeza ko inyandiko yabonywe — si ukugenzura niba icyemezo ubwacyo ari ukuri.",
+      "peer_reviewed": "Abasuzuma bigenga barebye ibimenyetso by’akazi barabyemeza. Abasuzuma bahabwa akazi mu buryo bwikora, umukozi ntashobora kubatoranya.",
+      "work_earned": "Byubatswe ku kazi karangiye kandi gasuzumwe kuri Isoko."
+    },
+    "addTitle": "Ongeraho icyemezo",
+    "addHint": "Fata ifoto y’icyemezo cyanditse cyangwa ushyireho PDF. Usuzuma azemeza ko yakibonye. Ntidushobora kugenzura icyemezo ubwacyo.",
+    "certTitleLabel": "Icyemezo ni icy’iki",
+    "certTitlePlaceholder": "Urugero: TVET Urwego rwa 3 muri Electronics",
+    "issuerLabel": "Ni nde wagitanze",
+    "issuerPlaceholder": "Urugero: Workforce Development Authority",
+    "issuedOnLabel": "Umwaka cyatangiwe (si ngombwa)",
+    "submit": "Ohereza gusuzumwa",
+    "declareTitle": "Ongeraho ubumenyi ufite",
+    "declareHint": "Bwira abakiriya icyo ukora. Ushobora kongeraho ibimenyetso nyuma — ubumenyi butagira ibimenyetso buracyagaragara, bwanditseho ko wivugiye.",
+    "declareSubmit": "Ongeraho ubumenyi",
+    "declared": "Ubumenyi bwongeweho.",
+    "mySkills": "Ubumenyi bwawe",
+    "noSkills": "Nta bumenyi bwongeweho.",
+    "honestNotice": "Isoko yemeza ko usuzuma yabonye icyemezo cyawe. Ntiyemeza ko icyemezo ari ukuri, kandi ntiyigera ibivuga."
   }
 }

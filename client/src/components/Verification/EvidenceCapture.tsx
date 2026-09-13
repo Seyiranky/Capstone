@@ -3,7 +3,7 @@ import { Alert, Button, Flex, Space, Tag, Typography } from 'antd';
 import { AudioOutlined, CameraOutlined, DeleteOutlined, StopOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
-const MAX_FILES = 5;
+const DEFAULT_MAX_FILES = 5;
 
 const prettySize = (bytes: number) =>
   bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
@@ -19,9 +19,22 @@ const prettySize = (bytes: number) =>
 const EvidenceCapture = ({
   files,
   onChange,
+  // Defaults preserve the demonstration flow exactly; a certificate passes
+  // different ones rather than forking the component, so the microphone
+  // cleanup and Android `capture` behaviour stay in one place.
+  accept = 'image/*,video/*',
+  max = DEFAULT_MAX_FILES,
+  photoLabelKey = 'verification.addPhoto',
+  hintKey = 'verification.captureHint',
+  allowVoice = true,
 }: {
   files: File[];
   onChange: (files: File[]) => void;
+  accept?: string;
+  max?: number;
+  photoLabelKey?: string;
+  hintKey?: string;
+  allowVoice?: boolean;
 }) => {
   const { t } = useTranslation();
   const photoInput = useRef<HTMLInputElement>(null);
@@ -47,9 +60,9 @@ const EvidenceCapture = ({
   );
 
   const addFiles = (incoming: File[]) => {
-    const room = MAX_FILES - files.length;
+    const room = max - files.length;
     if (room <= 0) {
-      setError(t('verification.tooManyFiles', { max: MAX_FILES }));
+      setError(t('verification.tooManyFiles', { max }));
       return;
     }
     setError(null);
@@ -86,23 +99,23 @@ const EvidenceCapture = ({
     <Space direction="vertical" size={10} style={{ width: '100%' }}>
       <Flex gap={8} wrap>
         <Button icon={<CameraOutlined />} onClick={() => photoInput.current?.click()}>
-          {t('verification.addPhoto')}
+          {t(photoLabelKey)}
         </Button>
-        {recording ? (
+        {allowVoice && recording ? (
           <Button danger icon={<StopOutlined />} onClick={stopRecording}>
             {t('verification.stopRecording', { seconds })}
           </Button>
-        ) : (
+        ) : allowVoice ? (
           <Button icon={<AudioOutlined />} onClick={startRecording}>
             {t('verification.recordVoice')}
           </Button>
-        )}
+        ) : null}
       </Flex>
 
       <input
         ref={photoInput}
         type="file"
-        accept="image/*,video/*"
+        accept={accept}
         // `capture` opens the camera directly on Android, which is the
         // difference between one tap and a file-manager hunt.
         capture="environment"
@@ -115,7 +128,7 @@ const EvidenceCapture = ({
       />
 
       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-        {t('verification.captureHint')}
+        {t(hintKey)}
       </Typography.Text>
 
       {error && <Alert type="warning" showIcon message={error} />}
