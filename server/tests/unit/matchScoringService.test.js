@@ -39,11 +39,28 @@ const worker = (overrides = {}) => ({
   ...overrides,
 });
 
-const verified = { verificationStatus: 'verified' };
+// The gig asks for one specialisation beneath a category, which is what lets
+// exact / sibling / category-only matching be told apart.
+const GIG_SKILL = { id: 'skill-bridal', name: 'Bridal & occasion wear', parentId: 'cat-tailoring' };
+const SIBLING_SKILL = { id: 'skill-uniforms', name: 'School uniforms', parentId: 'cat-tailoring' };
+const CATEGORY_SKILL = { id: 'cat-tailoring', name: 'Tailoring', parentId: null };
+const UNRELATED_SKILL = { id: 'skill-laptops', name: 'Laptop repair', parentId: 'cat-electronics' };
+
+/** A worker's skill row as the scorer receives it, with its Skill included. */
+const userSkill = (skill, overrides = {}) => ({
+  skillId: skill.id,
+  skill,
+  verificationStatus: 'verified',
+  proficiencyLevel: 3,
+  ...overrides,
+});
+
+const verified = userSkill(GIG_SKILL);
 
 const score = (args) =>
   matchScoringService.scorePair({
     gig: GIG,
+    gigSkill: GIG_SKILL,
     profile: BALANCED,
     workerSkill: verified,
     activeMatches: 0,
@@ -94,22 +111,105 @@ describe('distance scoring', () => {
   });
 });
 
+const fitFor = (workerSkill, gigOverrides = {}) =>
+  componentValue(
+    score({ worker: worker(), workerSkill, gig: { ...GIG, ...gigOverrides } }),
+    'skillFit',
+  );
+
 describe('skill fit', () => {
   test('verified outranks pending outranks claimed outranks absent', () => {
-    const fit = (workerSkill) => componentValue(score({ worker: worker(), workerSkill }), 'skillFit');
-    expect(fit({ verificationStatus: 'verified' })).toBeGreaterThan(
-      fit({ verificationStatus: 'pending' }),
+    expect(fitFor(userSkill(GIG_SKILL, { verificationStatus: 'verified' }))).toBeGreaterThan(
+      fitFor(userSkill(GIG_SKILL, { verificationStatus: 'pending' })),
     );
-    expect(fit({ verificationStatus: 'pending' })).toBeGreaterThan(
-      fit({ verificationStatus: 'unverified' }),
+    expect(fitFor(userSkill(GIG_SKILL, { verificationStatus: 'pending' }))).toBeGreaterThan(
+      fitFor(userSkill(GIG_SKILL, { verificationStatus: 'unverified' })),
     );
-    expect(fit(null)).toBe(0);
+    expect(fitFor(null)).toBe(0);
   });
 
   test('a worker without the skill can still apply but is never invited', () => {
     const result = score({ worker: worker(), workerSkill: null });
     expect(result.eligibleForInvite).toBe(false);
     expect(result.reasons.map((r) => r.key)).toContain('match.reason.skill.absent');
+  });
+});
+
+describe('specialisation matching', () => {
+  test('the exact specialisation beats a sibling, which beats the category alone', () => {
+    const exact = fitFor(userSkill(GIG_SKILL));
+    const sibling = fitFor(userSkill(SIBLING_SKILL));
+    const categoryOnly = fitFor(userSkill(CATEGORY_SKILL));
+
+    expect(exact).toBeGreaterThan(sibling);
+    expect(sibling).toBeGreaterThan(categoryOnly);
+    expect(categoryOnly).toBeGreaterThan(0);
+  });
+
+  test('a sibling specialisation is still a real candidate, not an exclusion', () => {
+    const result = score({ worker: worker(), workerSkill: userSkill(SIBLING_SKILL) });
+    expect(result.eligibleForInvite).toBe(true);
+    expect(result.reasons.map((r) => r.key)).toContain('match.reason.relatedSpecialisation');
+  });
+
+  test('a skill from another category does not match at all', () => {
+    const result = score({ worker: worker(), workerSkill: userSkill(UNRELATED_SKILL) });
+    expect(componentValue(result, 'skillFit')).toBe(0);
+    expect(result.eligibleForInvite).toBe(false);
+  });
+});
+
+describe('proficiency level', () => {
+  test('level now separates two otherwise identical verified workers', () => {
+    // Until this change a level-5 and a level-1 verified worker ranked the same.
+    const high = fitFor(userSkill(GIG_SKILL, { proficiencyLevel: 5 }));
+    const low = fitFor(userSkill(GIG_SKILL, { proficiencyLevel: 1 }));
+    expect(high).toBeGreaterThan(low);
+  });
+
+  test('meeting a stated requirement scores full marks, falling short is proportional', () => {
+    const meets = fitFor(userSkill(GIG_SKILL, { proficiencyLevel: 4 }), { requiredLevel: 4 });
+    const under = fitFor(userSkill(GIG_SKILL, { proficiencyLevel: 2 }), { requiredLevel: 4 });
+    expect(meets).toBeCloseTo(1, 5);
+    expect(under).toBeCloseTo(0.5, 5);
+  });
+
+  test('exceeding the requirement is not rewarded beyond meeting it', () => {
+    const meets = fitFor(userSkill(GIG_SKILL, { proficiencyLevel: 4 }), { requiredLevel: 4 });
+    const exceeds = fitFor(userSkill(GIG_SKILL, { proficiencyLevel: 5 }), { requiredLevel: 4 });
+    expect(exceeds).toBeCloseTo(meets, 5);
+  });
+
+  test('an unset requirement penalises nobody', () => {
+    const result = score({ worker: worker(), gig: { ...GIG, requiredLevel: null } });
+    expect(componentValue(result, 'skillFit')).toBeGreaterThan(0);
+    expect(result.reasons.map((r) => r.key)).not.toContain('match.reason.levelBelow');
+  });
+
+  test('a self-declared level cannot clear a client requirement', () => {
+    // Otherwise a worker awards themselves level 5, clears every bar, and the
+    // field stops carrying information within a week.
+    const selfDeclared = fitFor(
+      userSkill(GIG_SKILL, { verificationStatus: 'unverified', proficiencyLevel: 5 }),
+      { requiredLevel: 4 },
+    );
+    const honestBeginner = fitFor(
+      userSkill(GIG_SKILL, { verificationStatus: 'unverified', proficiencyLevel: 1 }),
+      { requiredLevel: 4 },
+    );
+    expect(selfDeclared).toBeCloseTo(honestBeginner, 10);
+  });
+
+  test('a client is told when a worker falls below the bar they set', () => {
+    const result = score({
+      worker: worker(),
+      workerSkill: userSkill(GIG_SKILL, { proficiencyLevel: 2 }),
+      gig: { ...GIG, requiredLevel: 5 },
+    });
+    const keys = result.reasons.map((r) => r.key);
+    expect(keys).toContain('match.reason.levelBelow');
+    // Down-ranked, never hidden.
+    expect(result.eligibleForInvite).toBe(true);
   });
 });
 

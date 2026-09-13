@@ -59,6 +59,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      // Optional. Scored as a soft penalty, never used to filter candidates.
+      requiredLevel: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        validate: { min: 1, max: 5 },
+      },
     },
     {
       sequelize,

@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { User, UserSkill, Match, MatchWeightProfile } = require('../models');
+const { User, UserSkill, Skill, Match, MatchWeightProfile } = require('../models');
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -16,12 +16,67 @@ const FALLBACK_PROFILE = {
 // Verified beats claimed beats absent. A worker with no record of the skill is
 // still allowed to apply — they simply score zero here and are told why — but
 // they are never proactively invited.
+//
+// This status factor moves out of skillFit and into a credentials component in
+// the next phase, so that "does this worker do this work" and "how well
+// established is the claim" stop being conflated.
 const SKILL_FIT_BY_STATUS = {
   verified: 1,
   pending: 0.6,
   unverified: 0.4,
 };
 const SKILL_FIT_ABSENT = 0;
+
+// How closely the worker's skill matches what the gig asked for. A sibling
+// specialisation still scores well: a tailor who does school uniforms can
+// plausibly hem curtains, and excluding them would be a filter by another name.
+const SPECIFICITY = {
+  exact: 1,
+  sibling: 0.7,
+  parentOnly: 0.5,
+};
+
+/**
+ * How well a worker's proficiency meets what the gig asked for.
+ *
+ * With no stated requirement, level still matters a little — a level-5 and a
+ * level-1 worker should not rank identically, which they did until now. With a
+ * requirement, the shortfall is proportional and never hard-excludes.
+ */
+const levelFit = (effectiveLevel, requiredLevel) => {
+  if (!requiredLevel) return clamp(0.7 + 0.06 * effectiveLevel, 0, 1);
+  return clamp(effectiveLevel / requiredLevel, 0, 1);
+};
+
+/**
+ * The level a client's stated requirement is measured against.
+ *
+ * Only a reviewer-set level counts. A worker who self-declares a skill can
+ * claim any level they like, and if that cleared a client's bar the field would
+ * mean nothing within a week — reviewer-set is the only reason `proficiencyLevel`
+ * carries information.
+ */
+const effectiveLevelFor = (workerSkill) =>
+  workerSkill?.verificationStatus === 'verified' ? (workerSkill.proficiencyLevel ?? 1) : 1;
+
+/** Exact specialisation, sibling under the same parent, or category-level only. */
+const specificityFor = (workerSkill, gigSkill) => {
+  if (!workerSkill || !gigSkill) return null;
+  if (workerSkill.skillId === gigSkill.id) return SPECIFICITY.exact;
+  // Both are specialisations beneath the same category.
+  if (
+    workerSkill.skill?.parentId &&
+    gigSkill.parentId &&
+    workerSkill.skill.parentId === gigSkill.parentId
+  ) {
+    return SPECIFICITY.sibling;
+  }
+  // One side named the category, the other a specialisation within it.
+  if (workerSkill.skill?.parentId === gigSkill.id || workerSkill.skillId === gigSkill.parentId) {
+    return SPECIFICITY.parentOnly;
+  }
+  return null;
+};
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const toRad = (deg) => (deg * Math.PI) / 180;
@@ -65,7 +120,7 @@ exports.resolveProfile = async (name) => {
  * show the explanation in the viewer's own language — a worker reading
  * Kinyarwanda must get the same account of the ranking as one reading English.
  */
-exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches }) => {
+exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkill }) => {
   const weights = profile.weights;
 
   const km =
@@ -73,9 +128,14 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches }) => {
       ? haversineKm(worker.locationLat, worker.locationLng, gig.locationLat, gig.locationLng)
       : null;
 
-  const fit = workerSkill
+  const specificity = specificityFor(workerSkill, gigSkill ?? { id: gig.skillId, parentId: null });
+  const status = workerSkill
     ? SKILL_FIT_BY_STATUS[workerSkill.verificationStatus] ?? SKILL_FIT_ABSENT
     : SKILL_FIT_ABSENT;
+  const effectiveLevel = effectiveLevelFor(workerSkill);
+  const level = levelFit(effectiveLevel, gig.requiredLevel);
+
+  const fit = specificity === null ? SKILL_FIT_ABSENT : specificity * level * status;
 
   const raw = {
     // No saved location is scored as neutral rather than zero, so a worker who
@@ -86,12 +146,17 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches }) => {
     availability: availabilityScore(activeMatches),
   };
 
-  const components = Object.entries(weights).map(([key, weight]) => ({
-    key,
-    weight,
-    value: raw[key],
-    contribution: weight * raw[key],
-  }));
+  // Only weights with a matching signal become components. A profile carrying a
+  // key this version does not compute would otherwise contribute NaN and
+  // silently poison every total.
+  const components = Object.entries(weights)
+    .filter(([key]) => raw[key] !== undefined)
+    .map(([key, weight]) => ({
+      key,
+      weight,
+      value: raw[key],
+      contribution: weight * raw[key],
+    }));
 
   const total = components.reduce((sum, component) => sum + component.contribution, 0);
   const beyondRange = km !== null && km > profile.maxDistanceKm;
@@ -110,8 +175,29 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches }) => {
     key: workerSkill
       ? `match.reason.skill.${workerSkill.verificationStatus}`
       : 'match.reason.skill.absent',
-    params: {},
+    params: { skill: workerSkill?.skill?.name ?? '' },
   });
+
+  if (specificity === SPECIFICITY.sibling) {
+    reasons.push({ key: 'match.reason.relatedSpecialisation', params: {} });
+  } else if (specificity === SPECIFICITY.parentOnly) {
+    reasons.push({ key: 'match.reason.categoryOnly', params: {} });
+  }
+
+  // A client who set a bar is told when someone falls under it, rather than the
+  // worker quietly sinking down the list.
+  if (gig.requiredLevel) {
+    reasons.push({
+      key:
+        effectiveLevel >= gig.requiredLevel
+          ? 'match.reason.levelMeets'
+          : 'match.reason.levelBelow',
+      params: { level: effectiveLevel, required: gig.requiredLevel },
+    });
+  } else if (workerSkill?.verificationStatus === 'verified') {
+    reasons.push({ key: 'match.reason.level', params: { level: effectiveLevel } });
+  }
+
   if (activeMatches > 0) {
     reasons.push({ key: 'match.reason.busy', params: { activeMatches } });
   }
@@ -140,19 +226,54 @@ const activeMatchCounts = async (workerIds) => {
   );
 };
 
-const skillsByWorker = async (workerIds, skillId) => {
+/**
+ * The gig's skill plus everything adjacent to it.
+ *
+ * A worker whose specialisation sits beside the one requested is a real
+ * candidate, so the lookup has to span the family rather than demand an exact
+ * id — otherwise sibling scoring could never fire.
+ */
+const skillFamily = async (gigSkill) => {
+  if (!gigSkill) return [];
+  const parentId = gigSkill.parentId ?? gigSkill.id;
+  const relatives = await Skill.findAll({
+    where: { [Op.or]: [{ id: parentId }, { parentId }] },
+    attributes: ['id'],
+  });
+  return relatives.map((row) => row.id);
+};
+
+/** Each worker's best-matching skill for this gig, richest match first. */
+const skillsByWorker = async (workerIds, gigSkill) => {
   if (workerIds.length === 0) return new Map();
-  const rows = await UserSkill.findAll({ where: { userId: { [Op.in]: workerIds }, skillId } });
-  return new Map(rows.map((row) => [row.userId, row]));
+  const familyIds = await skillFamily(gigSkill);
+  if (familyIds.length === 0) return new Map();
+
+  const rows = await UserSkill.findAll({
+    where: { userId: { [Op.in]: workerIds }, skillId: { [Op.in]: familyIds } },
+    include: [{ model: Skill, as: 'skill', attributes: ['id', 'name', 'parentId', 'category'] }],
+  });
+
+  const best = new Map();
+  for (const row of rows) {
+    const rank = specificityFor(row, gigSkill) ?? 0;
+    const current = best.get(row.userId);
+    if (!current || rank > (specificityFor(current, gigSkill) ?? 0)) {
+      best.set(row.userId, row);
+    }
+  }
+  return best;
 };
 
 /** Scores specific workers against a gig. */
 exports.scoreWorkers = async ({ gig, workers, profileName }) => {
   const profile = await exports.resolveProfile(profileName);
   const workerIds = workers.map((worker) => worker.id);
+  const gigSkill =
+    gig.skill ?? (await Skill.findByPk(gig.skillId, { attributes: ['id', 'name', 'parentId'] }));
   const [counts, skills] = await Promise.all([
     activeMatchCounts(workerIds),
-    skillsByWorker(workerIds, gig.skillId),
+    skillsByWorker(workerIds, gigSkill),
   ]);
 
   return workers
@@ -160,6 +281,7 @@ exports.scoreWorkers = async ({ gig, workers, profileName }) => {
       exports.scorePair({
         worker,
         gig,
+        gigSkill,
         profile,
         workerSkill: skills.get(worker.id) || null,
         activeMatches: counts.get(worker.id) || 0,
