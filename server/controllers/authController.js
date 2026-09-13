@@ -2,8 +2,8 @@ const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
-const { Op } = require('sequelize');
 const { User } = require('../models');
+const allocationService = require('../services/allocationService');
 
 const SALT_ROUNDS = 10;
 const REGISTERABLE_ROLES = ['worker', 'client'];
@@ -15,26 +15,31 @@ const signToken = (user) =>
   });
 
 /**
- * Assigns a client to one side of the RQ3 comparison.
+ * Takes the next arm from the pre-generated randomisation list.
  *
  * RQ3 asks whether structured, verified skill-proof raises a client's
- * willingness to hire a stranger. Answering it needs clients who see how each
- * claim was established and clients who see only verified-or-not. Assignment
- * happens at registration because an arm added later cannot describe the
- * decisions already made without it.
+ * willingness to hire a stranger, which needs clients who see how each claim
+ * was established and clients who see only verified-or-not. Assignment happens
+ * at registration because an arm added later cannot describe the decisions
+ * already made without it.
  *
- * Alternating rather than a coin flip. With roughly a dozen clients in the
- * pilot, independent randomisation can easily land 9-3 — eight flips during
- * testing produced 7-1 — and a between-subjects comparison that lopsided has
- * little power left. Alternating guarantees the arms stay balanced to within
- * one participant.
+ * The sequence is fixed before recruitment rather than decided here. Two
+ * earlier attempts were worse: an independent coin flip produced a 7-1 split
+ * across eight registrations in testing, which would gut a comparison of this
+ * size; strict alternation fixed the balance but made every assignment
+ * predictable, and in a pilot where the researcher personally registers
+ * participants in person, a predictable arm is an invitation to select who
+ * enrols next. A permuted-block list claimed atomically keeps the balance
+ * without telling anyone what is coming.
  *
- * Workers are unassigned: they see their own provenance either way.
+ * Returns null when the list runs out, rather than inventing an arm: an
+ * unallocated client is honest data, a fabricated one is not.
+ *
+ * Workers are unassigned — they see their own provenance either way.
  */
-const assignExperimentArm = async (role) => {
+const assignExperimentArm = async (role, userId) => {
   if (role !== 'client') return null;
-  const assigned = await User.count({ where: { experimentArm: { [Op.not]: null } } });
-  return assigned % 2 === 0 ? 'provenance' : 'plain';
+  return allocationService.claimArm(userId);
 };
 
 exports.register = async (req, res) => {
@@ -53,13 +58,12 @@ exports.register = async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = await User.create({
-    name,
-    email,
-    passwordHash,
-    role,
-    experimentArm: await assignExperimentArm(role),
-  });
+  const user = await User.create({ name, email, passwordHash, role });
+
+  const arm = await assignExperimentArm(role, user.id);
+  if (arm) {
+    await user.update({ experimentArm: arm });
+  }
 
   const token = signToken(user);
   res.status(201).json({ token, userId: user.id, role: user.role });

@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { Match, Gig, SkillTask, User } = require('../models');
 const { PEER_MIN_REVIEWS } = require('./skillVerificationService');
+const allocationService = require('./allocationService');
 
 const HOUR_MS = 1000 * 60 * 60;
 
@@ -168,6 +169,9 @@ exports.collect = async ({ from, to } = {}) => {
       byWeightProfile: mapValues(groupBy(matches, (m) => m.weightProfileId), acceptanceFor),
     },
     newcomerAccess: await newcomerAccess(matches),
+    // Surfaced so arm balance and remaining capacity are visible during the
+    // pilot rather than discovered when the list runs out mid-recruitment.
+    experimentAllocation: await allocationService.status(),
     timeToFirstMatch: {
       gigsOpened: gigs.length,
       openedNeverMatched,
