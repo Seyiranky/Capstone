@@ -99,6 +99,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      yearsExperience: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        validate: { min: 0, max: 60 },
+      },
       cvUrl: {
         type: DataTypes.STRING,
         allowNull: true,

@@ -15,6 +15,7 @@ const UPDATABLE_FIELDS = [
   'locationLng',
   'preferredLanguage',
   'experienceSummary',
+  'yearsExperience',
   'cvUrl',
   'certificateUrl',
   'phone',
@@ -51,6 +52,7 @@ exports.getPublicProfile = async (req, res) => {
     role: user.role,
     bio: user.bio,
     experienceSummary: user.experienceSummary,
+    yearsExperience: user.yearsExperience,
     trustScore: user.trustScore,
     // Exposed publicly on purpose: a score a client cannot interrogate is the
     // opaque-reputation problem this platform is meant to avoid.

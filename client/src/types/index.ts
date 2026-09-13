@@ -55,6 +55,7 @@ export interface User {
   completedJobCount?: number;
   preferredLanguage?: 'en' | 'rw';
   experienceSummary?: string | null;
+  yearsExperience?: number | null;
   phone?: string | null;
   smsNotificationsEnabled?: boolean;
   emailNotificationsEnabled?: boolean;
@@ -66,6 +67,11 @@ export interface Skill {
   category: SkillCategory;
   name: string;
   description?: string | null;
+  /** Null for a category, set for a specialisation beneath one. */
+  parentId?: string | null;
+  kind?: 'category' | 'specialisation';
+  sortOrder?: number;
+  children?: Skill[];
 }
 
 export type SkillTaskStatus = 'pending' | 'approved' | 'rejected';
@@ -110,6 +116,8 @@ export interface Gig {
   locationLat: number;
   locationLng: number;
   status: GigStatus;
+  /** Optional bar set by the client. Soft: below it ranks lower, never hidden. */
+  requiredLevel?: number | null;
   imageUrl?: string | null;
   createdAt: string;
   client?: User;
@@ -184,6 +192,7 @@ export interface PublicProfile {
   role: Role;
   bio?: string | null;
   experienceSummary?: string | null;
+  yearsExperience?: number | null;
   trustScore: number;
   trustScoreBreakdown?: TrustScoreBreakdown | null;
   reviewCount?: number;

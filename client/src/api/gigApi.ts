@@ -6,6 +6,8 @@ export interface CreateGigPayload {
   description: string;
   budget: number;
   skillId: string;
+  /** Optional bar. Workers below it rank lower but are never hidden. */
+  requiredLevel?: number | null;
   locationLat: number;
   locationLng: number;
 }
@@ -17,6 +19,9 @@ export const gigApi = {
     formData.append('description', payload.description);
     formData.append('budget', String(payload.budget));
     formData.append('skillId', payload.skillId);
+    if (payload.requiredLevel != null) {
+      formData.append('requiredLevel', String(payload.requiredLevel));
+    }
     formData.append('locationLat', String(payload.locationLat));
     formData.append('locationLng', String(payload.locationLng));
     if (imageFile) {

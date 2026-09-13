@@ -185,8 +185,10 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkil
   }
 
   // A client who set a bar is told when someone falls under it, rather than the
-  // worker quietly sinking down the list.
-  if (gig.requiredLevel) {
+  // worker quietly sinking down the list. Only meaningful for someone who has
+  // the skill at all: telling a client an electrician is "below level 5" for a
+  // tailoring job buries the actual reason.
+  if (gig.requiredLevel && specificity !== null) {
     reasons.push({
       key:
         effectiveLevel >= gig.requiredLevel
@@ -326,11 +328,26 @@ exports.componentVariance = (scored) => {
   );
 };
 
-/** Ranks every active worker as a candidate for a gig. */
+/**
+ * Ranks every active worker as a candidate for a gig.
+ *
+ * Candidates who cannot be invited — no relevant skill, or beyond the service
+ * radius — sort below those who can, regardless of score. A weighted sum will
+ * happily put a nearby, well-reviewed electrician above the only qualified
+ * tailor, and showing that at the top of a client's list is misleading. They
+ * stay listed with their explanation rather than being filtered out.
+ */
 exports.rankCandidates = async ({ gig, profileName, limit }) => {
   const workers = await User.findAll({ where: { role: 'worker', status: 'active' } });
   const scored = await exports.scoreWorkers({ gig, workers, profileName });
-  const ranked = scored.map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+  const ranked = scored
+    .sort((a, b) => {
+      if (a.eligibleForInvite !== b.eligibleForInvite) return a.eligibleForInvite ? -1 : 1;
+      return b.score - a.score;
+    })
+    .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
   return limit ? ranked.slice(0, limit) : ranked;
 };
 

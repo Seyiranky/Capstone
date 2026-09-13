@@ -146,7 +146,8 @@
       "messageClientHint": "Questions about this gig? Message {{name}} directly.",
       "messagePlaceholder": "Message {{name}}",
       "messageEmpty": "No messages yet — introduce yourself."
-    }
+    },
+    "postAGig": "Post a gig"
   },
   "wallet": {
     "title": "Wallet",
@@ -218,7 +219,12 @@
         "pending": "Verification in progress",
         "unverified": "Skill claimed, not yet verified",
         "absent": "This skill is not on their profile"
-      }
+      },
+      "relatedSpecialisation": "Related specialisation",
+      "categoryOnly": "Works in this trade, no specialisation listed",
+      "level": "Assessed at level {{level}}",
+      "levelMeets": "Level {{level}} — meets the level asked for",
+      "levelBelow": "Level {{level}} — below the level {{required}} asked for"
     },
     "weightLabel": "{{percent}}% of score",
     "contributionTooltip": "Scored {{value}} × weight {{weight}} = {{contribution}}",
@@ -387,5 +393,32 @@
     "confidenceHint": "If you are unsure, say so — a second reviewer will be brought in rather than leaving it to you alone.",
     "levelLabel": "Skill level you observed",
     "notesLabel": "Notes for the worker (optional)"
+  },
+  "skills": {
+    "categoryLabel": "Trade",
+    "specialisationLabel": "Specialisation",
+    "specialisationHint": "Optional. Choosing one helps us match you to the right work.",
+    "anySpecialisation": "Any / not sure",
+    "requiredLevelLabel": "Skill level needed",
+    "requiredLevelHint": "Optional. Workers below this level can still apply — they are ranked lower, not hidden.",
+    "anyLevel": "Any level",
+    "level": "Level {{level}}",
+    "levelName": {
+      "1": "Level 1 — starting out",
+      "2": "Level 2 — some experience",
+      "3": "Level 3 — competent",
+      "4": "Level 4 — experienced",
+      "5": "Level 5 — expert"
+    }
+  },
+  "experience": {
+    "title": "Your experience",
+    "hint": "Tell clients what you have done before. This is shown on your public profile.",
+    "yearsLabel": "Years doing this work",
+    "yearsSuffix": "{{count}} year",
+    "yearsSuffix_plural": "{{count}} years",
+    "summaryLabel": "What you have worked on",
+    "summaryPlaceholder": "For example: five years repairing phones in Nyamirambo, mostly screens and charging ports.",
+    "empty": "No experience added yet."
   }
 }

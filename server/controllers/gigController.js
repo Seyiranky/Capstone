@@ -3,11 +3,13 @@ const matchScoringService = require('../services/matchScoringService');
 
 const GIG_INCLUDES = [
   { model: User, as: 'client' },
+  // parentId comes along for the ride: the scorer needs it to tell an exact
+  // specialisation match from a sibling one.
   { model: Skill, as: 'skill' },
 ];
 
 exports.createGig = async (req, res) => {
-  const { title, description, budget, skillId, locationLat, locationLng } = req.body;
+  const { title, description, budget, skillId, requiredLevel, locationLat, locationLng } = req.body;
   if (!title || !description || budget === undefined || !skillId || locationLat === undefined || locationLng === undefined) {
     return res.status(400).json({
       message: 'title, description, budget, skillId, locationLat, and locationLng are required',
@@ -19,12 +21,20 @@ exports.createGig = async (req, res) => {
     return res.status(404).json({ message: 'Skill not found' });
   }
 
+  const level = requiredLevel === undefined || requiredLevel === null || requiredLevel === ''
+    ? null
+    : Number(requiredLevel);
+  if (level !== null && (!Number.isInteger(level) || level < 1 || level > 5)) {
+    return res.status(400).json({ message: 'requiredLevel must be an integer from 1 to 5' });
+  }
+
   const gig = await Gig.create({
     clientId: req.user.id,
     title,
     description,
     budget: Number(budget),
     skillId,
+    requiredLevel: level,
     locationLat: Number(locationLat),
     locationLng: Number(locationLng),
     status: 'pending_review',
@@ -86,7 +96,7 @@ exports.listCandidates = async (req, res) => {
   });
 };
 
-const UPDATABLE_FIELDS = ['title', 'description', 'budget', 'locationLat', 'locationLng'];
+const UPDATABLE_FIELDS = ['title', 'description', 'budget', 'requiredLevel', 'locationLat', 'locationLng'];
 
 exports.updateGig = async (req, res) => {
   const gig = await Gig.findByPk(req.params.id);

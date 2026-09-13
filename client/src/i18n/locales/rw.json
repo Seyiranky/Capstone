@@ -146,7 +146,8 @@
       "messageClientHint": "Ufite ibibazo kuri uyu murimo? Ohereza {{name}} ubutumwa.",
       "messagePlaceholder": "Andikira {{name}}",
       "messageEmpty": "Nta butumwa buraboneka — imenyekanishe."
-    }
+    },
+    "postAGig": "Tanga akazi"
   },
   "wallet": {
     "title": "Ipochi",
@@ -218,7 +219,12 @@
         "pending": "Kwemeza biracyakorwa",
         "unverified": "Yavuze ubu bumenyi ariko ntibwemezwa",
         "absent": "Ubu bumenyi ntiburi kuri profayili ye"
-      }
+      },
+      "relatedSpecialisation": "Ubumenyi bufitanye isano",
+      "categoryOnly": "Akora uyu mwuga, nta bwihariye bwatanzwe",
+      "level": "Yasuzumwe ku rwego {{level}}",
+      "levelMeets": "Urwego {{level}} — ruhuye n’urwasabwe",
+      "levelBelow": "Urwego {{level}} — ruri hasi y’urwego {{required}} rwasabwe"
     },
     "weightLabel": "{{percent}}% by’amanota",
     "contributionTooltip": "Amanota {{value}} × uburemere {{weight}} = {{contribution}}",
@@ -387,5 +393,32 @@
     "confidenceHint": "Niba udahamya, bivuge — undi musuzuma azazanwa aho kukubireka wenyine.",
     "levelLabel": "Urwego rw’ubumenyi wabonye",
     "notesLabel": "Ibisobanuro ku mukozi (si ngombwa)"
+  },
+  "skills": {
+    "categoryLabel": "Umwuga",
+    "specialisationLabel": "Ubwihariye",
+    "specialisationHint": "Si ngombwa. Guhitamo bidufasha kuguhuza n’akazi kakwiye.",
+    "anySpecialisation": "Ikindi cyose / simbizi",
+    "requiredLevelLabel": "Urwego rw’ubumenyi rukenewe",
+    "requiredLevelHint": "Si ngombwa. Abakozi bari hasi y’uru rwego baracyashobora gusaba — bashyirwa hasi ku rutonde, ntibahishwe.",
+    "anyLevel": "Urwego urwo ari rwo rwose",
+    "level": "Urwego {{level}}",
+    "levelName": {
+      "1": "Urwego 1 — atangira",
+      "2": "Urwego 2 — afite uburambe buke",
+      "3": "Urwego 3 — arabishoboye",
+      "4": "Urwego 4 — afite uburambe",
+      "5": "Urwego 5 — impuguke"
+    }
+  },
+  "experience": {
+    "title": "Uburambe bwawe",
+    "hint": "Bwira abakiriya ibyo wakoze mbere. Bigaragara ku mwirondoro wawe rusange.",
+    "yearsLabel": "Imyaka umaze ukora aka kazi",
+    "yearsSuffix": "Umwaka {{count}}",
+    "yearsSuffix_plural": "Imyaka {{count}}",
+    "summaryLabel": "Ibyo wakoze",
+    "summaryPlaceholder": "Urugero: imyaka itanu nsana telefoni i Nyamirambo, cyane cyane ibirahure n’aho bashyira umuriro.",
+    "empty": "Nta burambe bwatanzwe."
   }
 }

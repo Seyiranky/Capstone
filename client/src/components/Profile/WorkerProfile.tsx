@@ -138,6 +138,21 @@ const WorkerProfile = () => {
               </Card>
             )}
 
+            {profile.role === 'worker' && (profile.experienceSummary || profile.yearsExperience) && (
+              <Card title={t('experience.title')}>
+                {profile.yearsExperience != null && (
+                  <Tag style={{ marginBottom: profile.experienceSummary ? 10 : 0 }}>
+                    {t('experience.yearsSuffix', { count: profile.yearsExperience })}
+                  </Tag>
+                )}
+                {profile.experienceSummary && (
+                  <Typography.Paragraph style={{ margin: 0 }}>
+                    {profile.experienceSummary}
+                  </Typography.Paragraph>
+                )}
+              </Card>
+            )}
+
             {profile.role === 'worker' && (
               <Card title={t('profile.verifiedSkills')}>
                 {skills.length === 0 ? (

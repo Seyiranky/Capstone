@@ -20,23 +20,33 @@ interface GigFormValues {
   title: string;
   description: string;
   budget: number;
-  skillId: string;
+  categoryId: string;
+  specialisationId?: string;
+  requiredLevel?: number | null;
   locationName: string;
 }
+
+/** A category with its specialisations, as returned by `?tree=1`. */
+type SkillTree = Skill & { children?: Skill[] };
 
 const GigForm = ({ gig, onPosted }: GigFormProps) => {
   const { t } = useTranslation();
   const { message } = App.useApp();
   const dispatch = useAppDispatch();
   const isEdit = !!gig;
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const [skills, setSkills] = useState<SkillTree[]>([]);
+  const [categoryId, setCategoryId] = useState<string | undefined>();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    skillApi.listSkills().then(setSkills);
+    skillApi.listSkillTree().then(setSkills);
   }, []);
+
+  // Specialisations are optional. A client who does not know which one they
+  // need leaves it blank and is matched at category level.
+  const specialisations = skills.find((s) => s.id === categoryId)?.children ?? [];
 
   const initialValues = useMemo(
     () =>
@@ -45,7 +55,8 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
             title: gig.title,
             description: gig.description,
             budget: Number(gig.budget),
-            skillId: gig.skillId,
+            categoryId: gig.skillId,
+            requiredLevel: gig.requiredLevel ?? undefined,
             locationName:
               lookupLocationName(gig.locationLat, gig.locationLng) ?? KIGALI_LOCATIONS[0].name,
           }
@@ -64,6 +75,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
           title: values.title,
           description: values.description,
           budget: Number(values.budget),
+          requiredLevel: values.requiredLevel ?? null,
           locationLat: location.lat,
           locationLng: location.lng,
         });
@@ -76,7 +88,10 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
             title: values.title,
             description: values.description,
             budget: Number(values.budget),
-            skillId: values.skillId,
+            // The specialisation is the gig's skill when given; otherwise the
+            // category, which still matches but with less resolution.
+            skillId: values.specialisationId || values.categoryId,
+            requiredLevel: values.requiredLevel ?? null,
             locationLat: location.lat,
             locationLng: location.lng,
           },
@@ -120,14 +135,48 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
         />
       </Form.Item>
       {!isEdit && (
-        <Form.Item
-          name="skillId"
-          label={t('marketplace.gigForm.skillCategoryLabel')}
-          rules={[{ required: true }]}
-        >
-          <Select options={skills.map((s) => ({ value: s.id, label: s.name }))} />
-        </Form.Item>
+        <>
+          <Form.Item
+            name="categoryId"
+            label={t('skills.categoryLabel')}
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={skills.map((s) => ({ value: s.id, label: s.name }))}
+              onChange={(value) => setCategoryId(value as string)}
+            />
+          </Form.Item>
+
+          {specialisations.length > 0 && (
+            <Form.Item
+              name="specialisationId"
+              label={t('skills.specialisationLabel')}
+              extra={t('skills.specialisationHint')}
+            >
+              <Select
+                allowClear
+                placeholder={t('skills.anySpecialisation')}
+                options={specialisations.map((s) => ({ value: s.id, label: s.name }))}
+              />
+            </Form.Item>
+          )}
+        </>
       )}
+
+      <Form.Item
+        name="requiredLevel"
+        label={t('skills.requiredLevelLabel')}
+        extra={t('skills.requiredLevelHint')}
+      >
+        <Select
+          allowClear
+          placeholder={t('skills.anyLevel')}
+          options={[1, 2, 3, 4, 5].map((n) => ({
+            value: n,
+            label: t(`skills.levelName.${n}`),
+          }))}
+        />
+      </Form.Item>
       <Form.Item name="locationName" label={t('marketplace.gigForm.locationLabel')}>
         <Select options={KIGALI_LOCATIONS.map((l) => ({ value: l.name, label: l.name }))} />
       </Form.Item>

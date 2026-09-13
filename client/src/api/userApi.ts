@@ -6,6 +6,10 @@ export interface UpdateProfilePayload {
   bio?: string;
   locationLat?: number;
   locationLng?: number;
+  /** Null clears a previously set value; undefined leaves it untouched. */
+  yearsExperience?: number | null;
+  experienceSummary?: string | null;
+  preferredLanguage?: 'en' | 'rw';
 }
 
 export const userApi = {

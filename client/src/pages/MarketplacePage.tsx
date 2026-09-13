@@ -39,7 +39,7 @@ const MarketplacePage = () => {
       extra={
         role === 'client' && (
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setPostingGig(true)}>
-            Post a gig
+            {t('marketplace.postAGig')}
           </Button>
         )
       }
@@ -57,7 +57,7 @@ const MarketplacePage = () => {
       {tab === 'matches' && <MatchList />}
 
       <Drawer
-        title="Post a gig"
+        title={t('marketplace.postAGig')}
         width={480}
         open={postingGig}
         onClose={() => setPostingGig(false)}

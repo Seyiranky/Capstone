@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { App, Button, Form, Input, Select } from 'antd';
+import { App, Button, Divider, Form, Input, InputNumber, Select, Typography } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCurrentUser } from '../../store/slices/authSlice';
 import { userApi } from '../../api/userApi';
@@ -13,6 +13,8 @@ const findLocationName = (lat?: number | null, lng?: number | null) =>
 interface ProfileValues {
   bio?: string;
   locationName: string;
+  yearsExperience?: number | null;
+  experienceSummary?: string;
 }
 
 const ProfileEditor = () => {
@@ -31,6 +33,14 @@ const ProfileEditor = () => {
         bio: values.bio || undefined,
         locationLat: location.lat,
         locationLng: location.lng,
+        ...(role === 'worker'
+          ? {
+              // Sent as null rather than omitted so a worker can clear a value
+              // they previously set, not merely change it.
+              yearsExperience: values.yearsExperience ?? null,
+              experienceSummary: values.experienceSummary || null,
+            }
+          : {}),
       });
       await dispatch(fetchCurrentUser());
       message.success(t('settings.saved'));
@@ -47,15 +57,33 @@ const ProfileEditor = () => {
       initialValues={{
         bio: profile?.bio ?? '',
         locationName: findLocationName(profile?.locationLat, profile?.locationLng),
+        yearsExperience: profile?.yearsExperience ?? undefined,
+        experienceSummary: profile?.experienceSummary ?? '',
       }}
     >
       <Form.Item name="bio" label={t('settings.bioLabel')}>
         <Input.TextArea rows={3} />
       </Form.Item>
       {role === 'worker' && (
-        <Form.Item name="locationName" label={t('settings.locationLabel')}>
-          <Select options={KIGALI_LOCATIONS.map((l) => ({ value: l.name, label: l.name }))} />
-        </Form.Item>
+        <>
+          <Form.Item name="locationName" label={t('settings.locationLabel')}>
+            <Select options={KIGALI_LOCATIONS.map((l) => ({ value: l.name, label: l.name }))} />
+          </Form.Item>
+
+          <Divider plain style={{ marginTop: 8 }}>
+            {t('experience.title')}
+          </Divider>
+          <Typography.Paragraph type="secondary" style={{ fontSize: 13, marginTop: -4 }}>
+            {t('experience.hint')}
+          </Typography.Paragraph>
+
+          <Form.Item name="yearsExperience" label={t('experience.yearsLabel')}>
+            <InputNumber min={0} max={60} style={{ width: 140 }} />
+          </Form.Item>
+          <Form.Item name="experienceSummary" label={t('experience.summaryLabel')}>
+            <Input.TextArea rows={3} placeholder={t('experience.summaryPlaceholder')} />
+          </Form.Item>
+        </>
       )}
       <Button type="primary" htmlType="submit" loading={saving}>
         {t('settings.saveProfile')}
