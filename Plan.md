@@ -1,305 +1,259 @@
-# Isoko Talents — Credentials & Provenance Build Plan
+# Isoko Talents — Build Plan and Current State
 
-> Supersedes the earlier four-sprint plan, whose Sprints 0–C are now built and committed
-> (160 tests passing). Sprint D — offline PWA, SMS channel, payment seam — remains outstanding
-> and is deferred behind this work.
+> Last updated 2026-09-13, at the close of Sprint D. Sprints 0, A, B, C and D are
+> built, tested and committed. This file records what exists, why each piece is
+> shaped the way it is, what it contributes to RQ1–RQ3, and what is still open.
+> Earlier revisions of this file described work now complete; that content has
+> been folded into "What is built" rather than kept as a forward plan.
 
-## Context
+## The three research questions, and where each is answered in the code
 
-Workers currently have almost no way to show what they can do. A worker's entire
-self-description is a bio and a location dropdown. Registration captures no competence at all.
-Four things are broken or missing, and the first is debt I introduced:
+| | Question | Answered by |
+|---|---|---|
+| **RQ1** | Can skill verification resist collusion between a worker and a reviewer? | `services/skillVerificationService.js` — rotation, pairing limits, prior-relationship exclusion, seeded draw; `services/collusionDetectionService.js` — rubber-stamp flags |
+| **RQ2** | How should geographic closeness be weighted against trustworthiness? | `services/matchScoringService.js` — five weighted components, four weight profiles, `componentVariance()` for effective influence |
+| **RQ3** | Does verified skill-proof raise a client's willingness to hire a stranger? | `services/allocationService.js` — concealed permuted-block arms; `User.experimentArm`; survey `context` |
 
-1. **FR-3 is a promise with no delivery.** `User.experienceSummary`, `cvUrl`, `certificateUrl`
-   and `phone` exist as columns and sit in the `UPDATABLE_FIELDS` allowlist
-   (`server/controllers/userController.js:11-23`), but no UI writes them and no logic reads
-   them. `experienceSummary` is serialised into the public profile and rendered by nothing.
-2. **`proficiencyLevel` is dead in matching.** Reviewers set it (Sprint B), the passport shows
-   it, but `matchScoringService` never reads it — `SKILL_FIT_BY_STATUS` is a pure status
-   lookup, so a level-5 and a level-1 verified worker rank identically.
-3. **The skill vocabulary is four rows.** A tailor doing bridal wear is indistinguishable from
-   one doing school uniforms, which caps how much resolution matching can ever have.
-4. **Certificates have nowhere to live.** A worker with a real TVET certificate or trade
-   membership cannot record it.
-
-Collecting CVs and certificates is table stakes. The contribution is that **every competence
-claim carries its provenance, provenance determines how much it counts in ranking, and
-credentials are established by the same collusion-resistant rotation that already governs
-skills** — so a certificate is not "verified by the platform" but "sighted by a reviewer the
-worker could not have chosen". That extends RQ1 from skills to credentials, gives RQ3 a real
-manipulation, and operationalises Corten et al. on signal credibility instead of merely citing
-it.
-
-## Decisions taken
-
-| Decision | Choice |
-|---|---|
-| Scope | Credentials core only. No portfolio, no per-skill reputation in the score. |
-| Self-declared skills | Score a small nonzero value, labelled as self-declared |
-| RQ3 | Between-subjects provenance experiment, assignment column built in from the start |
-| Per-skill reputation | Display only in the trust receipt; the match component stays global |
-| `Gigs.requiredLevel` | Client-declared on the job post, optional, defaults unset |
-| Newcomer lock-out | A reserved exploration slot in the invitation shortlist |
-| Self-declared level vs `requiredLevel` | Does not count — only reviewer-set levels are measured against a client's bar |
-| Newcomer access | Tracked as a pilot metric, split by arm |
-
-### Why a reserved slot, and not just a softer level field
-
-The level field is real but it is the *smallest* of three compounding penalties. Modelling a
-newcomer against an established worker at the same location under balanced weights:
-
-| Component | Newcomer | Established | Gap |
-|---|---|---|---|
-| trust | 0.51 (provisional) | 0.85 | 0.085 |
-| **credentials** | 0.15 (self-declared) | 0.80 (peer-reviewed) | **0.130** |
-| skillFit, `requiredLevel` unset | 0.76 | 0.94 | 0.036 |
-| **Total** | **0.57** | **0.82** | **0.25** |
-
-Setting `requiredLevel: 3` costs the newcomer a further 0.085. So **the credentials component
-this plan introduces is itself the largest newcomer penalty**, and even with `requiredLevel`
-left unset a newcomer sits ~30% behind and never reaches a three-slot shortlist.
-
-Nothing hard-excludes them: `applyToGig` is not gated by score, and `eligibleForInvite` only
-requires `fit > 0`. The lock-out is purely the `.slice(0, limit)` cut in
-`inviteRankedCandidates`. Two consequences make this worth solving properly rather than by
-loosening the level field:
-
-- **It deepens a trap the platform exists to break.** Trust ← reviews ← completed jobs ←
-  selection ← ranking ← trust. Credentials adds a second locked loop, since `work_earned`
-  requires ≥3 completed gigs in the skill. §1.2's stated problem is that "every new client
-  relationship has to be built from zero trust"; a matching engine that buries newcomers
-  reproduces it.
-- **It would hollow out the pilot.** Over 4–6 weeks most of ~25 participants are newcomers most
-  of the time. A ranked arm that keeps inviting the same four established workers gives RQ2 data
-  from a handful of people, and gives everyone else "I signed up and nothing happened".
+Everything below exists to make one of those three measurable rather than
+asserted.
 
 ---
 
-## The organising idea
+## What is built
 
-Four ascending provenance tiers, each with a strength used by the ranking:
+### Sprint 0 — make the marketplace measurable
+
+Before this, a match was created already accepted, so acceptance rate was
+structurally pinned at 100% and RQ2 had nothing to measure. Matches now carry a
+real lifecycle (`pending` → `accepted` / `cancelled`) with `respondedAt`,
+`acceptedAt` and `declineReason`, and `MatchList` grew the Confirm/Decline UI
+that lifecycle requires. Acceptance rate on the seeded pilot history now reads
+**0.947**, not 1.0 — a number that can move.
+
+Trust scoring was a flat unweighted mean, which gave a worker with one 5-star
+review the same score as one with forty. `trustScoreService` is now Bayesian
+shrinkage toward a prior with recency half-life decay:
+
+```
+FORMULA_VERSION       v3-bayesian-2026-09
+RECENCY_HALF_LIFE_DAYS 180
+PRIOR_MEAN / STRENGTH  3.5 / 3
+COMPONENT_WEIGHTS      rating .55, completion .25, verification .20 (worker only)
+```
+
+Weights renormalise per role, so a client is not permanently capped by a
+verification component they can never earn. Declining a pending invitation is
+**not** penalised; only abandoning after `acceptedAt` is. Penalising a decline
+would make the acceptance rate RQ2 depends on an artefact of coercion.
+
+### Sprint A — ranked matching with an auditable explanation
+
+`matchScoringService.scorePair` produces five components:
+
+```
+distance     0.5 ^ (km / distanceHalfLifeKm)      unknown location → 0.5, never 0
+trust        trustScore / 5
+skillFit     specificity × levelFit                exact 1.0 | sibling 0.7 | parent 0.5
+credentials  credentialStrength                    the provenance tier (see Sprint C)
+availability decays with concurrent active matches
+```
+
+`skillFit` deliberately carries *fit* only and `credentials` carries
+*establishment*, so verification is never counted twice — the double-count was
+what confounded component variance in the first RQ2 dry run.
+
+Four weight profiles ship, giving RQ2 its comparison arms:
+
+| Profile | trust | distance | skillFit | credentials | availability |
+|---|---|---|---|---|---|
+| `balanced` | .25 | .25 | .20 | .20 | .10 |
+| `proximity_first` | .15 | .45 | .20 | .15 | .05 |
+| `trust_first` | .45 | .15 | .15 | .20 | .05 |
+| `credential_first` | .15 | .15 | .20 | .45 | .05 |
+
+Two failures found and fixed here are worth keeping on the record. Components
+are built by filtering `Object.entries(weights)` against `raw`, because a weight
+key with no matching raw value silently produced `NaN` and a profile missing a
+key silently dropped a component. And `rankCandidates` sorts **eligible-first,
+then by score** — without it, three unqualified workers (0.576) outranked the
+only qualified tailor (0.439) purely on proximity, which is exactly the opaque
+behaviour this project criticises.
+
+Every score is explained as i18n **keys plus params**, never a rendered
+sentence, so `MatchExplanation.tsx` and `TrustReceipt.tsx` translate into
+Kinyarwanda without the server knowing which language it is talking to.
+
+### Sprint B — verification that resists collusion (RQ1)
+
+A worker submits a demonstration task; reviewers are drawn, not chosen:
+
+```
+RECENT_TASKS_EXCLUDED    3     no reviewer seen in the worker's last 3 tasks
+MAX_PAIRINGS_PER_WINDOW  2     within PAIRING_WINDOW_DAYS = 90
+PEER_MIN_TRUST_SCORE     3.5
+PEER_MIN_REVIEWS         2     a score resting on the prior is not a track record
+```
+
+Every rejection is logged with its reason (`self`, `alreadyReviewed`,
+`recentPairing`, `pairingLimit`, `priorGigRelationship`, `notCategoryCompetent`,
+`peerTrustTooLow`, `peerNoTrackRecord`), and the draw is a seeded SHA-256 whose
+seed is stored on the assignment — so any allocation in the pilot can be
+reproduced and defended in a viva.
+
+`PEER_MIN_REVIEWS` exists because the trust floor alone was not a floor: an
+unreviewed worker sits at the 3.5 prior and cleared a 3.5 threshold on no
+evidence at all.
+
+`collusionDetectionService` flags rubber-stamping, but only for assignments that
+carry an `assignmentSeed` — judging seeded fixtures on review speed produced six
+false positives.
+
+**When no reviewer is eligible, the submission is kept and admins are
+notified** (`PUT /:id/assign?relax=true`). The earlier behaviour destroyed the
+worker's evidence, which in a pilot means a participant's effort vanishes.
+
+### Sprint C — competence by provenance, not by badge
+
+Four ascending tiers, each with the strength that enters `raw.credentials`:
 
 | Tier | Established by | Strength |
 |---|---|---|
-| `self_declared` | Worker says so | 0.15 |
-| `document_sighted` | A rotated reviewer looked at a photo of a paper certificate | 0.50 |
+| `self_declared` | The worker says so | 0.15 |
+| `document_sighted` | A rotated reviewer looked at the document | 0.50 |
 | `peer_reviewed` | An approved demonstration task | 0.80 |
 | `work_earned` | ≥3 completed, reviewed gigs in that skill | 1.00 |
 
-The decisive engineering move is **not** a new Credentials subsystem. It is adding `kind` to
-`SkillTask`. A certificate sighting becomes a skill task of kind `certificate` and inherits
-rotation, repeat-pairing limits, prior-gig exclusion, the seeded reproducible draw, quorum,
-low-confidence escalation and appeals from `server/services/skillVerificationService.js` at
-zero marginal cost.
+`competenceService` recomputes the tier and is **monotonic** — new evidence can
+never step a worker down.
 
-**Integrity constraint, non-negotiable in the UI copy:** `document_sighted` means a reviewer
-saw the document. It does **not** mean the certificate is genuine — the platform cannot
-authenticate a TVET award. Overclaiming here is the failure mode that would not survive a viva.
+The decisive move was *not* a new credentials subsystem: adding `SkillTask.kind`
+(`demonstration` | `certificate`) made a certificate sighting inherit rotation,
+pairing limits, quorum, escalation and appeals at zero marginal cost. That is
+what extends RQ1 from skills to credentials, and
+`tests/integration/skillVerification.test.js` passing untouched is the proof
+that `kind` never leaked into the assignment path.
+
+**Integrity constraint, load-bearing in the UI copy:** `document_sighted` means
+a reviewer *saw* the document. It does not mean the certificate is genuine. The
+platform cannot authenticate a TVET award and does not claim to.
+
+The taxonomy grew from 4 flat rows to **4 categories and 22 curated
+specialisations** (`Skills.parentId`, `kind`, `sortOrder`; `GET /skills?tree=1`).
+Curated, not worker-authored — free tagging would destroy the comparability RQ2
+needs.
+
+`Gigs.requiredLevel` is client-declared, optional and a **soft penalty, never a
+hard filter**. Only a reviewer-set level counts against it; a self-declared
+level 5 scores as level 1 against a client's bar, or `requiredLevel` would mean
+nothing.
+
+**The reserved exploration slot** takes the last invitation in the shortlist and
+gives it to the best otherwise-eligible worker below the track-record threshold.
+Without it the credentials component — the largest of three compounding
+newcomer penalties, 0.15 against 0.80 — would bury every new worker and
+reproduce the cold-start trap §1.2 of the proposal exists to break. It is tagged
+`Match.invitationReason = 'exploration'` and reported separately in the metrics,
+because an invitation received by reservation is **not** evidence the ranking
+chose them, and pooling the two would contaminate RQ2's ranked-arm acceptance
+rate. `EXPLORATION_SLOTS=0` switches it off for a control arm.
+
+**RQ3 allocation.** Arms come from a pre-generated permuted-block list
+(`ExperimentAllocations`, mixed block sizes 2 and 4 so block tails cannot be
+deduced), claimed under `FOR UPDATE SKIP LOCKED`. The first attempt — simple
+alternation — was wrong three ways in a researcher-registered in-person pilot:
+it destroyed allocation concealment, it had a count-then-write race, and its
+counter was polluted by test accounts. `claimArm` returns `null` when the list
+is exhausted; it never invents an arm.
+
+### Sprint D — reaching the phone the worker actually owns
+
+- **PWA / offline-first.** `vite-plugin-pwa` + Workbox. The API is `NetworkFirst`
+  with a 5s timeout — a stale gig list that looks live is worse than an honest
+  failure, because a worker could apply to something already taken. Uploads are
+  `CacheFirst`. Photographs are excluded from the precache: the login background
+  alone is 2.8MB, and spending a prepaid bundle on decoration before the worker
+  has done anything is indefensible.
+- **The offline queue** (`client/src/lib/offlineQueue.ts`) replays only a
+  whitelist — apply, respond to a match, mark a notification read, edit profile.
+  Payments and admin decisions are excluded by design. A 4xx is terminal and
+  goes to dead letters rather than retrying forever. Actions carry `occurredAt`
+  and `queuedOffline`, so a decision made in a dead zone keeps its real time.
+- **SMS channel** (`server/lib/channels/sms.js`) with a `log` driver by default
+  and a `pindo` driver behind config. `notify` fans out to in-app and SMS and
+  records a `NotificationDelivery` for **every** attempt, including `skipped` —
+  a pilot needs to know what never reached the worker, not only what did.
+- **Payments** are a façade over `services/payments/simulatedAdapter.js`.
+  Settlement runs through one idempotent `applyCallback` under a row lock, and
+  `confirm`/`fail` route through that same path, so the webhook and the manual
+  path cannot diverge. `Idempotency-Key` responses are recorded **before** the
+  response is sent — recording after meant an immediate retry got a 409 instead
+  of a replay.
 
 ---
 
-## Phase 1 — Taxonomy, level, and experience (Sprint 1)
-
-**Skill hierarchy.** Migration adds `Skills.parentId` (self-FK, nullable), `Skills.kind`
-(`category` | `specialisation`), `Skills.sortOrder`; model gains `belongsTo(Skill, {as:'parent'})`
-and `hasMany({as:'children'})`. Seed 5–7 curated specialisations per category — curated, not
-worker-authored, because free tagging destroys the comparability RQ2 needs. `skillController.listSkills`
-gains `?tree=1`; the existing flat response is preserved so `GigForm` and `SkillVerificationForm`
-keep working untouched.
-
-**Separate fit from establishment.** Today `skillFit` conflates "does this worker do this
-work" with "is it verified". Split them, which also protects component variance — the exact
-problem that confounded RQ2 before:
+## Current state
 
 ```
-raw.skillFit    = specificity × levelFit          // how well the worker matches the need
-  specificity   : exact specialisation 1.0 | sibling under same parent 0.7 | parent only 0.5 | absent 0
-  levelFit      : gig.requiredLevel ? min(1, effectiveLevel / requiredLevel) : 0.7 + 0.06 × level
-
-raw.credentials = credentialStrength              // how well established the claim is
+server   219 tests / 15 suites   eslint clean
+client    12 tests               eslint + tsc clean
+i18n     en/rw at parity (CI-gated by scripts/check-i18n-parity.mjs)
+dev DB   15 users · 29 gigs · 21 matches · 18 confirmed payments · 34 reviews
 ```
 
-`verificationStatus` therefore moves *out* of `skillFit` and into `credentials`, so nothing is
-counted twice.
-
-**`Gigs.requiredLevel`** (nullable, 1–5) is client-declared on the job post and defaults unset.
-It is a **soft penalty, never a hard filter** — filtering hides workers and reproduces the
-opacity this project criticises.
-
-**`effectiveLevel` is reviewer-set level only.** A self-declared level is displayed and still
-contributes through the `levelFit` branch when no `requiredLevel` is set, but counts as 1 when
-measured against a client's bar. Without this, a worker awards themselves level 5, clears every
-bar, and `requiredLevel` means nothing — `proficiencyLevel` being reviewer-set is the only
-reason it carries information at all.
-
-**Experience intake, voice-first.** `ProfileEditor.tsx` gains an experience section writing
-`experienceSummary` (already allowlisted — no server change) plus a new `yearsExperience` int.
-Extend `UpdateProfilePayload` in `client/src/api/userApi.ts`, which currently admits only
-`{name, bio, locationLat, locationLng}` and is what makes the other fields unreachable. Render
-it in `WorkerProfile.tsx`'s right column under the already-reserved, currently-unrendered
-`profile.experience` i18n key. Many of these workers have no CV and no digital documents, so
-reuse the `MediaRecorder` voice capture from `EvidenceCapture.tsx` — a spoken account of past
-work is more reachable than a textarea.
-
-**Critical files:** `server/models/Skill.js`, `server/services/matchScoringService.js`,
-`server/controllers/skillController.js`, `client/src/components/Settings/ProfileEditor.tsx`,
-`client/src/components/Profile/WorkerProfile.tsx`.
+The dev database was cleared of verification debris on 2026-09-13 (28
+`@example.com` accounts and 12 test-titled gigs), the RQ3 allocation list was
+regenerated, and trust scores and the peer-reviewer pool were rebuilt. Backup at
+`scratchpad/isoko_dev_before_cleanup.sql`.
 
 ---
 
-## Phase 2 — Credentials through the rotation (Sprint 2)
+## Open decisions
 
-**Schema.** `SkillTasks.kind` (`demonstration` default | `certificate`), `SkillTasks.claim`
-JSONB (`{title, issuer, issuedOn}`), backfilling existing rows to `demonstration`.
-`UserSkills` gains `provenance`, `provenanceDetail` JSONB, `credentialStrength` FLOAT,
-`selfDeclaredAt` — denormalised deliberately, because matching reads it per candidate and must
-not fan out queries.
-
-**Uploads.** Add a `document` entry to `EVIDENCE_LIMITS` in `server/middleware/upload.js`
-(PDF plus the existing image mimes, 8MB); `evidenceKindFor`/`evidenceLimitFor` pick it up
-automatically. Add `document` to `SkillTaskEvidence.kind`'s validator. Note the ambiguity: a
-JPEG can be a photo of work or a photo of a certificate, so the **client must send an explicit
-`evidenceKind[]` the controller trusts over mime sniffing**.
-
-**New `server/services/competenceService.js`**, modelled on `trustScoreService.recalculate`:
-recomputes `provenance`, `provenanceDetail` and `credentialStrength` for a `(userId, skillId)`
-pair, called from the same two places that already call `trustScoreService.recalculate` —
-`skillTaskController.reviewTask` on approval, and `matchController.updateMatchStatus` on
-completion. Tier must be **monotonic**: adding evidence can never lower it.
-
-**Self-declaration** creates a `UserSkill` at `unverified`/`self_declared`, which is the
-competence capture missing from registration today. Surface it as a new onboarding step object
-in `Dashboard.tsx:116-155` and a new `Settings` tab (a one-line `items` push).
-
-**The fifth score component.** `raw.credentials` enters `scorePair`, with a reason key per tier.
-`MatchExplanation.tsx` needs **no change** — it renders whatever components and reason keys the
-server emits, which is why the explainability work pays off here.
-
-> **Sharp edge:** `scorePair` builds components via `Object.entries(weights)`, so a profile
-> missing the new key silently drops a component and a profile carrying a key absent from `raw`
-> yields `NaN`. The migration must rewrite **all three seeded `MatchWeightProfiles` and
-> `FALLBACK_PROFILE` in the service together**, and `scorePair` should skip weight keys with no
-> corresponding `raw` value. Suggested balanced weights:
-> `{distance .25, trust .25, skillFit .2, credentials .2, availability .1}`. Add a fourth
-> profile, `credential_first`, to give RQ2 another comparison arm.
-
-**The reserved exploration slot.** In `inviteRankedCandidates`
-(`server/controllers/adminController.js`), the shortlist is currently
-`filter(eligibleForInvite).slice(0, limit)`. Change it to: take the top `limit - 1` by score,
-then fill the last slot with the highest-scoring *otherwise-eligible* worker below a
-track-record threshold (`reviewCount < PEER_MIN_REVIEWS`, reusing the constant already exported
-from `skillVerificationService`), if any exists and is not already in the list. If none exists,
-the slot falls back to the next-ranked worker so invitations are never wasted.
-
-Two things this must not do. It must not reorder the earned slots — exploration takes the last
-slot, never displaces a better-ranked worker from an earlier one. And it must be **visible in
-the data**: add `Match.invitationReason` (`ranked` | `exploration`), because an invitation the
-newcomer received by reservation is not evidence that the ranking chose them, and RQ2's ranked-arm
-acceptance rate would be contaminated if the two were pooled. `pilotMetricsService` must split
-acceptance by `invitationReason` as well as by `origin`.
-
-`EXPLORATION_SLOTS = Number(process.env.EXPLORATION_SLOTS ?? 1)`, read per call like
-`rankedInviteLimit()`, so the mechanism can be switched off for a control arm without a restart.
-
-**Newcomer access metrics.** `pilotMetricsService.collect` gains a `newcomerAccess` block:
-share of invitations and of accepted matches going to workers below the track-record threshold,
-split by arm and by `invitationReason`, plus a count of newcomers who have received no
-invitation at all. This is what lets a starved pilot be detected in week two rather than in the
-write-up, and it converts a fairness risk into a reportable finding.
-
-**RQ3 experiment arm.** `User.experimentArm` (`provenance` | `plain`, nullable), assigned at
-registration for clients. In the `plain` arm the UI shows a bare verified/unverified tag; in
-`provenance` it shows the full tier labelling. The existing `willingnessToHire` survey prompt
-(`server/controllers/surveyController.js`) already accepts a `context` object — record the arm
-there. This must ship with Phase 2, not later: retrofitting the assignment loses the data.
-
-**Critical files:** `server/controllers/skillTaskController.js`,
-`server/services/skillVerificationService.js` (read-only — it should need no change, and if it
-does, `kind` has leaked into the assignment path), `server/services/matchScoringService.js`,
-`server/models/UserSkill.js`, `client/src/components/Verification/EvidenceCapture.tsx`.
-
-**Client work.** Lift `accept`, `max` and label keys out of `EvidenceCapture.tsx` into optional
-props with defaults preserving current behaviour — do not fork it; the mic-cleanup-on-unmount
-and `capture="environment"` behaviour are worth keeping. Add a `document` branch to
-`EvidenceViewer.tsx`. New `client/src/components/Verification/CredentialForm.tsx` wraps both.
-
----
-
-## Explicitly cut
-
-- **`cvUrl` / `certificateUrl` as user-editable URL fields.** Leave the columns (the data export
-  references them) but stop advertising them. A URL field for a population without digital
-  documents is proposal theatre; certificate sighting replaces it honestly. Reword FR-3.
-- **Credential expiry, issuer registry, OCR, any authenticity check on the document.**
-- **Portfolio and per-skill reputation in the score** — deferred by the scope decision. Per-skill
-  reputation appears in `TrustReceipt` as display only.
-- **Worker-authored specialisation tags.**
-- **Certificate-specific quorum tuning** — inherit `requiredApprovalsFor` unchanged.
-
-## Decision points still open
-
-1. **The track-record threshold for the exploration slot.** Reusing `PEER_MIN_REVIEWS` (2) keeps
-   one definition of "unproven" across the codebase, but the right number for *access* may not be
-   the right number for *reviewing others*. Worth revisiting once pilot data exists.
-2. **Kinyarwanda copy for the four tier labels** is a translation judgement, not a lookup.
-   Budget real time — "sighted" versus "verified" is precisely the distinction that must survive
-   translation.
+1. **The track-record threshold for the exploration slot.** It currently reuses
+   `PEER_MIN_REVIEWS` (2), which keeps one definition of "unproven" across the
+   codebase — but the right number for *access* need not be the right number for
+   *reviewing others*. Revisit once pilot data exists.
+2. **Kinyarwanda copy for the four tier labels.** "Sighted" versus "verified" is
+   exactly the distinction that must survive translation, and it is a judgement,
+   not a lookup.
+3. **Real SMS and payment integration.** Deliberately deferred: the simulated
+   adapters keep the pilot runnable without a provider contract. The seam is
+   already in place, so switching is a driver swap, not a rewrite.
 
 ## Residual risk, accepted
 
-There is no floor on `levelFit`, so a client setting `requiredLevel: 5` drives a newcomer's
-`skillFit` to 0.2 and their earned ranking close to the bottom. The exploration slot is what
-keeps them reachable, so if that mechanism is ever disabled via `EXPLORATION_SLOTS=0`, inflated
-level requirements become a real lock-out again. Watch the `newcomerAccess` metric for it.
+`levelFit` has no floor, so a client setting `requiredLevel: 5` drives a
+newcomer's `skillFit` to 0.2. The exploration slot is what keeps them reachable
+— if it is ever disabled via `EXPLORATION_SLOTS=0`, inflated level requirements
+become a real lock-out again. Watch the `newcomerAccess` metric for it.
+
+The client bundle is ~3.3MB, above Workbox's 2MB default ceiling, which was
+raised rather than the feature dropped. It is genuinely too large for a low-end
+phone on metered data and wants code-splitting before the pilot.
+
+## Explicitly out of scope
+
+Credential expiry, an issuer registry, OCR, any authenticity check on a
+document, a portfolio, per-skill reputation in the match score (display only in
+the trust receipt), and worker-authored specialisation tags.
 
 ---
 
-## Verification
+## Running it
 
-**Tests that will break, and why — fix these first, do not patch around them.**
+```bash
+# Postgres 18 on 5432
+cd server && npm run migrate && npm run seed && npx nodemon server.js
+cd client && npm run dev
+```
 
-- `tests/unit/matchScoringService.test.js`: every absolute-total assertion moves once a fifth
-  component exists, and fixture profiles lacking `credentials` drop a component silently.
-  Harden `scorePair` against missing keys, then update fixtures. Add cases for exact vs sibling
-  vs parent fit, level-5 vs level-1 both verified now differing, and unset `requiredLevel` being
-  neutral.
-- `tests/integration/rankedMatching.test.js`: ordering and totals shift.
-- `tests/integration/skillVerification.test.js` **should keep passing untouched**. If it does
-  not, `kind` has leaked into the assignment path and the RQ1 claim is compromised.
+`npm run seed` chains `trust:backfill`, so seeded workers hold scores they have
+actually earned rather than a hardcoded 5.00 beside "no reviews yet".
 
-**New coverage.** `tests/integration/credentials.test.js` mirroring `skillEvidence.test.js`:
-submit a certificate → assert a reviewer was assigned by the *same* rotation (check the
-assignment row carries a seed and an eligible pool size) → approve → assert `provenance` moves
-to `document_sighted` and `credentialStrength` rises. `tests/unit/competenceService.test.js`
-for tier precedence and monotonicity.
+Logins are `<name>@isoko.demo` / `password123` — `emmanuel` admin, `grace` and
+`diane` clients, `eric` and `aline` peer reviewers.
 
-For the exploration slot, in `rankedMatching.test.js`: seed several established workers plus one
-newcomer who would not make the cut on score, then assert the newcomer is invited, that they
-occupy the *last* slot rather than displacing a higher-ranked worker, that the match carries
-`invitationReason: 'exploration'`, and that with `EXPLORATION_SLOTS=0` they are not invited at
-all. Add a metrics assertion that acceptance rate is reported separately for `ranked` and
-`exploration` invitations — pooling them would be the silent failure.
-
-A self-declared level must not clear a client's bar: assert that a worker who self-declares
-level 5 against a gig requiring level 4 scores the same `levelFit` as a level-1 worker.
-
-**End-to-end, locally.** Postgres on 5432; `cd server && npm run migrate && npm run seed &&
-npx nodemon server.js`; `cd client && npm run dev`. Seeded logins are `<name>@isoko.demo` /
-`password123` (`emmanuel` admin, `eric`/`aline` peer reviewers, `grace` client).
-
-1. As `aline`, self-declare a bridal-tailoring specialisation → confirm she becomes rankable
-   with a visibly small contribution labelled self-declared.
-2. Photograph any document, submit it as a certificate → confirm the assigned reviewer is not
-   Aline and not someone she has worked with, and that the assignment carries a seed.
-3. Approve it as that reviewer → confirm provenance moves to `document_sighted` and her ranking
-   on a matching gig rises.
-4. `GET /api/gigs/:id/candidates` → confirm five components, that `componentVariance` reports a
-   non-trivial `effectiveInfluence` for `credentials`, and that switching to `credential_first`
-   re-ranks.
-5. Post a gig with `requiredLevel: 4` and approve it → confirm an established worker takes the
-   earned slots, that a brand-new worker is still invited in the reserved slot with
-   `invitationReason: 'exploration'`, and that `GET /api/admin/metrics` shows a non-zero
-   newcomer invitation share with the two invitation reasons reported separately.
-6. Switch the interface to Kinyarwanda and re-read the candidate explanation — every new reason
-   key must render translated. `node scripts/check-i18n-parity.mjs` gates this in CI.
-7. Confirm a `plain`-arm client sees no tier labels anywhere.
+Useful scripts: `npm run trust:backfill`, `npm run reviewers:enrol`,
+`node scripts/generateAllocationList.js` (re-draws the RQ3 block sequence — only
+before a pilot starts, never mid-run), and `node scripts/check-i18n-parity.mjs`
+at the repo root.
