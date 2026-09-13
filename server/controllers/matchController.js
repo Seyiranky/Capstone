@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const { Match, Gig, User, Transaction, Review, GigApplication } = require('../models');
 const paymentService = require('../services/paymentService');
 const trustScoreService = require('../services/trustScoreService');
+const competenceService = require('../services/competenceService');
 const notify = require('../lib/notify');
 
 const MATCH_INCLUDES = [
@@ -127,6 +128,11 @@ exports.updateMatchStatus = async (req, res) => {
   if (status === 'completed' || status === 'cancelled') {
     await trustScoreService.recalculate(match.workerId, { trigger: `match:${status}` });
     await trustScoreService.recalculate(match.gig.clientId, { trigger: `match:${status}` });
+  }
+  if (status === 'completed') {
+    // Completed, reviewed work is itself a credential once there is enough of
+    // it, so finishing a job can raise provenance for that skill.
+    await competenceService.recalculateAllFor(match.workerId, { trigger: 'match:completed' });
   }
 
   const updated = await Match.findByPk(match.id, { include: MATCH_INCLUDES });

@@ -129,6 +129,13 @@ module.exports = (sequelize, DataTypes) => {
       // Capability to review skill submissions, independent of `role`. 'peer'
       // reviewers are verified workers, which is what makes the pool large
       // enough for rotation to mean anything.
+      // RQ3 between-subjects assignment: 'provenance' sees how each claim was
+      // established, 'plain' sees only verified or not.
+      experimentArm: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: { isIn: [['provenance', 'plain']] },
+      },
       reviewerTier: {
         type: DataTypes.STRING,
         allowNull: true,

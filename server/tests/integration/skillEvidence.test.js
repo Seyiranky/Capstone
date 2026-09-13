@@ -134,14 +134,30 @@ describe('submitting evidence', () => {
     expect(rows[0].kind).toBe('link');
   });
 
+  test('a PDF is accepted as a document, for a worker who does have one', async () => {
+    const res = await request(app)
+      .post('/api/skill-tasks')
+      .set('Authorization', `Bearer ${tokens.worker}`)
+      .field('skillId', skill.id)
+      .attach('evidence', Buffer.from('%PDF-1.4 minimal'), {
+        filename: 'certificate.pdf',
+        contentType: 'application/pdf',
+      });
+
+    expect(res.status).toBe(201);
+    const rows = await trackUploads(res.body.id);
+    expect(rows[0].kind).toBe('document');
+    expect(rows[0].url).toMatch(/\.pdf$/);
+  });
+
   test('an unsupported file type is refused', async () => {
     const res = await request(app)
       .post('/api/skill-tasks')
       .set('Authorization', `Bearer ${tokens.worker}`)
       .field('skillId', skill.id)
-      .attach('evidence', Buffer.from('%PDF-1.4'), {
-        filename: 'cv.pdf',
-        contentType: 'application/pdf',
+      .attach('evidence', Buffer.from('PK\x03\x04'), {
+        filename: 'bundle.zip',
+        contentType: 'application/zip',
       });
 
     expect(res.status).toBeGreaterThanOrEqual(400);

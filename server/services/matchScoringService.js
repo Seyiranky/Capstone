@@ -143,6 +143,10 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkil
     distance: km === null ? 0.5 : distanceScore(km, profile.distanceHalfLifeKm),
     trust: clamp(worker.trustScore / 5, 0, 1),
     skillFit: fit,
+    // How well established the claim is, as opposed to how well it fits. Kept
+    // separate from skillFit so verification is not counted twice, and so both
+    // components keep variance of their own.
+    credentials: specificity === null ? 0 : clamp(workerSkill?.credentialStrength ?? 0.15, 0, 1),
     availability: availabilityScore(activeMatches),
   };
 
@@ -178,6 +182,16 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkil
     params: { skill: workerSkill?.skill?.name ?? '' },
   });
 
+  // Says how the claim was established, not just that it was. A client reading
+  // "sighted" rather than "verified" is the point: the platform saw a document,
+  // it did not authenticate the award behind it.
+  if (workerSkill?.provenance && specificity !== null) {
+    reasons.push({
+      key: `match.reason.provenance.${workerSkill.provenance}`,
+      params: {},
+    });
+  }
+
   if (specificity === SPECIFICITY.sibling) {
     reasons.push({ key: 'match.reason.relatedSpecialisation', params: {} });
   } else if (specificity === SPECIFICITY.parentOnly) {
@@ -207,6 +221,10 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkil
   return {
     workerId: worker.id,
     score: total,
+    // Carried so callers can tell an unproven worker from an established one
+    // without re-querying inside a ranking loop.
+    reviewCount: worker.reviewCount ?? 0,
+    provenance: workerSkill?.provenance ?? null,
     eligibleForInvite: !beyondRange && fit > SKILL_FIT_ABSENT,
     beyondRange,
     distanceKm: km === null ? null : Number(km.toFixed(2)),

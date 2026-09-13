@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       kind: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: { isIn: [['photo', 'video', 'voice', 'link']] },
+        validate: { isIn: [['photo', 'video', 'voice', 'link', 'document']] },
       },
       url: {
         type: DataTypes.STRING,

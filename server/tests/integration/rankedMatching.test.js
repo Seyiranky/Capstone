@@ -112,7 +112,7 @@ describe('ranked candidate listing', () => {
 
     expect(near.rank).toBeLessThan(far.rank);
     expect(near.components.map((c) => c.key).sort()).toEqual(
-      ['availability', 'distance', 'skillFit', 'trust'],
+      ['availability', 'credentials', 'distance', 'skillFit', 'trust'],
     );
     expect(near.reasons.length).toBeGreaterThan(0);
     expect(near.distanceKm).toBeCloseTo(0.5, 1);

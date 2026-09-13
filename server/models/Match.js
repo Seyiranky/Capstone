@@ -61,6 +61,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: true,
       },
+      // 'exploration' marks an invitation a newcomer received because a slot
+      // was reserved, not because the ranking put them there.
+      invitationReason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: { isIn: [['ranked', 'exploration']] },
+      },
     },
     {
       sequelize,

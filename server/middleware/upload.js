@@ -19,9 +19,17 @@ const EVIDENCE_LIMITS = {
     maxBytes: 5 * 1024 * 1024,
     kind: 'voice',
   },
+  // Most certificates here are paper, photographed on a phone, so images are
+  // as much a document format as PDF is.
+  document: {
+    mimes: ['application/pdf'],
+    maxBytes: 8 * 1024 * 1024,
+    kind: 'document',
+  },
 };
 
 const EXTENSION_BY_MIME = {
+  'application/pdf': '.pdf',
   'audio/webm': '.webm',
   'audio/mp4': '.m4a',
   'audio/mpeg': '.mp3',
@@ -59,7 +67,7 @@ const evidenceFilter = (req, file, cb) => {
     return cb(
       new multer.MulterError(
         'LIMIT_UNEXPECTED_FILE',
-        'Evidence must be an image, an MP4/WebM video, or an audio recording',
+        'Evidence must be an image, an MP4/WebM video, an audio recording, or a PDF',
       ),
     );
   }

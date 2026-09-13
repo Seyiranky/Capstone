@@ -1,6 +1,7 @@
 const { Review, Match, Gig, User } = require('../models');
 const notify = require('../lib/notify');
 const trustScoreService = require('../services/trustScoreService');
+const competenceService = require('../services/competenceService');
 
 exports.createReview = async (req, res) => {
   const { matchId, rating, comment } = req.body;
@@ -41,6 +42,8 @@ exports.createReview = async (req, res) => {
   });
 
   await trustScoreService.recalculate(recipientId);
+  // work_earned counts reviewed jobs, so a review can be the thing that tips it.
+  await competenceService.recalculateAllFor(recipientId, { trigger: 'review:created' });
 
   const author = await User.findByPk(req.user.id);
   await notify(req, {

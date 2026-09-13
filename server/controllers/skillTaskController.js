@@ -14,6 +14,7 @@ const { evidenceKindFor, evidenceLimitFor } = require('../middleware/upload');
 const notify = require('../lib/notify');
 const skillVerificationService = require('../services/skillVerificationService');
 const trustScoreService = require('../services/trustScoreService');
+const competenceService = require('../services/competenceService');
 
 const TASK_INCLUDES = [
   { model: Skill, as: 'skill' },
@@ -58,11 +59,27 @@ const openRound = async (req, { task, skill, round, exclude, reason, relaxPairin
 };
 
 exports.submitTask = async (req, res) => {
-  const { skillId, evidenceUrl, notes } = req.body;
+  const { skillId, evidenceUrl, notes, kind = 'demonstration' } = req.body;
   const files = req.files || [];
 
   if (!skillId) {
     return res.status(400).json({ message: 'skillId is required' });
+  }
+  if (!['demonstration', 'certificate'].includes(kind)) {
+    return res.status(400).json({ message: "kind must be 'demonstration' or 'certificate'" });
+  }
+
+  // What the worker says the document is. A reviewer sights it; nobody
+  // authenticates the award behind it, and the UI must not imply otherwise.
+  let claim = null;
+  if (kind === 'certificate') {
+    const { title, issuer, issuedOn } = req.body;
+    if (!title || !issuer) {
+      return res
+        .status(400)
+        .json({ message: 'A certificate needs at least a title and an issuer' });
+    }
+    claim = { title, issuer, issuedOn: issuedOn || null };
   }
   // A pasted link is still accepted, but it is no longer the only way in: a
   // photo of finished work or a spoken description is far more reachable for
@@ -96,15 +113,24 @@ exports.submitTask = async (req, res) => {
     // single-link field keep working; SkillTaskEvidences is authoritative.
     evidenceUrl: evidenceUrl || `/uploads/evidence/${files[0].filename}`,
     notes,
+    kind,
+    claim,
     status: 'pending',
     requiredApprovals,
   });
 
+  // A photograph of a certificate and a photograph of finished work have the
+  // same mime type, so the client says which it is and the server trusts that
+  // over sniffing.
+  const declaredKinds = []
+    .concat(req.body.evidenceKind ?? [])
+    .filter((k) => ['photo', 'video', 'voice', 'link', 'document'].includes(k));
+
   const evidenceRows = [
     ...(evidenceUrl ? [{ taskId: task.id, kind: 'link', url: evidenceUrl }] : []),
-    ...files.map((file) => ({
+    ...files.map((file, index) => ({
       taskId: task.id,
-      kind: evidenceKindFor(file.mimetype),
+      kind: declaredKinds[index] || (kind === 'certificate' ? 'document' : evidenceKindFor(file.mimetype)),
       url: `/uploads/evidence/${file.filename}`,
       mimeType: file.mimetype,
       sizeBytes: file.size,
@@ -283,6 +309,11 @@ exports.reviewTask = async (req, res) => {
       });
 
       await trustScoreService.recalculate(task.workerId, { trigger: 'skill:verified' });
+      // Provenance moves with the kind of evidence approved: a sighted
+      // certificate and an approved demonstration are not the same claim.
+      await competenceService.recalculate(task.workerId, task.skillId, {
+        trigger: `task:${task.kind}:approved`,
+      });
     }
 
     await notify(req, {
@@ -435,4 +466,62 @@ exports.appealTask = async (req, res) => {
 
   const updated = await SkillTask.findByPk(task.id, { include: TASK_INCLUDES });
   res.status(201).json({ appeal, task: updated });
+};
+
+/**
+ * Records a skill the worker says they have.
+ *
+ * The weakest tier by design, and labelled as such everywhere it appears. It
+ * exists because registration captured no competence at all: a worker arrived
+ * with nothing on their profile and could not be matched to anything until a
+ * review completed, which in a short pilot means most people are invisible for
+ * most of it.
+ */
+exports.declareSkill = async (req, res) => {
+  const { skillId, proficiencyLevel } = req.body;
+  if (!skillId) {
+    return res.status(400).json({ message: 'skillId is required' });
+  }
+  if (proficiencyLevel !== undefined && ![1, 2, 3, 4, 5].includes(proficiencyLevel)) {
+    return res.status(400).json({ message: 'proficiencyLevel must be an integer from 1 to 5' });
+  }
+
+  const skill = await Skill.findByPk(skillId);
+  if (!skill) {
+    return res.status(404).json({ message: 'Skill not found' });
+  }
+
+  const [userSkill, created] = await UserSkill.findOrCreate({
+    where: { userId: req.user.id, skillId },
+    defaults: {
+      proficiencyLevel: proficiencyLevel ?? 1,
+      verificationStatus: 'unverified',
+      provenance: 'self_declared',
+      credentialStrength: competenceService.TIERS.self_declared,
+      selfDeclaredAt: new Date(),
+    },
+  });
+
+  // Declaring again must never undo verification a reviewer granted.
+  if (!created && userSkill.verificationStatus === 'unverified') {
+    await userSkill.update({
+      proficiencyLevel: proficiencyLevel ?? userSkill.proficiencyLevel,
+      selfDeclaredAt: userSkill.selfDeclaredAt ?? new Date(),
+    });
+  }
+
+  const fresh = await UserSkill.findByPk(userSkill.id, {
+    include: [{ model: Skill, as: 'skill' }],
+  });
+  res.status(created ? 201 : 200).json(fresh);
+};
+
+/** Every skill the signed-in worker holds, declared or verified. */
+exports.listMySkills = async (req, res) => {
+  const skills = await UserSkill.findAll({
+    where: { userId: req.user.id },
+    include: [{ model: Skill, as: 'skill' }],
+    order: [['createdAt', 'ASC']],
+  });
+  res.json(skills);
 };

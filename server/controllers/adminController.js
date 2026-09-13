@@ -156,14 +156,60 @@ const rankedInviteLimit = () => Number(process.env.RANKED_INVITE_LIMIT ?? 3);
  * (RQ2). The full score breakdown is frozen onto each match so a ranking stays
  * reproducible after the weight profile is retuned.
  */
+// One slot of the shortlist is held for a worker without a track record.
+// Set to 0 to run a control arm with pure ranking.
+const explorationSlots = () => Number(process.env.EXPLORATION_SLOTS ?? 1);
+
+/**
+ * Picks the shortlist, reserving a slot for someone unproven.
+ *
+ * Ranking alone would invite the same established handful indefinitely:
+ * credentials and trust both require completed work, and completed work
+ * requires being invited. Over a short pilot most participants would never be
+ * reached, so the data would come from a few people and everyone else would
+ * experience nothing happening.
+ *
+ * The reserved slot is the *last* one — it never displaces a better-ranked
+ * worker — and falls back to the next-ranked candidate when no newcomer is
+ * eligible, so an invitation is never wasted.
+ */
+const buildShortlist = (eligible, limit) => {
+  const reserved = Math.min(explorationSlots(), Math.max(limit - 1, 0));
+  if (reserved === 0) {
+    return eligible.slice(0, limit).map((c) => ({ ...c, invitationReason: 'ranked' }));
+  }
+
+  const earned = eligible.slice(0, limit - reserved).map((c) => ({ ...c, invitationReason: 'ranked' }));
+  const taken = new Set(earned.map((c) => c.workerId));
+
+  const newcomers = eligible.filter(
+    (c) => !taken.has(c.workerId) && (c.reviewCount ?? 0) < skillVerificationService.PEER_MIN_REVIEWS,
+  );
+  const explorers = newcomers
+    .slice(0, reserved)
+    .map((c) => ({ ...c, invitationReason: 'exploration' }));
+
+  // No unproven candidate to promote: give the slot back to the ranking.
+  const shortfall = reserved - explorers.length;
+  const filler = shortfall
+    ? eligible
+        .filter((c) => !taken.has(c.workerId) && !explorers.some((e) => e.workerId === c.workerId))
+        .slice(0, shortfall)
+        .map((c) => ({ ...c, invitationReason: 'ranked' }))
+    : [];
+
+  return [...earned, ...explorers, ...filler];
+};
+
 const inviteRankedCandidates = async (req, gig) => {
   const limit = rankedInviteLimit();
   if (limit <= 0) return [];
 
   const candidates = await matchScoringService.rankCandidates({ gig });
-  const shortlist = candidates
-    .filter((candidate) => candidate.eligibleForInvite && candidate.workerId !== gig.clientId)
-    .slice(0, limit);
+  const eligible = candidates.filter(
+    (candidate) => candidate.eligibleForInvite && candidate.workerId !== gig.clientId,
+  );
+  const shortlist = buildShortlist(eligible, limit);
 
   const invitations = [];
   for (const candidate of shortlist) {
@@ -172,6 +218,7 @@ const inviteRankedCandidates = async (req, gig) => {
       workerId: candidate.workerId,
       status: 'pending',
       origin: 'ranked',
+      invitationReason: candidate.invitationReason,
       rankScore: candidate.score,
       scoreBreakdown: candidate,
       weightProfileId: candidate.weightProfile.id,

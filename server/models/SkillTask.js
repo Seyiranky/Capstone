@@ -49,6 +49,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      kind: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'demonstration',
+        validate: { isIn: [['demonstration', 'certificate']] },
+      },
+      claim: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
       requiredApprovals: {
         type: DataTypes.INTEGER,
         allowNull: false,

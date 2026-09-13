@@ -35,6 +35,28 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 'unverified',
         validate: { isIn: [['unverified', 'pending', 'verified']] },
       },
+      // How the claim was established, not merely whether it was. Ascending:
+      // the worker said so, a reviewer sighted a document, a reviewer approved
+      // a demonstration, or the work itself was completed and reviewed.
+      provenance: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'self_declared',
+        validate: { isIn: [['self_declared', 'document_sighted', 'peer_reviewed', 'work_earned']] },
+      },
+      provenanceDetail: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
+      credentialStrength: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 0.15,
+      },
+      selfDeclaredAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       sequelize,
