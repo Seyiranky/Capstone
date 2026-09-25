@@ -1,6 +1,10 @@
-const crypto = require('crypto');
-const { Transaction, sequelize } = require('../models');
-const simulatedAdapter = require('./payments/simulatedAdapter');
+import crypto from 'crypto';
+import { Transaction, sequelize } from '../models';
+import simulatedAdapter from './payments/simulatedAdapter';
+import type { PaymentAdapter, PaymentCallback } from './payments/adapter';
+import type { TransactionStatus } from '../types/domain';
+import { HttpError } from '../lib/httpError';
+import type { Match } from '../models/Match';
 
 /**
  * Provider-agnostic payment handling.
@@ -11,11 +15,11 @@ const simulatedAdapter = require('./payments/simulatedAdapter');
  * mobile-money API — request now, confirm later by callback — so the code above
  * it is already correct for one.
  */
-const ADAPTERS = {
+const ADAPTERS: Record<string, PaymentAdapter> = {
   [simulatedAdapter.name]: simulatedAdapter,
 };
 
-const activeAdapter = () => {
+const activeAdapter = (): PaymentAdapter => {
   const name = process.env.PAYMENT_PROVIDER || simulatedAdapter.name;
   const adapter = ADAPTERS[name];
   if (!adapter) {
@@ -26,7 +30,11 @@ const activeAdapter = () => {
   return adapter;
 };
 
-exports.initiate = async (match, amount, { payerMsisdn } = {}) => {
+export const initiate = async (
+  match: Match,
+  amount: number,
+  { payerMsisdn }: { payerMsisdn?: string | null } = {},
+): Promise<Transaction> => {
   const adapter = activeAdapter();
   const reference = `ISK-${crypto.randomUUID()}`;
 
@@ -53,11 +61,28 @@ exports.initiate = async (match, amount, { payerMsisdn } = {}) => {
   });
 };
 
-const ALLOWED_TRANSITIONS = {
+const ALLOWED_TRANSITIONS: Record<TransactionStatus, TransactionStatus[]> = {
   initiated: ['confirmed', 'failed'],
   confirmed: [],
   failed: [],
 };
+
+/**
+ * Whether a settled-state change is permitted.
+ *
+ * The table above is exhaustive over TransactionStatus, so adding a state
+ * fails to compile until its transitions are declared. The lookup still
+ * tolerates a row holding something outside the union, which is what the
+ * original `?.` guarded against.
+ */
+const canTransition = (from: string, to: TransactionStatus): boolean =>
+  ALLOWED_TRANSITIONS[from as TransactionStatus]?.includes(to) ?? false;
+
+/** What applyCallback reports back to the webhook controller. */
+export type CallbackResult =
+  | { ok: false; reason: 'unknownProvider' | 'unknownTransaction'; transaction?: undefined }
+  | { ok: true; duplicate: true; conflicting?: boolean; transaction: Transaction }
+  | { ok: true; duplicate: false; transaction: Transaction };
 
 /**
  * Applies a provider callback.
@@ -70,13 +95,19 @@ const ALLOWED_TRANSITIONS = {
  * The row is locked while it is read and written, so two callbacks arriving
  * together cannot both observe 'initiated' and both apply.
  */
-exports.applyCallback = async ({ provider, providerReference, status, failureReason, raw }) => {
+export const applyCallback = async ({
+  provider,
+  providerReference,
+  status,
+  failureReason,
+  raw,
+}: PaymentCallback): Promise<CallbackResult> => {
   const adapter = ADAPTERS[provider];
   if (!adapter) {
     return { ok: false, reason: 'unknownProvider' };
   }
 
-  return sequelize.transaction(async (t) => {
+  return sequelize.transaction(async (t): Promise<CallbackResult> => {
     const transaction = await Transaction.findOne({
       where: { provider, providerReference },
       lock: t.LOCK.UPDATE,
@@ -92,7 +123,7 @@ exports.applyCallback = async ({ provider, providerReference, status, failureRea
     if (target === transaction.status) {
       return { ok: true, duplicate: true, transaction };
     }
-    if (!ALLOWED_TRANSITIONS[transaction.status]?.includes(target)) {
+    if (!canTransition(transaction.status, target)) {
       // Already settled the other way. Recorded, never silently overwritten.
       return { ok: true, duplicate: true, conflicting: true, transaction };
     }
@@ -112,6 +143,21 @@ exports.applyCallback = async ({ provider, providerReference, status, failureRea
   });
 };
 
+/** Loads a transaction that is still open, or explains why it is not. */
+const openTransaction = async (transactionId: string, verb: string): Promise<Transaction> => {
+  const transaction = await Transaction.findByPk(transactionId);
+  if (!transaction) {
+    throw new HttpError('Transaction not found', 404);
+  }
+  if (transaction.status !== 'initiated') {
+    throw new HttpError(
+      `Cannot ${verb} a transaction with status '${transaction.status}'`,
+      409,
+    );
+  }
+  return transaction;
+};
+
 /**
  * Confirms a payment from inside the platform.
  *
@@ -119,38 +165,20 @@ exports.applyCallback = async ({ provider, providerReference, status, failureRea
  * simulated flow exercises the real code rather than a shortcut that only
  * exists in simulation and is therefore never tested.
  */
-exports.confirm = async (transactionId) => {
-  const transaction = await Transaction.findByPk(transactionId);
-  if (!transaction) {
-    throw Object.assign(new Error('Transaction not found'), { status: 404 });
-  }
-  if (transaction.status !== 'initiated') {
-    throw Object.assign(
-      new Error(`Cannot confirm a transaction with status '${transaction.status}'`),
-      { status: 409 },
-    );
-  }
+export const confirm = async (transactionId: string): Promise<Transaction> => {
+  const transaction = await openTransaction(transactionId, 'confirm');
 
   const adapter = ADAPTERS[transaction.provider] ?? simulatedAdapter;
   const callback = adapter.buildCallback({
     providerReference: transaction.providerReference ?? transaction.reference,
     status: 'SUCCESSFUL',
   });
-  const result = await exports.applyCallback(callback);
+  const result = await applyCallback(callback);
   return result.transaction ?? transaction;
 };
 
-exports.fail = async (transactionId, reason) => {
-  const transaction = await Transaction.findByPk(transactionId);
-  if (!transaction) {
-    throw Object.assign(new Error('Transaction not found'), { status: 404 });
-  }
-  if (transaction.status !== 'initiated') {
-    throw Object.assign(
-      new Error(`Cannot fail a transaction with status '${transaction.status}'`),
-      { status: 409 },
-    );
-  }
+export const fail = async (transactionId: string, reason?: string): Promise<Transaction> => {
+  const transaction = await openTransaction(transactionId, 'fail');
 
   const adapter = ADAPTERS[transaction.provider] ?? simulatedAdapter;
   const callback = adapter.buildCallback({
@@ -158,9 +186,8 @@ exports.fail = async (transactionId, reason) => {
     status: 'FAILED',
     failureReason: reason,
   });
-  const result = await exports.applyCallback(callback);
+  const result = await applyCallback(callback);
   return result.transaction ?? transaction;
 };
 
-exports.activeAdapter = activeAdapter;
-exports.ADAPTERS = ADAPTERS;
+export { activeAdapter, ADAPTERS };

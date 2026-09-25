@@ -1,4 +1,12 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
+import type {
+  BuildCallbackInput,
+  PaymentAdapter,
+  PaymentCallback,
+  PaymentRequest,
+  PaymentRequestResult,
+} from './adapter';
+import type { TransactionStatus } from '../../types/domain';
 
 /**
  * The simulated mobile-money provider.
@@ -8,11 +16,11 @@ const crypto = require('crypto');
  * existing records and the tests that assert them stay valid.
  *
  * It is also the reference implementation of the adapter contract: a real
- * provider implements these four methods and nothing above this layer changes.
+ * provider implements these four members and nothing above this layer changes.
  */
 const PROVIDER = 'simulated-momo';
 
-exports.name = PROVIDER;
+export const name = PROVIDER;
 
 /**
  * Asks the provider to collect money.
@@ -22,7 +30,12 @@ exports.name = PROVIDER;
  * synchronously. Code written against this shape works unchanged against a
  * real gateway.
  */
-exports.requestPayment = async ({ amount, currency = 'RWF', payerMsisdn, reference }) => {
+export const requestPayment = async ({
+  amount,
+  currency = 'RWF',
+  payerMsisdn,
+  reference,
+}: PaymentRequest): Promise<PaymentRequestResult> => {
   const providerReference = `MOMO-SIM-${crypto.randomUUID()}`;
   return {
     providerReference,
@@ -45,7 +58,11 @@ exports.requestPayment = async ({ amount, currency = 'RWF', payerMsisdn, referen
  * provider would, rather than having a second code path that only exists in
  * simulation and is therefore never exercised.
  */
-exports.buildCallback = ({ providerReference, status = 'SUCCESSFUL', failureReason = null }) => ({
+export const buildCallback = ({
+  providerReference,
+  status = 'SUCCESSFUL',
+  failureReason = null,
+}: BuildCallbackInput): PaymentCallback => ({
   provider: PROVIDER,
   providerReference,
   status,
@@ -54,11 +71,18 @@ exports.buildCallback = ({ providerReference, status = 'SUCCESSFUL', failureReas
 });
 
 /** Maps a provider's vocabulary onto the platform's three states. */
-exports.normaliseStatus = (providerStatus) => {
+export const normaliseStatus = (
+  providerStatus: string | null | undefined,
+): TransactionStatus => {
   const value = String(providerStatus ?? '').toUpperCase();
   if (['SUCCESSFUL', 'SUCCESS', 'COMPLETED'].includes(value)) return 'confirmed';
   if (['FAILED', 'REJECTED', 'CANCELLED', 'TIMEOUT'].includes(value)) return 'failed';
   return 'initiated';
 };
 
-exports.PROVIDER = PROVIDER;
+export { PROVIDER };
+
+/** The module, viewed through the contract — this is what the façade registers. */
+const simulatedAdapter: PaymentAdapter = { name, requestPayment, buildCallback, normaliseStatus };
+
+export default simulatedAdapter;

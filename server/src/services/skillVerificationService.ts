@@ -1,13 +1,6 @@
-const crypto = require('crypto');
-const { Op, fn, col } = require('sequelize');
-const {
-  User,
-  SkillTask,
-  SkillTaskAssignment,
-  UserSkill,
-  Match,
-  Gig,
-} = require('../models');
+import crypto from 'crypto';
+import { Op, fn, col } from 'sequelize';
+import { User, SkillTask, SkillTaskAssignment, UserSkill, Match, Gig } from '../models';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -27,20 +20,54 @@ const PEER_MIN_TRUST_SCORE = 3.5;
 // rather than a record of good work.
 const PEER_MIN_REVIEWS = 2;
 
+/** Every reason a candidate can be removed from the pool. Recorded per
+ *  assignment, because these rules are what RQ1 actually tests. */
+export type RejectionRule =
+  | 'self'
+  | 'alreadyReviewed'
+  | 'recentPairing'
+  | 'pairingLimit'
+  | 'priorGigRelationship'
+  | 'notCategoryCompetent'
+  | 'peerTrustTooLow'
+  | 'peerNoTrackRecord';
+
+export interface AssignmentAudit {
+  reason: string;
+  relaxPairingLimit: boolean;
+  poolSize: number;
+  eligibleCount: number;
+  rejections: { reviewerId: string; rule: RejectionRule }[];
+  /** Present only when a reviewer was actually drawn. */
+  minPendingLoad?: number;
+  tiedCount?: number;
+  seed?: string;
+}
+
+export interface ReviewerAssignment {
+  reviewer: User | null;
+  audit: AssignmentAudit;
+}
+
+export interface ApprovalRequirement {
+  requiredApprovals: 1 | 2;
+  rationale: 'firstVerification' | 'priorRejection' | 'establishedWorker';
+}
+
 /**
  * Deterministic draw from a seed.
  *
  * A bare Math.random() leaves no way to show an assignment was not steered.
  * Recording the seed makes every draw replayable by an auditor.
  */
-const seededPick = (items, seed) => {
+const seededPick = <T>(items: T[], seed: string): T => {
   const digest = crypto.createHash('sha256').update(seed).digest();
   const index = digest.readUInt32BE(0) % items.length;
   return items[index];
 };
 
 /** Reviewers this worker has been paired with too recently or too often. */
-const overusedReviewers = async (workerId) => {
+const overusedReviewers = async (workerId: string) => {
   const recentTasks = await SkillTask.findAll({
     where: { workerId },
     order: [['createdAt', 'DESC']],
@@ -73,7 +100,7 @@ const overusedReviewers = async (workerId) => {
 
   const counts = windowAssignments.reduce(
     (map, a) => map.set(a.reviewerId, (map.get(a.reviewerId) || 0) + 1),
-    new Map(),
+    new Map<string, number>(),
   );
   const overused = new Set(
     [...counts.entries()]
@@ -90,13 +117,13 @@ const overusedReviewers = async (workerId) => {
  * A prior commercial relationship is exactly the channel through which
  * reciprocal approval would flow, so it disqualifies a reviewer.
  */
-const pastCollaborators = async (workerId) => {
+const pastCollaborators = async (workerId: string): Promise<Set<string>> => {
   const asWorker = await Match.findAll({
     where: { workerId },
     include: [{ model: Gig, as: 'gig', attributes: ['clientId'] }],
     attributes: ['id'],
   });
-  const clientIds = asWorker.map((m) => m.gig?.clientId).filter(Boolean);
+  const clientIds = asWorker.map((m) => m.gig?.clientId).filter(Boolean) as string[];
 
   const theirGigs = await Gig.findAll({ where: { clientId: workerId }, attributes: ['id'] });
   const workersTheyHired = theirGigs.length
@@ -110,7 +137,10 @@ const pastCollaborators = async (workerId) => {
 };
 
 /** Peer reviewers must be verified in the category they are judging. */
-const categoryCompetentPeers = async (peerIds, skillId) => {
+const categoryCompetentPeers = async (
+  peerIds: string[],
+  skillId: string,
+): Promise<Set<string>> => {
   if (peerIds.length === 0) return new Set();
   const rows = await UserSkill.findAll({
     where: { userId: { [Op.in]: peerIds }, skillId, verificationStatus: 'verified' },
@@ -119,15 +149,21 @@ const categoryCompetentPeers = async (peerIds, skillId) => {
   return new Set(rows.map((r) => r.userId));
 };
 
-const pendingLoads = async () => {
-  const rows = await SkillTaskAssignment.findAll({
+const pendingLoads = async (): Promise<Map<string, number>> => {
+  const rows = (await SkillTaskAssignment.findAll({
     attributes: ['reviewerId', [fn('COUNT', col('id')), 'pendingCount']],
     where: { status: 'pending' },
     group: ['reviewerId'],
     raw: true,
-  });
+  })) as unknown as { reviewerId: string; pendingCount: string }[];
   return new Map(rows.map((r) => [r.reviewerId, Number(r.pendingCount)]));
 };
+
+interface AssignReviewerOptions {
+  exclude?: string[];
+  reason?: string;
+  relaxPairingLimit?: boolean;
+}
 
 /**
  * Picks a reviewer for a skill task under the anti-collusion constraints.
@@ -137,11 +173,11 @@ const pendingLoads = async () => {
  * for the final draw. `exclude` is used when reassigning after an appeal, so no
  * prior reviewer can see the task again.
  */
-exports.assignReviewer = async (
-  workerId,
-  skillId,
-  { exclude = [], reason = 'initial', relaxPairingLimit = false } = {},
-) => {
+export const assignReviewer = async (
+  workerId: string,
+  skillId: string,
+  { exclude = [], reason = 'initial', relaxPairingLimit = false }: AssignReviewerOptions = {},
+): Promise<ReviewerAssignment> => {
   const candidates = await User.findAll({
     where: { reviewerTier: { [Op.not]: null }, status: 'active' },
     attributes: ['id', 'name', 'reviewerTier', 'trustScore', 'role'],
@@ -156,9 +192,9 @@ exports.assignReviewer = async (
   const competentPeers = await categoryCompetentPeers(peerIds, skillId);
 
   const excluded = new Set(exclude);
-  const rejections = [];
+  const rejections: { reviewerId: string; rule: RejectionRule }[] = [];
   const eligible = candidates.filter((candidate) => {
-    const reject = (rule) => {
+    const reject = (rule: RejectionRule) => {
       rejections.push({ reviewerId: candidate.id, rule });
       return false;
     };
@@ -175,7 +211,7 @@ exports.assignReviewer = async (
     return true;
   });
 
-  const audit = {
+  const audit: AssignmentAudit = {
     reason,
     relaxPairingLimit,
     poolSize: candidates.length,
@@ -211,7 +247,7 @@ exports.assignReviewer = async (
  * trustworthy: a worker with nothing verified yet, one with a prior rejection,
  * or a reviewer who says outright they are unsure.
  */
-exports.requiredApprovalsFor = async (workerId) => {
+export const requiredApprovalsFor = async (workerId: string): Promise<ApprovalRequirement> => {
   const [verifiedCount, priorRejection] = await Promise.all([
     UserSkill.count({ where: { userId: workerId, verificationStatus: 'verified' } }),
     SkillTask.count({ where: { workerId, status: 'rejected' } }),
@@ -228,9 +264,11 @@ exports.requiredApprovalsFor = async (workerId) => {
   };
 };
 
-exports.LOW_CONFIDENCE_THRESHOLD = 3;
-exports.PEER_MIN_TRUST_SCORE = PEER_MIN_TRUST_SCORE;
-exports.PEER_MIN_REVIEWS = PEER_MIN_REVIEWS;
-exports.RECENT_TASKS_EXCLUDED = RECENT_TASKS_EXCLUDED;
-exports.MAX_PAIRINGS_PER_WINDOW = MAX_PAIRINGS_PER_WINDOW;
-exports.PAIRING_WINDOW_DAYS = PAIRING_WINDOW_DAYS;
+export const LOW_CONFIDENCE_THRESHOLD = 3;
+export {
+  PEER_MIN_TRUST_SCORE,
+  PEER_MIN_REVIEWS,
+  RECENT_TASKS_EXCLUDED,
+  MAX_PAIRINGS_PER_WINDOW,
+  PAIRING_WINDOW_DAYS,
+};

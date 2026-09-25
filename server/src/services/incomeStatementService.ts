@@ -1,12 +1,71 @@
-const crypto = require('crypto');
-const { Op } = require('sequelize');
-const jwt = require('jsonwebtoken');
-const { User, Transaction, Match, Gig, Skill } = require('../models');
+import crypto from 'crypto';
+import { Op, type WhereOptions } from 'sequelize';
+import jwt from 'jsonwebtoken';
+import { User, Transaction, Match, Gig, Skill } from '../models';
+import { passportSigningSecret } from '../config/env';
 
-const signingSecret = () =>
-  process.env.PASSPORT_SIGNING_SECRET || process.env.JWT_SECRET;
+const monthKey = (date: Date) => date.toISOString().slice(0, 7);
 
-const monthKey = (date) => date.toISOString().slice(0, 7);
+export interface StatementEntry {
+  date: Date;
+  amount: number;
+  currency: string;
+  provider: string;
+  reference: string;
+  gig: string | null;
+  category: string | null;
+}
+
+export interface MonthTotal {
+  month: string;
+  jobs: number;
+  total: number;
+}
+
+export interface CategoryTotal {
+  category: string;
+  jobs: number;
+  total: number;
+}
+
+export interface IncomeStatement {
+  holder: { id: string; name: string; memberSince: Date };
+  period: { from: string | Date | null; to: string | Date | null };
+  currency: string;
+  summary: {
+    jobsPaid: number;
+    totalEarned: number;
+    averagePerMonth: number;
+    averagePerJob: number;
+    monthsActive: number;
+  };
+  byMonth: MonthTotal[];
+  byCategory: CategoryTotal[];
+  entries: StatementEntry[];
+  generatedAt: string;
+  signature: string;
+}
+
+/** A verification result, discriminated on `valid`. */
+export type StatementVerification =
+  | { valid: false; reason: 'invalidSignature' | 'unknownHolder' }
+  | {
+      valid: true;
+      matches: boolean;
+      holder: string;
+      statedJobs: number;
+      statedTotal: number;
+      currentJobs: number;
+      currentTotal: number;
+    };
+
+/** What gets signed into the statement token. */
+interface StatementClaims extends jwt.JwtPayload {
+  sub: string;
+  digest: string;
+  jobs: number;
+  total: number;
+}
 
 /**
  * A verifiable record of earnings, for a lender rather than for the worker.
@@ -15,15 +74,21 @@ const monthKey = (date) => date.toISOString().slice(0, 7);
  * so mobile-money micro-finance has no history to underwrite against. Only
  * confirmed transactions count: an initiated payment is not income.
  */
-exports.build = async (userId, { from, to } = {}) => {
+export const build = async (
+  userId: string,
+  { from, to }: { from?: string | Date; to?: string | Date } = {},
+): Promise<IncomeStatement | null> => {
   const user = await User.findByPk(userId);
   if (!user) return null;
 
-  const where = { status: 'confirmed' };
+  const where: WhereOptions & { status: string; updatedAt?: Record<symbol, unknown> } = {
+    status: 'confirmed',
+  };
   if (from || to) {
-    where.updatedAt = {};
-    if (from) where.updatedAt[Op.gte] = from;
-    if (to) where.updatedAt[Op.lte] = to;
+    const range: Record<symbol, unknown> = {};
+    if (from) range[Op.gte] = from;
+    if (to) range[Op.lte] = to;
+    where.updatedAt = range;
   }
 
   const transactions = await Transaction.findAll({
@@ -40,7 +105,7 @@ exports.build = async (userId, { from, to } = {}) => {
     order: [['updatedAt', 'ASC']],
   });
 
-  const entries = transactions.map((t) => ({
+  const entries: StatementEntry[] = transactions.map((t) => ({
     date: t.updatedAt,
     amount: Number(t.amount),
     currency: 'RWF',
@@ -52,7 +117,7 @@ exports.build = async (userId, { from, to } = {}) => {
 
   const total = entries.reduce((sum, e) => sum + e.amount, 0);
 
-  const byMonth = entries.reduce((map, e) => {
+  const byMonth = entries.reduce<Record<string, MonthTotal>>((map, e) => {
     const key = monthKey(new Date(e.date));
     if (!map[key]) map[key] = { month: key, jobs: 0, total: 0 };
     map[key].jobs += 1;
@@ -60,7 +125,7 @@ exports.build = async (userId, { from, to } = {}) => {
     return map;
   }, {});
 
-  const byCategory = entries.reduce((map, e) => {
+  const byCategory = entries.reduce<Record<string, CategoryTotal>>((map, e) => {
     const key = e.category ?? 'other';
     if (!map[key]) map[key] = { category: key, jobs: 0, total: 0 };
     map[key].jobs += 1;
@@ -73,8 +138,8 @@ exports.build = async (userId, { from, to } = {}) => {
   const statement = {
     holder: { id: user.id, name: user.name, memberSince: user.createdAt },
     period: {
-      from: from ? new Date(from).toISOString() : entries[0]?.date ?? null,
-      to: to ? new Date(to).toISOString() : entries[entries.length - 1]?.date ?? null,
+      from: from ? new Date(from).toISOString() : (entries[0]?.date ?? null),
+      to: to ? new Date(to).toISOString() : (entries[entries.length - 1]?.date ?? null),
     },
     currency: 'RWF',
     summary: {
@@ -100,7 +165,7 @@ exports.build = async (userId, { from, to } = {}) => {
     .digest('hex');
   const signature = jwt.sign(
     { sub: userId, digest, jobs: entries.length, total },
-    signingSecret(),
+    passportSigningSecret(),
     { expiresIn: '90d' },
   );
 
@@ -108,20 +173,21 @@ exports.build = async (userId, { from, to } = {}) => {
 };
 
 /** Confirms a statement signature and that its figures are unaltered. */
-exports.verify = async (signature) => {
-  let payload;
+export const verify = async (signature: string): Promise<StatementVerification> => {
+  let payload: StatementClaims;
   try {
-    payload = jwt.verify(signature, signingSecret());
+    payload = jwt.verify(signature, passportSigningSecret()) as StatementClaims;
   } catch {
     return { valid: false, reason: 'invalidSignature' };
   }
 
-  const current = await exports.build(payload.sub);
+  const current = await build(payload.sub);
   if (!current) return { valid: false, reason: 'unknownHolder' };
 
   return {
     valid: true,
-    matches: current.summary.jobsPaid === payload.jobs && current.summary.totalEarned === payload.total,
+    matches:
+      current.summary.jobsPaid === payload.jobs && current.summary.totalEarned === payload.total,
     holder: current.holder.name,
     statedJobs: payload.jobs,
     statedTotal: payload.total,
@@ -130,9 +196,9 @@ exports.verify = async (signature) => {
   };
 };
 
-exports.toCsv = (statement) => {
+export const toCsv = (statement: IncomeStatement): string => {
   const header = ['date', 'gig', 'category', 'amount', 'currency', 'provider', 'reference'];
-  const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const escape = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const rows = statement.entries.map((e) =>
     [
       new Date(e.date).toISOString().slice(0, 10),

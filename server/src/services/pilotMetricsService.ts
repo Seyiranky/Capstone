@@ -1,25 +1,45 @@
-const { Op } = require('sequelize');
-const { Match, Gig, SkillTask, User } = require('../models');
-const { PEER_MIN_REVIEWS } = require('./skillVerificationService');
-const allocationService = require('./allocationService');
+import { Op } from 'sequelize';
+import { Match, Gig, SkillTask, User } from '../models';
+import { PEER_MIN_REVIEWS } from './skillVerificationService';
+import * as allocationService from './allocationService';
+import type { AllocationStatus } from './allocationService';
 
 const HOUR_MS = 1000 * 60 * 60;
 
-const median = (values) => {
+const median = (values: number[]): number | null => {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 };
 
-const mean = (values) =>
+const mean = (values: number[]): number | null =>
   values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 
-const summarise = (values) => ({
+export interface Summary {
+  n: number;
+  meanHours: number | null;
+  medianHours: number | null;
+}
+
+const summarise = (values: number[]): Summary => ({
   n: values.length,
   meanHours: mean(values),
   medianHours: median(values),
 });
+
+export interface Acceptance {
+  total: number;
+  awaitingResponse: number;
+  withdrawnOrSuperseded: number;
+  responded: number;
+  accepted: number;
+  declined: number;
+  acceptanceRate: number | null;
+  responseTime: Summary;
+  responseTimeActioned: Summary;
+  queuedOffline: number;
+}
 
 /**
  * Acceptance rate counts only matches the worker themselves answered.
@@ -30,7 +50,7 @@ const summarise = (values) => ({
  * invitations superseded when another worker took the gig. Counting any of
  * those as declines would understate how willing workers are to accept.
  */
-const acceptanceFor = (matches) => {
+const acceptanceFor = (matches: Match[]): Acceptance => {
   const responded = matches.filter((match) => match.respondedAt);
   const accepted = responded.filter((match) => match.acceptedAt);
   const awaiting = matches.filter((match) => match.status === 'pending');
@@ -43,29 +63,48 @@ const acceptanceFor = (matches) => {
     declined: responded.length - accepted.length,
     acceptanceRate: responded.length ? accepted.length / responded.length : null,
     responseTime: summarise(
-      responded.map((match) => (match.respondedAt - match.createdAt) / HOUR_MS),
+      responded.map(
+        (match) => ((match.respondedAt as Date).getTime() - match.createdAt.getTime()) / HOUR_MS,
+      ),
     ),
     // Server time measures when the platform heard; actioned time measures when
     // the worker decided. They diverge exactly as much as connectivity did, so
     // reporting only the first would attribute network delay to hesitation.
     responseTimeActioned: summarise(
       responded.map(
-        (match) => ((match.respondedOccurredAt ?? match.respondedAt) - match.createdAt) / HOUR_MS,
+        (match) =>
+          ((match.respondedOccurredAt ?? (match.respondedAt as Date)).getTime() -
+            match.createdAt.getTime()) /
+          HOUR_MS,
       ),
     ),
     queuedOffline: matches.filter((match) => match.wasQueuedOffline).length,
   };
 };
 
-const groupBy = (items, keyOf) =>
-  items.reduce((acc, item) => {
+const groupBy = <T>(items: T[], keyOf: (item: T) => string | null | undefined): Record<string, T[]> =>
+  items.reduce<Record<string, T[]>>((acc, item) => {
     const key = keyOf(item) ?? 'none';
     (acc[key] = acc[key] || []).push(item);
     return acc;
   }, {});
 
-const mapValues = (obj, fn) =>
+const mapValues = <T, R>(obj: Record<string, T>, fn: (value: T) => R): Record<string, R> =>
   Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, fn(value)]));
+
+export interface NewcomerAccess {
+  threshold: { reviewsBelow: number };
+  newcomers: number;
+  establishedWorkers: number;
+  invitations: {
+    total: number;
+    toNewcomers: number;
+    share: number | null;
+    byReason: { ranked: number; exploration: number };
+  };
+  acceptedMatches: { total: number; byNewcomers: number; share: number | null };
+  newcomersNeverInvited: number;
+}
 
 /**
  * Whether workers without a track record are actually being reached.
@@ -75,7 +114,7 @@ const mapValues = (obj, fn) =>
  * A starved pilot is otherwise invisible until the write-up, by which point
  * the data has already been collected from a handful of participants.
  */
-const newcomerAccess = async (matches) => {
+const newcomerAccess = async (matches: Match[]): Promise<NewcomerAccess> => {
   const workers = await User.findAll({
     where: { role: 'worker', status: 'active' },
     attributes: ['id', 'name', 'reviewCount'],
@@ -118,11 +157,39 @@ const newcomerAccess = async (matches) => {
   };
 };
 
-exports.collect = async ({ from, to } = {}) => {
-  const createdAt = {};
+export interface PilotMetrics {
+  window: { from: string | Date | null; to: string | Date | null };
+  matchAcceptance: {
+    overall: Acceptance;
+    byOrigin: Record<string, Acceptance>;
+    byInvitationReason: Record<string, Acceptance>;
+    byWeightProfile: Record<string, Acceptance>;
+  };
+  newcomerAccess: NewcomerAccess;
+  experimentAllocation: AllocationStatus;
+  timeToFirstMatch: {
+    gigsOpened: number;
+    openedNeverMatched: number;
+    toFirstMatch: Summary;
+    toFirstAcceptedMatch: Summary;
+  };
+  skillReviewTurnaround: {
+    submitted: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+    turnaround: Summary;
+  };
+}
+
+export const collect = async ({
+  from,
+  to,
+}: { from?: string | Date; to?: string | Date } = {}): Promise<PilotMetrics> => {
+  const createdAt: Record<symbol, unknown> = {};
   if (from) createdAt[Op.gte] = from;
   if (to) createdAt[Op.lte] = to;
-  const dateFilter = Object.keys(createdAt).length ? { createdAt } : {};
+  const dateFilter = Object.getOwnPropertySymbols(createdAt).length ? { createdAt } : {};
 
   const matches = await Match.findAll({ where: dateFilter });
 
@@ -133,8 +200,8 @@ exports.collect = async ({ from, to } = {}) => {
     include: [{ model: Match, as: 'matches' }],
   });
 
-  const timeToFirstMatch = [];
-  const timeToFirstAccepted = [];
+  const timeToFirstMatch: number[] = [];
+  const timeToFirstAccepted: number[] = [];
   let openedNeverMatched = 0;
 
   for (const gig of gigs) {
@@ -144,11 +211,15 @@ exports.collect = async ({ from, to } = {}) => {
       continue;
     }
     const firstCreated = Math.min(...gigMatches.map((m) => m.createdAt.getTime()));
-    timeToFirstMatch.push((firstCreated - gig.openedAt.getTime()) / HOUR_MS);
+    timeToFirstMatch.push((firstCreated - (gig.openedAt as Date).getTime()) / HOUR_MS);
 
-    const acceptedTimes = gigMatches.filter((m) => m.acceptedAt).map((m) => m.acceptedAt.getTime());
+    const acceptedTimes = gigMatches
+      .filter((m) => m.acceptedAt)
+      .map((m) => (m.acceptedAt as Date).getTime());
     if (acceptedTimes.length) {
-      timeToFirstAccepted.push((Math.min(...acceptedTimes) - gig.openedAt.getTime()) / HOUR_MS);
+      timeToFirstAccepted.push(
+        (Math.min(...acceptedTimes) - (gig.openedAt as Date).getTime()) / HOUR_MS,
+      );
     }
   }
 
@@ -157,14 +228,17 @@ exports.collect = async ({ from, to } = {}) => {
   // updatedAt approximates the decision time; SkillTaskAssignments.decidedAt
   // will make this exact once per-reviewer assignment rounds land.
   const reviewTurnaround = decided.map(
-    (task) => (task.updatedAt - task.createdAt) / HOUR_MS,
+    (task) => (task.updatedAt.getTime() - task.createdAt.getTime()) / HOUR_MS,
   );
 
   return {
     window: { from: from || null, to: to || null },
     matchAcceptance: {
       overall: acceptanceFor(matches),
-      byOrigin: mapValues(groupBy(matches, (m) => m.origin), acceptanceFor),
+      byOrigin: mapValues(
+        groupBy(matches, (m) => m.origin),
+        acceptanceFor,
+      ),
       // A reserved-slot invitation is not evidence the ranking chose that
       // worker, so it must never be pooled with an earned one when reporting
       // how well ranking performs.
@@ -175,7 +249,10 @@ exports.collect = async ({ from, to } = {}) => {
         ),
         acceptanceFor,
       ),
-      byWeightProfile: mapValues(groupBy(matches, (m) => m.weightProfileId), acceptanceFor),
+      byWeightProfile: mapValues(
+        groupBy(matches, (m) => m.weightProfileId),
+        acceptanceFor,
+      ),
     },
     newcomerAccess: await newcomerAccess(matches),
     // Surfaced so arm balance and remaining capacity are visible during the

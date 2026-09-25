@@ -1,4 +1,6 @@
-const { UserSkill, SkillTask, Match, Gig, Review } = require('../models');
+import { UserSkill, SkillTask, Match, Gig, Review } from '../models';
+import type { Provenance } from '../types/domain';
+import type { CompetenceResult, ProvenanceDetail } from '../types/scoring';
 
 /**
  * How a competence claim was established, and what that is worth.
@@ -14,20 +16,25 @@ const { UserSkill, SkillTask, Match, Gig, Review } = require('../models');
  * them unrankable — reproducing the cold-start exclusion this platform exists
  * to break.
  */
-const TIERS = {
+const TIERS: Record<Provenance, number> = {
   self_declared: 0.15,
   document_sighted: 0.5,
   peer_reviewed: 0.8,
   work_earned: 1,
 };
 
-const TIER_ORDER = ['self_declared', 'document_sighted', 'peer_reviewed', 'work_earned'];
+const TIER_ORDER = [
+  'self_declared',
+  'document_sighted',
+  'peer_reviewed',
+  'work_earned',
+] as const satisfies readonly Provenance[];
 
 // Completed, reviewed jobs in this skill before the work itself is treated as
 // the credential. One job is an anecdote.
 const JOBS_FOR_WORK_EARNED = 3;
 
-const rank = (tier) => TIER_ORDER.indexOf(tier);
+const rank = (tier: Provenance) => TIER_ORDER.indexOf(tier as (typeof TIER_ORDER)[number]);
 
 /**
  * Recomputes provenance and strength for one worker-skill pair.
@@ -36,13 +43,21 @@ const rank = (tier) => TIER_ORDER.indexOf(tier);
  * supports, so adding evidence can raise a claim but never quietly demote a
  * worker who has done nothing wrong.
  */
-exports.recalculate = async (userId, skillId, { trigger = null } = {}) => {
+export const recalculate = async (
+  userId: string,
+  skillId: string,
+  { trigger = null }: { trigger?: string | null } = {},
+): Promise<CompetenceResult | null> => {
   const userSkill = await UserSkill.findOne({ where: { userId, skillId } });
   if (!userSkill) return null;
 
   const [approvedDemonstrations, sightedCertificates, completedJobs] = await Promise.all([
-    SkillTask.count({ where: { workerId: userId, skillId, status: 'approved', kind: 'demonstration' } }),
-    SkillTask.count({ where: { workerId: userId, skillId, status: 'approved', kind: 'certificate' } }),
+    SkillTask.count({
+      where: { workerId: userId, skillId, status: 'approved', kind: 'demonstration' },
+    }),
+    SkillTask.count({
+      where: { workerId: userId, skillId, status: 'approved', kind: 'certificate' },
+    }),
     Match.count({
       where: { workerId: userId, status: 'completed' },
       include: [{ model: Gig, as: 'gig', where: { skillId }, required: true }],
@@ -66,7 +81,7 @@ exports.recalculate = async (userId, skillId, { trigger = null } = {}) => {
       })
     : 0;
 
-  let provenance = 'self_declared';
+  let provenance: Provenance = 'self_declared';
   if (reviewedJobs >= JOBS_FOR_WORK_EARNED) {
     provenance = 'work_earned';
   } else if (approvedDemonstrations > 0) {
@@ -81,7 +96,7 @@ exports.recalculate = async (userId, skillId, { trigger = null } = {}) => {
     provenance = userSkill.provenance;
   }
 
-  const detail = {
+  const detail: ProvenanceDetail = {
     approvedDemonstrations,
     sightedCertificates,
     completedJobs,
@@ -101,11 +116,12 @@ exports.recalculate = async (userId, skillId, { trigger = null } = {}) => {
 };
 
 /** Recomputes every skill a worker holds, e.g. after a job completes. */
-exports.recalculateAllFor = async (userId, { trigger = null } = {}) => {
+export const recalculateAllFor = async (
+  userId: string,
+  { trigger = null }: { trigger?: string | null } = {},
+): Promise<(CompetenceResult | null)[]> => {
   const skills = await UserSkill.findAll({ where: { userId }, attributes: ['skillId'] });
-  return Promise.all(skills.map((s) => exports.recalculate(userId, s.skillId, { trigger })));
+  return Promise.all(skills.map((s) => recalculate(userId, s.skillId, { trigger })));
 };
 
-exports.TIERS = TIERS;
-exports.TIER_ORDER = TIER_ORDER;
-exports.JOBS_FOR_WORK_EARNED = JOBS_FOR_WORK_EARNED;
+export { TIERS, TIER_ORDER, JOBS_FOR_WORK_EARNED };

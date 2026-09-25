@@ -1,4 +1,6 @@
-const { Review, User, Match, Gig, UserSkill, TrustScoreSnapshot } = require('../models');
+import { Review, User, Match, Gig, UserSkill, TrustScoreSnapshot } from '../models';
+import type { Role } from '../types/domain';
+import type { TrustBreakdown, TrustComponent } from '../types/scoring';
 
 const FORMULA_VERSION = 'v3-bayesian-2026-09';
 
@@ -34,29 +36,43 @@ const MAX_ABANDONMENT_PENALTY = 0.25;
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+type ComponentKey = 'rating' | 'completion' | 'verification';
 
 // Components are declared with the roles they apply to. Weights are
 // renormalised over whichever components apply, so a client is not capped at
 // 80% of the scale merely for having no verifiable trade skills.
-const COMPONENT_WEIGHTS = {
+const COMPONENT_WEIGHTS: Record<ComponentKey, { weight: number; roles: Role[] }> = {
   rating: { weight: 0.55, roles: ['worker', 'client', 'admin'] },
   completion: { weight: 0.25, roles: ['worker', 'client', 'admin'] },
   verification: { weight: 0.2, roles: ['worker'] },
 };
 
-const ratingComponent = (reviews, now) => {
+/** A component before its weight is applied. */
+interface RawComponent<D> {
+  normalised: number;
+  detail: D;
+}
+
+type RatingDetail = Extract<TrustComponent, { key: 'rating' }>['detail'];
+type CompletionDetail = Extract<TrustComponent, { key: 'completion' }>['detail'];
+type VerificationDetail = Extract<TrustComponent, { key: 'verification' }>['detail'];
+
+const ratingComponent = (
+  reviews: Pick<Review, 'rating' | 'createdAt'>[],
+  now: Date,
+): RawComponent<RatingDetail> => {
   let weightedSum = 0;
   let weightTotal = 0;
   for (const review of reviews) {
-    const ageDays = (now - review.createdAt) / DAY_MS;
+    const ageDays = (now.getTime() - review.createdAt.getTime()) / DAY_MS;
     const weight = Math.pow(0.5, ageDays / RECENCY_HALF_LIFE_DAYS);
     weightedSum += weight * review.rating;
     weightTotal += weight;
   }
 
-  const shrunk =
-    (weightedSum + PRIOR_MEAN * PRIOR_STRENGTH) / (weightTotal + PRIOR_STRENGTH);
+  const shrunk = (weightedSum + PRIOR_MEAN * PRIOR_STRENGTH) / (weightTotal + PRIOR_STRENGTH);
 
   return {
     normalised: clamp(shrunk / 5, 0, 1),
@@ -72,7 +88,10 @@ const ratingComponent = (reviews, now) => {
   };
 };
 
-const completionComponent = (completed, abandoned) => {
+const completionComponent = (
+  completed: number,
+  abandoned: number,
+): RawComponent<CompletionDetail> => {
   const rate =
     (completed + COMPLETION_SMOOTHING_SUCCESS) /
     (completed + abandoned + COMPLETION_SMOOTHING_TOTAL);
@@ -82,7 +101,7 @@ const completionComponent = (completed, abandoned) => {
   };
 };
 
-const verificationComponent = (verifiedSkills) => ({
+const verificationComponent = (verifiedSkills: number): RawComponent<VerificationDetail> => ({
   normalised: clamp(verifiedSkills / VERIFIED_SKILLS_FOR_FULL_CREDIT, 0, 1),
   detail: { verifiedSkills, forFullCredit: VERIFIED_SKILLS_FOR_FULL_CREDIT },
 });
@@ -95,7 +114,7 @@ const verificationComponent = (verifiedSkills) => ({
  * week" is the honest answer, and penalising it would both punish good
  * behaviour and bias the acceptance-rate measure the pilot depends on.
  */
-const jobCountsFor = async (user) => {
+const jobCountsFor = async (user: User) => {
   const scope =
     user.role === 'client'
       ? { include: [{ model: Gig, as: 'gig', where: { clientId: user.id }, required: true }] }
@@ -121,7 +140,10 @@ const jobCountsFor = async (user) => {
  * Returns the score alongside its components so callers (and the UI) can show
  * *why* the number is what it is, rather than presenting an opaque figure.
  */
-exports.recalculate = async (userId, { trigger = null } = {}) => {
+export const recalculate = async (
+  userId: string,
+  { trigger = null }: { trigger?: string | null } = {},
+): Promise<TrustBreakdown | null> => {
   const user = await User.findByPk(userId);
   if (!user) return null;
 
@@ -142,8 +164,8 @@ exports.recalculate = async (userId, { trigger = null } = {}) => {
     verification: verificationComponent(verifiedSkills),
   };
 
-  const applicable = Object.entries(COMPONENT_WEIGHTS).filter(([, meta]) =>
-    meta.roles.includes(user.role),
+  const applicable = (Object.entries(COMPONENT_WEIGHTS) as [ComponentKey, { weight: number; roles: Role[] }][]).filter(
+    ([, meta]) => meta.roles.includes(user.role),
   );
   const weightTotal = applicable.reduce((sum, [, meta]) => sum + meta.weight, 0);
 
@@ -156,7 +178,7 @@ exports.recalculate = async (userId, { trigger = null } = {}) => {
       contribution: normalisedWeight * computed[key].normalised,
       detail: computed[key].detail,
     };
-  });
+  }) as TrustComponent[];
 
   const penalty =
     MAX_ABANDONMENT_PENALTY *
@@ -169,7 +191,7 @@ exports.recalculate = async (userId, { trigger = null } = {}) => {
   // this as "new" rather than showing a bare mid-scale number.
   const isProvisional = reviews.length === 0;
 
-  const breakdown = {
+  const breakdown: TrustBreakdown = {
     formulaVersion: FORMULA_VERSION,
     score,
     isProvisional,
@@ -205,6 +227,4 @@ exports.recalculate = async (userId, { trigger = null } = {}) => {
   return breakdown;
 };
 
-exports.FORMULA_VERSION = FORMULA_VERSION;
-exports.PRIOR_MEAN = PRIOR_MEAN;
-exports.PRIOR_STRENGTH = PRIOR_STRENGTH;
+export { FORMULA_VERSION, PRIOR_MEAN, PRIOR_STRENGTH };

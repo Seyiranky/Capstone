@@ -1,11 +1,21 @@
-const { Op } = require('sequelize');
-const { User, UserSkill, Skill, Match, MatchWeightProfile } = require('../models');
+import { Op } from 'sequelize';
+import { User, UserSkill, Skill, Match, MatchWeightProfile } from '../models';
+import type {
+  ComponentVariance,
+  RankedPair,
+  ScoreComponent,
+  ScoreReason,
+  ScoredPair,
+  WeightProfileShape,
+} from '../types/scoring';
+import type { VerificationStatus } from '../types/domain';
+import type { Gig } from '../models/Gig';
 
 const EARTH_RADIUS_KM = 6371;
 
 // Used only if no profile row is present (e.g. a bare test database). The
 // migration seeds 'balanced' with these same values.
-const FALLBACK_PROFILE = {
+const FALLBACK_PROFILE: WeightProfileShape = {
   id: null,
   name: 'balanced',
   weights: { distance: 0.3, trust: 0.3, skillFit: 0.3, availability: 0.1 },
@@ -20,12 +30,23 @@ const FALLBACK_PROFILE = {
 // This status factor moves out of skillFit and into a credentials component in
 // the next phase, so that "does this worker do this work" and "how well
 // established is the claim" stop being conflated.
-const SKILL_FIT_BY_STATUS = {
+const SKILL_FIT_BY_STATUS: Record<VerificationStatus, number> = {
   verified: 1,
   pending: 0.6,
   unverified: 0.4,
 };
 const SKILL_FIT_ABSENT = 0;
+
+/**
+ * The status factor, defaulting when the column holds something unexpected.
+ *
+ * The constant above is exhaustive over VerificationStatus, so a new status
+ * added to the union fails to compile until it is given a factor. The fallback
+ * covers the other direction: the column is a STRING with an isIn validator, so
+ * a row written before that validator existed could still carry anything.
+ */
+const skillFitFor = (status: string): number =>
+  SKILL_FIT_BY_STATUS[status as VerificationStatus] ?? SKILL_FIT_ABSENT;
 
 // How closely the worker's skill matches what the gig asked for. A sibling
 // specialisation still scores well: a tailor who does school uniforms can
@@ -36,6 +57,15 @@ const SPECIFICITY = {
   parentOnly: 0.5,
 };
 
+/** The subset of a Skill the scorer reads — a gig's own skill, or a lookup. */
+type GigSkillRef = Pick<Skill, 'id' | 'parentId'> & Partial<Pick<Skill, 'name'>>;
+
+/** A UserSkill with its Skill eagerly loaded, which specificityFor depends on. */
+type WorkerSkill = UserSkill & { skill?: Skill | null };
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+
 /**
  * How well a worker's proficiency meets what the gig asked for.
  *
@@ -43,7 +73,7 @@ const SPECIFICITY = {
  * level-1 worker should not rank identically, which they did until now. With a
  * requirement, the shortfall is proportional and never hard-excludes.
  */
-const levelFit = (effectiveLevel, requiredLevel) => {
+const levelFit = (effectiveLevel: number, requiredLevel: number | null | undefined) => {
   if (!requiredLevel) return clamp(0.7 + 0.06 * effectiveLevel, 0, 1);
   return clamp(effectiveLevel / requiredLevel, 0, 1);
 };
@@ -56,11 +86,14 @@ const levelFit = (effectiveLevel, requiredLevel) => {
  * mean nothing within a week — reviewer-set is the only reason `proficiencyLevel`
  * carries information.
  */
-const effectiveLevelFor = (workerSkill) =>
+const effectiveLevelFor = (workerSkill: WorkerSkill | null | undefined) =>
   workerSkill?.verificationStatus === 'verified' ? (workerSkill.proficiencyLevel ?? 1) : 1;
 
 /** Exact specialisation, sibling under the same parent, or category-level only. */
-const specificityFor = (workerSkill, gigSkill) => {
+const specificityFor = (
+  workerSkill: WorkerSkill | null | undefined,
+  gigSkill: GigSkillRef | null | undefined,
+): number | null => {
   if (!workerSkill || !gigSkill) return null;
   if (workerSkill.skillId === gigSkill.id) return SPECIFICITY.exact;
   // Both are specialisations beneath the same category.
@@ -78,10 +111,7 @@ const specificityFor = (workerSkill, gigSkill) => {
   return null;
 };
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-const toRad = (deg) => (deg * Math.PI) / 180;
-
-const haversineKm = (aLat, aLng, bLat, bLng) => {
+const haversineKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
   const dLat = toRad(bLat - aLat);
   const dLng = toRad(bLng - aLng);
   const h =
@@ -96,21 +126,30 @@ const haversineKm = (aLat, aLng, bLat, bLng) => {
  * far more than the tenth. With a 3km half-life, 0km scores 1.0, 3km scores
  * 0.5, 6km scores 0.25.
  */
-const distanceScore = (km, halfLifeKm) =>
+const distanceScore = (km: number | null, halfLifeKm: number) =>
   km === null ? null : clamp(Math.pow(0.5, km / halfLifeKm), 0, 1);
 
-const availabilityScore = (activeMatches) => {
+const availabilityScore = (activeMatches: number) => {
   if (activeMatches === 0) return 1;
   if (activeMatches === 1) return 0.5;
   return 0;
 };
 
-exports.resolveProfile = async (name) => {
+export const resolveProfile = async (name?: string): Promise<WeightProfileShape> => {
   const profile = name
     ? await MatchWeightProfile.findOne({ where: { name } })
     : await MatchWeightProfile.findOne({ where: { isActive: true } });
   return profile || FALLBACK_PROFILE;
 };
+
+interface ScorePairInput {
+  worker: User;
+  gig: Gig;
+  profile: WeightProfileShape;
+  workerSkill?: WorkerSkill | null;
+  activeMatches: number;
+  gigSkill?: GigSkillRef | null;
+}
 
 /**
  * Scores one (worker, gig) pair.
@@ -120,7 +159,14 @@ exports.resolveProfile = async (name) => {
  * show the explanation in the viewer's own language — a worker reading
  * Kinyarwanda must get the same account of the ranking as one reading English.
  */
-exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkill }) => {
+export const scorePair = ({
+  worker,
+  gig,
+  profile,
+  workerSkill,
+  activeMatches,
+  gigSkill,
+}: ScorePairInput): ScoredPair => {
   const weights = profile.weights;
 
   const km =
@@ -129,18 +175,16 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkil
       : null;
 
   const specificity = specificityFor(workerSkill, gigSkill ?? { id: gig.skillId, parentId: null });
-  const status = workerSkill
-    ? SKILL_FIT_BY_STATUS[workerSkill.verificationStatus] ?? SKILL_FIT_ABSENT
-    : SKILL_FIT_ABSENT;
+  const status = workerSkill ? skillFitFor(workerSkill.verificationStatus) : SKILL_FIT_ABSENT;
   const effectiveLevel = effectiveLevelFor(workerSkill);
   const level = levelFit(effectiveLevel, gig.requiredLevel);
 
   const fit = specificity === null ? SKILL_FIT_ABSENT : specificity * level * status;
 
-  const raw = {
+  const raw: Record<string, number> = {
     // No saved location is scored as neutral rather than zero, so a worker who
     // has not set a location is not silently buried.
-    distance: km === null ? 0.5 : distanceScore(km, profile.distanceHalfLifeKm),
+    distance: km === null ? 0.5 : (distanceScore(km, profile.distanceHalfLifeKm) as number),
     trust: clamp(worker.trustScore / 5, 0, 1),
     skillFit: fit,
     // How well established the claim is, as opposed to how well it fits. Kept
@@ -153,19 +197,19 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkil
   // Only weights with a matching signal become components. A profile carrying a
   // key this version does not compute would otherwise contribute NaN and
   // silently poison every total.
-  const components = Object.entries(weights)
+  const components: ScoreComponent[] = Object.entries(weights)
     .filter(([key]) => raw[key] !== undefined)
     .map(([key, weight]) => ({
       key,
       weight,
-      value: raw[key],
-      contribution: weight * raw[key],
+      value: raw[key] as number,
+      contribution: weight * (raw[key] as number),
     }));
 
   const total = components.reduce((sum, component) => sum + component.contribution, 0);
   const beyondRange = km !== null && km > profile.maxDistanceKm;
 
-  const reasons = [];
+  const reasons: ScoreReason[] = [];
   if (km === null) {
     reasons.push({ key: 'match.reason.noLocation', params: {} });
   } else {
@@ -234,7 +278,7 @@ exports.scorePair = ({ worker, gig, profile, workerSkill, activeMatches, gigSkil
   };
 };
 
-const activeMatchCounts = async (workerIds) => {
+const activeMatchCounts = async (workerIds: string[]): Promise<Map<string, number>> => {
   if (workerIds.length === 0) return new Map();
   const rows = await Match.findAll({
     where: { workerId: { [Op.in]: workerIds }, status: { [Op.in]: ['pending', 'accepted'] } },
@@ -242,7 +286,7 @@ const activeMatchCounts = async (workerIds) => {
   });
   return rows.reduce(
     (map, row) => map.set(row.workerId, (map.get(row.workerId) || 0) + 1),
-    new Map(),
+    new Map<string, number>(),
   );
 };
 
@@ -253,7 +297,7 @@ const activeMatchCounts = async (workerIds) => {
  * candidate, so the lookup has to span the family rather than demand an exact
  * id — otherwise sibling scoring could never fire.
  */
-const skillFamily = async (gigSkill) => {
+const skillFamily = async (gigSkill: GigSkillRef | null | undefined): Promise<string[]> => {
   if (!gigSkill) return [];
   const parentId = gigSkill.parentId ?? gigSkill.id;
   const relatives = await Skill.findAll({
@@ -264,17 +308,20 @@ const skillFamily = async (gigSkill) => {
 };
 
 /** Each worker's best-matching skill for this gig, richest match first. */
-const skillsByWorker = async (workerIds, gigSkill) => {
+const skillsByWorker = async (
+  workerIds: string[],
+  gigSkill: GigSkillRef | null | undefined,
+): Promise<Map<string, WorkerSkill>> => {
   if (workerIds.length === 0) return new Map();
   const familyIds = await skillFamily(gigSkill);
   if (familyIds.length === 0) return new Map();
 
-  const rows = await UserSkill.findAll({
+  const rows = (await UserSkill.findAll({
     where: { userId: { [Op.in]: workerIds }, skillId: { [Op.in]: familyIds } },
     include: [{ model: Skill, as: 'skill', attributes: ['id', 'name', 'parentId', 'category'] }],
-  });
+  })) as WorkerSkill[];
 
-  const best = new Map();
+  const best = new Map<string, WorkerSkill>();
   for (const row of rows) {
     const rank = specificityFor(row, gigSkill) ?? 0;
     const current = best.get(row.userId);
@@ -285,9 +332,19 @@ const skillsByWorker = async (workerIds, gigSkill) => {
   return best;
 };
 
+interface ScoreWorkersInput {
+  gig: Gig;
+  workers: User[];
+  profileName?: string;
+}
+
 /** Scores specific workers against a gig. */
-exports.scoreWorkers = async ({ gig, workers, profileName }) => {
-  const profile = await exports.resolveProfile(profileName);
+export const scoreWorkers = async ({
+  gig,
+  workers,
+  profileName,
+}: ScoreWorkersInput): Promise<ScoredPair[]> => {
+  const profile = await resolveProfile(profileName);
   const workerIds = workers.map((worker) => worker.id);
   const gigSkill =
     gig.skill ?? (await Skill.findByPk(gig.skillId, { attributes: ['id', 'name', 'parentId'] }));
@@ -298,7 +355,7 @@ exports.scoreWorkers = async ({ gig, workers, profileName }) => {
 
   return workers
     .map((worker) =>
-      exports.scorePair({
+      scorePair({
         worker,
         gig,
         gigSkill,
@@ -318,15 +375,15 @@ exports.scoreWorkers = async ({ gig, workers, profileName }) => {
  * weights do not mean equal influence — so any comparison of weight profiles
  * (RQ2) has to be read against these figures rather than the weights alone.
  */
-exports.componentVariance = (scored) => {
+export const componentVariance = (scored: ScoredPair[]): Record<string, ComponentVariance> => {
   if (scored.length === 0) return {};
   const keys = scored[0].components.map((c) => c.key);
   return Object.fromEntries(
     keys.map((key) => {
-      const values = scored.map((s) => s.components.find((c) => c.key === key).value);
+      const values = scored.map((s) => (s.components.find((c) => c.key === key) as ScoreComponent).value);
       const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
       const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
-      const weight = scored[0].components.find((c) => c.key === key).weight;
+      const weight = (scored[0].components.find((c) => c.key === key) as ScoreComponent).weight;
       const range = Math.max(...values) - Math.min(...values);
       return [
         key,
@@ -346,6 +403,12 @@ exports.componentVariance = (scored) => {
   );
 };
 
+interface RankCandidatesInput {
+  gig: Gig;
+  profileName?: string;
+  limit?: number;
+}
+
 /**
  * Ranks every active worker as a candidate for a gig.
  *
@@ -355,9 +418,13 @@ exports.componentVariance = (scored) => {
  * tailor, and showing that at the top of a client's list is misleading. They
  * stay listed with their explanation rather than being filtered out.
  */
-exports.rankCandidates = async ({ gig, profileName, limit }) => {
+export const rankCandidates = async ({
+  gig,
+  profileName,
+  limit,
+}: RankCandidatesInput): Promise<RankedPair[]> => {
   const workers = await User.findAll({ where: { role: 'worker', status: 'active' } });
-  const scored = await exports.scoreWorkers({ gig, workers, profileName });
+  const scored = await scoreWorkers({ gig, workers, profileName });
 
   const ranked = scored
     .sort((a, b) => {
@@ -369,7 +436,15 @@ exports.rankCandidates = async ({ gig, profileName, limit }) => {
   return limit ? ranked.slice(0, limit) : ranked;
 };
 
-exports.scoreOne = async ({ gig, worker, profileName }) => {
-  const [scored] = await exports.scoreWorkers({ gig, workers: [worker], profileName });
+export const scoreOne = async ({
+  gig,
+  worker,
+  profileName,
+}: {
+  gig: Gig;
+  worker: User;
+  profileName?: string;
+}): Promise<ScoredPair> => {
+  const [scored] = await scoreWorkers({ gig, workers: [worker], profileName });
   return scored;
 };

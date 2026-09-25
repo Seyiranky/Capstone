@@ -1,8 +1,10 @@
-const crypto = require('crypto');
-const { ExperimentAllocation, sequelize } = require('../models');
+import crypto from 'crypto';
+import { QueryTypes } from 'sequelize';
+import { ExperimentAllocation, sequelize } from '../models';
+import type { ExperimentArm } from '../types/domain';
 
 const EXPERIMENT = 'rq3_provenance';
-const ARMS = ['provenance', 'plain'];
+const ARMS: ExperimentArm[] = ['provenance', 'plain'];
 
 // Mixed block sizes on purpose. With a fixed size, the last entry of every
 // block is deducible from the ones before it, so whoever registers
@@ -10,13 +12,34 @@ const ARMS = ['provenance', 'plain'];
 // still bounding imbalance at half a block.
 const BLOCK_SIZES = [2, 4];
 
+/** One position in the generated sequence, before it is written to the table. */
+export interface AllocationRow {
+  experiment: string;
+  position: number;
+  blockIndex: number;
+  blockSize: number;
+  arm: ExperimentArm;
+  seed: string;
+}
+
+export interface AllocationStatus {
+  experiment: string;
+  seed: string | null;
+  total: number;
+  claimed: number;
+  remaining: number;
+  byArm: Record<ExperimentArm, number>;
+  imbalance: number;
+  exhausted: boolean;
+}
+
 /**
  * Deterministic pseudo-random stream from a seed.
  *
  * Seeded rather than Math.random so the published sequence can be regenerated
  * from the seed alone and checked against what the pilot actually used.
  */
-const streamFrom = (seed) => {
+const streamFrom = (seed: string): (() => number) => {
   let counter = 0;
   let buffer = Buffer.alloc(0);
   let offset = 0;
@@ -33,7 +56,7 @@ const streamFrom = (seed) => {
   };
 };
 
-const shuffle = (items, next) => {
+const shuffle = <T>(items: T[], next: () => number): T[] => {
   const out = [...items];
   for (let i = out.length - 1; i > 0; i -= 1) {
     const j = Math.floor(next() * (i + 1));
@@ -50,9 +73,12 @@ const shuffle = (items, next) => {
  * actually enrol — which matters when the target is roughly a dozen clients
  * and a lopsided split would leave the comparison with little power.
  */
-exports.generateSequence = (length, seed = crypto.randomUUID()) => {
+export const generateSequence = (
+  length: number,
+  seed: string = crypto.randomUUID(),
+): { seed: string; rows: AllocationRow[] } => {
   const next = streamFrom(seed);
-  const rows = [];
+  const rows: AllocationRow[] = [];
   let blockIndex = 0;
 
   while (rows.length < length) {
@@ -88,9 +114,9 @@ exports.generateSequence = (length, seed = crypto.randomUUID()) => {
  * Returns null when the list is exhausted; the caller decides what that means
  * rather than having an arm invented for them.
  */
-exports.claimArm = async (userId) => {
+export const claimArm = async (userId: string): Promise<ExperimentArm | null> => {
   return sequelize.transaction(async (transaction) => {
-    const [row] = await sequelize.query(
+    const [row] = await sequelize.query<{ id: string }>(
       `SELECT id FROM "ExperimentAllocations"
        WHERE "experiment" = :experiment AND "claimedByUserId" IS NULL
        ORDER BY "position" ASC
@@ -98,7 +124,7 @@ exports.claimArm = async (userId) => {
        FOR UPDATE SKIP LOCKED`,
       {
         replacements: { experiment: EXPERIMENT },
-        type: sequelize.QueryTypes.SELECT,
+        type: QueryTypes.SELECT,
         transaction,
       },
     );
@@ -106,23 +132,27 @@ exports.claimArm = async (userId) => {
     if (!row) return null;
 
     const allocation = await ExperimentAllocation.findByPk(row.id, { transaction });
+    if (!allocation) return null;
     await allocation.update({ claimedByUserId: userId, claimedAt: new Date() }, { transaction });
     return allocation.arm;
   });
 };
 
 /** Where the sequence stands, for the metrics endpoint and the write-up. */
-exports.status = async () => {
+export const status = async (): Promise<AllocationStatus> => {
   const rows = await ExperimentAllocation.findAll({
     where: { experiment: EXPERIMENT },
     order: [['position', 'ASC']],
   });
 
   const claimed = rows.filter((r) => r.claimedByUserId);
-  const byArm = ARMS.reduce((acc, arm) => {
-    acc[arm] = claimed.filter((r) => r.arm === arm).length;
-    return acc;
-  }, {});
+  const byArm = ARMS.reduce(
+    (acc, arm) => {
+      acc[arm] = claimed.filter((r) => r.arm === arm).length;
+      return acc;
+    },
+    {} as Record<ExperimentArm, number>,
+  );
 
   return {
     experiment: EXPERIMENT,
@@ -137,6 +167,4 @@ exports.status = async () => {
   };
 };
 
-exports.EXPERIMENT = EXPERIMENT;
-exports.ARMS = ARMS;
-exports.BLOCK_SIZES = BLOCK_SIZES;
+export { EXPERIMENT, ARMS, BLOCK_SIZES };
