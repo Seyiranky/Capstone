@@ -1,13 +1,44 @@
-'use strict';
-const { Model } = require('sequelize');
+import {
+  DataTypes,
+  Model,
+  type CreationOptional,
+  type InferAttributes,
+  type InferCreationAttributes,
+  type NonAttribute,
+  type Sequelize,
+} from 'sequelize';
+import type { Db } from './index';
+import type { Provenance, VerificationStatus } from '../types/domain';
+import type { ProvenanceDetail } from '../types/scoring';
+import type { Skill } from './Skill';
+import type { User } from './User';
 
-module.exports = (sequelize, DataTypes) => {
-  class UserSkill extends Model {
-    static associate(models) {
-      UserSkill.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
-      UserSkill.belongsTo(models.Skill, { foreignKey: 'skillId', as: 'skill' });
-    }
+export class UserSkill extends Model<
+  InferAttributes<UserSkill>,
+  InferCreationAttributes<UserSkill>
+> {
+  declare id: CreationOptional<string>;
+  declare userId: string;
+  declare skillId: string;
+  declare proficiencyLevel: CreationOptional<number>;
+  declare verificationStatus: CreationOptional<VerificationStatus>;
+  declare provenance: CreationOptional<Provenance>;
+  declare provenanceDetail: ProvenanceDetail | null;
+  declare credentialStrength: CreationOptional<number>;
+  declare selfDeclaredAt: Date | null;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+
+  declare user?: NonAttribute<User>;
+  declare skill?: NonAttribute<Skill>;
+
+  static associate(models: Db) {
+    UserSkill.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+    UserSkill.belongsTo(models.Skill, { foreignKey: 'skillId', as: 'skill' });
   }
+}
+
+export const initUserSkill = (sequelize: Sequelize) => {
   UserSkill.init(
     {
       id: {
@@ -57,6 +88,8 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      createdAt: DataTypes.DATE,
+      updatedAt: DataTypes.DATE,
     },
     {
       sequelize,
