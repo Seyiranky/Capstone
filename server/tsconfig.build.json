@@ -1,0 +1,15 @@
+{
+  /* The production build: src/ only, emitted to dist/. Tests are excluded so
+     dist/ carries just what the server runs. Everything else is inherited. */
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": false,
+    "types": ["node"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "migrations", "seeders", "uploads", "tests"]
+}

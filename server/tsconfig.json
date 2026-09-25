@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+
+    /* CommonJS throughout. Sequelize's model registry, sequelize-cli's loader
+       and the Jest transform all assume CJS, and the five integration tests
+       that set process.env after their imports depend on require ordering
+       that ESM hoisting would change. */
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+
+    /* No rootDir/outDir here: this config type-checks src/ and tests/ together
+       and never emits, so it must not be constrained to a single root.
+       Emit settings live in tsconfig.build.json. */
+    "noEmit": true,
+
+    /* Matches client/tsconfig.app.json so both halves of the stack are held
+       to one standard. */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "skipLibCheck": true,
+
+    /* Lets .ts and .js coexist while the migration is in flight. Both are
+       removed in the final phase, once nothing under src/ is JavaScript. */
+    "allowJs": true,
+    "checkJs": false,
+
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist", "migrations", "seeders", "uploads"]
+}
