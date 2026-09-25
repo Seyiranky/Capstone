@@ -2,7 +2,10 @@ const path = require('path');
 
 module.exports = {
   config: path.resolve('config', 'config.js'),
-  'models-path': path.resolve('models'),
+  // Only model:generate reads this; db:migrate and db:seed go through
+  // getMigrator() and never touch it. Kept accurate so the CLI does not
+  // scaffold a second models directory at the root.
+  'models-path': path.resolve('src', 'models'),
   'seeders-path': path.resolve('seeders'),
   'migrations-path': path.resolve('migrations'),
 };

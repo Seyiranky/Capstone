@@ -1,5 +1,5 @@
-const db = require('../../models');
-const service = require('../../services/collusionDetectionService');
+const db = require('../../src/models');
+const service = require('../../src/services/collusionDetectionService');
 
 let skill;
 const createdUserIds = [];

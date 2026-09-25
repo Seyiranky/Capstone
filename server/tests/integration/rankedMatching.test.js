@@ -1,7 +1,7 @@
 const request = require('supertest');
 const bcrypt = require('bcrypt');
-const app = require('../../app');
-const db = require('../../models');
+const app = require('../../src/app');
+const db = require('../../src/models');
 
 // The ranked arm: approving a gig invites a scored shortlist rather than
 // waiting for workers to find it themselves.

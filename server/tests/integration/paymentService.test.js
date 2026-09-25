@@ -1,5 +1,5 @@
-const db = require('../../models');
-const paymentService = require('../../services/paymentService');
+const db = require('../../src/models');
+const paymentService = require('../../src/services/paymentService');
 
 let skill;
 let client;

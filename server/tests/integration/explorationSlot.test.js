@@ -1,7 +1,7 @@
 const request = require('supertest');
 const bcrypt = require('bcrypt');
-const app = require('../../app');
-const db = require('../../models');
+const app = require('../../src/app');
+const db = require('../../src/models');
 
 // Three slots so there is room for two earned places and one reserved.
 process.env.RANKED_INVITE_LIMIT = '3';

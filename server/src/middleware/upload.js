@@ -3,7 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
 
-const UPLOAD_ROOT = path.join(__dirname, '..', 'uploads');
+const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 const GIG_IMAGE_DIR = path.join(UPLOAD_ROOT, 'gigs');
 const EVIDENCE_DIR = path.join(UPLOAD_ROOT, 'evidence');
 

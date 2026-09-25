@@ -1,7 +1,7 @@
 const request = require('supertest');
 const bcrypt = require('bcrypt');
-const app = require('../../app');
-const db = require('../../models');
+const app = require('../../src/app');
+const db = require('../../src/models');
 
 // This narrative covers the manual arm: a worker applies and is approved.
 // Ranked invitations are exercised separately in rankedMatching.test.js, and

@@ -1,8 +1,8 @@
 const request = require('supertest');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const app = require('../../app');
-const db = require('../../models');
+const app = require('../../src/app');
+const db = require('../../src/models');
 
 // Rotation is what this suite is checking, so the pool must be big enough for
 // a placement to be a real choice rather than the only option.

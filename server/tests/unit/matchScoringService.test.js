@@ -1,4 +1,4 @@
-const matchScoringService = require('../../services/matchScoringService');
+const matchScoringService = require('../../src/services/matchScoringService');
 
 // Kimironko, one of the two pilot sectors.
 const GIG = {

@@ -1,7 +1,7 @@
 const request = require('supertest');
 const bcrypt = require('bcrypt');
-const app = require('../../app');
-const db = require('../../models');
+const app = require('../../src/app');
+const db = require('../../src/models');
 
 process.env.RANKED_INVITE_LIMIT = '0';
 process.env.EXPLORATION_SLOTS = '0';
@@ -40,7 +40,7 @@ const paidMatch = async () => {
     status: 'completed',
     acceptedAt: new Date(),
   });
-  const paymentService = require('../../services/paymentService');
+  const paymentService = require('../../src/services/paymentService');
   const transaction = await paymentService.initiate(match, gig.budget);
   return { match, transaction };
 };

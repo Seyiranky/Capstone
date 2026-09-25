@@ -29,7 +29,9 @@ app.use(morgan('dev'));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// uploads/ sits beside src/, not inside it, so that the same path resolves
+// whether this file runs from src/ under tsx or from dist/ after a build.
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

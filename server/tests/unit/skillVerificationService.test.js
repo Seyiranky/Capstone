@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
-const db = require('../../models');
-const service = require('../../services/skillVerificationService');
+const db = require('../../src/models');
+const service = require('../../src/services/skillVerificationService');
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 

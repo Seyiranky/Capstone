@@ -1,5 +1,5 @@
-const db = require('../../models');
-const service = require('../../services/allocationService');
+const db = require('../../src/models');
+const service = require('../../src/services/allocationService');
 
 const createdUserIds = [];
 

@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const request = require('supertest');
 const bcrypt = require('bcrypt');
-const app = require('../../app');
-const db = require('../../models');
+const app = require('../../src/app');
+const db = require('../../src/models');
 
 // Reviewer rotation is not what this suite tests, so keep the pool ample.
 const stamp = Date.now();

@@ -1,5 +1,5 @@
-const db = require('../../models');
-const service = require('../../services/competenceService');
+const db = require('../../src/models');
+const service = require('../../src/services/competenceService');
 
 let skill;
 const createdUserIds = [];

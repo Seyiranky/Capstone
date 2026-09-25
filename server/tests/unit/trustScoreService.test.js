@@ -1,5 +1,5 @@
-const db = require('../../models');
-const trustScoreService = require('../../services/trustScoreService');
+const db = require('../../src/models');
+const trustScoreService = require('../../src/services/trustScoreService');
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
