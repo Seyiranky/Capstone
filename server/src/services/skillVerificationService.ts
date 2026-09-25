@@ -180,7 +180,11 @@ export const assignReviewer = async (
 ): Promise<ReviewerAssignment> => {
   const candidates = await User.findAll({
     where: { reviewerTier: { [Op.not]: null }, status: 'active' },
-    attributes: ['id', 'name', 'reviewerTier', 'trustScore', 'role'],
+    // reviewCount is selected because the peer track-record rule below reads
+    // it. Without it the column comes back undefined, `?? 0` makes it zero, and
+    // every peer is rejected as peerNoTrackRecord — which is what happened
+    // until now, leaving the pool admin-only.
+    attributes: ['id', 'name', 'reviewerTier', 'trustScore', 'role', 'reviewCount'],
   });
 
   const [{ recent, overused }, collaborators] = await Promise.all([
