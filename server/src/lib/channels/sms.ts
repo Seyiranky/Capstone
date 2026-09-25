@@ -10,10 +10,17 @@
  */
 const PINDO_ENDPOINT = process.env.PINDO_ENDPOINT || 'https://api.pindo.io/v1/sms/';
 
-const driverName = () => process.env.SMS_DRIVER || 'log';
+export interface SmsResult {
+  provider: string;
+  providerMessageId: string | null;
+}
+
+type SmsDriver = (message: { to: string; text: string }) => Promise<SmsResult>;
+
+const driverName = (): string => process.env.SMS_DRIVER || 'log';
 
 /** Rwandan numbers reach the gateway in international form. */
-const normaliseMsisdn = (phone) => {
+const normaliseMsisdn = (phone: string | null | undefined): string => {
   const digits = String(phone ?? '').replace(/[^\d+]/g, '');
   if (digits.startsWith('+')) return digits;
   if (digits.startsWith('250')) return `+${digits}`;
@@ -22,7 +29,7 @@ const normaliseMsisdn = (phone) => {
   return `+${digits}`;
 };
 
-const drivers = {
+const drivers: Record<string, SmsDriver> = {
   /** Records what would have been sent, so the flow is exercised end to end. */
   log: async ({ to, text }) => {
     console.log(`[sms:log] -> ${to}: ${text}`);
@@ -53,7 +60,7 @@ const drivers = {
       throw new Error(`Pindo rejected the message (${response.status}): ${body.slice(0, 200)}`);
     }
 
-    let parsed;
+    let parsed: { sms_id?: string; id?: string };
     try {
       parsed = JSON.parse(body);
     } catch {
@@ -70,7 +77,13 @@ const drivers = {
  * delivery did not happen. A pilot needs to know a number was wrong or a
  * balance was empty, not merely that nothing arrived.
  */
-exports.send = async ({ to, text }) => {
+export const send = async ({
+  to,
+  text,
+}: {
+  to: string | null | undefined;
+  text: string;
+}): Promise<SmsResult> => {
   const name = driverName();
   const driver = drivers[name];
   if (!driver) {
@@ -79,5 +92,4 @@ exports.send = async ({ to, text }) => {
   return driver({ to: normaliseMsisdn(to), text });
 };
 
-exports.driverName = driverName;
-exports.normaliseMsisdn = normaliseMsisdn;
+export { driverName, normaliseMsisdn };

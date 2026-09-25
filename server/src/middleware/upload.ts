@@ -1,7 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const multer = require('multer');
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import multer from 'multer';
+import type { Request } from 'express';
+import type { EvidenceKind } from '../types/domain';
 
 const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 const GIG_IMAGE_DIR = path.join(UPLOAD_ROOT, 'gigs');
@@ -9,11 +11,21 @@ const EVIDENCE_DIR = path.join(UPLOAD_ROOT, 'evidence');
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+interface EvidenceSpec {
+  mimes: string[];
+  maxBytes: number;
+  kind: EvidenceKind;
+}
+
 // Video and audio are capped well below the image-per-pixel equivalent because
 // the people uploading them are on metered mobile data.
-const EVIDENCE_LIMITS = {
+const EVIDENCE_LIMITS: Record<string, EvidenceSpec> = {
   image: { mimes: ALLOWED_MIME_TYPES, maxBytes: 10 * 1024 * 1024, kind: 'photo' },
-  video: { mimes: ['video/mp4', 'video/webm', 'video/quicktime'], maxBytes: 25 * 1024 * 1024, kind: 'video' },
+  video: {
+    mimes: ['video/mp4', 'video/webm', 'video/quicktime'],
+    maxBytes: 25 * 1024 * 1024,
+    kind: 'video',
+  },
   audio: {
     mimes: ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav'],
     maxBytes: 5 * 1024 * 1024,
@@ -28,7 +40,7 @@ const EVIDENCE_LIMITS = {
   },
 };
 
-const EXTENSION_BY_MIME = {
+const EXTENSION_BY_MIME: Record<string, string> = {
   'application/pdf': '.pdf',
   'audio/webm': '.webm',
   'audio/mp4': '.m4a',
@@ -40,13 +52,24 @@ const EXTENSION_BY_MIME = {
   'video/quicktime': '.mov',
 };
 
-const diskStorage = (dir) =>
+/**
+ * A MulterError carrying a human-readable reason.
+ *
+ * Multer's second constructor argument is typed as the *field* name, but the
+ * codebase has always passed an explanation here and the error middleware
+ * relays `err.message` straight to the caller. Preserved deliberately: changing
+ * it would replace a usable message with a field name in the API response.
+ */
+const rejectUpload = (message: string) =>
+  new multer.MulterError('LIMIT_UNEXPECTED_FILE', message as unknown as string);
+
+const diskStorage = (dir: string) =>
   multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (_req, _file, cb) => {
       fs.mkdirSync(dir, { recursive: true });
       cb(null, dir);
     },
-    filename: (req, file, cb) => {
+    filename: (_req, file, cb) => {
       // Browser-recorded blobs arrive without a usable filename, so the
       // extension comes from the declared type instead.
       const ext = path.extname(file.originalname) || EXTENSION_BY_MIME[file.mimetype] || '';
@@ -54,33 +77,38 @@ const diskStorage = (dir) =>
     },
   });
 
-const gigImageFilter = (req, file, cb) => {
+const gigImageFilter: multer.Options['fileFilter'] = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb,
+) => {
   if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Only JPEG, PNG, WEBP, or GIF images are allowed'));
+    return cb(rejectUpload('Only JPEG, PNG, WEBP, or GIF images are allowed'));
   }
   cb(null, true);
 };
 
-const evidenceFilter = (req, file, cb) => {
+const evidenceFilter: multer.Options['fileFilter'] = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb,
+) => {
   const allowed = Object.values(EVIDENCE_LIMITS).some((spec) => spec.mimes.includes(file.mimetype));
   if (!allowed) {
     return cb(
-      new multer.MulterError(
-        'LIMIT_UNEXPECTED_FILE',
-        'Evidence must be an image, an MP4/WebM video, an audio recording, or a PDF',
-      ),
+      rejectUpload('Evidence must be an image, an MP4/WebM video, an audio recording, or a PDF'),
     );
   }
   cb(null, true);
 };
 
-exports.uploadGigImage = multer({
+export const uploadGigImage = multer({
   storage: diskStorage(GIG_IMAGE_DIR),
   fileFilter: gigImageFilter,
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-exports.uploadEvidence = multer({
+export const uploadEvidence = multer({
   storage: diskStorage(EVIDENCE_DIR),
   fileFilter: evidenceFilter,
   // Multer enforces one ceiling, so the per-type limits below are checked after
@@ -89,15 +117,15 @@ exports.uploadEvidence = multer({
 });
 
 /** Maps an uploaded file to its evidence kind, or null if the type is not allowed. */
-exports.evidenceKindFor = (mimetype) => {
+export const evidenceKindFor = (mimetype: string): EvidenceKind | null => {
   const spec = Object.values(EVIDENCE_LIMITS).find((s) => s.mimes.includes(mimetype));
   return spec ? spec.kind : null;
 };
 
 /** Per-type size ceiling, so a 20MB voice note is rejected even though video allows it. */
-exports.evidenceLimitFor = (mimetype) => {
+export const evidenceLimitFor = (mimetype: string): number => {
   const spec = Object.values(EVIDENCE_LIMITS).find((s) => s.mimes.includes(mimetype));
   return spec ? spec.maxBytes : 0;
 };
 
-exports.EVIDENCE_DIR = EVIDENCE_DIR;
+export { EVIDENCE_DIR };

@@ -1,10 +1,31 @@
-const { Notification, NotificationDelivery, User } = require('../models');
-const sms = require('./channels/sms');
+import type { Request } from 'express';
+import { Notification, NotificationDelivery, User } from '../models';
+import * as sms from './channels/sms';
+import { ioFrom } from './io';
+import type { DeliveryChannel, DeliveryStatus } from '../types/domain';
+
+interface NotificationFields {
+  userId: string;
+  title: string;
+  body: string;
+}
+
+interface DeliveryRecord {
+  status: DeliveryStatus;
+  provider?: string | null;
+  providerMessageId?: string | null;
+  error?: string | null;
+  sentAt?: Date;
+}
 
 // In-app is the default channel for everyone and is never opted out of; SMS is
 // additional and only for those who asked for it. FR-13 words it that way, and
 // it also means a notification is never lost because a phone was unreachable.
-const recordDelivery = (notificationId, channel, fields) =>
+const recordDelivery = (
+  notificationId: string,
+  channel: DeliveryChannel,
+  fields: DeliveryRecord,
+) =>
   NotificationDelivery.create({ notificationId, channel, ...fields }).catch(() => {
     /* bookkeeping must never break the thing it is recording */
   });
@@ -16,7 +37,7 @@ const recordDelivery = (notificationId, channel, fields) =>
  * pilot reporting delivery needs to distinguish "they did not want SMS" from
  * "we tried and it failed", and only a row can tell them apart afterwards.
  */
-const deliverSms = async (notification, user) => {
+const deliverSms = async (notification: Notification, user: User | null) => {
   if (!user?.smsNotificationsEnabled) {
     return recordDelivery(notification.id, 'sms', { status: 'skipped', error: 'not opted in' });
   }
@@ -41,7 +62,7 @@ const deliverSms = async (notification, user) => {
     return recordDelivery(notification.id, 'sms', {
       status: 'failed',
       provider: sms.driverName(),
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 };
@@ -53,12 +74,16 @@ const deliverSms = async (notification, user) => {
  * wait on a mobile network, and a gateway timing out must not fail the action
  * that triggered it.
  */
-const notify = async (req, fields, { channels = ['in_app', 'sms'] } = {}) => {
+const notify = async (
+  req: Pick<Request, 'app'> | undefined,
+  fields: NotificationFields,
+  { channels = ['in_app', 'sms'] }: { channels?: DeliveryChannel[] } = {},
+): Promise<Notification> => {
   const notification = await Notification.create(fields);
 
   if (channels.includes('in_app')) {
     try {
-      const io = req?.app?.get('io');
+      const io = ioFrom(req);
       if (io) {
         io.to(fields.userId).emit('notification:new', notification);
       }
@@ -73,10 +98,19 @@ const notify = async (req, fields, { channels = ['in_app', 'sms'] } = {}) => {
       attributes: ['id', 'phone', 'smsNotificationsEnabled'],
     });
     // Deliberately not awaited.
-    deliverSms(notification, user);
+    void deliverSms(notification, user);
   }
 
   return notification;
 };
 
-module.exports = notify;
+/**
+ * Exported with `export =` rather than a default export on purpose.
+ *
+ * This module has always been `module.exports = notify` — a bare function —
+ * and eighteen call sites do `require('../lib/notify')` expecting exactly
+ * that. A default export would compile to `exports.default` and every one of
+ * them would call undefined. `export =` emits the same CommonJS shape, while
+ * `import notify from './lib/notify'` still works under esModuleInterop.
+ */
+export = notify;
