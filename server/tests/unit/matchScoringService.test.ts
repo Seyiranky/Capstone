@@ -1,4 +1,5 @@
-const matchScoringService = require('../../src/services/matchScoringService');
+import * as matchScoringService from '../../src/services/matchScoringService';
+import type { Provenance, VerificationStatus } from '../../src/types/domain';
 
 // Kimironko, one of the two pilot sectors.
 const GIG = {
@@ -30,7 +31,7 @@ const TRUST_FIRST = {
   weights: { distance: 0.2, trust: 0.5, skillFit: 0.25, availability: 0.05 },
 };
 
-const worker = (overrides = {}) => ({
+const worker = (overrides: any = {}) => ({
   id: 'worker-1',
   locationLat: GIG.locationLat,
   locationLng: GIG.locationLng,
@@ -47,17 +48,29 @@ const CATEGORY_SKILL = { id: 'cat-tailoring', name: 'Tailoring', parentId: null 
 const UNRELATED_SKILL = { id: 'skill-laptops', name: 'Laptop repair', parentId: 'cat-electronics' };
 
 /** A worker's skill row as the scorer receives it, with its Skill included. */
-const userSkill = (skill, overrides = {}) => ({
+const userSkill = (
+  skill: { id: string; name: string; parentId: string | null },
+  // Partial rather than a loose record: spreading `unknown` values would widen
+  // every field and stop the result satisfying the scorer's input type.
+  overrides: Partial<{
+    verificationStatus: VerificationStatus;
+    proficiencyLevel: number;
+    credentialStrength: number;
+    provenance: Provenance;
+  }> = {},
+) => ({
   skillId: skill.id,
   skill,
-  verificationStatus: 'verified',
+  // Annotated rather than inferred: a bare string literal widens to `string`
+  // and stops satisfying the VerificationStatus union the scorer expects.
+  verificationStatus: 'verified' as VerificationStatus,
   proficiencyLevel: 3,
   ...overrides,
 });
 
 const verified = userSkill(GIG_SKILL);
 
-const score = (args) =>
+const score = (args: any) =>
   matchScoringService.scorePair({
     gig: GIG,
     gigSkill: GIG_SKILL,
@@ -67,8 +80,8 @@ const score = (args) =>
     ...args,
   });
 
-const componentValue = (result, key) =>
-  result.components.find((component) => component.key === key).value;
+const componentValue = (result: any, key: any) =>
+  result.components.find((component: any) => component.key === key).value;
 
 describe('distance scoring', () => {
   test('a worker at the gig location scores a perfect proximity value', () => {
@@ -111,7 +124,7 @@ describe('distance scoring', () => {
   });
 });
 
-const fitFor = (workerSkill, gigOverrides = {}) =>
+const fitFor = (workerSkill: any, gigOverrides = {}) =>
   componentValue(
     score({ worker: worker(), workerSkill, gig: { ...GIG, ...gigOverrides } }),
     'skillFit',
@@ -233,7 +246,7 @@ describe('weight profiles (RQ2)', () => {
     locationLat: GIG.locationLat + 8 / 111.32,
   });
 
-  const rank = (profile) => {
+  const rank = (profile: any) => {
     const results = [near, far].map((w) =>
       matchScoringService.scorePair({
         worker: w,

@@ -8,7 +8,7 @@ import type {
   ScoredPair,
   WeightProfileShape,
 } from '../types/scoring';
-import type { VerificationStatus } from '../types/domain';
+import type { Provenance, VerificationStatus } from '../types/domain';
 import type { Gig } from '../models/Gig';
 
 const EARTH_RADIUS_KM = 6371;
@@ -60,8 +60,21 @@ const SPECIFICITY = {
 /** The subset of a Skill the scorer reads — a gig's own skill, or a lookup. */
 type GigSkillRef = Pick<Skill, 'id' | 'parentId'> & Partial<Pick<Skill, 'name'>>;
 
-/** A UserSkill with its Skill eagerly loaded, which specificityFor depends on. */
-type WorkerSkill = UserSkill & { skill?: Skill | null };
+/**
+ * A worker's skill as the scorer reads it: the claim, how well established it
+ * is, and enough of the Skill to judge specificity. Structural for the same
+ * reason ScorableWorker is — the eagerly-loaded row satisfies it, and so does
+ * a fixture.
+ */
+type WorkerSkill = Pick<UserSkill, 'skillId' | 'verificationStatus' | 'proficiencyLevel'> & {
+  // Both are read with a fallback, so a caller may legitimately omit them.
+  credentialStrength?: number;
+  provenance?: Provenance | null;
+  skill?: Pick<Skill, 'name' | 'parentId'> | null;
+};
+
+/** The same thing as loaded from the database, where userId is present. */
+type LoadedWorkerSkill = WorkerSkill & { userId: string };
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -142,9 +155,26 @@ export const resolveProfile = async (name?: string): Promise<WeightProfileShape>
   return profile || FALLBACK_PROFILE;
 };
 
+/**
+ * Only the fields scorePair actually reads.
+ *
+ * Declared structurally rather than as the full model, because scoring is a
+ * pure function of these five values — saying so lets a caller (and a unit
+ * test) supply the inputs without constructing a database row, and stops the
+ * signature implying a dependency on thirty columns it never touches.
+ */
+export type ScorableWorker = Pick<
+  User,
+  'id' | 'locationLat' | 'locationLng' | 'trustScore' | 'reviewCount'
+>;
+
+export type ScorableGig = Pick<Gig, 'skillId' | 'locationLat' | 'locationLng'> & {
+  requiredLevel?: number | null;
+};
+
 interface ScorePairInput {
-  worker: User;
-  gig: Gig;
+  worker: ScorableWorker;
+  gig: ScorableGig;
   profile: WeightProfileShape;
   workerSkill?: WorkerSkill | null;
   activeMatches: number;
@@ -311,7 +341,7 @@ const skillFamily = async (gigSkill: GigSkillRef | null | undefined): Promise<st
 const skillsByWorker = async (
   workerIds: string[],
   gigSkill: GigSkillRef | null | undefined,
-): Promise<Map<string, WorkerSkill>> => {
+): Promise<Map<string, LoadedWorkerSkill>> => {
   if (workerIds.length === 0) return new Map();
   const familyIds = await skillFamily(gigSkill);
   if (familyIds.length === 0) return new Map();
@@ -319,9 +349,9 @@ const skillsByWorker = async (
   const rows = (await UserSkill.findAll({
     where: { userId: { [Op.in]: workerIds }, skillId: { [Op.in]: familyIds } },
     include: [{ model: Skill, as: 'skill', attributes: ['id', 'name', 'parentId', 'category'] }],
-  })) as WorkerSkill[];
+  })) as LoadedWorkerSkill[];
 
-  const best = new Map<string, WorkerSkill>();
+  const best = new Map<string, LoadedWorkerSkill>();
   for (const row of rows) {
     const rank = specificityFor(row, gigSkill) ?? 0;
     const current = best.get(row.userId);

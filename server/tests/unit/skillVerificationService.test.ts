@@ -1,14 +1,16 @@
-const { Op } = require('sequelize');
-const db = require('../../src/models');
-const service = require('../../src/services/skillVerificationService');
+import { Op } from 'sequelize';
+import db from '../../src/models';
+import * as service from '../../src/services/skillVerificationService';
+import { must } from '../helpers/fixtures';
+import type { Role } from '../../src/types/domain';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
-let skill;
-let otherSkill;
-const createdUserIds = [];
+let skill: InstanceType<typeof db.Skill>;
+let otherSkill: InstanceType<typeof db.Skill>;
+const createdUserIds: string[] = [];
 
-const makeUser = async (role, overrides = {}) => {
+const makeUser = async (role: Role, overrides = {}) => {
   const user = await db.User.create({
     name: `SV ${role} ${Math.random().toString(36).slice(2, 8)}`,
     email: `sv-${role}-${Math.random().toString(36).slice(2, 10)}@example.com`,
@@ -22,7 +24,7 @@ const makeUser = async (role, overrides = {}) => {
 
 const makeAdminReviewer = () => makeUser('admin', { reviewerTier: 'admin' });
 
-const makePeerReviewer = async ({ trustScore = 4.5, skillId } = {}) => {
+const makePeerReviewer = async ({ trustScore = 4.5, skillId }: { trustScore?: number; skillId?: string } = {}) => {
   const peer = await makeUser('worker', { reviewerTier: 'peer', trustScore });
   await db.UserSkill.create({
     userId: peer.id,
@@ -34,7 +36,7 @@ const makePeerReviewer = async ({ trustScore = 4.5, skillId } = {}) => {
 };
 
 /** A decided task for `workerId` reviewed by `reviewerId`, `ageDays` old. */
-const pastTask = async (workerId, reviewerId, { ageDays = 0 } = {}) => {
+const pastTask = async (workerId: string, reviewerId: any, { ageDays = 0 } = {}) => {
   const at = new Date(Date.now() - ageDays * DAY_MS);
   const task = await db.SkillTask.create(
     {
@@ -65,8 +67,8 @@ const pastTask = async (workerId, reviewerId, { ageDays = 0 } = {}) => {
 };
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'tailoring' } });
-  otherSkill = await db.Skill.findOne({ where: { category: 'tutoring' } });
+  skill = must(await db.Skill.findOne({ where: { category: 'tailoring' } }), 'skill');
+  otherSkill = must(await db.Skill.findOne({ where: { category: 'tutoring' } }), 'otherSkill');
 });
 
 afterAll(async () => {
@@ -82,7 +84,7 @@ describe('reviewer eligibility', () => {
 
     const { reviewer, audit } = await service.assignReviewer(worker.id, skill.id);
     expect(reviewer).toBeTruthy();
-    expect(reviewer.id).not.toBe(worker.id);
+    expect(reviewer!.id).not.toBe(worker.id);
     expect(audit.rejections).toEqual(
       expect.arrayContaining([{ reviewerId: worker.id, rule: 'self' }]),
     );
@@ -96,7 +98,7 @@ describe('reviewer eligibility', () => {
     await pastTask(worker.id, recent.id);
 
     const { reviewer, audit } = await service.assignReviewer(worker.id, skill.id);
-    expect(reviewer.id).not.toBe(recent.id);
+    expect(reviewer!.id).not.toBe(recent.id);
     expect(audit.rejections).toEqual(
       expect.arrayContaining([{ reviewerId: recent.id, rule: 'recentPairing' }]),
     );
@@ -139,7 +141,7 @@ describe('reviewer eligibility', () => {
     await db.Match.create({ gigId: gig.id, workerId: worker.id, status: 'completed' });
 
     const { reviewer, audit } = await service.assignReviewer(worker.id, skill.id);
-    expect(reviewer.id).not.toBe(collaborator.id);
+    expect(reviewer!.id).not.toBe(collaborator.id);
     expect(audit.rejections).toEqual(
       expect.arrayContaining([{ reviewerId: collaborator.id, rule: 'priorGigRelationship' }]),
     );
@@ -153,7 +155,7 @@ describe('reviewer eligibility', () => {
     const admin = await makeAdminReviewer();
 
     const { reviewer, audit } = await service.assignReviewer(worker.id, skill.id);
-    expect(reviewer.id).not.toBe(wrongCategory.id);
+    expect(reviewer!.id).not.toBe(wrongCategory.id);
     expect(audit.rejections).toEqual(
       expect.arrayContaining([{ reviewerId: wrongCategory.id, rule: 'notCategoryCompetent' }]),
     );
@@ -166,7 +168,7 @@ describe('reviewer eligibility', () => {
     const admin = await makeAdminReviewer();
 
     const { reviewer, audit } = await service.assignReviewer(worker.id, skill.id);
-    expect(reviewer.id).not.toBe(lowTrust.id);
+    expect(reviewer!.id).not.toBe(lowTrust.id);
     expect(audit.rejections).toEqual(
       expect.arrayContaining([{ reviewerId: lowTrust.id, rule: 'peerTrustTooLow' }]),
     );
@@ -182,7 +184,7 @@ describe('reviewer eligibility', () => {
       exclude: [first.id],
       reason: 'appeal',
     });
-    expect(reviewer.id).not.toBe(first.id);
+    expect(reviewer!.id).not.toBe(first.id);
     expect(audit.reason).toBe('appeal');
     expect(second).toBeTruthy();
     expect(audit.rejections).toEqual(
@@ -238,7 +240,7 @@ describe('assignment auditability', () => {
     });
 
     const { reviewer, audit } = await service.assignReviewer(worker.id, skill.id);
-    expect(reviewer.id).not.toBe(busy.id);
+    expect(reviewer!.id).not.toBe(busy.id);
     expect(audit.minPendingLoad).toBe(0);
     expect(idle).toBeTruthy();
   });

@@ -1,12 +1,13 @@
-const request = require('supertest');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const app = require('../../src/app');
-const db = require('../../src/models');
+import request from 'supertest';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import app from '../../src/app';
+import db from '../../src/models';
+import { must } from '../helpers/fixtures';
 
 const stamp = Date.now();
 const password = 'password123';
-const emails = {
+const emails: Record<string, string> = {
   worker: `sv-worker-${stamp}@example.com`,
   worker2: `sv-worker2-${stamp}@example.com`,
   worker3: `sv-worker3-${stamp}@example.com`,
@@ -19,20 +20,20 @@ const emails = {
   peer: `sv-peer-${stamp}@example.com`,
 };
 
-let skill;
-let users = {};
-let tokens = {};
+let skill: InstanceType<typeof db.Skill>;
+const users: Record<string, InstanceType<typeof db.User>> = {};
+const tokens: Record<string, string> = {};
 
-const login = async (email) => {
+const login = async (email: string) => {
   const res = await request(app).post('/api/auth/login').send({ email, password });
   return res.body.token;
 };
 
 /** Whichever reviewer currently holds the open assignment for a task. */
-const openAssignee = async (taskId) => {
-  const assignment = await db.SkillTaskAssignment.findOne({
+const openAssignee = async (taskId: string) => {
+  const assignment = must(await db.SkillTaskAssignment.findOne({
     where: { taskId, status: 'pending' },
-  });
+  }), 'assignment');
   return assignment?.reviewerId ?? null;
 };
 
@@ -43,16 +44,16 @@ const openAssignee = async (taskId) => {
  * reviewer another suite created. Minting a token directly keeps this suite
  * testing the rotation mechanism rather than its own fixture list.
  */
-const tokenForUserId = async (userId) => {
+const tokenForUserId = async (userId: string | null | undefined) => {
   if (!userId) throw new Error('no open assignment: the eligible reviewer pool was exhausted');
   const key = Object.keys(users).find((k) => users[k].id === userId);
   if (key) return tokens[key];
-  const user = await db.User.findByPk(userId);
-  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const user = must(await db.User.findByPk(userId), 'user');
+  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
 };
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'digital_web' } });
+  skill = must(await db.Skill.findOne({ where: { category: 'digital_web' } }), 'skill');
   const passwordHash = await bcrypt.hash(password, 10);
 
   for (const key of ['worker', 'worker2', 'worker3']) {
@@ -84,7 +85,7 @@ afterAll(async () => {
 
 describe('reviewer enrolment', () => {
   test('an admin is a reviewer on creation, without being granted it', async () => {
-    const admin = await db.User.findByPk(users.admin1.id);
+    const admin = must(await db.User.findByPk(users.admin1.id), 'admin');
     expect(admin.reviewerTier).toBe('admin');
   });
 
@@ -146,8 +147,8 @@ describe('reviewer enrolment', () => {
 });
 
 describe('quorum for a first verification', () => {
-  let taskId;
-  let firstReviewerId;
+  let taskId: string;
+  let firstReviewerId: string;
 
   test('a first submission requires two approvals', async () => {
     const res = await request(app)
@@ -169,7 +170,7 @@ describe('quorum for a first verification', () => {
     );
     const res = await request(app)
       .put(`/api/skill-tasks/${taskId}/review`)
-      .set('Authorization', `Bearer ${tokens[outsiderKey]}`)
+      .set('Authorization', `Bearer ${tokens[outsiderKey as string]}`)
       .send({ decision: 'approved' });
     expect(res.status).toBe(403);
   });
@@ -198,18 +199,18 @@ describe('quorum for a first verification', () => {
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('approved');
 
-    const userSkill = await db.UserSkill.findOne({
+    const userSkill = must(await db.UserSkill.findOne({
       where: { userId: users.worker.id, skillId: skill.id },
-    });
+    }), 'userSkill');
     expect(userSkill.verificationStatus).toBe('verified');
     // Previously pinned at 1 regardless of what the reviewer saw.
     expect(userSkill.proficiencyLevel).toBe(4);
   });
 
   test('verification raised the trust score', async () => {
-    const worker = await db.User.findByPk(users.worker.id);
+    const worker = must(await db.User.findByPk(users.worker.id), 'worker');
     expect(worker.trustScore).toBeGreaterThan(0);
-    expect(worker.trustScoreBreakdown.components.map((c) => c.key)).toContain('verification');
+    expect(worker.trustScoreBreakdown!.components.map!((c: any) => c.key)).toContain('verification');
   });
 
   test('each round is recorded with its own assignment row for audit', async () => {
@@ -255,7 +256,7 @@ describe('low confidence escalates', () => {
 });
 
 describe('disagreement and appeal', () => {
-  let taskId;
+  let taskId: string;
 
   test('a split decision is flagged and escalated to a third reviewer', async () => {
     const submit = await request(app)

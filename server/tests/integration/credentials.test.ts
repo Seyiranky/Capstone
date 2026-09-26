@@ -1,8 +1,9 @@
-const request = require('supertest');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const app = require('../../src/app');
-const db = require('../../src/models');
+import request from 'supertest';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import app from '../../src/app';
+import db from '../../src/models';
+import { must } from '../helpers/fixtures';
 
 // Rotation is what this suite is checking, so the pool must be big enough for
 // a placement to be a real choice rather than the only option.
@@ -13,7 +14,7 @@ process.env.EXPLORATION_SLOTS = '0';
 
 const stamp = Date.now();
 const password = 'password123';
-const emails = {
+const emails: Record<string, string> = {
   worker: `cred-worker-${stamp}@example.com`,
   client: `cred-client-${stamp}@example.com`,
   admin1: `cred-admin1-${stamp}@example.com`,
@@ -27,33 +28,33 @@ const PNG = Buffer.from(
   'base64',
 );
 
-let skill;
-let users = {};
-let tokens = {};
+let skill: InstanceType<typeof db.Skill>;
+const users: Record<string, InstanceType<typeof db.User>> = {};
+const tokens: Record<string, string> = {};
 
-const login = async (email) => {
+const login = async (email: string) => {
   const res = await request(app).post('/api/auth/login').send({ email, password });
   return res.body.token;
 };
 
 /** A token for whoever holds the open assignment, whoever that turns out to be. */
-const tokenForUserId = async (userId) => {
+const tokenForUserId = async (userId: string | null | undefined) => {
   if (!userId) throw new Error('no open assignment: the eligible reviewer pool was exhausted');
   const key = Object.keys(users).find((k) => users[k].id === userId);
   if (key) return tokens[key];
-  const user = await db.User.findByPk(userId);
-  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const user = must(await db.User.findByPk(userId), 'user');
+  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
 };
 
-const openAssignee = async (taskId) => {
-  const assignment = await db.SkillTaskAssignment.findOne({
+const openAssignee = async (taskId: string) => {
+  const assignment = must(await db.SkillTaskAssignment.findOne({
     where: { taskId, status: 'pending' },
-  });
+  }), 'assignment');
   return assignment?.reviewerId ?? null;
 };
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'electronics_repair', parentId: null } });
+  skill = must(await db.Skill.findOne({ where: { category: 'electronics_repair', parentId: null } }), 'skill');
   const passwordHash = await bcrypt.hash(password, 10);
 
   users.worker = await db.User.create({
@@ -114,8 +115,8 @@ describe('self-declaration', () => {
 });
 
 describe('a certificate goes through the same rotation as a skill', () => {
-  let taskId;
-  let reviewerId;
+  let taskId: string;
+  let reviewerId: string;
 
   test('submitting a certificate requires a claim about what it is', async () => {
     const res = await request(app)
@@ -158,9 +159,9 @@ describe('a certificate goes through the same rotation as a skill', () => {
     // Never the worker themselves.
     expect(reviewerId).not.toBe(users.worker.id);
 
-    const assignment = await db.SkillTaskAssignment.findOne({
+    const assignment = must(await db.SkillTaskAssignment.findOne({
       where: { taskId, reviewerId },
-    });
+    }), 'assignment');
     // The seed and pool size are what make a placement auditable rather than
     // merely asserted; a bespoke certificate path would have neither.
     expect(assignment.assignmentSeed).toBeTruthy();
@@ -185,12 +186,12 @@ describe('a certificate goes through the same rotation as a skill', () => {
         .send({ decision: 'approved', confidence: 4, proficiencyLevel: 3 });
     }
 
-    const userSkill = await db.UserSkill.findOne({
+    const userSkill = must(await db.UserSkill.findOne({
       where: { userId: users.worker.id, skillId: skill.id },
-    });
+    }), 'userSkill');
     expect(userSkill.provenance).toBe('document_sighted');
     expect(userSkill.credentialStrength).toBe(0.5);
-    expect(userSkill.provenanceDetail.sightedCertificates).toBe(1);
+    expect(userSkill.provenanceDetail!.sightedCertificates!).toBe(1);
   });
 
   test('a demonstration then outranks the document', async () => {
@@ -216,9 +217,9 @@ describe('a certificate goes through the same rotation as a skill', () => {
         .send({ decision: 'approved', confidence: 5, proficiencyLevel: 4 });
     }
 
-    const userSkill = await db.UserSkill.findOne({
+    const userSkill = must(await db.UserSkill.findOne({
       where: { userId: users.worker.id, skillId: skill.id },
-    });
+    }), 'userSkill');
     expect(userSkill.provenance).toBe('peer_reviewed');
     expect(userSkill.credentialStrength).toBe(0.8);
   });
@@ -242,26 +243,26 @@ describe('credentials reach the ranking', () => {
       .get(`/api/gigs/${gig.body.id}/candidates`)
       .set('Authorization', `Bearer ${tokens.client}`);
 
-    const ours = res.body.candidates.find((c) => c.workerId === users.worker.id);
-    const credentials = ours.components.find((c) => c.key === 'credentials');
+    const ours = must(res.body.candidates.find((c: any) => c.workerId === users.worker.id), 'ours');
+    const credentials = must(ours.components.find((c: any) => c.key === 'credentials'), 'credentials');
     expect(credentials.value).toBe(0.8);
-    expect(ours.reasons.map((r) => r.key)).toContain('match.reason.provenance.peer_reviewed');
+    expect(ours.reasons.map((r: any) => r.key)).toContain('match.reason.provenance.peer_reviewed');
 
     // The client can see how much this component could move a ranking at all.
     expect(res.body.componentVariance.credentials).toBeTruthy();
   });
 
   test('credential_first re-ranks the same candidates', async () => {
-    const gig = await db.Gig.findOne({
+    const gig = must(await db.Gig.findOne({
       where: { clientId: users.client.id },
       order: [['createdAt', 'DESC']],
-    });
+    }), 'gig');
     const res = await request(app)
       .get(`/api/gigs/${gig.id}/candidates?profile=credential_first`)
       .set('Authorization', `Bearer ${tokens.client}`);
 
     expect(res.status).toBe(200);
     expect(res.body.candidates[0].weightProfile.name).toBe('credential_first');
-    expect(res.body.candidates[0].components.map((c) => c.key)).toContain('credentials');
+    expect(res.body.candidates[0].components.map((c: any) => c.key)).toContain('credentials');
   });
 });

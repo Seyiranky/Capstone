@@ -1,10 +1,12 @@
-const db = require('../../src/models');
-const service = require('../../src/services/competenceService');
+import db from '../../src/models';
+import * as service from '../../src/services/competenceService';
+import { must } from '../helpers/fixtures';
+import type { Role } from '../../src/types/domain';
 
-let skill;
-const createdUserIds = [];
+let skill: InstanceType<typeof db.Skill>;
+const createdUserIds: string[] = [];
 
-const makeUser = async (role, overrides = {}) => {
+const makeUser = async (role: Role, overrides = {}) => {
   const user = await db.User.create({
     name: `CS ${role} ${Math.random().toString(36).slice(2, 8)}`,
     email: `cs-${role}-${Math.random().toString(36).slice(2, 10)}@example.com`,
@@ -16,7 +18,7 @@ const makeUser = async (role, overrides = {}) => {
   return user;
 };
 
-const declare = (userId) =>
+const declare = (userId: string) =>
   db.UserSkill.create({
     userId,
     skillId: skill.id,
@@ -27,7 +29,7 @@ const declare = (userId) =>
     selfDeclaredAt: new Date(),
   });
 
-const approvedTask = (workerId, kind) =>
+const approvedTask = (workerId: string, kind: any) =>
   db.SkillTask.create({
     workerId,
     skillId: skill.id,
@@ -38,7 +40,7 @@ const approvedTask = (workerId, kind) =>
   });
 
 /** A completed job in this skill, optionally reviewed by the client. */
-const completedJob = async (workerId, clientId, { reviewed = true } = {}) => {
+const completedJob = async (workerId: string, clientId: any, { reviewed = true } = {}) => {
   const gig = await db.Gig.create({
     clientId,
     skillId: skill.id,
@@ -68,7 +70,7 @@ const completedJob = async (workerId, clientId, { reviewed = true } = {}) => {
 };
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'tutoring', parentId: null } });
+  skill = must(await db.Skill.findOne({ where: { category: 'tutoring', parentId: null } }), 'skill');
 });
 
 afterAll(async () => {
@@ -81,7 +83,7 @@ describe('provenance tiers', () => {
     const worker = await makeUser('worker');
     await declare(worker.id);
 
-    const result = await service.recalculate(worker.id, skill.id);
+    const result = must(await service.recalculate(worker.id, skill.id), 'result');
     expect(result.provenance).toBe('self_declared');
     expect(result.credentialStrength).toBe(service.TIERS.self_declared);
     // Nonzero on purpose: a zero would make an unproven worker unrankable and
@@ -94,7 +96,7 @@ describe('provenance tiers', () => {
     await declare(worker.id);
     await approvedTask(worker.id, 'certificate');
 
-    const result = await service.recalculate(worker.id, skill.id);
+    const result = must(await service.recalculate(worker.id, skill.id), 'result');
     expect(result.provenance).toBe('document_sighted');
     expect(result.credentialStrength).toBeGreaterThan(service.TIERS.self_declared);
   });
@@ -105,7 +107,7 @@ describe('provenance tiers', () => {
     await approvedTask(worker.id, 'certificate');
     await approvedTask(worker.id, 'demonstration');
 
-    const result = await service.recalculate(worker.id, skill.id);
+    const result = must(await service.recalculate(worker.id, skill.id), 'result');
     expect(result.provenance).toBe('peer_reviewed');
     expect(result.credentialStrength).toBe(service.TIERS.peer_reviewed);
   });
@@ -118,7 +120,7 @@ describe('provenance tiers', () => {
       await completedJob(worker.id, client.id);
     }
 
-    const result = await service.recalculate(worker.id, skill.id);
+    const result = must(await service.recalculate(worker.id, skill.id), 'result');
     expect(result.provenance).toBe('work_earned');
     expect(result.credentialStrength).toBe(1);
   });
@@ -132,7 +134,7 @@ describe('provenance tiers', () => {
       await completedJob(worker.id, client.id, { reviewed: false });
     }
 
-    const result = await service.recalculate(worker.id, skill.id);
+    const result = must(await service.recalculate(worker.id, skill.id), 'result');
     expect(result.provenance).toBe('self_declared');
     expect(result.detail.completedJobs).toBeGreaterThan(0);
     expect(result.detail.reviewedJobs).toBe(0);
@@ -148,7 +150,7 @@ describe('monotonicity', () => {
 
     // The evidence disappears, as it might if a task were purged.
     await db.SkillTask.destroy({ where: { workerId: worker.id } });
-    const after = await service.recalculate(worker.id, skill.id);
+    const after = must(await service.recalculate(worker.id, skill.id), 'after');
 
     expect(after.provenance).toBe('peer_reviewed');
     expect(userSkill).toBeTruthy();
@@ -160,15 +162,15 @@ describe('monotonicity', () => {
     await declare(worker.id);
 
     const seen = [];
-    seen.push((await service.recalculate(worker.id, skill.id)).credentialStrength);
+    seen.push((await service.recalculate(worker.id, skill.id))!.credentialStrength);
     await approvedTask(worker.id, 'certificate');
-    seen.push((await service.recalculate(worker.id, skill.id)).credentialStrength);
+    seen.push((await service.recalculate(worker.id, skill.id))!.credentialStrength);
     await approvedTask(worker.id, 'demonstration');
-    seen.push((await service.recalculate(worker.id, skill.id)).credentialStrength);
+    seen.push((await service.recalculate(worker.id, skill.id))!.credentialStrength);
     for (let i = 0; i < service.JOBS_FOR_WORK_EARNED; i += 1) {
       await completedJob(worker.id, client.id);
     }
-    seen.push((await service.recalculate(worker.id, skill.id)).credentialStrength);
+    seen.push((await service.recalculate(worker.id, skill.id))!.credentialStrength);
 
     expect(seen).toEqual([...seen].sort((a, b) => a - b));
     expect(new Set(seen).size).toBe(4);
@@ -181,7 +183,7 @@ describe('bookkeeping', () => {
     await declare(worker.id);
     await approvedTask(worker.id, 'certificate');
 
-    const result = await service.recalculate(worker.id, skill.id, { trigger: 'test' });
+    const result = must(await service.recalculate(worker.id, skill.id, { trigger: 'test' }), 'result');
     expect(result.detail.sightedCertificates).toBe(1);
     expect(result.detail.approvedDemonstrations).toBe(0);
     expect(result.detail.trigger).toBe('test');
@@ -189,6 +191,6 @@ describe('bookkeeping', () => {
 
   test('a worker without the skill is not invented', async () => {
     const worker = await makeUser('worker');
-    expect(await service.recalculate(worker.id, skill.id)).toBeNull();
+    expect(await service.recalculate(worker.id, skill.id))!.toBeNull();
   });
 });

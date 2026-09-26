@@ -1,7 +1,8 @@
-const request = require('supertest');
-const bcrypt = require('bcrypt');
-const app = require('../../src/app');
-const db = require('../../src/models');
+import request from 'supertest';
+import bcrypt from 'bcrypt';
+import app from '../../src/app';
+import db from '../../src/models';
+import { must } from '../helpers/fixtures';
 
 // This narrative covers the manual arm: a worker applies and is approved.
 // Ranked invitations are exercised separately in rankedMatching.test.js, and
@@ -9,24 +10,24 @@ const db = require('../../src/models');
 process.env.RANKED_INVITE_LIMIT = '0';
 
 const stamp = Date.now();
-const emails = {
+const emails: Record<string, string> = {
   client: `api-client-${stamp}@example.com`,
   worker: `api-worker-${stamp}@example.com`,
   admin: `api-admin-${stamp}@example.com`,
 };
 
-let clientToken;
-let workerToken;
-let adminToken;
-let clientId;
-let workerId;
-let adminId;
-let skillId;
-let taskId;
-let gigId;
-let applicationId;
-let matchId;
-let transactionId;
+let clientToken: string;
+let workerToken: string;
+let adminToken: string;
+let clientId: string;
+let workerId: string;
+let adminId: string;
+let skillId: string;
+let taskId: string;
+let gigId: string;
+let applicationId: string;
+let matchId: string;
+let transactionId: string;
 
 afterAll(async () => {
   await db.User.destroy({ where: { email: Object.values(emails) } });
@@ -327,7 +328,7 @@ describe('reviews and trust score', () => {
     // out the scale, which is what stops a lone rating outranking a long record.
     expect(res.body.trustScore).toBeLessThan(5);
 
-    const rating = res.body.trustScoreBreakdown.components.find((c) => c.key === 'rating');
+    const rating = must(res.body.trustScoreBreakdown.components.find((c: any) => c.key === 'rating'), 'rating');
     expect(rating.detail.rawMean).toBe(5);
     expect(rating.detail.shrunkMean).toBeLessThan(5);
   });
@@ -337,11 +338,11 @@ describe('reviews and trust score', () => {
       .get(`/api/users/${workerId}`)
       .set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
-    expect(res.body.trustScoreBreakdown.components.map((c) => c.key)).toEqual(
+    expect(res.body.trustScoreBreakdown.components.map((c: any) => c.key)).toEqual(
       expect.arrayContaining(['rating', 'completion', 'verification']),
     );
     const summed = res.body.trustScoreBreakdown.components.reduce(
-      (total, c) => total + c.contribution,
+      (total: any, c: any) => total + c.contribution,
       0,
     );
     const { score, penalty } = res.body.trustScoreBreakdown;
@@ -403,7 +404,7 @@ describe('messaging', () => {
 });
 
 describe('password reset', () => {
-  let resetToken;
+  let resetToken: string;
 
   test('requesting a reset for a registered email returns a token', async () => {
     const res = await request(app).post('/api/auth/forgot-password').send({ email: emails.worker });
@@ -456,9 +457,9 @@ describe('admin: gig visibility', () => {
   test("the completed gig's admin listing includes the worker who completed it and the payment status", async () => {
     const res = await request(app).get('/api/admin/gigs').set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
-    const gig = res.body.find((g) => g.id === gigId);
+    const gig = must(res.body.find((g: any) => g.id === gigId), 'gig');
     expect(gig.status).toBe('completed');
-    const match = gig.matches.find((m) => m.id === matchId);
+    const match = must(gig.matches.find((m: any) => m.id === matchId), 'match');
     expect(match.status).toBe('completed');
     expect(match.worker.id).toBe(workerId);
     expect(match.transaction.status).toBe('confirmed');
@@ -468,8 +469,8 @@ describe('admin: gig visibility', () => {
 describe('admin: user moderation', () => {
   const modEmail = `api-moderation-worker-${stamp}@example.com`;
   const otherAdminEmail = `api-moderation-admin-${stamp}@example.com`;
-  let modToken;
-  let modId;
+  let modToken: string;
+  let modId: string;
   let otherAdminId;
 
   afterAll(async () => {
@@ -565,6 +566,7 @@ describe('admin: user moderation', () => {
       .set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
 
+    // Deliberately nullable: the assertion below is that the row is gone.
     const stillThere = await db.User.findByPk(modId);
     expect(stillThere).toBeNull();
   });

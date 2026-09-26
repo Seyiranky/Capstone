@@ -1,29 +1,30 @@
-const request = require('supertest');
-const bcrypt = require('bcrypt');
-const app = require('../../src/app');
-const db = require('../../src/models');
+import request from 'supertest';
+import bcrypt from 'bcrypt';
+import app from '../../src/app';
+import db from '../../src/models';
+import { must } from '../helpers/fixtures';
 
 const stamp = Date.now();
 const password = 'password123';
-const emails = {
+const emails: Record<string, string> = {
   worker: `pp-worker-${stamp}@example.com`,
   client: `pp-client-${stamp}@example.com`,
   admin: `pp-admin-${stamp}@example.com`,
 };
 
-let skill;
-let otherSkill;
-let users = {};
-let tokens = {};
-let passportToken;
+let skill: InstanceType<typeof db.Skill>;
+let otherSkill: InstanceType<typeof db.Skill>;
+const users: Record<string, InstanceType<typeof db.User>> = {};
+const tokens: Record<string, string> = {};
+let passportToken: string;
 
-const login = async (email) => {
+const login = async (email: string) => {
   const res = await request(app).post('/api/auth/login').send({ email, password });
   return res.body.token;
 };
 
 /** A completed, paid, reviewed job for the worker. */
-const completedJob = async ({ amount, title }) => {
+const completedJob = async ({ amount, title }: { amount: number; title: string }) => {
   const gig = await db.Gig.create({
     clientId: users.client.id,
     skillId: skill.id,
@@ -52,8 +53,8 @@ const completedJob = async ({ amount, title }) => {
 };
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'tailoring' } });
-  otherSkill = await db.Skill.findOne({ where: { category: 'tutoring' } });
+  skill = must(await db.Skill.findOne({ where: { category: 'tailoring' } }), 'skill');
+  otherSkill = must(await db.Skill.findOne({ where: { category: 'tutoring' } }), 'otherSkill');
   const passwordHash = await bcrypt.hash(password, 10);
 
   users.worker = await db.User.create({
@@ -191,7 +192,7 @@ describe('revocation', () => {
 });
 
 describe('income statement', () => {
-  let signature;
+  let signature: string;
 
   test('it totals only confirmed payments, with a per-month breakdown', async () => {
     const res = await request(app)

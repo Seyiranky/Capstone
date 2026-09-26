@@ -1,23 +1,25 @@
-const request = require('supertest');
-const bcrypt = require('bcrypt');
-const app = require('../../src/app');
-const db = require('../../src/models');
+import request from 'supertest';
+import bcrypt from 'bcrypt';
+import app from '../../src/app';
+import db from '../../src/models';
+import * as paymentService from '../../src/services/paymentService';
+import { must } from '../helpers/fixtures';
 
 process.env.RANKED_INVITE_LIMIT = '0';
 process.env.EXPLORATION_SLOTS = '0';
 
 const stamp = Date.now();
 const password = 'password123';
-const emails = {
+const emails: Record<string, string> = {
   worker: `wh-worker-${stamp}@example.com`,
   client: `wh-client-${stamp}@example.com`,
 };
 
-let skill;
-let users = {};
-let tokens = {};
+let skill: InstanceType<typeof db.Skill>;
+const users: Record<string, InstanceType<typeof db.User>> = {};
+const tokens: Record<string, string> = {};
 
-const login = async (email) => {
+const login = async (email: string) => {
   const res = await request(app).post('/api/auth/login').send({ email, password });
   return res.body.token;
 };
@@ -40,12 +42,11 @@ const paidMatch = async () => {
     status: 'completed',
     acceptedAt: new Date(),
   });
-  const paymentService = require('../../src/services/paymentService');
   const transaction = await paymentService.initiate(match, gig.budget);
   return { match, transaction };
 };
 
-const callback = (transaction, body = {}) =>
+const callback = (transaction: any, body = {}) =>
   request(app)
     .post(`/api/webhooks/payments/${transaction.provider}`)
     .send({
@@ -55,7 +56,7 @@ const callback = (transaction, body = {}) =>
     });
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'digital_web', parentId: null } });
+  skill = must(await db.Skill.findOne({ where: { category: 'digital_web', parentId: null } }), 'skill');
   const passwordHash = await bcrypt.hash(password, 10);
 
   users.worker = await db.User.create({
@@ -117,7 +118,7 @@ describe('a repeated callback settles a payment once', () => {
 
   test('a retried callback does not tell the worker twice that they were paid', async () => {
     const { match, transaction } = await paidMatch();
-    const gig = await db.Gig.findByPk(match.gigId);
+    const gig = must(await db.Gig.findByPk(match.gigId), 'gig');
 
     await callback(transaction);
     await callback(transaction);
@@ -144,7 +145,7 @@ describe('a repeated callback settles a payment once', () => {
     const applied = results.filter((r) => r.body.applied === true);
     expect(applied).toHaveLength(1);
 
-    const row = await db.Transaction.findByPk(transaction.id);
+    const row = must(await db.Transaction.findByPk(transaction.id), 'row');
     expect(row.status).toBe('confirmed');
   });
 
@@ -156,7 +157,7 @@ describe('a repeated callback settles a payment once', () => {
     expect(late.status).toBe(200);
     expect(late.body.duplicate).toBe(true);
 
-    const row = await db.Transaction.findByPk(transaction.id);
+    const row = must(await db.Transaction.findByPk(transaction.id), 'row');
     expect(row.status).toBe('failed');
     expect(row.failureReason).toBe('insufficient balance');
   });
@@ -195,7 +196,7 @@ describe('webhook robustness', () => {
     expect(replay.body.replayed).toBe(true);
     expect(replay.body.status).toBe('confirmed');
 
-    const row = await db.Transaction.findByPk(transaction.id);
+    const row = must(await db.Transaction.findByPk(transaction.id), 'row');
     expect(row.status).toBe('confirmed');
   });
 });

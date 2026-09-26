@@ -1,11 +1,13 @@
-const db = require('../../src/models');
-const service = require('../../src/services/collusionDetectionService');
+import db from '../../src/models';
+import * as service from '../../src/services/collusionDetectionService';
+import { must } from '../helpers/fixtures';
+import type { AssignmentStatus, Role, SkillTaskStatus } from '../../src/types/domain';
 
-let skill;
-const createdUserIds = [];
-const createdTaskIds = [];
+let skill: InstanceType<typeof db.Skill>;
+const createdUserIds: string[] = [];
+const createdTaskIds: string[] = [];
 
-const makeUser = async (role, overrides = {}) => {
+const makeUser = async (role: Role, overrides: Record<string, unknown> = {}) => {
   const user = await db.User.create({
     name: `CD ${role} ${Math.random().toString(36).slice(2, 8)}`,
     email: `cd-${role}-${Math.random().toString(36).slice(2, 10)}@example.com`,
@@ -22,9 +24,19 @@ const makeUser = async (role, overrides = {}) => {
  * each detector can be driven directly.
  */
 const decided = async (
-  workerId,
-  reviewerId,
-  { status = 'approved', secondsToDecide = 3600, poolSize = 6 } = {},
+  workerId: string,
+  reviewerId: string,
+  {
+    status = 'approved',
+    secondsToDecide = 3600,
+    poolSize = 6,
+  }: {
+    // One value feeds both the task and its assignment, so it has to be
+    // acceptable to each of the two status unions.
+    status?: SkillTaskStatus & AssignmentStatus;
+    secondsToDecide?: number;
+    poolSize?: number;
+  } = {},
 ) => {
   const task = await db.SkillTask.create({
     workerId,
@@ -50,16 +62,16 @@ const decided = async (
   return task;
 };
 
-const flagsFor = (report, type, { workerId, reviewerId } = {}) =>
+const flagsFor = (report: any, type: any, { workerId, reviewerId }: { workerId?: string; reviewerId?: string } = {}) =>
   report.flags.filter(
-    (f) =>
+    (f: any) =>
       f.type === type &&
       (workerId ? f.workerId === workerId : true) &&
       (reviewerId ? f.reviewerId === reviewerId : true),
   );
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'electronics_repair' } });
+  skill = must(await db.Skill.findOne({ where: { category: 'electronics_repair' } }), 'skill');
 });
 
 afterAll(async () => {
@@ -186,7 +198,7 @@ describe('report shape', () => {
     await decided(worker.id, reviewer.id);
 
     const report = await service.report();
-    const row = report.reviewerLoad.find((r) => r.reviewerId === reviewer.id);
+    const row = must(report.reviewerLoad.find((r) => r.reviewerId === reviewer.id), 'row');
     expect(row.assignments).toBeGreaterThanOrEqual(1);
     expect(row.share).toBeGreaterThan(0);
     expect(report.summary.assignments).toBeGreaterThan(0);

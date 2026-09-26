@@ -1,7 +1,8 @@
-const request = require('supertest');
-const bcrypt = require('bcrypt');
-const app = require('../../src/app');
-const db = require('../../src/models');
+import request from 'supertest';
+import bcrypt from 'bcrypt';
+import app from '../../src/app';
+import db from '../../src/models';
+import { must } from '../helpers/fixtures';
 
 // The ranked arm: approving a gig invites a scored shortlist rather than
 // waiting for workers to find it themselves.
@@ -12,7 +13,7 @@ process.env.EXPLORATION_SLOTS = '0';
 
 const stamp = Date.now();
 const password = 'password123';
-const emails = {
+const emails: Record<string, string> = {
   client: `ranked-client-${stamp}@example.com`,
   admin: `ranked-admin-${stamp}@example.com`,
   near: `ranked-near-${stamp}@example.com`,
@@ -23,20 +24,20 @@ const emails = {
 // Kimironko, and offsets north of it (1 degree of latitude is ~111.32km).
 const GIG_LAT = -1.9536;
 const GIG_LNG = 30.1044;
-const kmNorth = (km) => GIG_LAT + km / 111.32;
+const kmNorth = (km: number) => GIG_LAT + km / 111.32;
 
-let skill;
-let tokens = {};
-let users = {};
-let gigId;
+let skill: InstanceType<typeof db.Skill>;
+const tokens: Record<string, string> = {};
+const users: Record<string, InstanceType<typeof db.User>> = {};
+let gigId: string;
 
-const login = async (email) => {
+const login = async (email: string) => {
   const res = await request(app).post('/api/auth/login').send({ email, password });
   return res.body.token;
 };
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'tailoring' } });
+  skill = must(await db.Skill.findOne({ where: { category: 'tailoring' } }), 'skill');
   const passwordHash = await bcrypt.hash(password, 10);
 
   users.client = await db.User.create({
@@ -107,14 +108,14 @@ describe('ranked candidate listing', () => {
       .set('Authorization', `Bearer ${tokens.client}`);
     expect(res.status).toBe(200);
 
-    const ours = res.body.candidates.filter((c) =>
+    const ours = res.body.candidates.filter((c: any) =>
       [users.near.id, users.far.id, users.distant.id].includes(c.workerId),
     );
-    const near = ours.find((c) => c.workerId === users.near.id);
-    const far = ours.find((c) => c.workerId === users.far.id);
+    const near = must(ours.find((c: any) => c.workerId === users.near.id), 'near');
+    const far = must(ours.find((c: any) => c.workerId === users.far.id), 'far');
 
     expect(near.rank).toBeLessThan(far.rank);
-    expect(near.components.map((c) => c.key).sort()).toEqual(
+    expect(near.components.map((c: any) => c.key).sort()).toEqual(
       ['availability', 'credentials', 'distance', 'skillFit', 'trust'],
     );
     expect(near.reasons.length).toBeGreaterThan(0);
@@ -125,19 +126,19 @@ describe('ranked candidate listing', () => {
     const res = await request(app)
       .get(`/api/gigs/${gigId}/candidates`)
       .set('Authorization', `Bearer ${tokens.client}`);
-    const distant = res.body.candidates.find((c) => c.workerId === users.distant.id);
+    const distant = must(res.body.candidates.find((c: any) => c.workerId === users.distant.id), 'distant');
     expect(distant.beyondRange).toBe(true);
     expect(distant.eligibleForInvite).toBe(false);
   });
 
   test('switching the weight profile re-ranks the same candidates (RQ2)', async () => {
-    const order = async (profile) => {
+    const order = async (profile: any) => {
       const res = await request(app)
         .get(`/api/gigs/${gigId}/candidates?profile=${profile}`)
         .set('Authorization', `Bearer ${tokens.client}`);
       return res.body.candidates
-        .filter((c) => [users.near.id, users.far.id].includes(c.workerId))
-        .map((c) => c.workerId);
+        .filter((c: any) => [users.near.id, users.far.id].includes(c.workerId))
+        .map((c: any) => c.workerId);
     };
 
     const proximity = await order('proximity_first');
@@ -154,7 +155,7 @@ describe('ranked candidate listing', () => {
 });
 
 describe('ranked invitations on approval', () => {
-  let invitations;
+  let invitations: InstanceType<typeof db.Match>[];
 
   test('approving a gig invites the top-ranked eligible workers as pending matches', async () => {
     const res = await request(app)
@@ -172,7 +173,7 @@ describe('ranked invitations on approval', () => {
       expect(invitation.status).toBe('pending');
       expect(invitation.origin).toBe('ranked');
       expect(invitation.rankScore).toBeGreaterThan(0);
-      expect(invitation.scoreBreakdown.components).toBeTruthy();
+      expect(invitation.scoreBreakdown!.components!).toBeTruthy();
     }
   });
 
@@ -189,7 +190,7 @@ describe('ranked invitations on approval', () => {
   });
 
   test('a declined invitation records a response without an acceptance', async () => {
-    const invitation = invitations.find((i) => i.workerId === users.far.id);
+    const invitation = must(invitations.find((i) => i.workerId === users.far.id), 'invitation');
     const res = await request(app)
       .put(`/api/matches/${invitation.id}/status`)
       .set('Authorization', `Bearer ${tokens.far}`)
@@ -206,7 +207,7 @@ describe('ranked invitations on approval', () => {
   });
 
   test('accepting an invitation claims the gig and withdraws the other invitations', async () => {
-    const invitation = invitations.find((i) => i.workerId === users.near.id);
+    const invitation = must(invitations.find((i) => i.workerId === users.near.id), 'invitation');
     const res = await request(app)
       .put(`/api/matches/${invitation.id}/status`)
       .set('Authorization', `Bearer ${tokens.near}`)

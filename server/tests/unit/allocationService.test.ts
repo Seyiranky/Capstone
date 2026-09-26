@@ -1,7 +1,7 @@
-const db = require('../../src/models');
-const service = require('../../src/services/allocationService');
+import db from '../../src/models';
+import * as service from '../../src/services/allocationService';
 
-const createdUserIds = [];
+const createdUserIds: string[] = [];
 
 const makeClient = async () => {
   const user = await db.User.create({
@@ -14,7 +14,7 @@ const makeClient = async () => {
   return user;
 };
 
-const resetList = async (size, seed) => {
+const resetList = async (size: number, seed: any) => {
   await db.ExperimentAllocation.destroy({ where: { experiment: service.EXPERIMENT } });
   const { rows } = service.generateSequence(size, seed);
   await db.ExperimentAllocation.bulkCreate(rows);
@@ -33,13 +33,13 @@ describe('sequence generation', () => {
     const blocks = rows.reduce((acc, row) => {
       (acc[row.blockIndex] = acc[row.blockIndex] ?? []).push(row.arm);
       return acc;
-    }, {});
+    }, {} as Record<number, string[]>);
 
     // The final block may be truncated by the requested length.
-    const complete = Object.values(blocks).filter((b, i, all) => i < all.length - 1);
+    const complete = Object.values(blocks).filter((_block, i, all) => i < all.length - 1);
     for (const block of complete) {
-      const provenance = block.filter((a) => a === 'provenance').length;
-      expect(provenance).toBe(block.length / 2);
+      const provenance = (block as string[]).filter((a: any) => a === 'provenance').length;
+      expect(provenance).toBe((block as string[]).length / 2);
     }
   });
 
@@ -114,8 +114,8 @@ describe('claiming', () => {
       where: { experiment: service.EXPERIMENT, claimedByUserId: users.map((u) => u.id) },
     });
     expect(claimed).toHaveLength(4);
-    expect(new Set(claimed.map((c) => c.position)).size).toBe(4);
-    expect(new Set(claimed.map((c) => c.claimedByUserId)).size).toBe(4);
+    expect(new Set(claimed.map((c: any) => c.position)).size).toBe(4);
+    expect(new Set(claimed.map((c: any) => c.claimedByUserId)).size).toBe(4);
   });
 
   test('an exhausted list returns null rather than inventing an arm', async () => {

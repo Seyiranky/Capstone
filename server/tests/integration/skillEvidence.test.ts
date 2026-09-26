@@ -1,24 +1,25 @@
-const fs = require('fs');
-const path = require('path');
-const request = require('supertest');
-const bcrypt = require('bcrypt');
-const app = require('../../src/app');
-const db = require('../../src/models');
+import fs from 'fs';
+import path from 'path';
+import request from 'supertest';
+import bcrypt from 'bcrypt';
+import app from '../../src/app';
+import db from '../../src/models';
+import { must } from '../helpers/fixtures';
 
 // Reviewer rotation is not what this suite tests, so keep the pool ample.
 const stamp = Date.now();
 const password = 'password123';
-const emails = {
+const emails: Record<string, string> = {
   worker: `ev-worker-${stamp}@example.com`,
   admin1: `ev-admin1-${stamp}@example.com`,
   admin2: `ev-admin2-${stamp}@example.com`,
   admin3: `ev-admin3-${stamp}@example.com`,
 };
 
-let skill;
-let users = {};
-let tokens = {};
-const uploadedPaths = [];
+let skill: InstanceType<typeof db.Skill>;
+const users: Record<string, InstanceType<typeof db.User>> = {};
+const tokens: Record<string, string> = {};
+const uploadedPaths: string[] = [];
 
 // A one-pixel PNG and a tiny WebM-labelled blob: enough to exercise the
 // pipeline without committing binary fixtures.
@@ -29,7 +30,7 @@ const PNG = Buffer.from(
 const AUDIO = Buffer.from('GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQRChYECGFOAZwEAAAAAAAHT', 'base64');
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'electronics_repair' } });
+  skill = must(await db.Skill.findOne({ where: { category: 'electronics_repair' } }), 'skill');
   const passwordHash = await bcrypt.hash(password, 10);
 
   users.worker = await db.User.create({
@@ -55,7 +56,7 @@ afterAll(async () => {
   await db.sequelize.close();
 });
 
-const trackUploads = async (taskId) => {
+const trackUploads = async (taskId: string) => {
   const rows = await db.SkillTaskEvidence.findAll({ where: { taskId } });
   for (const row of rows) {
     if (row.url.startsWith('/uploads/')) {
@@ -173,25 +174,25 @@ describe('evidence reaches the reviewer', () => {
       .attach('evidence', PNG, { filename: 'proof.png', contentType: 'image/png' });
     await trackUploads(submit.body.id);
 
-    const assignment = await db.SkillTaskAssignment.findOne({
+    const assignment = must(await db.SkillTaskAssignment.findOne({
       where: { taskId: submit.body.id, status: 'pending' },
-    });
+    }), 'assignment');
     expect(assignment).toBeTruthy();
 
     const listed = await request(app)
       .get('/api/skill-tasks')
       .set('Authorization', `Bearer ${tokens.admin1}`);
 
-    const task = listed.body.find((t) => t.id === submit.body.id);
+    const task = must(listed.body.find((t: any) => t.id === submit.body.id), 'task');
     expect(task.evidence).toHaveLength(1);
     expect(task.evidence[0].kind).toBe('photo');
   });
 
   test('an uploaded artifact is actually served', async () => {
-    const row = await db.SkillTaskEvidence.findOne({
+    const row = must(await db.SkillTaskEvidence.findOne({
       where: { kind: 'photo' },
       order: [['createdAt', 'DESC']],
-    });
+    }), 'row');
     const res = await request(app).get(row.url);
     expect(res.status).toBe(200);
   });

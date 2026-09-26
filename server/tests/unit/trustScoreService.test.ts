@@ -1,13 +1,15 @@
-const db = require('../../src/models');
-const trustScoreService = require('../../src/services/trustScoreService');
+import db from '../../src/models';
+import * as trustScoreService from '../../src/services/trustScoreService';
+import { must } from '../helpers/fixtures';
+import type { Role } from '../../src/types/domain';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
-let skill;
-let client;
-const createdUserIds = [];
+let skill: InstanceType<typeof db.Skill>;
+let client: InstanceType<typeof db.User>;
+const createdUserIds: string[] = [];
 
-const makeUser = async (role, overrides = {}) => {
+const makeUser = async (role: Role, overrides = {}) => {
   const user = await db.User.create({
     name: `Trust ${role} ${Math.random().toString(36).slice(2, 8)}`,
     email: `trust-${role}-${Math.random().toString(36).slice(2, 10)}@example.com`,
@@ -20,7 +22,7 @@ const makeUser = async (role, overrides = {}) => {
 };
 
 /** Gives a worker a completed match plus a review of the given rating and age. */
-const giveReview = async (worker, { rating, ageDays = 0 }) => {
+const giveReview = async (worker: any, { rating, ageDays = 0 }: { rating: number; ageDays?: number }) => {
   const gig = await db.Gig.create({
     clientId: client.id,
     skillId: skill.id,
@@ -50,7 +52,7 @@ const giveReview = async (worker, { rating, ageDays = 0 }) => {
 };
 
 /** A match the worker accepted and then abandoned. */
-const abandonMatch = async (worker, { ageDays = 0 } = {}) => {
+const abandonMatch = async (worker: any, { ageDays = 0 } = {}) => {
   const gig = await db.Gig.create({
     clientId: client.id,
     skillId: skill.id,
@@ -73,7 +75,7 @@ const abandonMatch = async (worker, { ageDays = 0 } = {}) => {
 };
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'tailoring' } });
+  skill = must(await db.Skill.findOne({ where: { category: 'tailoring' } }), 'skill');
   client = await makeUser('client');
 });
 
@@ -85,10 +87,10 @@ afterAll(async () => {
 describe('provisional scores', () => {
   test('a worker with no reviews is marked provisional, not badly rated', async () => {
     const worker = await makeUser('worker');
-    const breakdown = await trustScoreService.recalculate(worker.id);
+    const breakdown = must(await trustScoreService.recalculate(worker.id), 'breakdown');
 
     expect(breakdown.isProvisional).toBe(true);
-    const rating = breakdown.components.find((c) => c.key === 'rating');
+    const rating = must(breakdown.components.find((c: any) => c.key === 'rating'), 'rating');
     expect(rating.detail.reviewCount).toBe(0);
     // The prior, not zero: absence of evidence must not read as bad evidence.
     expect(rating.detail.shrunkMean).toBeCloseTo(trustScoreService.PRIOR_MEAN, 5);
@@ -97,7 +99,7 @@ describe('provisional scores', () => {
   test('a single review no longer makes the score provisional', async () => {
     const worker = await makeUser('worker');
     await giveReview(worker, { rating: 5 });
-    const breakdown = await trustScoreService.recalculate(worker.id);
+    const breakdown = must(await trustScoreService.recalculate(worker.id), 'breakdown');
     expect(breakdown.isProvisional).toBe(false);
   });
 });
@@ -112,8 +114,8 @@ describe('volume confidence (the shrinkage fix)', () => {
       await giveReview(veteran, { rating: 4 });
     }
 
-    const newcomerScore = (await trustScoreService.recalculate(newcomer.id)).score;
-    const veteranScore = (await trustScoreService.recalculate(veteran.id)).score;
+    const newcomerScore = (await trustScoreService.recalculate(newcomer.id))!.score;
+    const veteranScore = (await trustScoreService.recalculate(veteran.id))!.score;
 
     expect(veteranScore).toBeGreaterThan(newcomerScore);
   });
@@ -121,12 +123,12 @@ describe('volume confidence (the shrinkage fix)', () => {
   test('a perfect record converges upward as review volume grows', async () => {
     const worker = await makeUser('worker');
     await giveReview(worker, { rating: 5 });
-    const afterOne = (await trustScoreService.recalculate(worker.id)).score;
+    const afterOne = (await trustScoreService.recalculate(worker.id))!.score;
 
     for (let i = 0; i < 15; i += 1) {
       await giveReview(worker, { rating: 5 });
     }
-    const afterSixteen = (await trustScoreService.recalculate(worker.id)).score;
+    const afterSixteen = (await trustScoreService.recalculate(worker.id))!.score;
 
     expect(afterSixteen).toBeGreaterThan(afterOne);
   });
@@ -140,8 +142,8 @@ describe('recency weighting', () => {
     const stale = await makeUser('worker');
     await giveReview(stale, { rating: 5, ageDays: 720 });
 
-    const recentScore = (await trustScoreService.recalculate(recent.id)).score;
-    const staleScore = (await trustScoreService.recalculate(stale.id)).score;
+    const recentScore = (await trustScoreService.recalculate(recent.id))!.score;
+    const staleScore = (await trustScoreService.recalculate(stale.id))!.score;
 
     expect(recentScore).toBeGreaterThan(staleScore);
   });
@@ -149,8 +151,8 @@ describe('recency weighting', () => {
   test('a review at the half-life carries about half its original weight', async () => {
     const worker = await makeUser('worker');
     await giveReview(worker, { rating: 5, ageDays: 180 });
-    const breakdown = await trustScoreService.recalculate(worker.id);
-    const rating = breakdown.components.find((c) => c.key === 'rating');
+    const breakdown = must(await trustScoreService.recalculate(worker.id), 'breakdown');
+    const rating = must(breakdown.components.find((c: any) => c.key === 'rating'), 'rating');
     expect(rating.detail.effectiveReviewWeight).toBeCloseTo(0.5, 2);
   });
 });
@@ -166,8 +168,8 @@ describe('reliability signals', () => {
     await abandonMatch(flaky);
     await abandonMatch(flaky);
 
-    const reliableScore = (await trustScoreService.recalculate(reliable.id)).score;
-    const flakyScore = (await trustScoreService.recalculate(flaky.id)).score;
+    const reliableScore = (await trustScoreService.recalculate(reliable.id))!.score;
+    const flakyScore = (await trustScoreService.recalculate(flaky.id))!.score;
 
     expect(flakyScore).toBeLessThan(reliableScore);
   });
@@ -175,7 +177,7 @@ describe('reliability signals', () => {
   test('declining while still pending is not penalised', async () => {
     const worker = await makeUser('worker');
     await giveReview(worker, { rating: 4 });
-    const before = (await trustScoreService.recalculate(worker.id)).score;
+    const before = (await trustScoreService.recalculate(worker.id))!.score;
 
     // Declined before accepting: acceptedAt stays null.
     const gig = await db.Gig.create({
@@ -196,7 +198,7 @@ describe('reliability signals', () => {
       declineReason: 'Not free that week',
     });
 
-    const after = (await trustScoreService.recalculate(worker.id)).score;
+    const after = (await trustScoreService.recalculate(worker.id))!.score;
     expect(after).toBeCloseTo(before, 10);
   });
 
@@ -213,8 +215,8 @@ describe('reliability signals', () => {
     await abandonMatch(reformed, { ageDays: 210 });
     await abandonMatch(reformed, { ageDays: 220 });
 
-    const recentBreakdown = await trustScoreService.recalculate(recentlyFlaky.id);
-    const reformedBreakdown = await trustScoreService.recalculate(reformed.id);
+    const recentBreakdown = must(await trustScoreService.recalculate(recentlyFlaky.id), 'recentBreakdown');
+    const reformedBreakdown = must(await trustScoreService.recalculate(reformed.id), 'reformedBreakdown');
 
     expect(recentBreakdown.penalty.value).toBeGreaterThan(0);
     expect(reformedBreakdown.penalty.value).toBe(0);
@@ -226,7 +228,7 @@ describe('verification contribution', () => {
   test('verifying a skill raises a worker score', async () => {
     const worker = await makeUser('worker');
     await giveReview(worker, { rating: 4 });
-    const before = (await trustScoreService.recalculate(worker.id)).score;
+    const before = (await trustScoreService.recalculate(worker.id))!.score;
 
     await db.UserSkill.create({
       userId: worker.id,
@@ -235,15 +237,15 @@ describe('verification contribution', () => {
       proficiencyLevel: 3,
     });
 
-    const after = (await trustScoreService.recalculate(worker.id)).score;
+    const after = (await trustScoreService.recalculate(worker.id))!.score;
     expect(after).toBeGreaterThan(before);
   });
 
   test('clients are scored without a verification component, not penalised for lacking one', async () => {
     const scoredClient = await makeUser('client');
-    const breakdown = await trustScoreService.recalculate(scoredClient.id);
+    const breakdown = must(await trustScoreService.recalculate(scoredClient.id), 'breakdown');
 
-    const keys = breakdown.components.map((c) => c.key);
+    const keys = breakdown.components.map((c: any) => c.key);
     expect(keys).not.toContain('verification');
     // Weights are renormalised so the achievable maximum is still the full scale.
     const weightSum = breakdown.components.reduce((sum, c) => sum + c.weight, 0);
@@ -271,14 +273,14 @@ describe('auditability', () => {
   test('the persisted breakdown explains the stored score', async () => {
     const worker = await makeUser('worker');
     await giveReview(worker, { rating: 4 });
-    const breakdown = await trustScoreService.recalculate(worker.id);
+    const breakdown = must(await trustScoreService.recalculate(worker.id), 'breakdown');
 
     const positive = breakdown.components.reduce((sum, c) => sum + c.contribution, 0);
     expect(breakdown.score).toBeCloseTo(5 * (positive - breakdown.penalty.value), 6);
 
-    const reloaded = await db.User.findByPk(worker.id);
+    const reloaded = must(await db.User.findByPk(worker.id), 'reloaded');
     expect(reloaded.trustScore).toBeCloseTo(breakdown.score, 6);
-    expect(reloaded.trustScoreBreakdown.formulaVersion).toBe(trustScoreService.FORMULA_VERSION);
+    expect(reloaded.trustScoreBreakdown!.formulaVersion!).toBe(trustScoreService.FORMULA_VERSION);
     expect(reloaded.reviewCount).toBe(1);
   });
 });

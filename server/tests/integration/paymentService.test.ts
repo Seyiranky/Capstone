@@ -1,14 +1,15 @@
-const db = require('../../src/models');
-const paymentService = require('../../src/services/paymentService');
+import db from '../../src/models';
+import * as paymentService from '../../src/services/paymentService';
+import { must } from '../helpers/fixtures';
 
-let skill;
-let client;
-let worker;
-let gig;
-let match;
+let skill: InstanceType<typeof db.Skill>;
+let client: InstanceType<typeof db.User>;
+let worker: InstanceType<typeof db.User>;
+let gig: InstanceType<typeof db.Gig>;
+let match: InstanceType<typeof db.Match>;
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'digital_web' } });
+  skill = must(await db.Skill.findOne({ where: { category: 'digital_web' } }), 'skill');
   client = await db.User.create({
     name: 'Test Client',
     email: `payment-client-${Date.now()}@example.com`,

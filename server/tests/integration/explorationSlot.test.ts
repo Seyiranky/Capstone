@@ -1,7 +1,8 @@
-const request = require('supertest');
-const bcrypt = require('bcrypt');
-const app = require('../../src/app');
-const db = require('../../src/models');
+import request from 'supertest';
+import bcrypt from 'bcrypt';
+import app from '../../src/app';
+import db from '../../src/models';
+import { must } from '../helpers/fixtures';
 
 // Three slots so there is room for two earned places and one reserved.
 process.env.RANKED_INVITE_LIMIT = '3';
@@ -9,7 +10,7 @@ process.env.EXPLORATION_SLOTS = '1';
 
 const stamp = Date.now();
 const password = 'password123';
-const emails = {
+const emails: Record<string, string> = {
   client: `exp-client-${stamp}@example.com`,
   admin: `exp-admin-${stamp}@example.com`,
   established1: `exp-est1-${stamp}@example.com`,
@@ -20,18 +21,18 @@ const emails = {
 
 const GIG_LAT = -1.9536;
 const GIG_LNG = 30.1044;
-const kmNorth = (km) => GIG_LAT + km / 111.32;
+const kmNorth = (km: number) => GIG_LAT + km / 111.32;
 
-let skill;
-let users = {};
-let tokens = {};
+let skill: InstanceType<typeof db.Skill>;
+const users: Record<string, InstanceType<typeof db.User>> = {};
+const tokens: Record<string, string> = {};
 
-const login = async (email) => {
+const login = async (email: string) => {
   const res = await request(app).post('/api/auth/login').send({ email, password });
   return res.body.token;
 };
 
-const postGig = async (title) => {
+const postGig = async (title: string) => {
   const res = await request(app)
     .post('/api/gigs')
     .set('Authorization', `Bearer ${tokens.client}`)
@@ -46,7 +47,7 @@ const postGig = async (title) => {
   return res.body.id;
 };
 
-const approve = async (gigId) => {
+const approve = async (gigId: string) => {
   const res = await request(app)
     .put(`/api/admin/gigs/${gigId}/review`)
     .set('Authorization', `Bearer ${tokens.admin}`)
@@ -55,7 +56,7 @@ const approve = async (gigId) => {
 };
 
 beforeAll(async () => {
-  skill = await db.Skill.findOne({ where: { category: 'tailoring', parentId: null } });
+  skill = must(await db.Skill.findOne({ where: { category: 'tailoring', parentId: null } }), 'skill');
   const passwordHash = await bcrypt.hash(password, 10);
 
   users.client = await db.User.create({
@@ -123,7 +124,7 @@ afterAll(async () => {
 });
 
 describe('a reserved slot reaches workers ranking cannot', () => {
-  let invitations;
+  let invitations: InstanceType<typeof db.Match>[];
 
   test('the newcomer would not make the shortlist on score alone', async () => {
     const gigId = await postGig(`Exploration baseline ${stamp}`);
@@ -131,7 +132,7 @@ describe('a reserved slot reaches workers ranking cannot', () => {
       .get(`/api/gigs/${gigId}/candidates`)
       .set('Authorization', `Bearer ${tokens.client}`);
 
-    const ranked = res.body.candidates.filter((c) => c.eligibleForInvite).map((c) => c.workerId);
+    const ranked = res.body.candidates.filter((c: any) => c.eligibleForInvite).map((c: any) => c.workerId);
     const position = ranked.indexOf(users.newcomer.id);
     expect(position).toBeGreaterThanOrEqual(3);
   });
@@ -142,7 +143,7 @@ describe('a reserved slot reaches workers ranking cannot', () => {
     const mine = invitations.filter((i) =>
       Object.values(users).some((u) => u.id === i.workerId),
     );
-    const explorer = mine.find((i) => i.workerId === users.newcomer.id);
+    const explorer = must(mine.find((i) => i.workerId === users.newcomer.id), 'explorer');
 
     expect(explorer).toBeTruthy();
     expect(explorer.invitationReason).toBe('exploration');
@@ -159,9 +160,9 @@ describe('a reserved slot reaches workers ranking cannot', () => {
 
   test('earned invitations still went to the strongest candidates', () => {
     const earned = invitations.filter((i) => i.invitationReason === 'ranked');
-    const explorer = invitations.find((i) => i.invitationReason === 'exploration');
+    const explorer = must(invitations.find((i) => i.invitationReason === 'exploration'), 'explorer');
     for (const e of earned) {
-      expect(e.rankScore).toBeGreaterThan(explorer.rankScore);
+      expect(e.rankScore as number).toBeGreaterThan(explorer.rankScore as number);
     }
   });
 
@@ -169,8 +170,8 @@ describe('a reserved slot reaches workers ranking cannot', () => {
     process.env.EXPLORATION_SLOTS = '0';
     const pure = await approve(await postGig(`Exploration disabled ${stamp}`));
 
-    expect(pure.every((i) => i.invitationReason === 'ranked')).toBe(true);
-    expect(pure.map((i) => i.workerId)).not.toContain(users.newcomer.id);
+    expect(pure.every((i: any) => i.invitationReason === 'ranked')).toBe(true);
+    expect(pure.map((i: any) => i.workerId)).not.toContain(users.newcomer.id);
     process.env.EXPLORATION_SLOTS = '1';
   });
 });
