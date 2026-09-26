@@ -118,41 +118,41 @@ const Dashboard = () => {
       ? [
           {
             key: 'loc',
-            label: 'Add your location',
+            label: t('dashboard.checklist.addLocation'),
             done: profile.locationLat != null,
             to: '/settings',
-            action: 'Set location',
+            action: t('dashboard.checklist.setLocation'),
           },
           {
             key: 'skill',
-            label: 'Submit a skill for verification',
+            label: t('dashboard.checklist.submitSkill'),
             done: verifiedSkills.length > 0 || tasks.length > 0,
             to: '/dashboard',
-            action: 'Add skill',
+            action: t('dashboard.checklist.addSkill'),
           },
           {
             key: 'apply',
-            label: 'Apply to your first gig',
+            label: t('dashboard.checklist.applyFirstGig'),
             done: myApplicationCount > 0,
             to: '/marketplace',
-            action: 'Browse gigs',
+            action: t('dashboard.checklist.browseGigs'),
           },
         ]
       : role === 'client'
         ? [
             {
               key: 'bio',
-              label: 'Add a short bio',
+              label: t('dashboard.checklist.addBio'),
               done: !!profile.bio,
               to: '/settings',
-              action: 'Edit profile',
+              action: t('dashboard.checklist.editProfile'),
             },
             {
               key: 'post',
-              label: 'Post your first gig',
+              label: t('dashboard.checklist.postFirstGig'),
               done: myGigCount > 0,
               to: '/marketplace',
-              action: 'Post a gig',
+              action: t('dashboard.checklist.postGig'),
             },
           ]
         : [];
@@ -168,7 +168,7 @@ const Dashboard = () => {
   return (
     <PageContainer
       title={t('dashboard.welcome', { name: profile.name })}
-      subtitle={<span style={{ textTransform: 'capitalize' }}>{profile.role}</span>}
+      subtitle={<span>{t(`common.roles.${profile.role}`)}</span>}
     >
       {needsLocation && (
         <Alert

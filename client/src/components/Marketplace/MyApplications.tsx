@@ -22,29 +22,29 @@ const MyApplications = () => {
 
   const columns: ColumnsType<GigApplication> = [
     {
-      title: 'Gig',
+      title: t('marketplace.myApplications.gig'),
       key: 'gig',
       render: (_, a) =>
         a.gig ? <Link to={`/gigs/${a.gigId}`}>{a.gig.title}</Link> : a.gigId,
     },
     {
-      title: 'Category',
+      title: t('marketplace.myApplications.category'),
       key: 'category',
       render: (_, a) => a.gig?.skill?.name ?? '—',
     },
     {
-      title: 'Budget',
+      title: t('marketplace.myApplications.budget'),
       key: 'budget',
       align: 'right',
       render: (_, a) => (a.gig ? `${Number(a.gig.budget).toLocaleString()} RWF` : '—'),
     },
     {
-      title: 'Status',
+      title: t('marketplace.myApplications.status'),
       key: 'status',
       render: (_, a) => <StatusTag status={a.status} />,
     },
     {
-      title: 'Applied',
+      title: t('marketplace.myApplications.applied'),
       key: 'applied',
       render: (_, a) => fromNow(a.createdAt),
     },

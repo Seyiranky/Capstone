@@ -98,7 +98,19 @@
     "gigsAwaitingReview": "{{count}} imirimo itegereje isuzuma ryawe.",
     "addSkillModalTitle": "Ongeraho ubuhanga bushya",
     "skillReviewModalTitle": "Isuzuma ry'ubuhanga",
-    "gigApprovalModalTitle": "Kwemeza imirimo"
+    "gigApprovalModalTitle": "Kwemeza imirimo",
+    "checklist": {
+      "addLocation": "Shyiraho aho uherereye",
+      "setLocation": "Shyiraho aho uherereye",
+      "submitSkill": "Ohereza ubuhanga bwawe kugira ngo bwemezwe",
+      "addSkill": "Ongeraho ubuhanga",
+      "applyFirstGig": "Saba umurimo wawe wa mbere",
+      "browseGigs": "Reba imirimo",
+      "addBio": "Andika incamake ngufi kuri wowe",
+      "editProfile": "Hindura umwirondoro",
+      "postFirstGig": "Shyiraho umurimo wawe wa mbere",
+      "postGig": "Shyiraho umurimo"
+    }
   },
   "marketplace": {
     "gigForm": {
@@ -120,7 +132,19 @@
       "viewDetails": "Reba amakuru arambuye",
       "nearMe": "Hafi yanjye",
       "distanceAway": "bikaba {{distance}} km uvuye",
-      "setLocationHint": "Shyiraho aho uherereye muri Igenamiterere kugira ngo bitondekwe hakurikijwe intera."
+      "setLocationHint": "Shyiraho aho uherereye muri Igenamiterere kugira ngo bitondekwe hakurikijwe intera.",
+      "allCategories": "Ibyiciro byose",
+      "sortNewest": "Bishya mbere",
+      "sortBudgetDesc": "Ingengo y’imari: kuva ku nyinshi",
+      "sortBudgetAsc": "Ingengo y’imari: kuva ku nke",
+      "sortNearest": "Ibiri hafi mbere",
+      "searchGigs": "Shakisha imirimo",
+      "gigCount_one": "Umurimo {{count}}",
+      "gigCount_other": "Imirimo {{count}}",
+      "gigCountOnMap_one": "Umurimo {{count}} ku ikarita",
+      "gigCountOnMap_other": "Imirimo {{count}} ku ikarita",
+      "emptySaved": "Nta murimo wabitse — kanda ku mutima kuri umurimo kugira ngo uwubike.",
+      "emptyFiltered": "Nta murimo uhuye n’ibyo washakishije."
     },
     "gigDetail": {
       "loading": "Gutangura umurimo...",
@@ -145,9 +169,28 @@
       "messageClient": "Ohereza ubutumwa kuri nyiri umurimo",
       "messageClientHint": "Ufite ibibazo kuri uyu murimo? Ohereza {{name}} ubutumwa.",
       "messagePlaceholder": "Andikira {{name}}",
-      "messageEmpty": "Nta butumwa buraboneka — imenyekanishe."
+      "messageEmpty": "Nta butumwa buraboneka — imenyekanishe.",
+      "steps": {
+        "applied": "Byasabwe",
+        "underReview": "Birimo gusuzumwa",
+        "approved": "Byemejwe"
+      }
     },
-    "postAGig": "Tanga akazi"
+    "postAGig": "Tanga akazi",
+    "tabs": {
+      "openGigs": "Imirimo ifunguye",
+      "yourGigs": "Imirimo yawe",
+      "saved": "Ibyabitswe",
+      "myApplications": "Ibyo nasabye",
+      "yourMatches": "Imirimo wahuriyeho"
+    },
+    "myApplications": {
+      "gig": "Umurimo",
+      "category": "Icyiciro",
+      "budget": "Ingengo y’imari",
+      "status": "Imimerere",
+      "applied": "Byasabwe"
+    }
   },
   "wallet": {
     "title": "Ipochi",
@@ -386,6 +429,11 @@
     "searchLabel": "Shakisha",
     "searchPalette": "Shakisha akazi n’impapuro…",
     "role": {
+      "worker": "Umukozi",
+      "client": "Umukiriya",
+      "admin": "Umuyobozi"
+    },
+    "roles": {
       "worker": "Umukozi",
       "client": "Umukiriya",
       "admin": "Umuyobozi"

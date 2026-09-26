@@ -98,7 +98,19 @@
     "gigsAwaitingReview": "{{count}} gig(s) awaiting your review.",
     "addSkillModalTitle": "Add a new skill",
     "skillReviewModalTitle": "Skill verification reviews",
-    "gigApprovalModalTitle": "Gig approvals"
+    "gigApprovalModalTitle": "Gig approvals",
+    "checklist": {
+      "addLocation": "Add your location",
+      "setLocation": "Set location",
+      "submitSkill": "Submit a skill for verification",
+      "addSkill": "Add skill",
+      "applyFirstGig": "Apply to your first gig",
+      "browseGigs": "Browse gigs",
+      "addBio": "Add a short bio",
+      "editProfile": "Edit profile",
+      "postFirstGig": "Post your first gig",
+      "postGig": "Post a gig"
+    }
   },
   "marketplace": {
     "gigForm": {
@@ -120,7 +132,19 @@
       "viewDetails": "View details",
       "nearMe": "Near me",
       "distanceAway": "{{distance}} km away",
-      "setLocationHint": "Set your location in Settings to sort by distance."
+      "setLocationHint": "Set your location in Settings to sort by distance.",
+      "allCategories": "All categories",
+      "sortNewest": "Newest first",
+      "sortBudgetDesc": "Budget: high to low",
+      "sortBudgetAsc": "Budget: low to high",
+      "sortNearest": "Nearest first",
+      "searchGigs": "Search gigs",
+      "gigCount_one": "{{count}} gig",
+      "gigCount_other": "{{count}} gigs",
+      "gigCountOnMap_one": "{{count}} gig on the map",
+      "gigCountOnMap_other": "{{count}} gigs on the map",
+      "emptySaved": "No saved gigs yet — tap the heart on a gig to save it.",
+      "emptyFiltered": "No gigs match your filters."
     },
     "gigDetail": {
       "loading": "Loading gig...",
@@ -145,9 +169,28 @@
       "messageClient": "Message the client",
       "messageClientHint": "Questions about this gig? Message {{name}} directly.",
       "messagePlaceholder": "Message {{name}}",
-      "messageEmpty": "No messages yet — introduce yourself."
+      "messageEmpty": "No messages yet — introduce yourself.",
+      "steps": {
+        "applied": "Applied",
+        "underReview": "Under review",
+        "approved": "Approved"
+      }
     },
-    "postAGig": "Post a gig"
+    "postAGig": "Post a gig",
+    "tabs": {
+      "openGigs": "Open gigs",
+      "yourGigs": "Your gigs",
+      "saved": "Saved",
+      "myApplications": "My applications",
+      "yourMatches": "Your matches"
+    },
+    "myApplications": {
+      "gig": "Gig",
+      "category": "Category",
+      "budget": "Budget",
+      "status": "Status",
+      "applied": "Applied"
+    }
   },
   "wallet": {
     "title": "Wallet",
@@ -386,6 +429,11 @@
     "searchLabel": "Search",
     "searchPalette": "Search gigs and pages…",
     "role": {
+      "worker": "Worker",
+      "client": "Client",
+      "admin": "Admin"
+    },
+    "roles": {
       "worker": "Worker",
       "client": "Client",
       "admin": "Admin"

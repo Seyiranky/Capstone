@@ -300,7 +300,11 @@ const GigDetail = () => {
                 progressDot
                 current={myApplication.status === 'approved' ? 2 : 1}
                 status={myApplication.status === 'rejected' ? 'error' : 'process'}
-                items={[{ title: 'Applied' }, { title: 'Under review' }, { title: 'Approved' }]}
+                items={[
+                  { title: t('marketplace.gigDetail.steps.applied') },
+                  { title: t('marketplace.gigDetail.steps.underReview') },
+                  { title: t('marketplace.gigDetail.steps.approved') },
+                ]}
               />
             </Card>
           )}

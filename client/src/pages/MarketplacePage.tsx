@@ -20,17 +20,23 @@ const MarketplacePage = () => {
   const [postingGig, setPostingGig] = useState(false);
 
   const options = [
-    { label: role === 'client' ? 'Your gigs' : 'Open gigs', value: 'gigs' },
+    {
+      label: role === 'client' ? t('marketplace.tabs.yourGigs') : t('marketplace.tabs.openGigs'),
+      value: 'gigs',
+    },
     {
       label: (
         <span>
-          Saved{savedIds.length ? <Badge count={savedIds.length} size="small" offset={[6, -2]} /> : null}
+          {t('marketplace.tabs.saved')}
+          {savedIds.length ? <Badge count={savedIds.length} size="small" offset={[6, -2]} /> : null}
         </span>
       ),
       value: 'saved',
     },
-    ...(role === 'worker' ? [{ label: 'My applications', value: 'applications' }] : []),
-    { label: 'Your matches', value: 'matches' },
+    ...(role === 'worker'
+      ? [{ label: t('marketplace.tabs.myApplications'), value: 'applications' }]
+      : []),
+    { label: t('marketplace.tabs.yourMatches'), value: 'matches' },
   ];
 
   return (

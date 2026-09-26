@@ -95,7 +95,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
           onChange={setCategory}
           style={{ width: 200 }}
           options={[
-            { value: 'all', label: 'All categories' },
+            { value: 'all', label: t('marketplace.gigFeed.allCategories') },
             ...categories.map((c) => ({ value: c, label: c })),
           ]}
         />
@@ -104,10 +104,10 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
           onChange={setSort}
           style={{ width: 180 }}
           options={[
-            { value: 'newest', label: 'Newest first' },
-            { value: 'budget_desc', label: 'Budget: high to low' },
-            { value: 'budget_asc', label: 'Budget: low to high' },
-            ...(hasWorkerLocation ? [{ value: 'nearest', label: 'Nearest first' }] : []),
+            { value: 'newest', label: t('marketplace.gigFeed.sortNewest') },
+            { value: 'budget_desc', label: t('marketplace.gigFeed.sortBudgetDesc') },
+            { value: 'budget_asc', label: t('marketplace.gigFeed.sortBudgetAsc') },
+            ...(hasWorkerLocation ? [{ value: 'nearest', label: t('marketplace.gigFeed.sortNearest') }] : []),
           ]}
         />
         {role === 'worker' && (
@@ -151,9 +151,9 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
           <Empty
             description={
               savedOnly
-                ? 'No saved gigs yet — tap the heart on a gig to save it.'
+                ? t('marketplace.gigFeed.emptySaved')
                 : search || category !== 'all'
-                  ? 'No gigs match your filters.'
+                  ? t('marketplace.gigFeed.emptyFiltered')
                   : t('marketplace.gigFeed.empty')
             }
           />
@@ -161,14 +161,14 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
       ) : view === 'map' ? (
         <>
           <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 10 }}>
-            {finalGigs.length} gig{finalGigs.length === 1 ? '' : 's'} on the map
+            {t('marketplace.gigFeed.gigCountOnMap', { count: finalGigs.length })}
           </Typography.Text>
           <MarketplaceMap gigs={finalGigs} />
         </>
       ) : (
         <>
           <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 10 }}>
-            {finalGigs.length} gig{finalGigs.length === 1 ? '' : 's'}
+            {t('marketplace.gigFeed.gigCount', { count: finalGigs.length })}
           </Typography.Text>
           <Row gutter={[16, 16]}>
             {finalGigs.map((gig) => (
