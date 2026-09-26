@@ -26,10 +26,10 @@
     "noImplicitOverride": true,
     "skipLibCheck": true,
 
-    /* Lets .ts and .js coexist while the migration is in flight. Both are
-       removed in the final phase, once nothing under src/ is JavaScript. */
-    "allowJs": true,
-    "checkJs": false,
+    /* Nothing under src/ or tests/ is JavaScript any more, so plain .js is no
+       longer accepted into the program. migrations/ and seeders/ stay
+       JavaScript and are excluded below — sequelize-cli loads those itself. */
+    "allowJs": false,
 
     "types": ["node", "jest"]
   },

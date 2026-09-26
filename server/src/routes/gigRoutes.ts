@@ -1,0 +1,15 @@
+import express from 'express';
+import * as gigController from '../controllers/gigController';
+import { verifyToken } from '../middleware/authMiddleware';
+import { authorize } from '../middleware/roleMiddleware';
+import { uploadGigImage } from '../middleware/upload';
+
+const router = express.Router();
+
+router.post('/', verifyToken, authorize('client'), uploadGigImage.single('image'), gigController.createGig);
+router.get('/', gigController.listGigs);
+router.get('/:id', gigController.getGig);
+router.get('/:id/candidates', verifyToken, gigController.listCandidates);
+router.put('/:id', verifyToken, authorize('client'), gigController.updateGig);
+
+export default router;
