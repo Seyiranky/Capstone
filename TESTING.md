@@ -19,6 +19,33 @@ cd client  && npm run dev                                      # http://localhos
 scores they have earned and the peer-reviewer pool is populated. Without it,
 every worker reads 5.00 beside "no reviews yet" and no rotation is possible.
 
+## Running the tests
+
+```bash
+cd server && npm run typecheck && npm test
+```
+
+`npm test` needs the test database migrated and seeded once:
+
+```bash
+npm run migrate:test && npm run seed:test
+```
+
+**Run `seed:test` only once per database.** The seeder is not idempotent — a
+second run inserts a duplicate set of the four skill categories, and the suite
+then fails with `Expected length: 1, Received length: 2` because it looks up a
+category by name. CI is unaffected (it builds a fresh database each run). To
+recover locally, delete the duplicates rather than re-seeding:
+
+```sql
+DELETE FROM "Skills" WHERE id IN (
+  SELECT id FROM (
+    SELECT id, row_number() OVER (PARTITION BY category, kind ORDER BY "createdAt") rn
+    FROM "Skills"
+  ) s WHERE rn > 1
+);
+```
+
 To test the PWA and offline behaviour you need the **production build**, because
 the service worker is deliberately disabled in dev (a cached shell hides the
 change you just made):

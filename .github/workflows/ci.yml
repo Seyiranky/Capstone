@@ -55,6 +55,12 @@ jobs:
       - run: npm ci
       - run: npx eslint .
 
+      - name: Typecheck
+        # Jest runs ts-jest with diagnostics off, so this is the only thing
+        # standing between a type error and a green build. Without it the
+        # migration to TypeScript would buy nothing in CI.
+        run: npm run typecheck
+
       - name: Migrate test database
         run: npm run migrate:test
 
@@ -64,6 +70,11 @@ jobs:
         run: npm run seed:test
 
       - run: npm test
+
+      - name: Build
+        # Proves the artifact `npm start` runs actually compiles, which the
+        # tests do not: ts-jest transpiles the sources itself and never emits.
+        run: npm run build
 
   client:
     name: Client (lint + typecheck + build)

@@ -1,10 +1,69 @@
 # Isoko Talents — Build Plan and Current State
 
-> Last updated 2026-09-13, at the close of Sprint D. Sprints 0, A, B, C and D are
-> built, tested and committed. This file records what exists, why each piece is
+> Last updated 2026-09-26. Sprints 0–D are built, and the backend has since been
+> migrated to TypeScript. This file records what exists, why each piece is
 > shaped the way it is, what it contributes to RQ1–RQ3, and what is still open.
-> Earlier revisions of this file described work now complete; that content has
-> been folded into "What is built" rather than kept as a forward plan.
+
+## Backend TypeScript migration — complete
+
+The server is now TypeScript end to end: **85 files under `src/`, zero
+JavaScript**, plus all 16 test files. 219 tests pass, `tsc --noEmit` and
+`eslint` are both clean, and CI gates on typecheck and build as well as tests.
+
+Migrations (42) and seeders (6) deliberately stay JavaScript — sequelize-cli
+loads them itself and cannot execute `.ts`. They are excluded from the
+TypeScript program.
+
+| Decision | Choice |
+|---|---|
+| Layout | Application code moved to `src/`; `config/`, `migrations/`, `seeders/` stay at the root for sequelize-cli |
+| Runtime | `tsc` → `dist/` for production (`npm start`); `tsx` for dev and for the container |
+| Strictness | `strict`, `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` — matching `client/tsconfig.app.json` |
+| Tests | ts-jest with diagnostics off; types enforced once by `npm run typecheck` |
+| Shared types | None. The client keeps its own copies for now |
+
+**The change that mattered.** `models/index.js` was the stock sequelize-cli
+loader — `readdirSync`, `require`, into a bare object with no type — so all 28
+call sites doing `const { User } = require('../models')` resolved to `any`, and
+a mistyped attribute was a runtime `undefined` rather than an error. It is now
+an explicit registry, which is what makes every other type in the codebase
+worth anything.
+
+**The JSONB columns now have contracts.** `Match.scoreBreakdown` and
+`GigApplication.scoreBreakdown` are typed as `ScoredPair`, the exact return of
+`matchScoringService.scorePair`; `User.trustScoreBreakdown` and
+`TrustScoreSnapshot.components` are both `TrustBreakdown`. Producer and store
+can no longer drift apart silently, which matters because those columns are the
+pilot's data.
+
+**Behaviour was held fixed and checked, not assumed.** The ranking order,
+reasons and component weights are identical to a snapshot taken before the
+migration; acceptance rate is still 0.947. The trust formula was compared
+directly against its pre-migration implementation on the same row: the two
+differ by 5.6e-11, which is the same order as running either one twice in a
+row — clock drift inside the recency decay, not a change in the code.
+
+**What typing found.** Three genuine problems surfaced that no test had caught:
+
+1. **The peer reviewer pool was always empty.** `assignReviewer` selected
+   `['id','name','reviewerTier','trustScore','role']` and then filtered on
+   `candidate.reviewCount`, which that query never loaded — so every peer was
+   rejected as `peerNoTrackRecord` and every review fell to an admin. RQ1's
+   mechanism is rotation across *peers*, so this matters beyond tidiness. Fixed
+   in its own commit, separate from the behaviour-preserving migration.
+2. **Query parameters were never the strings the handlers assumed.** Express
+   parses `?id[]=a&id[]=b` into an array and `?id[x]=y` into an object, and
+   those went straight into Sequelize `where` clauses. Now rejected at the edge.
+3. **`jwt.verify(token, process.env.JWT_SECRET)` could not compile** — the
+   secret is `string | undefined`. The server had been booting happily with no
+   `JWT_SECRET` and failing only at the first login; `server.ts` now asserts the
+   required secrets at start-up.
+
+**Known foot-gun, documented in TESTING.md**: `npm run seed:test` is not
+idempotent. A second run duplicates the four skill categories and the suite then
+fails looking one up by name. CI is unaffected (fresh database each run).
+
+---
 
 ## The three research questions, and where each is answered in the code
 
@@ -243,7 +302,7 @@ the trust receipt), and worker-authored specialisation tags.
 
 ```bash
 # Postgres 18 on 5432
-cd server && npm run migrate && npm run seed && npx nodemon server.js
+cd server && npm run migrate && npm run seed && npm run dev   # tsx watch src/server.ts
 cd client && npm run dev
 ```
 
@@ -253,7 +312,12 @@ actually earned rather than a hardcoded 5.00 beside "no reviews yet".
 Logins are `<name>@isoko.demo` / `password123` — `emmanuel` admin, `grace` and
 `diane` clients, `eric` and `aline` peer reviewers.
 
-Useful scripts: `npm run trust:backfill`, `npm run reviewers:enrol`,
-`node scripts/generateAllocationList.js` (re-draws the RQ3 block sequence — only
-before a pilot starts, never mid-run), and `node scripts/check-i18n-parity.mjs`
-at the repo root.
+For production: `npm run build` emits `dist/`, and `npm start` runs
+`node dist/server.js`. The container runs `npm run dev` instead, because
+docker-compose bind-mounts `./server` over `/app` and would shadow a `dist/`
+built at image time.
+
+Useful scripts: `npm run typecheck`, `npm run trust:backfill`,
+`npm run reviewers:enrol`, `npx tsx src/scripts/generateAllocationList.ts`
+(re-draws the RQ3 block sequence — only before a pilot starts, never mid-run),
+and `node scripts/check-i18n-parity.mjs` at the repo root.
