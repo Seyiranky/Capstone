@@ -14,7 +14,10 @@ export default defineConfig({
       // The service worker is off in dev: a cached shell during development
       // hides the change you just made, which costs more time than it saves.
       devOptions: { enabled: false },
-      includeAssets: ['vite.svg'],
+      // Only the tab icons are precached. apple-touch-icon is served but left
+      // out: it is 76KB and only fetched when someone adds the app to a home
+      // screen, so precaching it taxes every visitor for a rare case.
+      includeAssets: ['favicon-32.png', 'favicon-64.png'],
       manifest: {
         name: 'Isoko Talents',
         short_name: 'Isoko',
