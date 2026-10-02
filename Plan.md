@@ -1,323 +1,575 @@
-# Isoko Talents — Build Plan and Current State
+# Isoko Talents — Email notification channel
 
-> Last updated 2026-09-26. Sprints 0–D are built, and the backend has since been
-> migrated to TypeScript. This file records what exists, why each piece is
-> shaped the way it is, what it contributes to RQ1–RQ3, and what is still open.
+> Supersedes the backend TypeScript migration plan, which is built and committed.
+>
+> **Status: implemented** in commits `51feae8`..`8edb3d8` (2 Oct 2026). All seven
+> phases landed as planned, with two deviations noted at the end. 253 tests green,
+> locales at 451 keys each. Remaining follow-ups are listed in the README's
+> "Before going live": the password-reset mailer, an email bounce webhook,
+> server-side notification translation, and narrowing SMS to `critical`.
 
-## Backend TypeScript migration — complete
+## Context
 
-The server is now TypeScript end to end: **85 files under `src/`, zero
-JavaScript**, plus all 16 test files. 219 tests pass, `tsc --noEmit` and
-`eslint` are both clean, and CI gates on typecheck and build as well as tests.
+FR-13 promised notifications on three channels. Two exist: in-app (Socket.IO + a
+`Notification` row) and SMS (`lib/channels/sms.ts`, a `log` driver by default with a real
+Pindo driver behind `SMS_DRIVER`). Email was designed in from the start and never built —
+the migration that created `NotificationDeliveries` says so in its own header comment, and
+`DeliveryChannel` has read `'in_app' | 'sms' | 'email'` since then.
 
-Migrations (42) and seeders (6) deliberately stay JavaScript — sequelize-cli
-loads them itself and cannot execute `.ts`. They are excluded from the
-TypeScript program.
+Users have no way to express a preference. `smsNotificationsEnabled` and
+`emailNotificationsEnabled` exist as columns, are already in `UPDATABLE_FIELDS`, and are
+**unreachable from the UI** — there is no Notifications tab in Settings, and
+`UpdateProfilePayload` does not even carry the fields.
 
-| Decision | Choice |
+Two consequences this change addresses:
+
+1. **Notifications don't reach people who aren't in the app.** A worker whose application
+   was approved, or whose payment landed, learns about it only by opening the site. That
+   is the gap FR-13 named.
+2. **Every notification currently fans out to every enabled channel.** All 18 `notify()`
+   call sites take the default `channels` — including "New gig application", which fires to
+   *every* admin on *every* application. The README already flags this as needing a
+   severity filter before launch. Adding email without one would mail that chatter too.
+
+Outcome wanted: a user picks **one** off-app channel in Settings, the address is
+**verified** before anything is sent to it, only notices worth an interruption are emailed,
+and the whole thing runs end to end with **no credentials configured** so the demo and CI
+are unaffected.
+
+## Decisions taken
+
+| Decision | Choice | Why |
+|---|---|---|
+| Preference model | **One exclusive choice**: in-app only / email / SMS | Needs a new `preferredChannel` column; the two booleans become one source of truth |
+| Which notices email | **Only important ones** — money, account status, outcomes | Protects sender reputation and inbox credibility |
+| Address verification | **Verify before sending** | Adds `emailVerifiedAt` + a token flow ahead of first send |
+| Provider | **Brevo**, reached over SMTP | No domain is owned. Brevo is the only permanent free tier that delivers to arbitrary recipients with no domain and no card |
+| Transport | `nodemailer` + SMTP, driver-selected | Every candidate provider offers SMTP, so a provider swap is four env vars, not a code change |
+| Localised email | **Out of scope**, documented as follow-up | The server has no i18n catalogue; all 18 call sites interpolate hardcoded English |
+
+---
+
+## Provider research — why Brevo
+
+The no-domain constraint eliminates most of the field. Verified as of 2 Oct 2026:
+
+| Provider | Free tier | Sends to arbitrary recipients with **no domain**? |
+|---|---|---|
+| **Brevo** | **300/day, permanent, no card** | **Yes** — verify a sender address by emailed code, no DNS |
+| SMTP2GO | 1,000/mo, permanent, no card | Yes — but **25/hour** until a domain is verified |
+| Resend | 3,000/mo (100/day) | **No** — `onboarding@resend.dev` returns 403, owner's address only |
+| Amazon SES | ~$0.20 for the whole pilot | **No** — sandbox needs verified recipients; exit is a manual AWS review |
+| Mailgun | 100/day | **No** — sandbox domain allows 5 authorized recipients |
+| Postmark | 100/mo | **No** — refuses Gmail signups outright; manual approval |
+| SendGrid | 100/day for **60 days only** | Yes, but the free plan was retired in 2025 |
+| Mailjet | 6,000/mo | Technically, but it does **not** rewrite the From — a Gmail sender fails DMARC |
+| ZeptoMail | 10,000 trial, ~1 month | **No** — domain verification is a prerequisite |
+
+**Brevo is the recommendation.** It is the only permanent free tier that clears the
+constraint. Because a free-mail domain can never be authenticated, Brevo **rewrites the
+From domain to `@brevosend.com`** so Gmail's sender rules still pass — which is precisely
+why it works without DNS.
+
+Three things to know before relying on it:
+
+- Recipients see a `@brevosend.com` sender and a Gmail **"via brevosend.com"** label. Visibly
+  unbranded in a demo. Say so on the slide rather than letting a reviewer notice it.
+- Brevo gates **transactional** sending behind an activation step — possibly a support
+  ticket describing the use case. Secondary sources claim it needs a verified domain;
+  **Brevo's help pages block automated fetching so this is unconfirmed, and it is the one
+  thing that could invalidate this choice. Sign up in week 1, not the week before the pilot.**
+- Free-tier IPs are shared. Expect mostly-inbox with occasional spam-foldering; tell pilot
+  participants to check spam on day one and star the first message.
+
+**Fallback if Brevo activation stalls: SMTP2GO** (1,000/mo, permanent, no card, no domain
+needed). Because both are reached over SMTP, switching is an env-var change.
+
+At ~30 users and ~50 emails/day the pilot is far below Gmail's 5,000/day bulk-sender
+threshold, where SPF *or* DKIM suffices and DMARC is optional — an authenticated shared
+domain clears the bar. **No country-level signup block was found for Rwanda at any
+provider**; the real friction everywhere is payment-method verification, which Brevo does
+not require.
+
+> If a domain is registered later, **Resend** becomes the better pick on developer experience
+> alone (3,000/mo free, first-class TS SDK, webhooks) and `EMAIL_FROM` becomes a real Isoko
+> address. The driver seam below makes that a config change plus one new driver.
+
+---
+
+## Phase 1 — Schema: one source of truth for the preference
+
+A single migration, `server/migrations/<ts>-add-notification-preference-and-email-verification.js`
+(migrations stay `.js` — that is the standing convention):
+
+```js
+// Up
+addColumn('Users', 'preferredChannel',          { type: STRING, allowNull: false, defaultValue: 'none' });
+addColumn('Users', 'emailVerifiedAt',           { type: DATE, allowNull: true });
+addColumn('Users', 'emailVerificationToken',    { type: STRING, allowNull: true });
+addColumn('Users', 'emailVerificationExpiresAt',{ type: DATE, allowNull: true });
+
+// Backfill before dropping, so no expressed preference is lost. SMS wins when
+// both are set: SMS is the channel that actually delivers today.
+UPDATE "Users" SET "preferredChannel" =
+  CASE WHEN "smsNotificationsEnabled"   THEN 'sms'
+       WHEN "emailNotificationsEnabled" THEN 'email'
+       ELSE 'none' END;
+
+removeColumn('Users', 'smsNotificationsEnabled');
+removeColumn('Users', 'emailNotificationsEnabled');
+```
+
+The `down` restores both booleans and repopulates them from `preferredChannel`, so the
+migration is genuinely reversible.
+
+**Why drop the booleans rather than keep them alongside.** An exclusive choice stored in two
+independent flags has states the UI cannot produce (both true) and no answer for what
+`notify` should do with them. One column cannot drift from itself. The cost is a destructive
+step — hence the backfill-then-drop ordering and the real `down`.
+
+`server/src/models/User.ts`:
+
+```ts
+declare preferredChannel: CreationOptional<PreferredChannel>;
+declare emailVerifiedAt: Date | null;
+declare emailVerificationToken: string | null;
+declare emailVerificationExpiresAt: Date | null;
+```
+
+with an attribute definition mirroring `preferredLanguage` (`STRING`, default, `isIn`
+validator — this codebase uses validators, not `DataTypes.ENUM`), and **two edits that are
+easy to miss**:
+
+- add `'emailVerificationToken'` to the `defaultScope` `exclude` array (line ~259) next to
+  `passwordHash` and `resetToken`. It is a bearer credential for claiming an address; the
+  existing comment there explains exactly this reasoning.
+- widen `SafeUser` (line 95) to `Omit<User, 'passwordHash' | 'resetToken' | 'emailVerificationToken'>`.
+
+`server/src/types/domain.ts`, beside `DeliveryChannel` at line 96:
+
+```ts
+export type PreferredChannel = 'none' | 'email' | 'sms';
+export type NotificationCategory = 'activity' | 'outcome' | 'critical';
+```
+
+`server/src/controllers/userController.ts` — in `UPDATABLE_FIELDS` (line 26), replace
+`'smsNotificationsEnabled'` and `'emailNotificationsEnabled'` with `'preferredChannel'`.
+`updateProfile` needs no other change, **but** it currently copies any defined allowlisted
+key verbatim — add a narrow guard rejecting a `preferredChannel` outside the three literals
+with a 400, rather than letting the model validator surface as a 500.
+
+Also update `server/seeders/` where the booleans are set (grep `NotificationsEnabled`) so
+`eric`, who has SMS on today per `TESTING.md`, lands on `preferredChannel: 'sms'` and keeps
+producing SMS delivery rows. Set `emailVerifiedAt` on the seeded accounts so the demo does
+not require 15 verification clicks.
+
+---
+
+## Phase 2 — The email driver
+
+New `server/src/lib/channels/email.ts`, mirroring `sms.ts` in shape, naming and tone —
+including its docblock explaining that `log` is a deliberate pilot posture and not a missing
+integration.
+
+```ts
+export interface EmailResult { provider: string; providerMessageId: string | null }
+type EmailMessage = { to: string; subject: string; text: string; html: string };
+type EmailDriver = (message: EmailMessage) => Promise<EmailResult>;
+
+const driverName = (): string => process.env.EMAIL_DRIVER || 'log';
+const fromAddress = (): string =>
+  process.env.EMAIL_FROM || 'Isoko Talents <notifications@example.invalid>';
+
+const drivers: Record<string, EmailDriver> = {
+  log: async ({ to, subject, text }) => {
+    console.log(`[email:log] -> ${to}: ${subject}\n${text}`);
+    return { provider: 'log', providerMessageId: null };
+  },
+  smtp: async ({ to, subject, text, html }) => {
+    // nodemailer, created per send and lazily, so SMTP_* is read at call time
+    // exactly as the pindo driver reads its token — and so tests can swap it.
+    const host = process.env.SMTP_HOST;
+    if (!host) throw new Error('SMTP_HOST is not set');
+    const transport = nodemailer.createTransport({ host, port: Number(process.env.SMTP_PORT) || 587, auth: { user: ..., pass: ... } });
+    const info = await transport.sendMail({ from: fromAddress(), to, subject, text, html });
+    return { provider: `smtp:${host}`, providerMessageId: info.messageId ?? null };
+  },
+};
+
+/** Renders the single notification layout: plain text plus a minimal HTML twin. */
+export const render = (title: string, body: string) => ({ subject: title, text: ..., html: ... });
+
+export const send = async (message: EmailMessage): Promise<EmailResult> => {
+  const name = driverName();
+  const driver = drivers[name];
+  if (!driver) throw new Error(`Unknown EMAIL_DRIVER '${name}'. Available: ${Object.keys(drivers).join(', ')}`);
+  return driver(message);
+};
+
+export { driverName, fromAddress };
+```
+
+It **throws rather than swallows**, for the same reason `sms.ts` does (its lines 74-80 say
+it outright): `notify` needs to record *why* nothing arrived.
+
+**Why SMTP + nodemailer rather than Brevo's REST API.** Brevo's REST endpoint is a single
+`fetch` POST and would mirror the `pindo` driver with zero new dependencies — more elegant,
+and that is the real trade-off being made here. SMTP wins because the provider choice is
+**not settled**: Brevo's transactional-activation requirement is unconfirmed, and if it
+stalls the move to SMTP2GO is four env vars instead of a second driver written mid-pilot.
+One dependency (`nodemailer` + `@types/nodemailer`) buys that. The REST driver stays
+available as a later addition to the same `drivers` record once a provider is proven.
+
+HTML body: inline-styled, no tables, ~30 lines — heading, body paragraph, a link to
+`${APP_URL}/notifications`, and a footer line saying these can be turned off in
+Settings → Notifications. That footer is the pilot's stand-in for a List-Unsubscribe header.
+
+---
+
+## Phase 3 — Verifying the address before first send
+
+Verification mail is **not** a notification: it goes to someone who has expressed no
+preference yet, so it calls `email.send()` directly and never touches `notify()`.
+
+`server/src/controllers/authController.ts` — two new handlers, mirroring the
+`forgotPassword`/`resetPassword` idiom already there (`crypto.randomBytes(32).toString('hex')`,
+an expiry column, lookup by token):
+
+```ts
+// POST /api/auth/send-verification   (authed; `protect` middleware)
+//   24h token + expiry on the user, then email.send(renderVerification(link))
+//   link = `${APP_URL}/verify-email?token=${token}`
+//   Cooldown: refuse with 429 if emailVerificationExpiresAt was set < 2 min ago,
+//   so the button cannot be used to mail-bomb an address.
+// POST /api/auth/verify-email        (public; { token })
+//   find by emailVerificationToken, reject if missing/expired,
+//   then update({ emailVerifiedAt: new Date(), emailVerificationToken: null, emailVerificationExpiresAt: null })
+```
+
+Register both in `server/src/routes/authRoutes.ts` beside the existing reset routes.
+
+**Deliberately *not* returning the token in the response.** `forgotPassword` does that
+(authController.ts:179-183 explains it was because no mailer existed), and it is a real hole
+— anyone who knows an email gets a working reset token. Do not copy it. With
+`EMAIL_DRIVER=log` the link prints to the server console, which is how the demo works.
+
+**Google sign-in users are verified for free.** `authController.ts:140-142` already rejects
+a login whose `payload.email_verified` is false, and then throws the fact away. Set
+`emailVerifiedAt: new Date()` on the user it creates (and on an existing user whose
+`emailVerifiedAt` is null). Google has already done the work; asking those users to confirm
+again would be theatre.
+
+Dependency ordering to keep in mind: **Phase 2 must land before Phase 3**, since
+verification needs a mailer, and Phase 3 before email delivery is switched on in Phase 4.
+
+> Once `email.ts` exists, the highest-value follow-up is making `forgotPassword` actually
+> mail its link instead of returning the token. **Keep it out of this change** — it widens the
+> diff into auth and deserves its own commit. Record it in the README.
+
+---
+
+## Phase 4 — Teaching `notify` about email
+
+Three edits to `server/src/lib/notify.ts`, with **no behavioural change to in-app or SMS**.
+
+**1. Category in, channels out.** New `server/src/lib/channels/policy.ts`:
+
+```ts
+/** Transport is a property of the kind of notice, not of the controller that sends it. */
+const POLICY: Record<NotificationCategory, DeliveryChannel[]> = {
+  activity: ['in_app', 'sms'],            // today's default, byte for byte
+  outcome:  ['in_app', 'sms', 'email'],
+  critical: ['in_app', 'sms', 'email'],
+};
+export const channelsFor = (category: NotificationCategory = 'activity') =>
+  POLICY[category] ?? POLICY.activity;
+```
+
+`NotificationFields` gains `category?: NotificationCategory`. **It is not a column** — line 82
+is `Notification.create(fields)`, so it must be destructured out or Sequelize carries a stray
+attribute:
+
+```ts
+const { category, ...attributes } = fields;
+const { channels = channelsFor(category) } = options;
+const notification = await Notification.create(attributes);
+```
+
+An un-annotated call site therefore resolves to exactly `['in_app', 'sms']` — today's
+literal. That equality is worth a test, because it is the whole regression argument.
+
+`outcome` and `critical` resolve identically right now. Keep them distinct anyway: `critical`
+is the hook for narrowing *SMS* once Pindo is billed per segment, which is the filter the
+README already asks for.
+
+**2. One user fetch for both off-app channels**, replacing lines 96-102:
+
+```ts
+const needsUser = channels.includes('sms') || channels.includes('email');
+const user = needsUser
+  ? await User.findByPk(fields.userId, {
+      attributes: ['id', 'phone', 'email', 'preferredChannel', 'emailVerifiedAt'],
+    })
+  : null;
+
+if (channels.includes('sms'))   void deliverSms(notification, user);   // deliberately not awaited
+if (channels.includes('email')) void deliverEmail(notification, user); // same reason
+```
+
+Keep the "Deliberately not awaited" comment and extend it: an HTTP request should not wait on
+an SMTP handshake either.
+
+**3. `deliverEmail`**, structurally identical to `deliverSms` (lines 40-68), recording every
+outcome — the point of `recordDelivery` is that a pilot can tell "did not want email" from
+"tried and failed":
+
+| Condition | row |
 |---|---|
-| Layout | Application code moved to `src/`; `config/`, `migrations/`, `seeders/` stay at the root for sequelize-cli |
-| Runtime | `tsc` → `dist/` for production (`npm start`); `tsx` for dev and for the container |
-| Strictness | `strict`, `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` — matching `client/tsconfig.app.json` |
-| Tests | ts-jest with diagnostics off; types enforced once by `npm run typecheck` |
-| Shared types | None. The client keeps its own copies for now |
+| `user?.preferredChannel !== 'email'` | `skipped`, `'not opted in'` |
+| `!user.emailVerifiedAt` | `skipped`, `'email not verified'` |
+| `!user.email` | `skipped`, `'no email address'` (unreachable — column is NOT NULL — kept for symmetry) |
+| sent | `sent` + `provider`, `providerMessageId`, `sentAt` |
+| threw | `failed` + `provider: email.driverName()`, error message |
 
-**The change that mattered.** `models/index.js` was the stock sequelize-cli
-loader — `readdirSync`, `require`, into a bare object with no type — so all 28
-call sites doing `const { User } = require('../models')` resolved to `any`, and
-a mistyped attribute was a runtime `undefined` rather than an error. It is now
-an explicit registry, which is what makes every other type in the codebase
-worth anything.
+`deliverSms`'s opt-in check changes from `!user?.smsNotificationsEnabled` to
+`user?.preferredChannel !== 'sms'`. Same semantics for every existing row after the backfill.
 
-**The JSONB columns now have contracts.** `Match.scoreBreakdown` and
-`GigApplication.scoreBreakdown` are typed as `ScoredPair`, the exact return of
-`matchScoringService.scorePair`; `User.trustScoreBreakdown` and
-`TrustScoreSnapshot.components` are both `TrustBreakdown`. Producer and store
-can no longer drift apart silently, which matters because those columns are the
-pilot's data.
+Email passes the **title as subject** and body as body — the SMS comment about keeping to one
+billable segment does not apply. Comment the divergence so it reads as intentional.
 
-**Behaviour was held fixed and checked, not assumed.** The ranking order,
-reasons and component weights are identical to a snapshot taken before the
-migration; acceptance rate is still 0.947. The trust formula was compared
-directly against its pre-migration implementation on the same row: the two
-differ by 5.6e-11, which is the same order as running either one twice in a
-row — clock drift inside the recency decay, not a change in the code.
-
-**What typing found.** Three genuine problems surfaced that no test had caught:
-
-1. **The peer reviewer pool was always empty.** `assignReviewer` selected
-   `['id','name','reviewerTier','trustScore','role']` and then filtered on
-   `candidate.reviewCount`, which that query never loaded — so every peer was
-   rejected as `peerNoTrackRecord` and every review fell to an admin. RQ1's
-   mechanism is rotation across *peers*, so this matters beyond tidiness. Fixed
-   in its own commit, separate from the behaviour-preserving migration.
-2. **Query parameters were never the strings the handlers assumed.** Express
-   parses `?id[]=a&id[]=b` into an array and `?id[x]=y` into an object, and
-   those went straight into Sequelize `where` clauses. Now rejected at the edge.
-3. **`jwt.verify(token, process.env.JWT_SECRET)` could not compile** — the
-   secret is `string | undefined`. The server had been booting happily with no
-   `JWT_SECRET` and failing only at the first login; `server.ts` now asserts the
-   required secrets at start-up.
-
-**Known foot-gun, documented in TESTING.md**: `npm run seed:test` is not
-idempotent. A second run duplicates the four skill categories and the suite then
-fails looking one up by name. CI is unaffected (fresh database each run).
+**No migration for the delivery table.** `channel` is already a plain `Sequelize.STRING` with
+no DB enum, and `NotificationDelivery.ts:49` already validates
+`isIn: [['in_app','sms','email']]`.
 
 ---
 
-## The three research questions, and where each is answered in the code
+## Phase 5 — Mark the notices worth an email
 
-| | Question | Answered by |
+Eight one-line additions. Not 18, and not a `channels` array in a controller.
+
+| File:line | Title | add |
 |---|---|---|
-| **RQ1** | Can skill verification resist collusion between a worker and a reviewer? | `services/skillVerificationService.js` — rotation, pairing limits, prior-relationship exclusion, seeded draw; `services/collusionDetectionService.js` — rubber-stamp flags |
-| **RQ2** | How should geographic closeness be weighted against trustworthiness? | `services/matchScoringService.js` — five weighted components, four weight profiles, `componentVariance()` for effective influence |
-| **RQ3** | Does verified skill-proof raise a client's willingness to hire a stranger? | `services/allocationService.js` — concealed permuted-block arms; `User.experimentArm`; survey `context` |
+| `webhookController.ts:77` | Payment confirmed / failed | `category: 'critical'` |
+| `adminController.ts:282` | Account suspended / reactivated | `category: 'critical'` |
+| `adminController.ts:144` | Gig approved / rejected | `category: 'outcome'` |
+| `gigApplicationController.ts:139` | Application not selected | `category: 'outcome'` |
+| `gigApplicationController.ts:161` | Application approved | `category: 'outcome'` |
+| `skillTaskController.ts:367` | Skill verified / rejected | `category: 'outcome'` |
+| `matchController.ts:152` | Worker confirmed | `category: 'outcome'` |
+| `matchController.ts:166` | Worker declined / Match cancelled | `category: 'outcome'` |
 
-Everything below exists to make one of those three measurable rather than
-asserted.
+Left as `activity` **on purpose** — `gigApplicationController.ts:82` ("New gig application",
+fires to every admin on every application), both "needs manual assignment" notices
+(`skillTaskController.ts:190,513`), `matchController.ts:136,144`, `reviewController.ts:61`,
+`adminController.ts:90`, and `adminController.ts:247` ("You were matched to a new gig" — high
+user value, but ranked matching sends several invites per gig, so it is also the highest
+volume). Promoting any of these later is a one-word diff.
 
 ---
 
-## What is built
+## Phase 6 — Client
 
-### Sprint 0 — make the marketplace measurable
+**`client/src/api/userApi.ts`** — widen `UpdateProfilePayload` (lines 4-13). This is the hard
+blocker; the toggle cannot be sent without it:
 
-Before this, a match was created already accepted, so acceptance rate was
-structurally pinned at 100% and RQ2 had nothing to measure. Matches now carry a
-real lifecycle (`pending` → `accepted` / `cancelled`) with `respondedAt`,
-`acceptedAt` and `declineReason`, and `MatchList` grew the Confirm/Decline UI
-that lifecycle requires. Acceptance rate on the seeded pilot history now reads
-**0.947**, not 1.0 — a number that can move.
-
-Trust scoring was a flat unweighted mean, which gave a worker with one 5-star
-review the same score as one with forty. `trustScoreService` is now Bayesian
-shrinkage toward a prior with recency half-life decay:
-
-```
-FORMULA_VERSION       v3-bayesian-2026-09
-RECENCY_HALF_LIFE_DAYS 180
-PRIOR_MEAN / STRENGTH  3.5 / 3
-COMPONENT_WEIGHTS      rating .55, completion .25, verification .20 (worker only)
+```ts
+preferredChannel?: 'none' | 'email' | 'sms';
+/** Null clears the number; undefined leaves it untouched. */
+phone?: string | null;
 ```
 
-Weights renormalise per role, so a client is not permanently capped by a
-verification component they can never earn. Declining a pending invitation is
-**not** penalised; only abandoning after `acceptedAt` is. Penalising a decline
-would make the acceptance rate RQ2 depends on an artefact of coercion.
+**`client/src/types/index.ts`** — replace `smsNotificationsEnabled` / `emailNotificationsEnabled`
+(lines 62-63) with `preferredChannel?: 'none' | 'email' | 'sms'` and add
+`emailVerifiedAt?: string | null`.
 
-### Sprint A — ranked matching with an auditable explanation
+**New `client/src/components/Settings/NotificationPreferences.tsx`** — its own component, not
+folded into `ProfileEditor`: that is one submit-button form, and a preference should take
+effect on change.
 
-`matchScoringService.scorePair` produces five components:
+- `Radio.Group` over three options: in-app only / Email / SMS, bound to
+  `profile?.preferredChannel ?? 'none'`.
+- **SMS rendered `disabled`** with a "coming soon" hint — the ask shown honestly: the shape
+  exists, SMS is dated. A user already on `'sms'` (seeded `eric`) still displays as selected
+  and still receives SMS; they simply cannot newly choose it.
+- Choosing Email when `emailVerifiedAt` is null shows an `Alert` with a **Verify my address**
+  button → `POST /auth/send-verification`, and the copy states plainly that no email will be
+  sent until the address is confirmed. Show the destination address read-only so the user
+  knows where it goes before opting in.
+- On change: `userApi.updateProfile({ preferredChannel })` → `await dispatch(fetchCurrentUser())`
+  → `message.success(t('settings.saved'))`, with a loading flag during the round trip and a
+  revert + `message.error` on failure. That is the save idiom `ProfileEditor` already uses.
 
-```
-distance     0.5 ^ (km / distanceHalfLifeKm)      unknown location → 0.5, never 0
-trust        trustScore / 5
-skillFit     specificity × levelFit                exact 1.0 | sibling 0.7 | parent 0.5
-credentials  credentialStrength                    the provenance tier (see Sprint C)
-availability decays with concurrent active matches
-```
+**New `client/src/pages/VerifyEmailPage.tsx`** + a public route `/verify-email` in the router,
+alongside the existing `/forgot-password`. Reads `?token=`, posts it, shows success or an
+expired-link message with a path back to Settings.
 
-`skillFit` deliberately carries *fit* only and `credentials` carries
-*establishment*, so verification is never counted twice — the double-count was
-what confounded component variance in the first RQ2 dry run.
+**`client/src/components/Settings/Settings.tsx`** — append a fifth tab after `data` (index 4):
+`{ key: 'notifications', label: <Space size={8}><BellOutlined />{t('settings.notifications.title')}</Space>, children: <Card …><NotificationPreferences /></Card> }`.
+**Leave the `role === 'worker'` splices at lines 125/135 untouched** — they insert at indices
+1 and 2 positionally. Add a one-line comment above them saying so, so the next person does not
+insert above them.
 
-Four weight profiles ship, giving RQ2 its comparison arms:
+**i18n** — add the same leaf keys to **both** `en.json` and `rw.json` under
+`settings.notifications`: `title`, `desc`, `inAppAlways`, `emailLabel`, `emailHint`, `sentTo`,
+`verifyCta`, `verifyPending`, `verifySent`, `smsLabel`, `smsSoon`, plus `verifyEmail.*` for the
+page. Both files are at 428 keys; they must stay equal.
+`node scripts/check-i18n-parity.mjs` gates this in CI and also **warns on identical en/rw
+values**, so write real Kinyarwanda rather than English placeholders. As with the ~40 strings
+from the last i18n pass, these want a native-speaker review before the pilot.
 
-| Profile | trust | distance | skillFit | credentials | availability |
-|---|---|---|---|---|---|
-| `balanced` | .25 | .25 | .20 | .20 | .10 |
-| `proximity_first` | .15 | .45 | .20 | .15 | .05 |
-| `trust_first` | .45 | .15 | .15 | .20 | .05 |
-| `credential_first` | .15 | .15 | .20 | .45 | .05 |
+---
 
-Two failures found and fixed here are worth keeping on the record. Components
-are built by filtering `Object.entries(weights)` against `raw`, because a weight
-key with no matching raw value silently produced `NaN` and a profile missing a
-key silently dropped a component. And `rankCandidates` sorts **eligible-first,
-then by score** — without it, three unqualified workers (0.576) outranked the
-only qualified tailor (0.439) purely on proximity, which is exactly the opaque
-behaviour this project criticises.
+## Phase 7 — Env vars and documentation
 
-Every score is explained as i18n **keys plus params**, never a rendered
-sentence, so `MatchExplanation.tsx` and `TrustReceipt.tsx` translate into
-Kinyarwanda without the server knowing which language it is talking to.
-
-### Sprint B — verification that resists collusion (RQ1)
-
-A worker submits a demonstration task; reviewers are drawn, not chosen:
-
-```
-RECENT_TASKS_EXCLUDED    3     no reviewer seen in the worker's last 3 tasks
-MAX_PAIRINGS_PER_WINDOW  2     within PAIRING_WINDOW_DAYS = 90
-PEER_MIN_TRUST_SCORE     3.5
-PEER_MIN_REVIEWS         2     a score resting on the prior is not a track record
-```
-
-Every rejection is logged with its reason (`self`, `alreadyReviewed`,
-`recentPairing`, `pairingLimit`, `priorGigRelationship`, `notCategoryCompetent`,
-`peerTrustTooLow`, `peerNoTrackRecord`), and the draw is a seeded SHA-256 whose
-seed is stored on the assignment — so any allocation in the pilot can be
-reproduced and defended in a viva.
-
-`PEER_MIN_REVIEWS` exists because the trust floor alone was not a floor: an
-unreviewed worker sits at the 3.5 prior and cleared a 3.5 threshold on no
-evidence at all.
-
-`collusionDetectionService` flags rubber-stamping, but only for assignments that
-carry an `assignmentSeed` — judging seeded fixtures on review speed produced six
-false positives.
-
-**When no reviewer is eligible, the submission is kept and admins are
-notified** (`PUT /:id/assign?relax=true`). The earlier behaviour destroyed the
-worker's evidence, which in a pilot means a participant's effort vanishes.
-
-### Sprint C — competence by provenance, not by badge
-
-Four ascending tiers, each with the strength that enters `raw.credentials`:
-
-| Tier | Established by | Strength |
+| Variable | Purpose | Default |
 |---|---|---|
-| `self_declared` | The worker says so | 0.15 |
-| `document_sighted` | A rotated reviewer looked at the document | 0.50 |
-| `peer_reviewed` | An approved demonstration task | 0.80 |
-| `work_earned` | ≥3 completed, reviewed gigs in that skill | 1.00 |
+| `EMAIL_DRIVER` | `log` today; `smtp` once a Brevo sender is verified | `log` |
+| `EMAIL_FROM` | `From` header. With Brevo and no domain this is rewritten to `@brevosend.com` | placeholder |
+| `SMTP_HOST` | `smtp-relay.brevo.com` | — |
+| `SMTP_PORT` | | `587` |
+| `SMTP_USER` / `SMTP_PASS` | Brevo SMTP login + key | — |
+| `APP_URL` | Base URL for the links in emails | `http://localhost:5173` |
 
-`competenceService` recomputes the tier and is **monotonic** — new evidence can
-never step a worker down.
+All optional and read lazily per call, so **the server boots and the feature works end to end
+with nothing configured**. `assertRequiredEnv()` in `config/env.ts` is untouched.
 
-The decisive move was *not* a new credentials subsystem: adding `SkillTask.kind`
-(`demonstration` | `certificate`) made a certificate sighting inherit rotation,
-pairing limits, quorum, escalation and appeals at zero marginal cost. That is
-what extends RQ1 from skills to credentials, and
-`tests/integration/skillVerification.test.js` passing untouched is the proof
-that `kind` never leaked into the assignment path.
+README: add these rows to the env table (~line 494, under `SMS_DRIVER`); note that
+`PINDO_API_TOKEN` / `SMS_SENDER_ID` are currently undocumented there and should be added in the
+same pass. Add an **Email** bullet to "Before going live" covering the Brevo activation risk,
+the missing bounce webhook, and the `forgotPassword` follow-up. Amend the existing
+"Notification volume" bullet to say the severity filter it asks for now exists as
+`NotificationCategory`, and is the hook for narrowing SMS.
 
-**Integrity constraint, load-bearing in the UI copy:** `document_sighted` means
-a reviewer *saw* the document. It does not mean the certificate is genuine. The
-platform cannot authenticate a TVET award and does not claim to.
+`config/env.ts:24-27` tells the operator to "see `.env.example` for the full list" and **that
+file does not exist**. Create `server/.env.example` listing every variable in the README table.
+It is the first place a new contributor looks, and it makes the existing error message true.
 
-The taxonomy grew from 4 flat rows to **4 categories and 22 curated
-specialisations** (`Skills.parentId`, `kind`, `sortOrder`; `GET /skills?tree=1`).
-Curated, not worker-authored — free tagging would destroy the comparability RQ2
-needs.
+**Bounces.** With `log` there are none. With `smtp`, rejections at submit time already land as
+a `failed` `NotificationDelivery` row carrying the provider error — the audit trail
+`recordDelivery` was written for. Asynchronous bounces need a provider webhook and are out of
+scope; at 30 users the mitigation is operational. Add to the README as the pilot's delivery
+health check:
 
-`Gigs.requiredLevel` is client-declared, optional and a **soft penalty, never a
-hard filter**. Only a reviewer-set level counts against it; a self-declared
-level 5 scores as level 1 against a client's bar, or `requiredLevel` would mean
-nothing.
+```sql
+SELECT channel, status, error, count(*) FROM "NotificationDeliveries"
+WHERE channel = 'email' GROUP BY 1,2,3 ORDER BY 4 DESC;
+```
 
-**The reserved exploration slot** takes the last invitation in the shortlist and
-gives it to the best otherwise-eligible worker below the track-record threshold.
-Without it the credentials component — the largest of three compounding
-newcomer penalties, 0.15 against 0.80 — would bury every new worker and
-reproduce the cold-start trap §1.2 of the proposal exists to break. It is tagged
-`Match.invitationReason = 'exploration'` and reported separately in the metrics,
-because an invitation received by reservation is **not** evidence the ranking
-chose them, and pooling the two would contaminate RQ2's ranked-arm acceptance
-rate. `EXPLORATION_SLOTS=0` switches it off for a control arm.
-
-**RQ3 allocation.** Arms come from a pre-generated permuted-block list
-(`ExperimentAllocations`, mixed block sizes 2 and 4 so block tails cannot be
-deduced), claimed under `FOR UPDATE SKIP LOCKED`. The first attempt — simple
-alternation — was wrong three ways in a researcher-registered in-person pilot:
-it destroyed allocation concealment, it had a count-then-write race, and its
-counter was polluted by test accounts. `claimArm` returns `null` when the list
-is exhausted; it never invents an arm.
-
-### Sprint D — reaching the phone the worker actually owns
-
-- **PWA / offline-first.** `vite-plugin-pwa` + Workbox. The API is `NetworkFirst`
-  with a 5s timeout — a stale gig list that looks live is worse than an honest
-  failure, because a worker could apply to something already taken. Uploads are
-  `CacheFirst`. Photographs are excluded from the precache: the login background
-  alone is 2.8MB, and spending a prepaid bundle on decoration before the worker
-  has done anything is indefensible.
-- **The offline queue** (`client/src/lib/offlineQueue.ts`) replays only a
-  whitelist — apply, respond to a match, mark a notification read, edit profile.
-  Payments and admin decisions are excluded by design. A 4xx is terminal and
-  goes to dead letters rather than retrying forever. Actions carry `occurredAt`
-  and `queuedOffline`, so a decision made in a dead zone keeps its real time.
-- **SMS channel** (`server/lib/channels/sms.js`) with a `log` driver by default
-  and a `pindo` driver behind config. `notify` fans out to in-app and SMS and
-  records a `NotificationDelivery` for **every** attempt, including `skipped` —
-  a pilot needs to know what never reached the worker, not only what did.
-- **Payments** are a façade over `services/payments/simulatedAdapter.js`.
-  Settlement runs through one idempotent `applyCallback` under a row lock, and
-  `confirm`/`fail` route through that same path, so the webhook and the manual
-  path cannot diverge. `Idempotency-Key` responses are recorded **before** the
-  response is sent — recording after meant an immediate retry got a 409 instead
-  of a replay.
+**Localisation is out of scope, deliberately.** The server has no i18n library and no
+catalogue; all 18 call sites interpolate hardcoded English. Translating only email would make
+the email better-localised than the in-app notification generated from the same row. The right
+fix is a server-side message catalogue keyed by notification type at the `notify` layer,
+serving all three channels at once — a separate, larger change. Record it as a follow-up.
 
 ---
 
-## Current state
+## Tests
 
-```
-server   219 tests / 15 suites   eslint clean
-client    12 tests               eslint + tsc clean
-i18n     en/rw at parity (CI-gated by scripts/check-i18n-parity.mjs)
-dev DB   15 users · 29 gigs · 21 matches · 18 confirmed payments · 34 reviews
+Nothing covers `notify` or `sms` today (`server/tests/**` has zero matches), so these establish
+the pattern. ts-jest with `diagnostics: false`, `--runInBand`.
+
+**`tests/unit/emailChannel.test.ts`** — pure, no Postgres. Save/restore `process.env` around
+each test; stub the transport.
+- no env set → driver is `log`, returns `{provider:'log', providerMessageId:null}`, sends nothing
+- `EMAIL_DRIVER=nope` → throws `Unknown EMAIL_DRIVER 'nope'. Available: log, smtp`
+- `EMAIL_DRIVER=smtp` with no `SMTP_HOST` → throws `SMTP_HOST is not set`
+- smtp happy path → `from` comes from `EMAIL_FROM`; returns the provider `messageId`
+- smtp rejection → throws, message preserved
+- `render()` → subject is the title, text contains the body, html contains the body and the
+  `APP_URL` link
+
+**`tests/unit/notificationPolicy.test.ts`** — `channelsFor(undefined)` is **exactly**
+`['in_app','sms']` (the regression guard for the 10 un-annotated call sites); `outcome` and
+`critical` include `email`; an unknown value falls back to activity.
+
+**`tests/integration/notifyEmail.test.ts`** — DB-bound, following the `trustScoreService.test.ts`
+idiom (`import db from '../../src/models'`, per-test users with randomised emails, cleanup by
+collected ids). Call `notify` with `req = undefined` so no Socket.IO is needed.
+- verified + `preferredChannel:'email'` + `category:'critical'` → `email` row `sent`, provider `log`, `sentAt` set
+- `preferredChannel:'none'` (the default) → `skipped` / `'not opted in'`
+- `preferredChannel:'email'` but `emailVerifiedAt` null → `skipped` / `'email not verified'`
+- `category` omitted → **no `email` row at all**, and the `in_app` + `sms` rows are unchanged
+- unknown `EMAIL_DRIVER` → `failed` with the provider name and the thrown message
+- `category` is not persisted onto the `Notification` row (guards the destructure)
+
+**`tests/integration/emailVerification.test.ts`** — send-verification sets a token and expiry;
+verify-email with it sets `emailVerifiedAt` and clears the token; a second use of the same token
+fails; an expired token fails; a resend inside the cooldown returns 429; the token never appears
+in any response body.
+
+**The race to plan for:** `deliverEmail` is `void`-ed, so its row appears *after* `notify`
+resolves. Add a polling helper to `tests/helpers/fixtures.ts`:
+
+```ts
+/** Delivery is dispatched without being awaited, so assertions must wait for it. */
+export const waitForDeliveries = async (notificationId, channel, { tries = 40, ms = 25 } = {}) => { /* poll, then throw a readable timeout */ };
 ```
 
-The dev database was cleared of verification debris on 2026-09-13 (28
-`@example.com` accounts and 12 test-titled gigs), the RQ3 allocation list was
-regenerated, and trust scores and the peer-reviewer pool were rebuilt. Backup at
-`scratchpad/isoko_dev_before_cleanup.sql`.
+Do **not** make `deliverEmail` awaited just to simplify the test — that would add SMTP latency
+to a user-visible action.
 
 ---
 
-## Open decisions
+## Verification
 
-1. **The track-record threshold for the exploration slot.** It currently reuses
-   `PEER_MIN_REVIEWS` (2), which keeps one definition of "unproven" across the
-   codebase — but the right number for *access* need not be the right number for
-   *reviewing others*. Revisit once pilot data exists.
-2. **Kinyarwanda copy for the four tier labels.** "Sighted" versus "verified" is
-   exactly the distinction that must survive translation, and it is a judgement,
-   not a lookup.
-3. **Real SMS and payment integration.** Deliberately deferred: the simulated
-   adapters keep the pilot runnable without a provider contract. The seam is
-   already in place, so switching is a driver swap, not a rewrite.
-
-## Residual risk, accepted
-
-`levelFit` has no floor, so a client setting `requiredLevel: 5` drives a
-newcomer's `skillFit` to 0.2. The exploration slot is what keeps them reachable
-— if it is ever disabled via `EXPLORATION_SLOTS=0`, inflated level requirements
-become a real lock-out again. Watch the `newcomerAccess` metric for it.
-
-The client bundle is ~3.3MB, above Workbox's 2MB default ceiling, which was
-raised rather than the feature dropped. It is genuinely too large for a low-end
-phone on metered data and wants code-splitting before the pilot.
-
-## Explicitly out of scope
-
-Credential expiry, an issuer registry, OCR, any authenticity check on a
-document, a portfolio, per-skill reputation in the match score (display only in
-the trust receipt), and worker-authored specialisation tags.
+1. `cd server && npm run typecheck && npm run lint`
+2. `npm run migrate` then `npm run seed`; confirm `eric` reads `preferredChannel = 'sms'` —
+   proof the backfill preserved the one expressed preference in the data
+3. `npm run migrate:undo` once → both booleans come back with the right values → `migrate` again
+4. `npm test` — new files pass, nothing regresses. `tests/integration/api.test.ts` exercises
+   several `notify` paths and is the real guard that the single-fetch refactor is behaviour-neutral
+5. `node scripts/check-i18n-parity.mjs` → equal counts, no new untranslated warnings
+6. `cd client && npm run build`
+7. **Manual, no credentials.** Both dev servers up. Log in as `david@isoko.demo` →
+   Settings → **Notifications** → pick Email → the unverified alert appears → **Verify my
+   address** → the link prints to the server console as `[email:log] -> …` → open it →
+   the page confirms → Settings shows verified. As a worker, confirm **Credentials** and
+   **Passport** are still the 2nd and 3rd tabs and Notifications is last.
+8. Trigger a `critical` notice — admin-suspend a test user (`adminController.ts:282`) or post the
+   payment webhook against a seeded transaction. Console shows `[email:log]`;
+   `SELECT * FROM "NotificationDeliveries" WHERE channel='email'` shows `sent` / `log`.
+9. Switch back to in-app only, repeat → row is `skipped` / `'not opted in'`.
+10. **The noise check:** apply to a gig as a worker (`gigApplicationController.ts:82`, the
+    per-admin fan-out) → **no `email` rows**, with an opted-in verified admin.
+11. With a real Brevo key: `EMAIL_DRIVER=smtp SMTP_HOST=smtp-relay.brevo.com SMTP_USER=… SMTP_PASS=…`
+    → mail arrives at a Gmail address (**check spam**), `providerMessageId` populated. Then a bad
+    password → `failed` row carrying the provider message.
 
 ---
 
-## Running it
+## Commits
 
-```bash
-# Postgres 18 on 5432
-cd server && npm run migrate && npm run seed && npm run dev   # tsx watch src/server.ts
-cd client && npm run dev
-```
+Incremental and narrative, explaining why.
 
-`npm run seed` chains `trust:backfill`, so seeded workers hold scores they have
-actually earned rather than a hardcoded 5.00 beside "no reviews yet".
+1. Migration + `User` model + `domain.ts` + `UPDATABLE_FIELDS` + seeders — *"Store one notification preference instead of two flags"* (why: an exclusive choice in two booleans has states the UI cannot produce)
+2. `lib/channels/email.ts` + its unit tests — *"Add an email driver that works with no credentials"* (why `log` is the default; why SMTP over a provider REST API)
+3. Auth handlers, routes and tests for verification — *"Confirm an address before sending anything to it"* (why the token is not returned in the response; why Google users are verified for free)
+4. `policy.ts` + `notify.ts` + integration test — *"Deliver notifications by email when the recipient asked for it"* (why one user fetch; why delivery is not awaited; why localisation waits)
+5. The eight `category:` annotations — *"Mark the notices worth an email"* (why each omission was omitted)
+6. Client: `userApi.ts`, `types/index.ts`, `NotificationPreferences.tsx`, `VerifyEmailPage.tsx`, `Settings.tsx`, both locales — *"Let people choose how they hear from us"* (why a live toggle rather than the profile form; why SMS is shown disabled)
+7. README env table, `.env.example`, "Before going live" — *"Document the email channel and what it still needs"*
 
-Logins are `<name>@isoko.demo` / `password123` — `emmanuel` admin, `grace` and
-`diane` clients, `eric` and `aline` peer reviewers.
+## Not in scope
 
-For production: `npm run build` emits `dist/`, and `npm start` runs
-`node dist/server.js`. The container runs `npm run dev` instead, because
-docker-compose bind-mounts `./server` over `/app` and would shadow a `dist/`
-built at image time.
+Localised notification bodies; a bounce/complaint webhook; making `forgotPassword` mail its
+link; SMS preference selection (the option ships disabled); per-category preferences; and any
+change to in-app or SMS delivery behaviour.
 
-Useful scripts: `npm run typecheck`, `npm run trust:backfill`,
-`npm run reviewers:enrol`, `npx tsx src/scripts/generateAllocationList.ts`
-(re-draws the RQ3 block sequence — only before a pilot starts, never mid-run),
-and `node scripts/check-i18n-parity.mjs` at the repo root.
+---
+
+## Deviations from the plan as written
+
+Two, both recorded here rather than silently absorbed:
+
+1. **`notify.ts`'s SMS opt-in check moved into Phase 1** rather than Phase 4.
+   Dropping the boolean columns stops the file compiling, and every commit has to
+   build on its own, so the one-line rename travelled with the schema change.
+
+2. **"Worker selected" was annotated and then reverted** to `activity`. It fires
+   from the client's own click to approve an application, so emailing it reports
+   their own action back to them, and "Worker confirmed" covers the same hiring
+   event once it actually resolves. Eight call sites carry a category, as planned.
+
+One addition the plan did not call for: `render()` escapes the notification title
+and body into the HTML part. Titles interpolate gig titles and user names, so a
+quote or an angle bracket from a real listing would otherwise break the markup.
