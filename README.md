@@ -2,7 +2,17 @@
 
 A skills-to-income marketplace for urban youth in Rwanda. Workers build verified skill profiles, apply to gigs, get matched, and track simulated mobile-money payments. Clients post jobs, review applications, and manage matches. Admins moderate users, approve gigs, and review skill submissions.
 
-**Stack:** React (Vite + TypeScript) · Node.js (Express) · PostgreSQL (Sequelize) · Docker Compose
+**Stack:** React (Vite + TypeScript) · Node.js + Express (TypeScript) · PostgreSQL (Sequelize) · Docker Compose
+
+**Repository:** https://github.com/Seyiranky/Capstone
+
+The backend and the frontend are both TypeScript under `strict`. Every push runs
+lint, typecheck, the test suite and a production build:
+
+```bash
+cd server && npm run lint && npm run typecheck && npm test && npm run build
+cd client && npx eslint src && npx tsc --noEmit -p tsconfig.app.json && npm test && npm run build
+```
 
 ---
 
@@ -402,3 +412,94 @@ cd server
 npm run migrate
 npm run migrate:undo
 ```
+
+---
+
+## Deployment plan
+
+The application is container-first, so the same image runs locally and in a
+hosted environment. Nothing below requires a rewrite — only configuration.
+
+### Current state
+
+| Environment | How it runs | Status |
+|---|---|---|
+| Local (Docker) | `docker compose up` — Postgres, API and client containers | Working |
+| Local (Node) | `npm run dev` in `server/` and `client/` | Working |
+| Pilot / production | Not yet deployed — the plan below | Planned |
+
+### Build artifacts
+
+```bash
+cd server && npm run build    # tsc → server/dist, run with `npm start`
+cd client && npm run build    # vite → client/dist, static files
+```
+
+The server compiles to plain JavaScript in `dist/` and is started with
+`node dist/server.js`. The client builds to static assets that any CDN or static
+host can serve.
+
+### Target topology for the pilot
+
+```
+┌──────────────┐     HTTPS      ┌─────────────────┐
+│  Browser /   │ ─────────────▶ │  Static host    │  client/dist
+│  installed   │                │  (Netlify/      │  + service worker
+│  PWA         │                │   Vercel)       │
+└──────┬───────┘                └─────────────────┘
+       │ /api  (HTTPS)
+       ▼
+┌─────────────────┐   DATABASE_URL   ┌──────────────────┐
+│  API container  │ ───────────────▶ │  Managed         │
+│  (Render /      │                  │  PostgreSQL 18   │
+│   Railway /     │                  │  + daily backup  │
+│   Fly.io)       │                  └──────────────────┘
+└─────────────────┘
+```
+
+**Why this split.** The client is static and benefits from a CDN, which matters
+when the audience is on metered mobile data in Kigali. The API needs a long-lived
+process for Socket.IO, so it belongs on a container host rather than a serverless
+function.
+
+### Steps
+
+1. **Database** — provision managed PostgreSQL 18, enable daily backups, and set
+   `DATABASE_URL`. The production config in `server/config/config.js` already
+   reads that variable and requires SSL.
+2. **API** — deploy `server/` from the Dockerfile. Release command:
+   `npm run migrate && npm start`. Migrations run on release rather than on boot,
+   so two instances starting together cannot race each other.
+3. **Client** — build with `VITE_PROXY_TARGET` unset and the API's public URL
+   configured, publish `client/dist`, and point `/api` at the API host.
+4. **Secrets** — set `JWT_SECRET` and `PASSPORT_SIGNING_SECRET` to independently
+   generated values. The server now refuses to boot without `JWT_SECRET`, so a
+   missing secret fails at deploy time rather than at the first login.
+5. **Seed reference data once** — `npm run seed` on first release only. The
+   seeders are not idempotent; re-running them duplicates the skill categories.
+
+### Environment variables for production
+
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | Managed Postgres connection string (SSL required) |
+| `NODE_ENV` | `production` |
+| `JWT_SECRET` | Session signing. **Required** — boot fails without it |
+| `PASSPORT_SIGNING_SECRET` | Signs skill passports and income statements. Kept separate from `JWT_SECRET` because a passport is a long-lived public credential |
+| `PAYMENT_PROVIDER` | `simulated-momo` today; the MTN adapter slots in here |
+| `PAYMENT_WEBHOOK_SECRET` | Shared secret on the payment callback endpoint |
+| `SMS_DRIVER` | `log` today, `pindo` once a sender ID is approved |
+| `RANKED_INVITE_LIMIT`, `EXPLORATION_SLOTS` | Pilot arm configuration, read per request so they can change without a restart |
+
+### Before going live
+
+- **Payments**: the adapter seam is in place but reconciliation is not. A dropped
+  webhook currently leaves a transaction at `initiated` forever; a status-polling
+  job is needed before real money moves.
+- **SMS**: a Rwandan alphanumeric sender ID needs RURA approval, roughly three
+  weeks. Apply before the pilot window, not during it.
+- **Notification volume**: every notification currently attempts an SMS. With a
+  live provider that is billable on admin chatter, so the fan-out needs a
+  severity filter first.
+- **Bundle size**: the client bundle is ~3.3 MB and wants code-splitting before a
+  pilot on metered connections.
