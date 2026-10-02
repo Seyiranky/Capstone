@@ -15,3 +15,28 @@ export const must = <T>(value: T | null | undefined, what: string): T => {
   }
   return value;
 };
+
+/**
+ * Waits for the delivery rows a notification produced.
+ *
+ * `notify` dispatches SMS and email without awaiting them, so that an HTTP
+ * request never waits on a gateway. That is deliberate and worth keeping, which
+ * means the rows appear shortly *after* notify resolves and an assertion made
+ * straight away races them. Polling here is the cost of not making production
+ * slower to suit the tests.
+ */
+export const waitForDeliveries = async <T>(
+  find: () => Promise<T[]>,
+  { expected = 1, tries = 40, intervalMs = 25 } = {},
+): Promise<T[]> => {
+  for (let attempt = 0; attempt < tries; attempt += 1) {
+    const rows = await find();
+    if (rows.length >= expected) {
+      return rows;
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+  throw new Error(
+    `Timed out after ${tries * intervalMs}ms waiting for ${expected} delivery row(s)`,
+  );
+};
