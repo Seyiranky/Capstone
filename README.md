@@ -23,6 +23,9 @@ cd client && npx eslint src && npx tsc --noEmit -p tsconfig.app.json && npm test
 | `client/` | React + TypeScript frontend (Vite dev server) |
 | `server/` | Node.js/Express REST API + Sequelize ORM |
 | `docker-compose.yml` | Orchestrates Postgres, API, and client containers |
+| `SCHEMA.md` | Database schema and data model, with the reasoning behind it |
+| `TESTING.md` | Per-role manual test guide and seeded account credentials |
+| `DEMO.md` | Script for the demo recording |
 | `.env.example` | Optional root-level overrides for Docker Compose |
 
 ---
