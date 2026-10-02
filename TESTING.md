@@ -181,6 +181,38 @@ Against the **preview build on :4173**, logged in as `eric`:
 5. `SELECT * FROM "NotificationDeliveries" ORDER BY "createdAt" DESC;` →
    every attempt is recorded, including `skipped` for workers with no phone.
 
+### 5b. Email notifications
+
+No mail account is needed: `EMAIL_DRIVER` defaults to `log`, which prints the
+whole message — including verification links — to the server console.
+
+As any worker, e.g. **`david@isoko.demo`**:
+
+1. **Settings → Notifications** → choose **Email**. A warning appears saying
+   nothing will be sent until the address is confirmed.
+2. **Send me a link** → the server console prints `[email:log] -> …` with a
+   `/verify-email?token=…` URL. Open it. The page confirms and Settings then
+   shows the address as verified. Pressing the button twice inside two minutes
+   is refused with a 429.
+3. Trigger something **critical** — have an admin suspend a test account, or
+   post the payment webhook for a seeded transaction. The console shows the
+   email and:
+
+   ```sql
+   SELECT d.channel, d.status, d.provider, d.error
+     FROM "NotificationDeliveries" d
+     JOIN "Notifications" n ON n.id = d."notificationId"
+    WHERE n."userId" = '<user>' ORDER BY d."createdAt";
+   ```
+
+   should show `in_app` sent, `sms` skipped (`not opted in`) and `email` sent.
+4. Switch back to **In the app only** and repeat → the email row is `skipped`
+   with `not opted in`, not absent. The distinction is the point: a pilot has to
+   tell "did not want email" from "tried and failed".
+5. **The noise check.** Opt an *admin* into verified email, then apply to a gig
+   as a worker. "New gig application" fires to every admin, and it must produce
+   **no email row at all** — only notices carrying a `category` are emailed.
+
 ### 6. Language parity
 
 Switch to Kinyarwanda in **Settings → Appearance** and re-walk the worker

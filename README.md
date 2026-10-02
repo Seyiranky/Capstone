@@ -492,6 +492,15 @@ function.
 | `PAYMENT_PROVIDER` | `simulated-momo` today; the MTN adapter slots in here |
 | `PAYMENT_WEBHOOK_SECRET` | Shared secret on the payment callback endpoint |
 | `SMS_DRIVER` | `log` today, `pindo` once a sender ID is approved |
+| `PINDO_API_TOKEN` | Pindo API key. Required only when `SMS_DRIVER=pindo` |
+| `PINDO_ENDPOINT` | Override the Pindo URL; defaults to their v1 SMS endpoint |
+| `SMS_SENDER_ID` | The alphanumeric sender shown on an SMS, once RURA approves one |
+| `EMAIL_DRIVER` | `log` today, `smtp` once a sending account exists |
+| `EMAIL_FROM` | `From` header, e.g. `Isoko Talents <notifications@example.com>` |
+| `SMTP_HOST` | Mail host. Required only when `EMAIL_DRIVER=smtp` |
+| `SMTP_PORT` | Defaults to 587; 465 is treated as implicit TLS |
+| `SMTP_USER`, `SMTP_PASS` | SMTP credentials. Omit both for an unauthenticated relay |
+| `APP_URL` | Base URL used in email links; defaults to the Vite dev server |
 | `RANKED_INVITE_LIMIT`, `EXPLORATION_SLOTS` | Pilot arm configuration, read per request so they can change without a restart |
 
 ### Before going live
@@ -501,8 +510,36 @@ function.
   job is needed before real money moves.
 - **SMS**: a Rwandan alphanumeric sender ID needs RURA approval, roughly three
   weeks. Apply before the pilot window, not during it.
-- **Notification volume**: every notification currently attempts an SMS. With a
-  live provider that is billable on admin chatter, so the fan-out needs a
-  severity filter first.
+- **Notification volume**: SMS is still attempted on every notification, which
+  is billable chatter once a live provider is configured. Email no longer is —
+  `NotificationCategory` in `src/lib/channels/policy.ts` now decides channels per
+  notice, and narrowing SMS to `critical` is a one-line change to that table.
+- **Email**: the channel works end to end on the `log` driver, which prints
+  instead of sending, so no account is needed to demo or test it. For real mail,
+  set `EMAIL_DRIVER=smtp` with the four `SMTP_*` variables. Isoko owns no domain,
+  which rules out most transactional providers: Resend will only mail the account
+  holder's own address, SES needs verified recipients until a manual sandbox
+  review, Mailgun allows five. **Brevo** works without DNS because it re-signs
+  under `brevosend.com` — 300/day free, no card — at the cost of recipients
+  seeing a `via brevosend.com` label. Its transactional sending needs an
+  activation step that may require a domain, so **open the account early**;
+  SMTP2GO is the fallback and, because both speak SMTP, swapping is config only.
+- **Email bounces**: a rejection at send time is recorded as a `failed` delivery
+  row, but an asynchronous bounce needs a provider webhook that does not exist
+  yet. At pilot scale the check is operational:
+
+  ```sql
+  SELECT channel, status, error, count(*) FROM "NotificationDeliveries"
+  WHERE channel = 'email' GROUP BY 1,2,3 ORDER BY 4 DESC;
+  ```
+
+- **Password reset still returns its token in the response**, because no mailer
+  existed when it was written — anyone who knows an address can obtain a working
+  reset token. Now that `lib/channels/email.ts` exists this is fixable, and it is
+  the highest-value follow-up to this change.
+- **Notification text is English on every channel.** The server has no i18n
+  catalogue and all eighteen call sites interpolate English, so email matches
+  in-app rather than being better than it. The fix is a server-side catalogue
+  keyed by notification type at the `notify` layer, serving all three channels.
 - **Bundle size**: the client bundle is ~3.3 MB and wants code-splitting before a
   pilot on metered connections.
