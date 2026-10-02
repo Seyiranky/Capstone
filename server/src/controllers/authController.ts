@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import type { Request, Response } from 'express';
 import { User, userWithPassword } from '../models/User';
+import * as email from '../lib/channels/email';
+import { authed } from '../lib/authed';
 import * as allocationService from '../services/allocationService';
 import { jwtExpiresIn, jwtSecret } from '../config/env';
 import type { ExperimentArm, Role } from '../types/domain';
@@ -161,8 +163,16 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
       email: payload.email as string,
       passwordHash,
       role,
+      // Google asserted email_verified above, which is checked before we get
+      // here. Asking this user to confirm an address Google already confirmed
+      // would be theatre, so record it and move on.
+      emailVerifiedAt: new Date(),
     });
     status = 201;
+  } else if (!user.emailVerifiedAt) {
+    // An account that registered with a password and later signed in with
+    // Google: the same proof applies, so stop treating the address as unproven.
+    await user.update({ emailVerifiedAt: new Date() });
   }
 
   if (user.status === 'suspended') {
@@ -221,4 +231,103 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   await user.update({ passwordHash, resetToken: null, resetTokenExpiresAt: null });
 
   res.json({ message: 'Password updated. You can now log in.' });
+};
+
+const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
+const VERIFICATION_RESEND_COOLDOWN_MS = 2 * 60 * 1000;
+
+/**
+ * Mails a link that confirms the caller owns the address on their account.
+ *
+ * Deliberately not modelled as a notification. A notification is something the
+ * recipient opted into a channel for, and this is the message that establishes
+ * whether that channel can be used at all -- so it goes straight to the email
+ * channel and is sent whatever the user's preference says.
+ *
+ * Unlike forgotPassword, the token is never in the response. That endpoint
+ * returns it because no mailer existed when it was written, which means anyone
+ * who knows an address can obtain a working reset token; it is a hole to close,
+ * not a pattern to copy. On the `log` driver the link is printed by the server,
+ * which is how this is demonstrated without a mail account.
+ */
+export const sendVerificationEmail = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const user = await User.findByPk(caller.id);
+  if (!user) {
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+
+  if (user.emailVerifiedAt) {
+    res.json({ message: 'This address is already confirmed.', verified: true });
+    return;
+  }
+
+  // The expiry doubles as the record of when the last link was sent, so a
+  // cooldown needs no extra column. Without it this endpoint will mail an
+  // arbitrary address as fast as it is called.
+  if (user.emailVerificationExpiresAt) {
+    const sentAt = user.emailVerificationExpiresAt.getTime() - VERIFICATION_TTL_MS;
+    const waited = Date.now() - sentAt;
+    if (waited < VERIFICATION_RESEND_COOLDOWN_MS) {
+      const retryAfter = Math.ceil((VERIFICATION_RESEND_COOLDOWN_MS - waited) / 1000);
+      res.status(429).json({
+        message: `A link was just sent. Try again in ${retryAfter} seconds.`,
+        retryAfter,
+      });
+      return;
+    }
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  await user.update({
+    emailVerificationToken: token,
+    emailVerificationExpiresAt: new Date(Date.now() + VERIFICATION_TTL_MS),
+  });
+
+  const link = `${email.appUrl()}/verify-email?token=${token}`;
+  const body = `Confirm this address to start receiving Isoko Talents notifications by email.\n\n${link}\n\nThe link works for 24 hours. If you did not ask for this, ignore it.`;
+
+  try {
+    await email.send({ to: user.email, ...email.render('Confirm your email address', body) });
+  } catch (error) {
+    // Surfaced rather than swallowed: the user is waiting on a link, and
+    // reporting success while nothing was sent leaves them stuck with no clue.
+    res.status(502).json({
+      message: 'Could not send the confirmation email. Try again shortly.',
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return;
+  }
+
+  res.json({ message: 'Check your inbox for a confirmation link.' });
+};
+
+/**
+ * Confirms an address from the token in the emailed link.
+ *
+ * Public, because the link is followed from a mail client where the user may
+ * not be signed in. The token is the proof -- 32 random bytes, single use, and
+ * cleared on success so a forwarded email cannot be replayed.
+ */
+export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
+  const { token } = req.body ?? {};
+  if (!token || typeof token !== 'string') {
+    res.status(400).json({ message: 'token is required' });
+    return;
+  }
+
+  const user = await User.findOne({ where: { emailVerificationToken: token } });
+  if (!user || !user.emailVerificationExpiresAt || user.emailVerificationExpiresAt < new Date()) {
+    res.status(400).json({ message: 'This confirmation link is invalid or has expired' });
+    return;
+  }
+
+  await user.update({
+    emailVerifiedAt: new Date(),
+    emailVerificationToken: null,
+    emailVerificationExpiresAt: null,
+  });
+
+  res.json({ message: 'Email address confirmed. You can now receive notifications by email.' });
 };
