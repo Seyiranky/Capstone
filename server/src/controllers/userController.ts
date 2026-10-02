@@ -34,9 +34,10 @@ const UPDATABLE_FIELDS = [
   'cvUrl',
   'certificateUrl',
   'phone',
-  'smsNotificationsEnabled',
-  'emailNotificationsEnabled',
+  'preferredChannel',
 ] as const;
+
+const PREFERRED_CHANNELS = ['none', 'email', 'sms'] as const;
 
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
@@ -50,6 +51,20 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   // live on the same record, and a caller must not be able to set them by
   // naming them in the body.
   const body = (req.body ?? {}) as Record<string, unknown>;
+
+  // Checked here rather than left to the model validator, which would surface a
+  // bad value as a 500. The allowlist below only decides *which* keys may be
+  // written, not that what they carry is meaningful.
+  if (
+    body.preferredChannel !== undefined &&
+    !PREFERRED_CHANNELS.includes(body.preferredChannel as (typeof PREFERRED_CHANNELS)[number])
+  ) {
+    res
+      .status(400)
+      .json({ message: `preferredChannel must be one of ${PREFERRED_CHANNELS.join(', ')}` });
+    return;
+  }
+
   const updates: Record<string, unknown> = {};
   for (const field of UPDATABLE_FIELDS) {
     if (body[field] !== undefined) {

@@ -96,6 +96,24 @@ export type TransactionStatus = 'initiated' | 'confirmed' | 'failed';
 export type DeliveryChannel = 'in_app' | 'sms' | 'email';
 
 /**
+ * User.preferredChannel — the one off-app channel a user has chosen.
+ *
+ * In-app is never opted out of, so it is absent here: this names what is
+ * delivered *in addition* to it. Exclusive rather than a set of flags because
+ * two independent booleans can describe states the UI cannot produce.
+ */
+export type PreferredChannel = 'none' | 'email' | 'sms';
+
+/**
+ * What kind of notice a notification is, which is what decides its channels.
+ *
+ * A controller knows the meaning of the event it is reporting; it should not
+ * also have to know which transports that meaning deserves. `lib/channels/policy.ts`
+ * maps these to channels, so the fan-out can be narrowed in one place.
+ */
+export type NotificationCategory = 'activity' | 'outcome' | 'critical';
+
+/**
  * NotificationDelivery.status — `skipped` is load-bearing: a pilot reporting
  * delivery has to tell "did not want SMS" apart from "tried and failed".
  */

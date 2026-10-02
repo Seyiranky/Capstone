@@ -11,6 +11,7 @@ import type { Db } from './index';
 import type {
   ExperimentArm,
   Language,
+  PreferredChannel,
   ReviewerTier,
   Role,
   UserStatus,
@@ -47,8 +48,10 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare cvUrl: string | null;
   declare certificateUrl: string | null;
   declare phone: string | null;
-  declare smsNotificationsEnabled: CreationOptional<boolean>;
-  declare emailNotificationsEnabled: CreationOptional<boolean>;
+  declare preferredChannel: CreationOptional<PreferredChannel>;
+  declare emailVerifiedAt: Date | null;
+  declare emailVerificationToken: string | null;
+  declare emailVerificationExpiresAt: Date | null;
   declare experimentArm: ExperimentArm | null;
   declare reviewerTier: ReviewerTier | null;
   declare resetToken: string | null;
@@ -87,12 +90,13 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
 /**
  * The shape a normal query actually returns.
  *
- * `defaultScope` strips passwordHash and resetToken, so on any unscoped read
+ * `defaultScope` strips passwordHash, resetToken and emailVerificationToken, so
+ * on any unscoped read
  * those fields are typed present but absent at runtime. Reach for the
  * `withPassword` scope — see `userWithPassword()` — when you genuinely need the
  * hash, and use this type everywhere else.
  */
-export type SafeUser = Omit<User, 'passwordHash' | 'resetToken'>;
+export type SafeUser = Omit<User, 'passwordHash' | 'resetToken' | 'emailVerificationToken'>;
 
 /**
  * The only supported way to read the password hash.
@@ -203,15 +207,28 @@ export const initUser = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      smsNotificationsEnabled: {
-        type: DataTypes.BOOLEAN,
+      // Validated rather than a DataTypes.ENUM, matching preferredLanguage and
+      // every other union in this schema: the validator is the runtime check
+      // the TypeScript union cannot perform on a body arriving from the network.
+      preferredChannel: {
+        type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: false,
+        defaultValue: 'none',
+        validate: { isIn: [['none', 'email', 'sms']] },
       },
-      emailNotificationsEnabled: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
+      // Null until the address is confirmed. Email delivery checks this, so an
+      // unconfirmed address is never written to — see lib/notify.ts.
+      emailVerifiedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      emailVerificationToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      emailVerificationExpiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
       // Capability to review skill submissions, independent of `role`. 'peer'
       // reviewers are verified workers, which is what makes the pool large
@@ -253,10 +270,11 @@ export const initUser = (sequelize: Sequelize) => {
         },
       },
       defaultScope: {
-        // resetToken is a bearer credential for resetting a password — never
-        // serialize it on a normal query. resetTokenExpiresAt is harmless and
-        // stays visible since the reset flow needs to read it back.
-        attributes: { exclude: ['passwordHash', 'resetToken'] },
+        // resetToken is a bearer credential for resetting a password, and
+        // emailVerificationToken one for claiming an address — never serialize
+        // either on a normal query. The matching *ExpiresAt columns are harmless
+        // and stay visible, since both flows need to read them back.
+        attributes: { exclude: ['passwordHash', 'resetToken', 'emailVerificationToken'] },
       },
       scopes: {
         withPassword: {

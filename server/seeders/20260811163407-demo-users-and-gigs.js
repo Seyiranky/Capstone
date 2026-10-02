@@ -180,6 +180,9 @@ module.exports = {
         passwordHash,
         role: 'admin',
         trustScore: 0,
+        // Seeded addresses are ours, so they start confirmed: a demo should not
+        // open with fifteen verification clicks. Real signups verify properly.
+        emailVerifiedAt: now,
         createdAt: now,
         updatedAt: now,
       })),
@@ -192,6 +195,7 @@ module.exports = {
         locationLat: w.location.lat,
         locationLng: w.location.lng,
         trustScore: w.trustScore,
+        emailVerifiedAt: now,
         createdAt: now,
         updatedAt: now,
       })),
@@ -202,6 +206,7 @@ module.exports = {
         passwordHash,
         role: 'client',
         trustScore: 0,
+        emailVerifiedAt: now,
         createdAt: now,
         updatedAt: now,
       })),

@@ -38,7 +38,7 @@ const recordDelivery = (
  * "we tried and it failed", and only a row can tell them apart afterwards.
  */
 const deliverSms = async (notification: Notification, user: User | null) => {
-  if (!user?.smsNotificationsEnabled) {
+  if (user?.preferredChannel !== 'sms') {
     return recordDelivery(notification.id, 'sms', { status: 'skipped', error: 'not opted in' });
   }
   if (!user.phone) {
@@ -95,7 +95,7 @@ const notify = async (
 
   if (channels.includes('sms')) {
     const user = await User.findByPk(fields.userId, {
-      attributes: ['id', 'phone', 'smsNotificationsEnabled'],
+      attributes: ['id', 'phone', 'preferredChannel'],
     });
     // Deliberately not awaited.
     void deliverSms(notification, user);

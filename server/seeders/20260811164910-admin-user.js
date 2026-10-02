@@ -17,6 +17,7 @@ module.exports = {
         passwordHash,
         role: 'admin',
         trustScore: 0,
+        emailVerifiedAt: now,
         createdAt: now,
         updatedAt: now,
       },
