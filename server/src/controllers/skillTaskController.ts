@@ -371,6 +371,9 @@ export const reviewTask = async (req: Request, res: Response): Promise<void> => 
         finalStatus === 'approved'
           ? `Your submission for ${task.skill?.name} was approved. It now shows as a verified skill.`
           : `Your submission for ${task.skill?.name} was rejected. You can appeal or submit new evidence.`,
+      // The verdict on evidence the worker submitted, often days earlier --
+      // the wait is exactly why this should not need the app to be open.
+      category: 'outcome',
     });
   };
 

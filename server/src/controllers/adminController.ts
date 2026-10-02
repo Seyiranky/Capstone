@@ -148,6 +148,8 @@ export const reviewGig = async (req: Request, res: Response): Promise<void> => {
       decision === 'approved'
         ? `Your gig "${gig.title}" was approved and is now live for workers to apply to.`
         : `Your gig "${gig.title}" was rejected.`,
+    // A decision on work the client submitted and is waiting on.
+    category: 'outcome',
   });
 
   const invitations = decision === 'approved' ? await inviteRankedCandidates(req, gig) : [];
@@ -286,6 +288,9 @@ export const moderateUser = async (req: Request, res: Response): Promise<void> =
       action === 'suspend'
         ? 'An administrator has suspended your account. Contact support if you believe this is a mistake.'
         : 'Your account has been reactivated. You can log in again.',
+    // Losing or regaining access, which an in-app notice cannot reach someone
+    // to tell them about once they are suspended.
+    category: 'critical',
   });
 
   res.json(user);

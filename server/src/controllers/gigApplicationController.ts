@@ -140,6 +140,8 @@ export const reviewApplication = async (req: Request, res: Response): Promise<vo
       userId: application.workerId,
       title: 'Application not selected',
       body: `Your application for "${application.gig?.title}" was not selected.`,
+      // The answer to something the worker applied for and is waiting on.
+      category: 'outcome',
     });
     res.json({ application });
     return;
@@ -162,11 +164,16 @@ export const reviewApplication = async (req: Request, res: Response): Promise<vo
     userId: application.workerId,
     title: 'Application approved',
     body: `Your application for "${application.gig?.title}" was approved. Confirm you're still available to take it.`,
+    // Work won, and it needs the worker to act before the gig moves on.
+    category: 'outcome',
   });
   await notify(req, {
     userId: application.gig?.clientId as string,
     title: 'Worker selected',
     body: `A worker was selected for "${application.gig?.title}" and has been asked to confirm.`,
+    // Left in-app: the client triggered this by approving the application, so
+    // an email would report their own click back to them, and "Worker
+    // confirmed" covers the same hiring event once it actually resolves.
   });
 
   res.json({ application, match });

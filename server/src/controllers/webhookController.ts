@@ -80,6 +80,8 @@ export const paymentCallback = async (req: Request, res: Response): Promise<void
       body: confirmed
         ? `Payment for "${match.gig?.title}" was confirmed (${result.transaction.amount} ${result.transaction.currency}).`
         : `Payment for "${match.gig?.title}" did not go through. ${result.transaction.failureReason ?? ''}`.trim(),
+      // Money. The one notice a worker should never have to open the app to find.
+      category: 'critical',
     });
   }
 

@@ -153,6 +153,7 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
       userId: gig.clientId,
       title: 'Worker confirmed',
       body: `The worker confirmed they will take "${gig.title}".`,
+      category: 'outcome',
     });
   }
 
@@ -167,6 +168,8 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
       userId: gig.clientId,
       title: wasPending ? 'Worker declined' : 'Match cancelled',
       body: `"${gig.title}" is open again${declineReason ? `: ${declineReason}` : '.'}`,
+      // The client's gig just lost its worker and needs attention.
+      category: 'outcome',
     });
   }
 
