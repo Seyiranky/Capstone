@@ -15,12 +15,15 @@ import '@fontsource/plus-jakarta-sans/700.css'
 import '@fontsource/plus-jakarta-sans/800.css'
 import './index.css'
 import './theme/global.css'
-import './i18n'
+import i18n from './i18n'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+    {/* Google's script takes its language once, at load. Left unset it infers
+        one from geography, and the sign-in button can appear in French beside
+        an interface the user set to English or Kinyarwanda. */}
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID} locale={i18n.language}>
       <Provider store={store}>
         <ThemeProvider>
           <BrowserRouter>
