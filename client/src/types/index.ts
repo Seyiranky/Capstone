@@ -40,6 +40,8 @@ export interface MatchScoreBreakdown {
   weightProfile: { id: string | null; name: string; weights: Record<string, number> };
 }
 
+export type PreferredChannel = 'none' | 'email' | 'sms';
+
 export interface User {
   id: string;
   name: string;
@@ -59,8 +61,10 @@ export interface User {
   experienceSummary?: string | null;
   yearsExperience?: number | null;
   phone?: string | null;
-  smsNotificationsEnabled?: boolean;
-  emailNotificationsEnabled?: boolean;
+  /** The one off-app channel chosen. In-app is always on and so is not listed. */
+  preferredChannel?: PreferredChannel;
+  /** Null until the address is confirmed; email is not sent before then. */
+  emailVerifiedAt?: string | null;
   createdAt?: string;
 }
 

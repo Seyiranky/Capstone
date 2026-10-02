@@ -241,7 +241,25 @@
     "yourData": "Amakuru yawe",
     "exportDesc": "Kuramo kopi y'ibyose Isoko Talents ifite kuri konti yawe — umwirondoro wawe, ubuhanga bwoherejwe, imirimo, imirimo mwahuriyeho, ubwishyu, ibitekerezo, n'ubutumwa — nk'idosiye ya JSON.",
     "exportButton": "Kuramo amakuru yanjye",
-    "exporting": "Gutegura gukuramo..."
+    "exporting": "Gutegura gukuramo...",
+    "notifications": {
+      "title": "Amatangazo",
+      "desc": "Amatangazo yo muri porogaramu ahora akora. Hitamo ubundi buryo bumwe bwo kumenyeshwa.",
+      "inAppOnly": "Muri porogaramu gusa",
+      "inAppAlways": "Uzahora ubona amatangazo hano, uko waba wahisemo kose.",
+      "emailLabel": "Imeyili",
+      "emailHint": "Ku bijyanye no kwishyurwa, impinduka kuri konti, n'ibyemezo ku kazi kawe.",
+      "sentTo": "Zoherezwa kuri {{email}}.",
+      "smsLabel": "Ubutumwa bugufi",
+      "smsSoon": "Ntiraboneka.",
+      "verifyTitle": "Emeza aderesi ya imeyili yawe",
+      "verifyPending": "Nta meyili izoherezwa mbere y'uko wemeza iyi aderesi.",
+      "verifyCta": "Nyoherereza umuhuza",
+      "verifySent": "Reba muri imeyili yawe umuhuza wo kwemeza.",
+      "verifyFailed": "Umuhuza ntiwashoboye koherezwa. Ongera ugerageze.",
+      "verifiedNotice": "Aderesi ya imeyili yawe yemejwe.",
+      "saveFailed": "Ntibyashoboye kubikwa. Ongera ugerageze."
+    }
   },
   "match": {
     "component": {
@@ -516,5 +534,14 @@
     "savedOffline": "Byabitswe. Bizoherezwa igihe uzagaruka kuri interineti.",
     "failed": "Igikorwa {{count}} cyabitswe nticyashoboye koherezwa.",
     "failed_plural": "Ibikorwa {{count}} byabitswe ntibyashoboye koherezwa."
+  },
+  "verifyEmail": {
+    "checking": "Turimo kwemeza aderesi yawe...",
+    "successTitle": "Aderesi ya imeyili yemejwe",
+    "successBody": "Ubu uzahabwa amatangazo ya Isoko Talents kuri imeyili.",
+    "failedTitle": "Uyu muhuza ntiwakoze",
+    "failedBody": "Ashobora kuba yarangiye cyangwa yakoreshejwe. Saba undi mushya muri Igenamiterere.",
+    "missingToken": "Uyu muhuza wuzuye. Ongera ufungure umuhuza uri muri imeyili yawe.",
+    "backToSettings": "Subira mu igenamiterere"
   }
 }

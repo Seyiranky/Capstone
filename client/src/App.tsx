@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import DashboardPage from './pages/DashboardPage';
 import MarketplacePage from './pages/MarketplacePage';
 import GigDetailPage from './pages/GigDetailPage';
@@ -40,6 +41,8 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      {/* Opened from a mail client, so it cannot require a session. */}
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       {/* Public by design: a client checks a passport without an account. */}
       <Route path="/p/:token" element={<PassportPage />} />
       {/* Verification now lives as a section on the Dashboard. */}

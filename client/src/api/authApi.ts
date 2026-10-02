@@ -32,4 +32,12 @@ export const authApi = {
 
   resetPassword: (payload: { token: string; password: string }) =>
     axiosClient.post<{ message: string }>('/auth/reset-password', payload).then((res) => res.data),
+
+  sendVerificationEmail: () =>
+    axiosClient
+      .post<{ message: string; verified?: boolean }>('/auth/send-verification')
+      .then((res) => res.data),
+
+  verifyEmail: (payload: { token: string }) =>
+    axiosClient.post<{ message: string }>('/auth/verify-email', payload).then((res) => res.data),
 };

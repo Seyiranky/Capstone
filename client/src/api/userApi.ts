@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { PublicProfile, User, UserSkill } from '../types';
+import type { PreferredChannel, PublicProfile, User, UserSkill } from '../types';
 
 export interface UpdateProfilePayload {
   name?: string;
@@ -10,6 +10,8 @@ export interface UpdateProfilePayload {
   yearsExperience?: number | null;
   experienceSummary?: string | null;
   preferredLanguage?: 'en' | 'rw';
+  phone?: string | null;
+  preferredChannel?: PreferredChannel;
 }
 
 export const userApi = {

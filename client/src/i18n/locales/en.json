@@ -241,7 +241,25 @@
     "yourData": "Your data",
     "exportDesc": "Download a copy of everything Isoko Talents holds about your account — your profile, skill submissions, gigs, matches, payments, reviews, and messages — as a JSON file.",
     "exportButton": "Export my data",
-    "exporting": "Preparing export..."
+    "exporting": "Preparing export...",
+    "notifications": {
+      "title": "Notifications",
+      "desc": "In-app notifications are always on. Choose one more way to hear from us.",
+      "inAppOnly": "In the app only",
+      "inAppAlways": "You will always see notifications here, whichever option you pick.",
+      "emailLabel": "Email",
+      "emailHint": "For payments, account changes and decisions on your work.",
+      "sentTo": "Sent to {{email}}.",
+      "smsLabel": "SMS",
+      "smsSoon": "Not available yet.",
+      "verifyTitle": "Confirm your email address",
+      "verifyPending": "No email will be sent until you confirm this address.",
+      "verifyCta": "Send me a link",
+      "verifySent": "Check your inbox for a confirmation link.",
+      "verifyFailed": "Could not send the link. Try again shortly.",
+      "verifiedNotice": "Your email address is confirmed.",
+      "saveFailed": "Could not save that. Try again."
+    }
   },
   "match": {
     "component": {
@@ -516,5 +534,14 @@
     "savedOffline": "Saved. This will be sent when you are back online.",
     "failed": "{{count}} saved action could not be sent.",
     "failed_plural": "{{count}} saved actions could not be sent."
+  },
+  "verifyEmail": {
+    "checking": "Confirming your address...",
+    "successTitle": "Email address confirmed",
+    "successBody": "You will now receive Isoko Talents notifications by email.",
+    "failedTitle": "This link did not work",
+    "failedBody": "It may have expired or already been used. Request a new one from Settings.",
+    "missingToken": "This link is incomplete. Open the link from your email again.",
+    "backToSettings": "Back to settings"
   }
 }

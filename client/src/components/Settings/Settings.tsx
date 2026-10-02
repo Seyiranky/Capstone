@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Flex, Grid, Segmented, Space, Tabs, Typography } from 'antd';
 import {
+  BellOutlined,
   BgColorsOutlined,
   DownloadOutlined,
   LockOutlined,
@@ -13,6 +14,7 @@ import { useThemeMode } from '../../theme/ThemeProvider';
 import PageContainer from '../Layout/PageContainer';
 import ProfileEditor from './ProfileEditor';
 import ExportDataButton from './ExportDataButton';
+import NotificationPreferences from './NotificationPreferences';
 import PassportPanel from '../Profile/PassportPanel';
 import MySkillsPanel from '../Verification/MySkillsPanel';
 
@@ -105,6 +107,20 @@ const Settings = () => {
       ),
     },
     {
+      key: 'notifications',
+      label: (
+        <Space size={8}>
+          <BellOutlined />
+          {t('settings.notifications.title')}
+        </Space>
+      ),
+      children: (
+        <Card title={t('settings.notifications.title')}>
+          <NotificationPreferences />
+        </Card>
+      ),
+    },
+    {
       key: 'data',
       label: (
         <Space size={8}>
@@ -120,7 +136,9 @@ const Settings = () => {
     },
   ];
 
-  // Only workers hold skills, credentials or a passport.
+  // Only workers hold skills, credentials or a passport. These splice by
+  // position, so anything new belongs after them -- inserting above would push
+  // Credentials and Passport out of their intended slots.
   if (role === 'worker') {
     items.splice(1, 0, {
       key: 'skills',
