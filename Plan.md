@@ -82,21 +82,228 @@ methods (MoMo?).
 
 ## Phase 0 — Accounts and paperwork (no code; start first, it's the long pole)
 
-1. **Open a Pindo account**, copy the API token, and top up the minimum. Keep the token
-   out of git (`server/.env` only).
-2. **Email Pindo** the five questions above. The answer on the shared sender decides
-   whether a live demo is possible before the sender ID is approved.
-3. **Start the "Isoko" sender ID** through a registered sponsor (the university or an
-   incubator), since both steps need an RDB company certificate:
-   - RURA "Sender ID Whitelisting Authorization": free, about 5 days.
-   - MTN and Airtel registration, filed through Pindo with stamped letters on the
-     sponsor's letterhead: about 3 weeks.
-   "Isoko" already fits the rules (≤ 11 characters, starts with a letter, not generic).
-4. **Fix the README and the `sms.ts` header comment** to describe the two separate approvals
-   correctly. Today they say "RURA approval taking about three weeks".
+Phase 0 is everything that has to happen outside the codebase before a real SMS can carry
+the name "Isoko". None of it blocks Phases 1–6, which all run on the `log` driver, but the
+sender ID takes **four to five weeks** end to end, so it starts on day one.
 
-**Done when:** a token is in `server/.env`, the sender ID application is filed, and
-Pindo's answers are written into this section.
+### What has to exist at the end
+
+| Item | Who issues it | Typical time | Cost |
+|---|---|---|---|
+| Pindo account, API token, credit | Pindo (self-service) | Same day | Credit only |
+| A first real SMS to a team phone | Pindo, using its test sender | Same day, if allowed | ~$0.01 |
+| RURA Sender ID Whitelisting Authorization for "Isoko" | RURA, at licensing.rura.rw | ~5 working days | Free |
+| MTN Rwanda and Airtel Rwanda registration of "Isoko" | The operators, filed through Pindo | ~3 weeks | Ask Pindo (step 0.4) |
+| Pindo's written answers to the open questions | Pindo support | 1–5 days | — |
+| Consent wording and processor record for Law 058/2021 | The team | 1 day | — |
+
+### 0.1 Decide who the legal applicant is (day 1)
+
+Both the RURA and the operator steps ask for an **RDB certificate of registration**: proof
+that the applicant is a registered organisation. A student team doesn't have one, so pick
+one of these first. Everything after depends on it.
+
+| Option | What you need | Pros | Cons |
+|---|---|---|---|
+| **A. University as sponsor** | A signed and stamped letter from ALU authorising the sender ID "Isoko" for the capstone pilot, plus ALU's RDB certificate | No new entity; credible to assessors | Depends on how fast ALU's admin office signs; ALU's name appears on the paperwork |
+| **B. Register your own business at RDB** | Online at RDB (business registration is free and usually same-day; confirm current terms at rdb.rw before relying on that) | You own the sender ID; reusable after the capstone | Creates a real business with tax-registration obligations; check those before choosing |
+| **C. Incubator or partner company** | Their signed and stamped letter plus their RDB certificate | Can be fast if you already have a relationship | The ID is legally theirs |
+
+**Recommendation:** ask ALU (option A) on day 1 and, in parallel, read RDB's current
+requirements for option B. Take whichever produces a signed letter and certificate first.
+Record the choice here.
+
+> Applicant chosen: _______________ (fill in)
+
+### 0.2 Open the Pindo account and prove it can send (day 1)
+
+1. Sign up at **pindo.io** with a team-owned email address, not a personal one: it holds
+   the API token and the account balance.
+2. Top up the minimum, enough for a few hundred messages (about $5 covers 500 at
+   $0.01). Note which payment methods are offered (card, MoMo, bank) and the minimum, and
+   write them in the answers table below.
+3. Copy the API token from **profile icon → Security**. Put it **only** in `server/.env`:
+   ```
+   PINDO_API_TOKEN=<token>
+   ```
+   Never in git, chat, screenshots or the client. If it leaks, press **Refresh** on the
+   same page, which revokes the old token immediately.
+4. **Try a test send to a team member's own phone.** Pindo's quickstart uses the sender
+   `PindoTest` in its example, which may be a shared test sender for new accounts:
+   ```bash
+   source server/.env
+   curl -sS -X POST https://api.pindo.io/v1/sms/ \
+     -H "Authorization: Bearer $PINDO_API_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{"to":"+2507XXXXXXXX","text":"Isoko test 1","sender":"PindoTest"}'
+   ```
+   Record exactly what happens:
+   - **`201` and the phone receives it:** a live demo is possible before "Isoko" is
+     approved. Note which sender name showed on the phone.
+   - **`201` but nothing arrives within 10 minutes:** note it; this is what the delivery
+     report in Phase 3 exists to explain.
+   - **An error:** copy the status code and body into the answers table.
+   Repeat once with an **Airtel** number (072/073), since Airtel and MTN may behave
+   differently.
+5. Optionally, the same command with `"sender":"Isoko"` shows how Pindo rejects an
+   unapproved sender, which tells Phase 1 what error to expect.
+
+### 0.3 Email Pindo the open questions (day 1)
+
+Send from the team address, to the support contact on pindo.io:
+
+> **Subject:** Sender ID registration and API questions — Isoko Talents (student pilot, Rwanda)
+>
+> Hello,
+>
+> We are building Isoko Talents, a gig marketplace for informal workers in Kigali, as a
+> university capstone, and plan to use Pindo's SMS API for transactional notifications
+> (job outcomes, payment confirmations, phone number verification codes). No marketing
+> messages. Expected volume is about 2,000 SMS a month during the pilot.
+>
+> Could you help with the following?
+>
+> 1. Can our account send from a shared or test sender (e.g. "PindoTest") while our own
+>    sender ID is being approved? If so, to which networks?
+> 2. We want to register the sender ID **"Isoko"** for Rwanda (MTN and Airtel). What
+>    documents do you need from us, in what format, and do you have templates for the
+>    operator letters? Do you also file the RURA whitelisting, or should we do it first?
+>    What does registration cost and how long does it take?
+> 3. What is the per-SMS price to **Airtel Rwanda**, and is a Unicode (UCS-2) message
+>    billed per 70-character segment?
+> 4. Can the delivery-report (DLR) webhook send a custom header (for a shared secret)?
+>    If not, can the callback URL include a query string?
+> 5. What is the minimum top-up, and can we pay by MTN MoMo?
+> 6. Do you provide a data processing agreement or terms describing where message data
+>    and phone numbers are stored?
+>
+> Thank you,
+> [name], [role], Isoko Talents
+> [phone] · [team email]
+
+### 0.4 Prepare the documents (days 2–5)
+
+Gather these as PDFs in one folder (outside the repo; they carry signatures and stamps):
+
+1. **RDB certificate** of the applicant chosen in 0.1.
+2. **RURA request letter** on the applicant's letterhead, signed and stamped. It must
+   confirm lawful use of the sender ID. Suggested wording:
+
+   > To: Rwanda Utilities Regulatory Authority
+   > Subject: Request for Sender ID whitelisting — "Isoko"
+   >
+   > [Applicant] (RDB reg. no. [number]) requests whitelisting of the alphanumeric
+   > sender ID **"Isoko"** for application-to-person SMS in Rwanda.
+   >
+   > The sender ID will be used only for transactional notifications to registered users
+   > of the Isoko Talents platform who have opted in to SMS: job and application
+   > outcomes, payment confirmations, and one-time phone verification codes. It will not
+   > be used for marketing. Messages will be sent through Pindo Rwanda Ltd. Users can
+   > stop SMS at any time in the platform's settings.
+   >
+   > We confirm the sender ID will be used lawfully and in line with RURA's regulations
+   > on unsolicited messages and Law No. 058/2021 on personal data protection.
+   >
+   > [Name, title, signature, stamp, date]
+
+3. **Authorisation letter** if someone other than the signatory files at RURA (for
+   example a student filing on ALU's behalf): the applicant authorises [name, ID number]
+   to submit the application.
+4. **Operator letters for MTN Rwanda and Airtel Rwanda**, one each, on letterhead, signed
+   and stamped. Use **Pindo's templates** if they send them (question 2); otherwise adapt
+   the RURA letter, addressed to each operator, naming Pindo as the aggregator.
+5. **Sample messages** (operators sometimes ask), written in plain ASCII so they fit one
+   GSM-7 segment, for example:
+   - `Isoko: Your application for "Repair my laptop screen" was accepted. Open the app to see details.`
+   - `Isoko code: 123456. Expires in 10 minutes. Do not share it.`
+
+Keep "Isoko" exactly the same in every document. Fallbacks if it's refused: `IsokoTalent`
+(11 characters) or `IsokoRW`. Never generic words like INFO or ALERT, which are always rejected.
+
+### 0.5 File the RURA whitelisting (day ~5, then ~5 working days)
+
+1. Create an account on **licensing.rura.rw** in the applicant's name.
+2. Open the **"Sender ID Whitelisting Authorization"** service. It's free, and processing
+   is stated as "within 5 days".
+3. Upload the request letter, the RDB certificate and, if needed, the authorisation letter.
+4. Save the application reference here, and download the authorisation once it's issued.
+   Operators or Pindo may ask for it.
+
+> RURA reference: _______________ · Filed: ________ · Approved: ________
+
+Sources don't agree on whether operators need the RURA approval *before* they register
+the ID. If Pindo's answer to question 2 says so, wait for it; otherwise run 0.5 and 0.6
+in parallel to save a week.
+
+### 0.6 Register "Isoko" with the operators through Pindo (~3 weeks)
+
+1. Submit the sender ID in Pindo's dashboard (or however Pindo's reply says to), for
+   country **RW**, with the operator letters, the RDB certificate and the RURA
+   authorisation attached. A community guide describes an API route
+   (`POST https://api.pindo.io/sender_ids` with `{"sender_id":"Isoko","countries":["RW"]}`),
+   but it isn't in Pindo's official docs, so use whatever Pindo tells you.
+2. Check the status in the dashboard weekly, and email Pindo if nothing moves for 10
+   working days.
+3. Once approved, **repeat the test send from 0.2 with `"sender":"Isoko"`** to both an MTN
+   and an Airtel phone, and confirm the phone shows "Isoko" as the sender.
+4. Then set in `server/.env`:
+   ```
+   SMS_DRIVER=pindo
+   SMS_SENDER_ID=Isoko
+   ```
+
+> Submitted to Pindo: ________ · MTN approved: ________ · Airtel approved: ________
+
+### 0.7 Data protection housekeeping (day 2, 1 hour)
+
+For the pilot this is about **writing down** what happens to phone numbers, not filing with
+a regulator:
+
+1. Save Pindo's answer to question 6 (its DPA or terms) next to the RURA documents.
+2. Agree the consent wording used in Phase 5 (it names Pindo, says how to stop SMS, and
+   nothing is pre-selected).
+3. Note in the README's "Before going live" list that a real launch needs **NCSA
+   data-controller registration** (dpo.gov.rw), declaring Pindo as a processor and saying
+   where the database is hosted. Article 50 of Law 058/2021 expects personal data to be
+   stored in Rwanda unless NCSA authorises otherwise.
+
+### 0.8 Fix the docs that describe this wrongly (day 1, with the first Phase 1 commit)
+
+The README and the header comment in `sms.ts` both say a sender ID needs "RURA approval,
+roughly three weeks". Replace it with: RURA whitelisting (free, about 5 days) **plus**
+MTN and Airtel registration through the provider (about 3 weeks), both needing an RDB
+certificate.
+
+### Timeline
+
+| When | Step |
+|---|---|
+| Day 1 | 0.1 ask ALU for a sponsor letter · 0.2 account, top-up, test sends · 0.3 email Pindo |
+| Days 2–5 | 0.4 documents signed and stamped · 0.7 consent wording |
+| ~Day 5 | 0.5 file at RURA (and 0.6 at Pindo, if Pindo says parallel is fine) |
+| ~Day 10 | RURA authorisation issued → 0.6 at Pindo if not already filed |
+| ~Days 10–31 | Operator registration; Phases 1–6 continue on the `log` driver meanwhile |
+| ~Day 31 | 0.6 step 3: live send as "Isoko" to MTN and Airtel; switch `SMS_DRIVER=pindo` |
+
+If the assessment date is less than five weeks away, plan the demo around the `log`
+driver and, if 0.2 worked, a recorded `PindoTest` send. Don't plan it around "Isoko".
+
+### Answers from Pindo (fill in as they arrive)
+
+| Question | Answer | Date |
+|---|---|---|
+| Shared/test sender before approval? | | |
+| Documents and templates for "Isoko"; who files RURA; fee; time | | |
+| Airtel price; Unicode billing | | |
+| DLR webhook: custom header or query string? | | |
+| Minimum top-up; payment methods | | |
+| DPA / data location | | |
+| Test send result, MTN (0.2) | | |
+| Test send result, Airtel (0.2) | | |
+
+**Phase 0 is done when** the answers table is filled in, the token is in `server/.env`,
+the RURA and operator applications have references written above, and at least one real
+SMS has reached a team phone, from `PindoTest` now or from "Isoko" once approved.
 
 ---
 
