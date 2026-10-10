@@ -5,6 +5,7 @@ import {
   Col,
   Empty,
   Flex,
+  Grid,
   Input,
   Row,
   Segmented,
@@ -79,6 +80,9 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
     });
   }, [base, search, category, effectiveSort, hasWorkerLocation, workerLat, workerLng]);
 
+  // Phones: search takes its own row and the two selects split the next one.
+  const narrow = !Grid.useBreakpoint().sm;
+
   return (
     <div>
       <Flex wrap="wrap" gap={12} align="center" style={{ marginBottom: 18 }}>
@@ -88,12 +92,12 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
           placeholder={t('common.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ width: 240 }}
+          style={{ width: narrow ? '100%' : 240 }}
         />
         <Select
           value={category}
           onChange={setCategory}
-          style={{ width: 200 }}
+          style={{ width: narrow ? 'calc(50% - 6px)' : 200 }}
           options={[
             { value: 'all', label: t('marketplace.gigFeed.allCategories') },
             ...categories.map((c) => ({ value: c, label: c })),
@@ -102,7 +106,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
         <Select
           value={sort}
           onChange={setSort}
-          style={{ width: 180 }}
+          style={{ width: narrow ? 'calc(50% - 6px)' : 180 }}
           options={[
             { value: 'newest', label: t('marketplace.gigFeed.sortNewest') },
             { value: 'budget_desc', label: t('marketplace.gigFeed.sortBudgetDesc') },

@@ -52,6 +52,7 @@ const Wallet = () => {
     {
       title: isClient ? t('wallet.colWorker') : t('wallet.colClient'),
       key: 'party',
+      responsive: ['md'],
       render: (_, tx) => {
         const cp = isClient ? tx.match?.worker : tx.match?.gig?.client;
         return cp ? <IdentityLink id={cp.id} name={cp.name} size={22} /> : '—';
@@ -71,6 +72,7 @@ const Wallet = () => {
     {
       title: t('wallet.colDate'),
       key: 'date',
+      responsive: ['sm'],
       render: (_, tx) => new Date(tx.createdAt).toLocaleDateString(),
     },
   ];

@@ -9,13 +9,20 @@ import {
   Col,
   Empty,
   Flex,
+  Grid,
   List,
   Row,
   Segmented,
   Space,
   Typography,
 } from 'antd';
-import { BellOutlined, CheckOutlined, InboxOutlined, MessageOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftOutlined,
+  BellOutlined,
+  CheckOutlined,
+  InboxOutlined,
+  MessageOutlined,
+} from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
 import { skillTaskApi } from '../../api/skillTaskApi';
 import { messageApi } from '../../api/messageApi';
@@ -38,6 +45,8 @@ const NotificationCenter = () => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [tab, setTab] = useState<'messages' | 'updates'>('messages');
+  // Below md the list and the thread don't fit side by side, so show one at a time.
+  const stacked = !Grid.useBreakpoint().md;
 
   const myIdRef = useRef<string | undefined>(undefined);
   myIdRef.current = useAppSelector((state) => state.auth.profile?.id);
@@ -140,8 +149,8 @@ const NotificationCenter = () => {
 
       {tab === 'messages' ? (
         <Row gutter={16}>
-          <Col xs={24} md={9} lg={8}>
-            <Card styles={{ body: { padding: 6 } }} style={{ minHeight: 440 }}>
+          <Col xs={24} md={9} lg={8} style={{ display: stacked && selectedContact ? 'none' : undefined }}>
+            <Card styles={{ body: { padding: 6 } }} style={{ minHeight: stacked ? undefined : 440 }}>
               {contacts.length === 0 ? (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -175,8 +184,18 @@ const NotificationCenter = () => {
               )}
             </Card>
           </Col>
-          <Col xs={24} md={15} lg={16}>
-            <Card style={{ minHeight: 440 }}>
+          <Col xs={24} md={15} lg={16} style={{ display: stacked && !selectedContact ? 'none' : undefined }}>
+            {stacked && selectedContact && (
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => setSelectedContact(null)}
+                style={{ marginBottom: 8, paddingInline: 4 }}
+              >
+                {t('common.allConversations')}
+              </Button>
+            )}
+            <Card style={{ minHeight: stacked ? undefined : 440 }}>
               {selectedContact ? (
                 <ChatThread
                   key={selectedContact.id}

@@ -30,11 +30,13 @@ const MyApplications = () => {
     {
       title: t('marketplace.myApplications.category'),
       key: 'category',
+      responsive: ['md'],
       render: (_, a) => a.gig?.skill?.name ?? '—',
     },
     {
       title: t('marketplace.myApplications.budget'),
       key: 'budget',
+      responsive: ['sm'],
       align: 'right',
       render: (_, a) => (a.gig ? `${Number(a.gig.budget).toLocaleString()} RWF` : '—'),
     },
@@ -46,6 +48,7 @@ const MyApplications = () => {
     {
       title: t('marketplace.myApplications.applied'),
       key: 'applied',
+      responsive: ['sm'],
       render: (_, a) => fromNow(a.createdAt),
     },
   ];

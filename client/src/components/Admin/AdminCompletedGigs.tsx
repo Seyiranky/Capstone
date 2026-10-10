@@ -26,12 +26,14 @@ const AdminCompletedGigs = () => {
     {
       title: 'Client',
       key: 'client',
+      responsive: ['md'],
       render: (_, g) =>
         g.client ? <IdentityLink id={g.client.id} name={g.client.name} size={22} /> : '—',
     },
     {
       title: 'Completed by',
       key: 'worker',
+      responsive: ['md'],
       render: (_, g) => {
         const w = g.matches?.find((m) => m.status === 'completed')?.worker;
         return w ? <IdentityLink id={w.id} name={w.name} size={22} /> : '—';
@@ -40,6 +42,7 @@ const AdminCompletedGigs = () => {
     {
       title: 'Budget',
       key: 'budget',
+      responsive: ['sm'],
       align: 'right',
       render: (_, g) => `${Number(g.budget).toLocaleString()} RWF`,
     },
@@ -58,6 +61,7 @@ const AdminCompletedGigs = () => {
     {
       title: 'Completed',
       key: 'date',
+      responsive: ['sm'],
       render: (_, g) => {
         const m = g.matches?.find((x) => x.status === 'completed');
         return m ? new Date(m.updatedAt).toLocaleDateString() : '—';

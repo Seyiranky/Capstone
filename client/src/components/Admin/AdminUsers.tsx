@@ -68,11 +68,12 @@ const AdminUsers = () => {
       render: (_, u) => <IdentityLink id={u.id} name={u.name} size={26} />,
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
+    { title: 'Email', dataIndex: 'email', key: 'email', responsive: ['md'] },
     {
       title: 'Role',
       dataIndex: 'role',
       key: 'role',
+      responsive: ['sm'],
       filters: [
         { text: 'Worker', value: 'worker' },
         { text: 'Client', value: 'client' },
@@ -96,6 +97,7 @@ const AdminUsers = () => {
       title: 'Trust',
       dataIndex: 'trustScore',
       key: 'trustScore',
+      responsive: ['md'],
       align: 'right',
       width: 90,
       sorter: (a, b) => a.trustScore - b.trustScore,
@@ -105,13 +107,15 @@ const AdminUsers = () => {
       title: 'Joined',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      responsive: ['md'],
       sorter: (a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''),
       render: (d?: string) => (d ? new Date(d).toLocaleDateString() : '—'),
     },
     {
       title: '',
       key: 'actions',
-      width: 120,
+      width: 84,
+      fixed: 'right',
       render: (_, u) => {
         const isSelf = u.id === profile?.id;
         if (u.role === 'admin' || isSelf) {

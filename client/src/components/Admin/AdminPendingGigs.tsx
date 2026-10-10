@@ -32,12 +32,14 @@ const AdminPendingGigs = () => {
     {
       title: 'Client',
       key: 'client',
+      responsive: ['md'],
       render: (_, g) =>
         g.client ? <IdentityLink id={g.client.id} name={g.client.name} size={22} /> : '—',
     },
     {
       title: 'Category',
       key: 'category',
+      responsive: ['md'],
       render: (_, g) => (
         <Space size={8}>
           <GigThumbnail gig={g} size={22} />
@@ -48,6 +50,7 @@ const AdminPendingGigs = () => {
     {
       title: 'Budget',
       key: 'budget',
+      responsive: ['sm'],
       align: 'right',
       render: (_, g) => `${Number(g.budget).toLocaleString()} RWF`,
     },

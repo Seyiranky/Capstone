@@ -70,19 +70,21 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
 
   return (
     <Flex align="center" justify="space-between" style={{ height: '100%', width: '100%' }}>
-      <Space size={10}>
+      {/* minWidth 0 lets the title truncate instead of breaking mid-word on phones. */}
+      <Flex align="center" gap={screens.sm ? 10 : 4} style={{ minWidth: 0, flex: 1 }}>
         <Button
           type="text"
           aria-label="Toggle navigation"
           icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           onClick={onToggle}
+          style={{ flexShrink: 0 }}
         />
-        <Typography.Text strong style={{ fontSize: 16 }}>
+        <Typography.Text strong ellipsis style={{ fontSize: 16 }}>
           {pageTitle(location.pathname, t)}
         </Typography.Text>
-      </Space>
+      </Flex>
 
-      <Space size={8} align="center">
+      <Space size={screens.sm ? 8 : 2} align="center" style={{ flexShrink: 0 }}>
         {screens.sm ? (
           <button
             type="button"
@@ -128,14 +130,17 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
             { label: 'RW', value: 'rw' },
           ]}
         />
-        <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
-          <Button
-            type="text"
-            aria-label="Toggle theme"
-            icon={<BulbOutlined />}
-            onClick={() => setMode(isDark ? 'light' : 'dark')}
-          />
-        </Tooltip>
+        {/* Phones keep the header to essentials; theme stays reachable in Settings. */}
+        {screens.sm && (
+          <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
+            <Button
+              type="text"
+              aria-label="Toggle theme"
+              icon={<BulbOutlined />}
+              onClick={() => setMode(isDark ? 'light' : 'dark')}
+            />
+          </Tooltip>
+        )}
         <Badge count={unread} size="small" offset={[-2, 4]}>
           <Button
             type="text"

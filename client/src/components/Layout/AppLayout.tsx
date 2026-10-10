@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import OfflineBanner from '../common/OfflineBanner';
-import { Link, Outlet } from 'react-router-dom';
-import { Grid, Layout } from 'antd';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Drawer, Grid, Layout } from 'antd';
 import SideNav from './SideNav';
 import SideFooter from './SideFooter';
 import AppHeader from './AppHeader';
@@ -17,9 +17,17 @@ const AppLayout = () => {
   const { isDark } = useThemeMode();
   const isMobile = !screens.lg;
   const [collapsed, setCollapsed] = useState(false);
+  // Phones get the nav as an overlay drawer; the inline sider would eat the screen.
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const sidebarCollapsed = isMobile ? true : collapsed;
+  const { pathname } = useLocation();
+
+  // Any navigation (nav item, footer menu, in-page link) should dismiss the drawer.
+  useEffect(() => setDrawerOpen(false), [pathname]);
+  useEffect(() => {
+    if (!isMobile) setDrawerOpen(false);
+  }, [isMobile]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -45,54 +53,70 @@ const AppLayout = () => {
 
   const hairline = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(24,24,27,0.08)';
 
-  return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        theme={isDark ? 'dark' : 'light'}
-        width={236}
-        collapsible
-        collapsed={sidebarCollapsed}
-        collapsedWidth={isMobile ? 0 : 76}
-        trigger={null}
-        breakpoint="lg"
+  const renderNav = (narrow: boolean) => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Link
+        to="/dashboard"
         style={{
-          position: isMobile ? 'fixed' : 'sticky',
-          top: 0,
-          height: '100vh',
-          zIndex: 20,
-          borderInlineEnd: `1px solid ${hairline}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: narrow ? 'center' : 'flex-start',
+          height: 60,
+          flexShrink: 0,
+          padding: narrow ? 0 : '0 18px',
+          borderBottom: `1px solid ${hairline}`,
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <Link
-            to="/dashboard"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-              height: 60,
-              flexShrink: 0,
-              padding: sidebarCollapsed ? 0 : '0 18px',
-              borderBottom: `1px solid ${hairline}`,
-            }}
-          >
-            <img
-              src={logo}
-              alt="Isoko Talents"
-              style={{
-                height: sidebarCollapsed ? 26 : 32,
-                width: 'auto',
-                objectFit: 'contain',
-                display: 'block',
-              }}
-            />
-          </Link>
-          <div style={{ flex: 1, overflowY: 'auto', paddingTop: 8 }}>
-            <SideNav dark={isDark} onNavigate={() => isMobile && setCollapsed(true)} />
-          </div>
-          <SideFooter collapsed={sidebarCollapsed} dark={isDark} />
-        </div>
-      </Sider>
+        <img
+          src={logo}
+          alt="Isoko Talents"
+          style={{
+            height: narrow ? 26 : 32,
+            width: 'auto',
+            objectFit: 'contain',
+            display: 'block',
+          }}
+        />
+      </Link>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: 8 }}>
+        <SideNav dark={isDark} />
+      </div>
+      <SideFooter collapsed={narrow} dark={isDark} />
+    </div>
+  );
+
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      {isMobile ? (
+        <Drawer
+          placement="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          closable={false}
+          size={260}
+          styles={{ body: { padding: 0 } }}
+        >
+          {renderNav(false)}
+        </Drawer>
+      ) : (
+        <Sider
+          theme={isDark ? 'dark' : 'light'}
+          width={236}
+          collapsible
+          collapsed={collapsed}
+          collapsedWidth={76}
+          trigger={null}
+          style={{
+            position: 'sticky',
+            top: 0,
+            height: '100vh',
+            zIndex: 20,
+            borderInlineEnd: `1px solid ${hairline}`,
+          }}
+        >
+          {renderNav(collapsed)}
+        </Sider>
+      )}
 
       <Layout>
         <Header
@@ -101,18 +125,19 @@ const AppLayout = () => {
             top: 0,
             zIndex: 10,
             borderBottom: `1px solid ${hairline}`,
+            paddingInline: isMobile ? 8 : undefined,
           }}
         >
           <AppHeader
-            collapsed={collapsed}
-            onToggle={() => setCollapsed((c) => !c)}
+            collapsed={isMobile ? !drawerOpen : collapsed}
+            onToggle={() => (isMobile ? setDrawerOpen(true) : setCollapsed((c) => !c))}
             onSearch={() => setSearchOpen(true)}
           />
         </Header>
         {/* Above the content, not inside it: connectivity applies to the whole
             session, not to whichever screen happens to be open. */}
         <OfflineBanner />
-        <Content style={{ padding: screens.xs ? 16 : 28 }}>
+        <Content style={{ padding: screens.md ? 28 : 16 }}>
           <div style={{ maxWidth: 1180, margin: '0 auto' }}>
             <Outlet />
           </div>

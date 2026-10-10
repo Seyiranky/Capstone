@@ -6,6 +6,7 @@ import {
   Col,
   Empty,
   Flex,
+  Grid,
   Progress,
   Row,
   Skeleton,
@@ -76,6 +77,7 @@ const toCsv = (report: Report) => {
 const CollusionReport = () => {
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
+  const screens = Grid.useBreakpoint();
 
   const load = () => {
     setLoading(true);
@@ -188,11 +190,12 @@ const CollusionReport = () => {
         title="Reviewer assignment distribution"
         extra={
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={load} size="small">
-              Refresh
+            {/* Icon-only on phones so the card title isn't truncated to nothing. */}
+            <Button icon={<ReloadOutlined />} onClick={load} size="small" aria-label="Refresh">
+              {screens.sm && 'Refresh'}
             </Button>
-            <Button icon={<DownloadOutlined />} onClick={download} size="small">
-              Export CSV
+            <Button icon={<DownloadOutlined />} onClick={download} size="small" aria-label="Export CSV">
+              {screens.sm && 'Export CSV'}
             </Button>
           </Space>
         }

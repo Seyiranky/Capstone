@@ -56,3 +56,29 @@ a:hover {
 .ant-typography + .ant-typography {
   margin-top: 0;
 }
+
+/* Segmented controls (tab-like rows) scroll sideways instead of being clipped
+   when their options don't fit, which is most of them on a phone. */
+.ant-segmented {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ant-segmented::-webkit-scrollbar {
+  display: none;
+}
+
+/* Drawers sized for desktop (480px forms) must not run off a phone screen. */
+.ant-drawer-content-wrapper {
+  max-width: 100vw;
+}
+
+/* Phones: 24px card padding on a 375px screen leaves too little for content. */
+@media (max-width: 575px) {
+  .ant-card .ant-card-body {
+    padding: 16px;
+  }
+  .ant-card .ant-card-head {
+    padding-inline: 16px;
+  }
+}

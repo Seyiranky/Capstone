@@ -141,6 +141,7 @@ const GigDetail = () => {
     {
       title: t('match.component.trust'),
       key: 'trust',
+      responsive: ['sm'],
       width: 80,
       render: (_, a) =>
         a.worker?.reviewCount === 0
@@ -150,6 +151,7 @@ const GigDetail = () => {
     {
       title: t('match.explainTitle'),
       key: 'match',
+      responsive: ['md'],
       render: (_, a) =>
         a.scoreBreakdown ? (
           <Space direction="vertical" size={4} style={{ width: '100%' }}>
@@ -167,6 +169,7 @@ const GigDetail = () => {
       title: '',
       key: 'actions',
       width: 170,
+      fixed: 'right',
       render: (_, a) =>
         role === 'admin' && a.status === 'pending' ? (
           <Space>
@@ -325,6 +328,7 @@ const GigDetail = () => {
                   size="small"
                   pagination={false}
                   columns={applicantColumns}
+                  scroll={{ x: 'max-content' }}
                   dataSource={sortedApplicants}
                   expandable={{
                     rowExpandable: (a) => Boolean(a.scoreBreakdown),
