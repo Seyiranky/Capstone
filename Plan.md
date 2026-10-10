@@ -1,575 +1,413 @@
-# Isoko Talents — Email notification channel
+# Isoko Talents — SMS notifications through Pindo
 
-> Supersedes the backend TypeScript migration plan, which is built and committed.
+> Supersedes the email notification channel plan, which is built and committed
+> (`51feae8`..`8edb3d8`, 2 Oct 2026). That plan's text is in git history.
 >
-> **Status: implemented** in commits `51feae8`..`8edb3d8` (2 Oct 2026). All seven
-> phases landed as planned, with two deviations noted at the end. 253 tests green,
-> locales at 451 keys each. Remaining follow-ups are listed in the README's
-> "Before going live": the password-reset mailer, an email bounce webhook,
-> server-side notification translation, and narrowing SMS to `critical`.
+> **Status: planned** (10 Oct 2026). Nothing below is implemented yet.
+> Provider research behind the choice: `reports/SMS provider for Isoko Talents.md`.
 
 ## Context
 
-FR-13 promised notifications on three channels. Two exist: in-app (Socket.IO + a
-`Notification` row) and SMS (`lib/channels/sms.ts`, a `log` driver by default with a real
-Pindo driver behind `SMS_DRIVER`). Email was designed in from the start and never built —
-the migration that created `NotificationDeliveries` says so in its own header comment, and
-`DeliveryChannel` has read `'in_app' | 'sms' | 'email'` since then.
+FR-13 promised notifications on three channels. In-app and email are live. SMS has been
+**built but switched off** since September:
 
-Users have no way to express a preference. `smsNotificationsEnabled` and
-`emailNotificationsEnabled` exist as columns, are already in `UPDATABLE_FIELDS`, and are
-**unreachable from the UI** — there is no Notifications tab in Settings, and
-`UpdateProfilePayload` does not even carry the fields.
+- `server/src/lib/channels/sms.ts` has a `log` driver (the default) and a `pindo` driver
+  behind `SMS_DRIVER`. The Pindo driver has never sent a real message.
+- `notify.ts` already calls `deliverSms()` for every category, and records a
+  `NotificationDelivery` row whatever happens.
+- `User.preferredChannel` can already hold `'sms'`, but the Settings radio for SMS is
+  **disabled** ("Not available yet.") unless the user is already on it.
 
-Two consequences this change addresses:
+What stops SMS from going live today:
 
-1. **Notifications don't reach people who aren't in the app.** A worker whose application
-   was approved, or whose payment landed, learns about it only by opening the site. That
-   is the gap FR-13 named.
-2. **Every notification currently fans out to every enabled channel.** All 18 `notify()`
-   call sites take the default `channels` — including "New gig application", which fires to
-   *every* admin on *every* application. The README already flags this as needing a
-   severity filter before launch. Adding email without one would mail that chatter too.
+1. **There is no way to enter a phone number.** `phone` is in `UPDATABLE_FIELDS` and in the
+   client types, but no screen edits it.
+2. **Numbers are never verified.** Email gets a confirmation link before anything is sent to
+   it. SMS sends to whatever `phone` holds, so a typo bills Isoko for messages to a stranger.
+3. **Numbers are not validated.** `normaliseMsisdn()` turns any string into `+<digits>`,
+   so `"hello"` becomes `+` and is sent to Pindo, which rejects it with `409`.
+4. **Text is not made safe for SMS.** Kinyarwanda needs no accents, so it fits GSM-7 at 160
+   characters a segment. A single curly apostrophe (`n’`) forces UCS-2 at 70 a segment and
+   can turn one billed segment into three. The driver passes text through unchanged.
+5. **"Sent" is the last thing we know.** Pindo reports delivery (`DELIVRD`, `UNDELIV`, …) to
+   a webhook, but there is no endpoint to receive it, so a pilot can't report whether
+   anyone was actually reached.
+6. **Every notification goes to SMS.** The policy table still sends `activity` notices
+   (including the "new application" fan-out to every admin) by SMS. That was harmless on
+   the `log` driver; on Pindo every one is billed.
+7. **The driver has no timeout.** `fetch` to Pindo can hang for as long as the socket allows.
 
-Outcome wanted: a user picks **one** off-app channel in Settings, the address is
-**verified** before anything is sent to it, only notices worth an interruption are emailed,
-and the whole thing runs end to end with **no credentials configured** so the demo and CI
-are unaffected.
+Outcome wanted: a user enters a Rwandan mobile number, confirms it with a code, chooses
+SMS, and receives only the notices worth paying for, in text that stays inside one
+GSM-7 segment where possible. Every message's fate (sent, delivered, failed, skipped) is
+recorded. The whole flow still runs end to end with **no credentials** on the `log`
+driver, so the demo and CI are unaffected.
 
 ## Decisions taken
 
 | Decision | Choice | Why |
 |---|---|---|
-| Preference model | **One exclusive choice**: in-app only / email / SMS | Needs a new `preferredChannel` column; the two booleans become one source of truth |
-| Which notices email | **Only important ones** — money, account status, outcomes | Protects sender reputation and inbox credibility |
-| Address verification | **Verify before sending** | Adds `emailVerifiedAt` + a token flow ahead of first send |
-| Provider | **Brevo**, reached over SMTP | No domain is owned. Brevo is the only permanent free tier that delivers to arbitrary recipients with no domain and no card |
-| Transport | `nodemailer` + SMTP, driver-selected | Every candidate provider offers SMTP, so a provider swap is four env vars, not a code change |
-| Localised email | **Out of scope**, documented as follow-up | The server has no i18n catalogue; all 18 call sites interpolate hardcoded English |
+| Provider | **Pindo** | Kigali company, $0.01/SMS (Twilio is ~$0.33), Irembo as a customer, and the driver already speaks its API. See the research report |
+| Phone verification | **Own 6-digit code sent through `sms.send()`**, not Pindo Verify | Works on the `log` driver, so it can be demonstrated and tested with no account. Mirrors the email flow. Pindo Verify costs the same $0.01, ties us to Pindo, and can't run offline |
+| Numbers accepted | **Rwandan mobile only**: `+250 7[2389]X XXX XXX` (MTN 078/079, Airtel 072/073) | Pindo returns `409` for unsupported countries or networks. Reject at input, not after billing |
+| Which notices go by SMS | **`critical` and `outcome` only.** `activity` becomes in-app only | Stops billed chatter. The README already names this as the next filter |
+| Text encoding | **Normalise to GSM-7 before sending**, and log segment count | Keeps Kinyarwanda and English at 160 characters a segment |
+| Delivery reports | **Webhook at `/api/webhooks/sms/pindo`**, guarded by a shared secret | Pindo posts `DELIVRD` / `UNDELIV` etc. per message; without it "sent" is all we know |
+| Opt-out | **The Settings radio**, not "reply STOP" | A2P SMS in Rwanda is one-way; nobody can reply |
+| Localised SMS text | **Out of scope**, as it was for email | The server has no i18n catalogue; all call sites write English. Follow-up |
+| Quiet hours | **Out of scope** | No legal requirement; would need a send queue. Follow-up |
 
 ---
 
-## Provider research — why Brevo
+## Pindo, as verified against docs.pindo.ai (10 Oct 2026)
 
-The no-domain constraint eliminates most of the field. Verified as of 2 Oct 2026:
+| Item | Detail |
+|---|---|
+| Auth | `Authorization: Bearer <token>`. The token is in the dashboard under Security; refreshing it revokes the old one |
+| Send one | `POST https://api.pindo.io/v1/sms/` with `{ to, text, sender }`, all required. `to` in international form |
+| Success | `201` with `{ status: "sent", sms_id, item_price, remaining_balance, total_cost }` |
+| Errors | `401` bad token · `404` bad path · `409` unsupported country, unsupported network, or wrong number format |
+| Delivery report | Configured in the dashboard under **SMS → Configurations**. Pindo posts `{ sms_id, status, modified_at, retries_count }` |
+| Report statuses | `ACCEPTED`, `DELIVRD`, `UNDELIV`, `REJECTED`, `EXPIRED`, `UNKNOWN` |
+| Report retries | **None documented**: "if it's down when an event occurs, that notification is missed" |
+| Verify | `POST /v1/sms/verify` then `/v1/sms/verify/check`; $0.01 per PIN. Not used (see decisions) |
+| No Node SDK | Plain `fetch`, which the driver already uses |
 
-| Provider | Free tier | Sends to arbitrary recipients with **no domain**? |
+**Still to confirm by email with Pindo** (Phase 0): whether a new account can send from a
+shared/default sender before "Isoko" is approved, the Airtel price, how Unicode is billed,
+whether the DLR webhook can carry a custom header, and the minimum top-up and payment
+methods (MoMo?).
+
+---
+
+## Phase 0 — Accounts and paperwork (no code; start first, it's the long pole)
+
+1. **Open a Pindo account**, copy the API token, and top up the minimum. Keep the token
+   out of git (`server/.env` only).
+2. **Email Pindo** the five questions above. The answer on the shared sender decides
+   whether a live demo is possible before the sender ID is approved.
+3. **Start the "Isoko" sender ID** through a registered sponsor (the university or an
+   incubator), since both steps need an RDB company certificate:
+   - RURA "Sender ID Whitelisting Authorization": free, about 5 days.
+   - MTN and Airtel registration, filed through Pindo with stamped letters on the
+     sponsor's letterhead: about 3 weeks.
+   "Isoko" already fits the rules (≤ 11 characters, starts with a letter, not generic).
+4. **Fix the README and the `sms.ts` header comment** to describe the two separate approvals
+   correctly. Today they say "RURA approval taking about three weeks".
+
+**Done when:** a token is in `server/.env`, the sender ID application is filed, and
+Pindo's answers are written into this section.
+
+---
+
+## Phase 1 — Make the driver safe to point at a real gateway
+
+All in `server/src/lib/channels/`. No behaviour change on the `log` driver.
+
+### 1a. `gsm7.ts` (new)
+
+```ts
+/** Replaces characters that would force UCS-2 with GSM-7 equivalents. */
+export const toGsm7 = (text: string): string
+/** True when every character is in the GSM-7 basic set or its extension table. */
+export const isGsm7 = (text: string): boolean
+/** Segments this text bills as: 160/153 for GSM-7, 70/67 for UCS-2. */
+export const segmentCount = (text: string): number
+```
+
+`toGsm7` maps `’ ‘ ‛` → `'`, `“ ” „` → `"`, `– —` → `-`, `…` → `...`, non-breaking space →
+space, and drops emoji and zero-width characters. It leaves anything else alone; if
+something non-GSM survives, `segmentCount` reports the UCS-2 cost rather than hiding it.
+Extension-table characters (`€ [ ] { } \ ~ ^ |`) count as two.
+
+### 1b. `sms.ts` changes
+
+- **Validate numbers.** Replace `normaliseMsisdn` with:
+  ```ts
+  /** Returns +2507XXXXXXXX, or null when the number is not a Rwandan mobile. */
+  export const toRwandanMsisdn = (phone: string | null | undefined): string | null
+  ```
+  It accepts `07XXXXXXXX`, `2507…`, `+2507…`, with spaces or dashes, and allows only the
+  MTN and Airtel prefixes 072, 073, 078 and 079. `send()` throws `InvalidNumberError` on
+  `null` before any network call. The old name stays exported as an alias until callers move.
+- **Normalise text** with `toGsm7()` inside `send()`, so no caller can forget it.
+- **Time out** with `AbortSignal.timeout(Number(process.env.SMS_TIMEOUT_MS) || 10_000)`.
+- **Read the real response.** Parse `sms_id`, `item_price` and `remaining_balance`
+  (verified field names), and return them in `SmsResult`:
+  ```ts
+  export interface SmsResult {
+    provider: string;
+    providerMessageId: string | null;
+    segments: number;          // from segmentCount(), on every driver
+    cost: number | null;       // item_price, USD; null on log
+    balance: number | null;    // remaining_balance; null on log
+  }
+  ```
+- **Classify Pindo errors.** `401` → `"Pindo token rejected"` (config problem). `409` →
+  `"Number or network not supported"` (permanent; the user should fix their number).
+  Anything else keeps the current message. The body is still trimmed to 200 characters.
+- **Warn on low balance.** If `balance` falls below `SMS_LOW_BALANCE_USD` (default 2),
+  `console.warn` once per process. Running out of credit is otherwise invisible until
+  every SMS fails.
+- **The `log` driver prints the segment count** next to the text, so the demo shows the
+  encoding work.
+
+**Tests** (`tests/unit/`):
+- `gsm7.test.ts`: curly quotes, emoji, extension characters, 160 vs 161, a real Kinyarwanda
+  template with `n’` going from 3 segments to 1.
+- `smsDriver.test.ts`: `toRwandanMsisdn` accepts the four prefixes in each form and rejects
+  landlines (`025…`), foreign numbers and junk. With `global.fetch` mocked, the Pindo
+  driver sends the right headers and body, parses a `201`, maps `401` and `409`, and
+  aborts on timeout.
+
+---
+
+## Phase 2 — Phone number entry and verification
+
+Mirrors the email confirmation flow in `authController.ts` (TTL, resend cooldown, single
+use), with a code in place of a link because a code can be typed on the phone that received it.
+
+### 2a. Migration `20261010100000-add-phone-verification.js`
+
+On `Users`:
+
+| Column | Type | Purpose |
 |---|---|---|
-| **Brevo** | **300/day, permanent, no card** | **Yes** — verify a sender address by emailed code, no DNS |
-| SMTP2GO | 1,000/mo, permanent, no card | Yes — but **25/hour** until a domain is verified |
-| Resend | 3,000/mo (100/day) | **No** — `onboarding@resend.dev` returns 403, owner's address only |
-| Amazon SES | ~$0.20 for the whole pilot | **No** — sandbox needs verified recipients; exit is a manual AWS review |
-| Mailgun | 100/day | **No** — sandbox domain allows 5 authorized recipients |
-| Postmark | 100/mo | **No** — refuses Gmail signups outright; manual approval |
-| SendGrid | 100/day for **60 days only** | Yes, but the free plan was retired in 2025 |
-| Mailjet | 6,000/mo | Technically, but it does **not** rewrite the From — a Gmail sender fails DMARC |
-| ZeptoMail | 10,000 trial, ~1 month | **No** — domain verification is a prerequisite |
+| `phoneVerifiedAt` | `DATE NULL` | Set when the code is confirmed |
+| `phoneVerificationCodeHash` | `STRING NULL` | SHA-256 of the 6-digit code plus the user id; the code is never stored |
+| `phoneVerificationExpiresAt` | `DATE NULL` | 10 minutes after sending; also used for the resend cooldown, as email does |
+| `phoneVerificationAttempts` | `INTEGER NOT NULL DEFAULT 0` | Locks the code after 5 wrong guesses |
 
-**Brevo is the recommendation.** It is the only permanent free tier that clears the
-constraint. Because a free-mail domain can never be authenticated, Brevo **rewrites the
-From domain to `@brevosend.com`** so Gmail's sender rules still pass — which is precisely
-why it works without DNS.
+Backfill: any user who already has `preferredChannel = 'sms'` and a valid number gets
+`phoneVerifiedAt = now()`, so the seeded `eric` keeps producing SMS delivery rows. Check
+where `eric`'s phone is seeded during this phase; `TESTING.md` says it is set, but no
+seeder writes a `phone` literal.
 
-Three things to know before relying on it:
+Update `models/User.ts` and the serialiser so the hash and attempts are **never** returned
+by `/users/me`.
 
-- Recipients see a `@brevosend.com` sender and a Gmail **"via brevosend.com"** label. Visibly
-  unbranded in a demo. Say so on the slide rather than letting a reviewer notice it.
-- Brevo gates **transactional** sending behind an activation step — possibly a support
-  ticket describing the use case. Secondary sources claim it needs a verified domain;
-  **Brevo's help pages block automated fetching so this is unconfirmed, and it is the one
-  thing that could invalidate this choice. Sign up in week 1, not the week before the pilot.**
-- Free-tier IPs are shared. Expect mostly-inbox with occasional spam-foldering; tell pilot
-  participants to check spam on day one and star the first message.
+### 2b. Endpoints (`authRoutes.ts`, both behind `verifyToken`)
 
-**Fallback if Brevo activation stalls: SMTP2GO** (1,000/mo, permanent, no card, no domain
-needed). Because both are reached over SMTP, switching is an env-var change.
+- `POST /api/auth/send-phone-code` with `{ phone }`:
+  1. `toRwandanMsisdn(phone)`; `400` if `null`.
+  2. If the number differs from the stored one, save it and clear `phoneVerifiedAt`.
+  3. If already verified for this number: `200 { verified: true }`.
+  4. Cooldown of 60 s since the last send: `429 { retryAfter }`.
+  5. Generate the code with `crypto.randomInt(0, 1_000_000)`, padded to 6 digits. Store the
+     hash and expiry, reset attempts.
+  6. Send directly through `sms.send()`, **not** `notify()`: like the email link, this is
+     the message that decides whether the channel can be used at all. Text:
+     `Isoko code: 123456. Expires in 10 minutes. Do not share it.` (GSM-7, 1 segment).
+  7. On send failure: `502` with the reason. On `InvalidNumberError`: `400`.
+- `POST /api/auth/verify-phone` with `{ code }`:
+  - Expired, missing or locked: `400`. Wrong: increment attempts, `400` with attempts left.
+  - Right: set `phoneVerifiedAt`, clear hash, expiry and attempts.
 
-At ~30 users and ~50 emails/day the pilot is far below Gmail's 5,000/day bulk-sender
-threshold, where SPF *or* DKIM suffices and DMARC is optional — an authenticated shared
-domain clears the bar. **No country-level signup block was found for Rwanda at any
-provider**; the real friction everywhere is payment-method verification, which Brevo does
-not require.
+The code is never in a response. On the `log` driver it appears in the server log, which
+is how it is demonstrated without an account, the same way the email link is.
 
-> If a domain is registered later, **Resend** becomes the better pick on developer experience
-> alone (3,000/mo free, first-class TS SDK, webhooks) and `EMAIL_FROM` becomes a real Isoko
-> address. The driver seam below makes that a config change plus one new driver.
+### 2c. Profile update rule (`userController.ts`)
 
----
+`phone` comes **out** of `UPDATABLE_FIELDS`. It now changes only through
+`send-phone-code`, so a number can't be swapped after verification without being
+re-confirmed. `preferredChannel: 'sms'` is accepted only when `phoneVerifiedAt` is set
+(`400` otherwise), matching what the UI enforces.
 
-## Phase 1 — Schema: one source of truth for the preference
+### 2d. `notify.ts`
 
-A single migration, `server/migrations/<ts>-add-notification-preference-and-email-verification.js`
-(migrations stay `.js` — that is the standing convention):
+`deliverSms` gains a step between "no phone number" and sending:
+`if (!user.phoneVerifiedAt)` → `skipped`, `"phone not verified"`. Add `phoneVerifiedAt` to
+the `attributes` list in the `User.findByPk` call.
 
-```js
-// Up
-addColumn('Users', 'preferredChannel',          { type: STRING, allowNull: false, defaultValue: 'none' });
-addColumn('Users', 'emailVerifiedAt',           { type: DATE, allowNull: true });
-addColumn('Users', 'emailVerificationToken',    { type: STRING, allowNull: true });
-addColumn('Users', 'emailVerificationExpiresAt',{ type: DATE, allowNull: true });
-
-// Backfill before dropping, so no expressed preference is lost. SMS wins when
-// both are set: SMS is the channel that actually delivers today.
-UPDATE "Users" SET "preferredChannel" =
-  CASE WHEN "smsNotificationsEnabled"   THEN 'sms'
-       WHEN "emailNotificationsEnabled" THEN 'email'
-       ELSE 'none' END;
-
-removeColumn('Users', 'smsNotificationsEnabled');
-removeColumn('Users', 'emailNotificationsEnabled');
-```
-
-The `down` restores both booleans and repopulates them from `preferredChannel`, so the
-migration is genuinely reversible.
-
-**Why drop the booleans rather than keep them alongside.** An exclusive choice stored in two
-independent flags has states the UI cannot produce (both true) and no answer for what
-`notify` should do with them. One column cannot drift from itself. The cost is a destructive
-step — hence the backfill-then-drop ordering and the real `down`.
-
-`server/src/models/User.ts`:
-
-```ts
-declare preferredChannel: CreationOptional<PreferredChannel>;
-declare emailVerifiedAt: Date | null;
-declare emailVerificationToken: string | null;
-declare emailVerificationExpiresAt: Date | null;
-```
-
-with an attribute definition mirroring `preferredLanguage` (`STRING`, default, `isIn`
-validator — this codebase uses validators, not `DataTypes.ENUM`), and **two edits that are
-easy to miss**:
-
-- add `'emailVerificationToken'` to the `defaultScope` `exclude` array (line ~259) next to
-  `passwordHash` and `resetToken`. It is a bearer credential for claiming an address; the
-  existing comment there explains exactly this reasoning.
-- widen `SafeUser` (line 95) to `Omit<User, 'passwordHash' | 'resetToken' | 'emailVerificationToken'>`.
-
-`server/src/types/domain.ts`, beside `DeliveryChannel` at line 96:
-
-```ts
-export type PreferredChannel = 'none' | 'email' | 'sms';
-export type NotificationCategory = 'activity' | 'outcome' | 'critical';
-```
-
-`server/src/controllers/userController.ts` — in `UPDATABLE_FIELDS` (line 26), replace
-`'smsNotificationsEnabled'` and `'emailNotificationsEnabled'` with `'preferredChannel'`.
-`updateProfile` needs no other change, **but** it currently copies any defined allowlisted
-key verbatim — add a narrow guard rejecting a `preferredChannel` outside the three literals
-with a 400, rather than letting the model validator surface as a 500.
-
-Also update `server/seeders/` where the booleans are set (grep `NotificationsEnabled`) so
-`eric`, who has SMS on today per `TESTING.md`, lands on `preferredChannel: 'sms'` and keeps
-producing SMS delivery rows. Set `emailVerifiedAt` on the seeded accounts so the demo does
-not require 15 verification clicks.
+**Tests** (`tests/integration/phoneVerification.test.ts`): send → code from the
+`log`-driver spy → verify; wrong code ×5 locks; expired code; cooldown `429`; changing the
+number clears verification; an invalid number gives `400` and sends nothing; `phone` in
+`PUT /users/me` is ignored; `preferredChannel: 'sms'` is refused while unverified; and
+`notifySms`, the SMS twin of `notifyEmail.test.ts`, covers sent / not opted in / no phone /
+not verified / driver failure.
 
 ---
 
-## Phase 2 — The email driver
+## Phase 3 — Delivery reports
 
-New `server/src/lib/channels/email.ts`, mirroring `sms.ts` in shape, naming and tone —
-including its docblock explaining that `log` is a deliberate pilot posture and not a missing
-integration.
+### 3a. Migration `20261010100100-add-delivery-report-fields.js`
 
-```ts
-export interface EmailResult { provider: string; providerMessageId: string | null }
-type EmailMessage = { to: string; subject: string; text: string; html: string };
-type EmailDriver = (message: EmailMessage) => Promise<EmailResult>;
+On `NotificationDeliveries`:
 
-const driverName = (): string => process.env.EMAIL_DRIVER || 'log';
-const fromAddress = (): string =>
-  process.env.EMAIL_FROM || 'Isoko Talents <notifications@example.invalid>';
+| Column | Type | Purpose |
+|---|---|---|
+| `deliveredAt` | `DATE NULL` | When the carrier confirmed |
+| `providerStatus` | `STRING NULL` | Raw status: `DELIVRD`, `UNDELIV`, … |
+| `segments` | `INTEGER NULL` | From `SmsResult` |
+| `cost` | `DECIMAL(10,4) NULL` | `item_price`, USD |
 
-const drivers: Record<string, EmailDriver> = {
-  log: async ({ to, subject, text }) => {
-    console.log(`[email:log] -> ${to}: ${subject}\n${text}`);
-    return { provider: 'log', providerMessageId: null };
-  },
-  smtp: async ({ to, subject, text, html }) => {
-    // nodemailer, created per send and lazily, so SMTP_* is read at call time
-    // exactly as the pindo driver reads its token — and so tests can swap it.
-    const host = process.env.SMTP_HOST;
-    if (!host) throw new Error('SMTP_HOST is not set');
-    const transport = nodemailer.createTransport({ host, port: Number(process.env.SMTP_PORT) || 587, auth: { user: ..., pass: ... } });
-    const info = await transport.sendMail({ from: fromAddress(), to, subject, text, html });
-    return { provider: `smtp:${host}`, providerMessageId: info.messageId ?? null };
-  },
-};
+Plus an index on `(provider, providerMessageId)`, for webhook lookups.
 
-/** Renders the single notification layout: plain text plus a minimal HTML twin. */
-export const render = (title: string, body: string) => ({ subject: title, text: ..., html: ... });
+`DeliveryStatus` gains `'delivered'` in `types/domain.ts` and the model validator.
+`deliverSms` records `segments` and `cost` on `sent`.
 
-export const send = async (message: EmailMessage): Promise<EmailResult> => {
-  const name = driverName();
-  const driver = drivers[name];
-  if (!driver) throw new Error(`Unknown EMAIL_DRIVER '${name}'. Available: ${Object.keys(drivers).join(', ')}`);
-  return driver(message);
-};
+### 3b. Endpoint `POST /api/webhooks/sms/pindo`
 
-export { driverName, fromAddress };
-```
+In `webhookRoutes.ts`, next to the payment callback, with a new `smsWebhookController.ts`:
 
-It **throws rather than swallows**, for the same reason `sms.ts` does (its lines 74-80 say
-it outright): `notify` needs to record *why* nothing arrived.
+- **Auth:** `SMS_WEBHOOK_SECRET`, compared with the existing `secretMatches()` (move it to
+  `lib/secrets.ts` so both controllers share it). Read it from the `X-Webhook-Secret`
+  header if Pindo can set custom headers on the DLR webhook, otherwise from a `?secret=`
+  query parameter. Which one depends on Pindo's answer in Phase 0. If the secret is unset,
+  reject everything in production and accept in development, as the payment webhook does.
+- **Mapping:** `DELIVRD` → `delivered` with `deliveredAt = modified_at`; `UNDELIV`,
+  `REJECTED`, `EXPIRED` → `failed` with `error = "carrier: <status>"`; `ACCEPTED`,
+  `UNKNOWN` → no status change, but `providerStatus` is still updated.
+- **Unknown `sms_id`:** `200` and ignore. Pindo doesn't retry, so a non-2xx gains nothing.
+- **Idempotent by nature:** setting the same status twice is harmless. A late `ACCEPTED`
+  never overwrites `delivered` or `failed`.
 
-**Why SMTP + nodemailer rather than Brevo's REST API.** Brevo's REST endpoint is a single
-`fetch` POST and would mirror the `pindo` driver with zero new dependencies — more elegant,
-and that is the real trade-off being made here. SMTP wins because the provider choice is
-**not settled**: Brevo's transactional-activation requirement is unconfirmed, and if it
-stalls the move to SMTP2GO is four env vars instead of a second driver written mid-pilot.
-One dependency (`nodemailer` + `@types/nodemailer`) buys that. The REST driver stays
-available as a later addition to the same `drivers` record once a provider is proven.
+**Known limit, documented rather than solved:** Pindo doesn't retry a missed report, so a
+row can stay `sent` forever. The admin view (Phase 5) reports "sent, no report after 24 h"
+as its own figure instead of treating it as delivered.
 
-HTML body: inline-styled, no tables, ~30 lines — heading, body paragraph, a link to
-`${APP_URL}/notifications`, and a footer line saying these can be turned off in
-Settings → Notifications. That footer is the pilot's stand-in for a List-Unsubscribe header.
+**Tests** (`tests/integration/smsWebhook.test.ts`): bad or missing secret `401`; each
+status maps correctly; an unknown id returns `200` and changes nothing; `ACCEPTED` after
+`DELIVRD` doesn't regress it.
 
 ---
 
-## Phase 3 — Verifying the address before first send
+## Phase 4 — Send only what is worth paying for
 
-Verification mail is **not** a notification: it goes to someone who has expressed no
-preference yet, so it calls `email.send()` directly and never touches `notify()`.
-
-`server/src/controllers/authController.ts` — two new handlers, mirroring the
-`forgotPassword`/`resetPassword` idiom already there (`crypto.randomBytes(32).toString('hex')`,
-an expiry column, lookup by token):
+`policy.ts`:
 
 ```ts
-// POST /api/auth/send-verification   (authed; `protect` middleware)
-//   24h token + expiry on the user, then email.send(renderVerification(link))
-//   link = `${APP_URL}/verify-email?token=${token}`
-//   Cooldown: refuse with 429 if emailVerificationExpiresAt was set < 2 min ago,
-//   so the button cannot be used to mail-bomb an address.
-// POST /api/auth/verify-email        (public; { token })
-//   find by emailVerificationToken, reject if missing/expired,
-//   then update({ emailVerifiedAt: new Date(), emailVerificationToken: null, emailVerificationExpiresAt: null })
-```
-
-Register both in `server/src/routes/authRoutes.ts` beside the existing reset routes.
-
-**Deliberately *not* returning the token in the response.** `forgotPassword` does that
-(authController.ts:179-183 explains it was because no mailer existed), and it is a real hole
-— anyone who knows an email gets a working reset token. Do not copy it. With
-`EMAIL_DRIVER=log` the link prints to the server console, which is how the demo works.
-
-**Google sign-in users are verified for free.** `authController.ts:140-142` already rejects
-a login whose `payload.email_verified` is false, and then throws the fact away. Set
-`emailVerifiedAt: new Date()` on the user it creates (and on an existing user whose
-`emailVerifiedAt` is null). Google has already done the work; asking those users to confirm
-again would be theatre.
-
-Dependency ordering to keep in mind: **Phase 2 must land before Phase 3**, since
-verification needs a mailer, and Phase 3 before email delivery is switched on in Phase 4.
-
-> Once `email.ts` exists, the highest-value follow-up is making `forgotPassword` actually
-> mail its link instead of returning the token. **Keep it out of this change** — it widens the
-> diff into auth and deserves its own commit. Record it in the README.
-
----
-
-## Phase 4 — Teaching `notify` about email
-
-Three edits to `server/src/lib/notify.ts`, with **no behavioural change to in-app or SMS**.
-
-**1. Category in, channels out.** New `server/src/lib/channels/policy.ts`:
-
-```ts
-/** Transport is a property of the kind of notice, not of the controller that sends it. */
 const POLICY: Record<NotificationCategory, DeliveryChannel[]> = {
-  activity: ['in_app', 'sms'],            // today's default, byte for byte
-  outcome:  ['in_app', 'sms', 'email'],
+  activity: ['in_app'],
+  outcome: ['in_app', 'sms', 'email'],
   critical: ['in_app', 'sms', 'email'],
 };
-export const channelsFor = (category: NotificationCategory = 'activity') =>
-  POLICY[category] ?? POLICY.activity;
 ```
 
-`NotificationFields` gains `category?: NotificationCategory`. **It is not a column** — line 82
-is `Notification.create(fields)`, so it must be destructured out or Sequelize carries a stray
-attribute:
+Rewrite the header comment: `activity` no longer means "what every call site did before
+email". Update `notificationPolicy.test.ts`.
 
-```ts
-const { category, ...attributes } = fields;
-const { channels = channelsFor(category) } = options;
-const notification = await Notification.create(attributes);
-```
+Then **re-read the 18 `notify()` call sites** and confirm each category against one
+question: *would a worker without the app open want to pay attention to this now?* Eight
+are already annotated. The candidates most likely to move from `activity` to `outcome` are
+the ones that ask the worker to act (being invited to a gig, a skill task needing
+evidence). List every change in the commit message.
 
-An un-annotated call site therefore resolves to exactly `['in_app', 'sms']` — today's
-literal. That equality is worth a test, because it is the whole regression argument.
-
-`outcome` and `critical` resolve identically right now. Keep them distinct anyway: `critical`
-is the hook for narrowing *SMS* once Pindo is billed per segment, which is the filter the
-README already asks for.
-
-**2. One user fetch for both off-app channels**, replacing lines 96-102:
-
-```ts
-const needsUser = channels.includes('sms') || channels.includes('email');
-const user = needsUser
-  ? await User.findByPk(fields.userId, {
-      attributes: ['id', 'phone', 'email', 'preferredChannel', 'emailVerifiedAt'],
-    })
-  : null;
-
-if (channels.includes('sms'))   void deliverSms(notification, user);   // deliberately not awaited
-if (channels.includes('email')) void deliverEmail(notification, user); // same reason
-```
-
-Keep the "Deliberately not awaited" comment and extend it: an HTTP request should not wait on
-an SMTP handshake either.
-
-**3. `deliverEmail`**, structurally identical to `deliverSms` (lines 40-68), recording every
-outcome — the point of `recordDelivery` is that a pilot can tell "did not want email" from
-"tried and failed":
-
-| Condition | row |
-|---|---|
-| `user?.preferredChannel !== 'email'` | `skipped`, `'not opted in'` |
-| `!user.emailVerifiedAt` | `skipped`, `'email not verified'` |
-| `!user.email` | `skipped`, `'no email address'` (unreachable — column is NOT NULL — kept for symmetry) |
-| sent | `sent` + `provider`, `providerMessageId`, `sentAt` |
-| threw | `failed` + `provider: email.driverName()`, error message |
-
-`deliverSms`'s opt-in check changes from `!user?.smsNotificationsEnabled` to
-`user?.preferredChannel !== 'sms'`. Same semantics for every existing row after the backfill.
-
-Email passes the **title as subject** and body as body — the SMS comment about keeping to one
-billable segment does not apply. Comment the divergence so it reads as intentional.
-
-**No migration for the delivery table.** `channel` is already a plain `Sequelize.STRING` with
-no DB enum, and `NotificationDelivery.ts:49` already validates
-`isIn: [['in_app','sms','email']]`.
+**Tighten the SMS text** in `deliverSms`: `${title}: ${body}` is often over 160
+characters. Cut the body so the whole message fits in **one GSM-7 segment** (`segmentCount`
+from Phase 1), ending in `…` → `...`, and add a short link `isoko: <APP_URL>/notifications`
+only if it still fits. A test asserts that every annotated call site's message, filled in
+with a realistic long gig title, comes to 1 segment.
 
 ---
 
-## Phase 5 — Mark the notices worth an email
+## Phase 5 — Client
 
-Eight one-line additions. Not 18, and not a `channels` array in a controller.
+### 5a. `NotificationPreferences.tsx`
 
-| File:line | Title | add |
-|---|---|---|
-| `webhookController.ts:77` | Payment confirmed / failed | `category: 'critical'` |
-| `adminController.ts:282` | Account suspended / reactivated | `category: 'critical'` |
-| `adminController.ts:144` | Gig approved / rejected | `category: 'outcome'` |
-| `gigApplicationController.ts:139` | Application not selected | `category: 'outcome'` |
-| `gigApplicationController.ts:161` | Application approved | `category: 'outcome'` |
-| `skillTaskController.ts:367` | Skill verified / rejected | `category: 'outcome'` |
-| `matchController.ts:152` | Worker confirmed | `category: 'outcome'` |
-| `matchController.ts:166` | Worker declined / Match cancelled | `category: 'outcome'` |
+- **Enable the SMS radio.** Delete the "Not available yet." hint and the `disabled` rule.
+- **Choosing SMS without a verified number** opens a phone step in place, instead of saving:
+  1. Antd `Input` with `addonBefore="+250"`, `inputMode="tel"` and the placeholder
+     `78X XXX XXX`. Client-side check against the same four prefixes.
+  2. **Consent line under the field (Law 058/2021):** "Isoko will send notifications to
+     this number through Pindo, an SMS provider in Rwanda. You can switch SMS off here at
+     any time." Choosing SMS is the consent; nothing is pre-selected.
+  3. "Send code" calls `authApi.sendPhoneCode`. Show the cooldown countdown from
+     `retryAfter`.
+  4. Antd `Input.OTP` (length 6) calls `authApi.verifyPhone`. On success, save
+     `preferredChannel: 'sms'` and refresh the profile.
+- **Verified state:** a success `Alert` showing the masked number (`+250 78• ••• 567`) and
+  a "Change number" link back to step 1.
+- Must work at 375 px: input and button stack on `xs`, as the other mobile fixes do.
 
-Left as `activity` **on purpose** — `gigApplicationController.ts:82` ("New gig application",
-fires to every admin on every application), both "needs manual assignment" notices
-(`skillTaskController.ts:190,513`), `matchController.ts:136,144`, `reviewController.ts:61`,
-`adminController.ts:90`, and `adminController.ts:247` ("You were matched to a new gig" — high
-user value, but ranked matching sends several invites per gig, so it is also the highest
-volume). Promoting any of these later is a one-word diff.
+### 5b. Plumbing
 
----
+- `authApi.ts`: `sendPhoneCode(phone)`, `verifyPhone(code)`.
+- `types/index.ts`: `phoneVerifiedAt?: string | null` on the profile.
+- `userApi.ts`: remove `phone` from `UpdateProfilePayload`, since the server now ignores it.
+- `en.json` + `rw.json`: about 15 keys under `settings.notifications.sms*`, written
+  properly in Kinyarwanda and not machine-filled. `scripts/check-i18n-parity.mjs` must pass.
 
-## Phase 6 — Client
+### 5c. Admin: SMS health card (small)
 
-**`client/src/api/userApi.ts`** — widen `UpdateProfilePayload` (lines 4-13). This is the hard
-blocker; the toggle cannot be sent without it:
-
-```ts
-preferredChannel?: 'none' | 'email' | 'sms';
-/** Null clears the number; undefined leaves it untouched. */
-phone?: string | null;
-```
-
-**`client/src/types/index.ts`** — replace `smsNotificationsEnabled` / `emailNotificationsEnabled`
-(lines 62-63) with `preferredChannel?: 'none' | 'email' | 'sms'` and add
-`emailVerifiedAt?: string | null`.
-
-**New `client/src/components/Settings/NotificationPreferences.tsx`** — its own component, not
-folded into `ProfileEditor`: that is one submit-button form, and a preference should take
-effect on change.
-
-- `Radio.Group` over three options: in-app only / Email / SMS, bound to
-  `profile?.preferredChannel ?? 'none'`.
-- **SMS rendered `disabled`** with a "coming soon" hint — the ask shown honestly: the shape
-  exists, SMS is dated. A user already on `'sms'` (seeded `eric`) still displays as selected
-  and still receives SMS; they simply cannot newly choose it.
-- Choosing Email when `emailVerifiedAt` is null shows an `Alert` with a **Verify my address**
-  button → `POST /auth/send-verification`, and the copy states plainly that no email will be
-  sent until the address is confirmed. Show the destination address read-only so the user
-  knows where it goes before opting in.
-- On change: `userApi.updateProfile({ preferredChannel })` → `await dispatch(fetchCurrentUser())`
-  → `message.success(t('settings.saved'))`, with a loading flag during the round trip and a
-  revert + `message.error` on failure. That is the save idiom `ProfileEditor` already uses.
-
-**New `client/src/pages/VerifyEmailPage.tsx`** + a public route `/verify-email` in the router,
-alongside the existing `/forgot-password`. Reads `?token=`, posts it, shows success or an
-expired-link message with a path back to Settings.
-
-**`client/src/components/Settings/Settings.tsx`** — append a fifth tab after `data` (index 4):
-`{ key: 'notifications', label: <Space size={8}><BellOutlined />{t('settings.notifications.title')}</Space>, children: <Card …><NotificationPreferences /></Card> }`.
-**Leave the `role === 'worker'` splices at lines 125/135 untouched** — they insert at indices
-1 and 2 positionally. Add a one-line comment above them saying so, so the next person does not
-insert above them.
-
-**i18n** — add the same leaf keys to **both** `en.json` and `rw.json` under
-`settings.notifications`: `title`, `desc`, `inAppAlways`, `emailLabel`, `emailHint`, `sentTo`,
-`verifyCta`, `verifyPending`, `verifySent`, `smsLabel`, `smsSoon`, plus `verifyEmail.*` for the
-page. Both files are at 428 keys; they must stay equal.
-`node scripts/check-i18n-parity.mjs` gates this in CI and also **warns on identical en/rw
-values**, so write real Kinyarwanda rather than English placeholders. As with the ~40 strings
-from the last i18n pass, these want a native-speaker review before the pilot.
+`GET /api/admin/sms-health` returns, for the last 7 days, counts of SMS deliveries by
+status, "sent, no report after 24 h", total `cost`, average `segments`, and the last
+`balance` seen (kept in memory by the driver; `null` after a restart until the next send).
+Show it as one card on `AdminDashboard.tsx`. It's the evidence a pilot report needs: how
+many were reached and what it cost.
 
 ---
 
-## Phase 7 — Env vars and documentation
+## Phase 6 — Configuration, docs and demo
 
-| Variable | Purpose | Default |
-|---|---|---|
-| `EMAIL_DRIVER` | `log` today; `smtp` once a Brevo sender is verified | `log` |
-| `EMAIL_FROM` | `From` header. With Brevo and no domain this is rewritten to `@brevosend.com` | placeholder |
-| `SMTP_HOST` | `smtp-relay.brevo.com` | — |
-| `SMTP_PORT` | | `587` |
-| `SMTP_USER` / `SMTP_PASS` | Brevo SMTP login + key | — |
-| `APP_URL` | Base URL for the links in emails | `http://localhost:5173` |
-
-All optional and read lazily per call, so **the server boots and the feature works end to end
-with nothing configured**. `assertRequiredEnv()` in `config/env.ts` is untouched.
-
-README: add these rows to the env table (~line 494, under `SMS_DRIVER`); note that
-`PINDO_API_TOKEN` / `SMS_SENDER_ID` are currently undocumented there and should be added in the
-same pass. Add an **Email** bullet to "Before going live" covering the Brevo activation risk,
-the missing bounce webhook, and the `forgotPassword` follow-up. Amend the existing
-"Notification volume" bullet to say the severity filter it asks for now exists as
-`NotificationCategory`, and is the hook for narrowing SMS.
-
-`config/env.ts:24-27` tells the operator to "see `.env.example` for the full list" and **that
-file does not exist**. Create `server/.env.example` listing every variable in the README table.
-It is the first place a new contributor looks, and it makes the existing error message true.
-
-**Bounces.** With `log` there are none. With `smtp`, rejections at submit time already land as
-a `failed` `NotificationDelivery` row carrying the provider error — the audit trail
-`recordDelivery` was written for. Asynchronous bounces need a provider webhook and are out of
-scope; at 30 users the mitigation is operational. Add to the README as the pilot's delivery
-health check:
-
-```sql
-SELECT channel, status, error, count(*) FROM "NotificationDeliveries"
-WHERE channel = 'email' GROUP BY 1,2,3 ORDER BY 4 DESC;
-```
-
-**Localisation is out of scope, deliberately.** The server has no i18n library and no
-catalogue; all 18 call sites interpolate hardcoded English. Translating only email would make
-the email better-localised than the in-app notification generated from the same row. The right
-fix is a server-side message catalogue keyed by notification type at the `notify` layer,
-serving all three channels at once — a separate, larger change. Record it as a follow-up.
+- **`server/.env.example`:**
+  ```
+  SMS_DRIVER=log              # log | pindo
+  PINDO_API_TOKEN=
+  SMS_SENDER_ID=Isoko         # must be approved by RURA + MTN + Airtel before use
+  SMS_WEBHOOK_SECRET=
+  SMS_TIMEOUT_MS=10000
+  SMS_LOW_BALANCE_USD=2
+  ```
+- **README:** an SMS section shaped like the email one (drivers, what is needed to go
+  live, the sender-ID timeline, the webhook URL to paste into Pindo's dashboard). Remove
+  "Notification volume" from "Before going live", since Phase 4 resolves it.
+- **TESTING.md:** a walkthrough. Log in as a worker, Settings → Notifications → SMS, enter
+  `0788 123 456`, copy the code from the server log, confirm, then trigger an `outcome`
+  notice and find the `[sms:log]` line with its segment count.
+- **`docker-compose.yml`:** pass the new variables through to the server container.
+- **Demo for assessors** (from the research report), in order of what's available:
+  1. The `log` driver: the full flow, with no account needed. Always works.
+  2. `SMS_DRIVER=pindo` to a team member's phone, if Pindo allows a shared sender before
+     "Isoko" is approved. Record it in advance in case the network misbehaves on the day.
+  3. The delivery report arriving: expose the local server with a tunnel
+     (`cloudflared` / `ngrok`) and point Pindo's DLR webhook at it.
 
 ---
 
-## Tests
+## Commit sequence
 
-Nothing covers `notify` or `sms` today (`server/tests/**` has zero matches), so these establish
-the pattern. ts-jest with `diagnostics: false`, `--runInBand`.
+Each commit builds, lints and passes tests on its own, with no attribution trailers:
 
-**`tests/unit/emailChannel.test.ts`** — pure, no Postgres. Save/restore `process.env` around
-each test; stub the transport.
-- no env set → driver is `log`, returns `{provider:'log', providerMessageId:null}`, sends nothing
-- `EMAIL_DRIVER=nope` → throws `Unknown EMAIL_DRIVER 'nope'. Available: log, smtp`
-- `EMAIL_DRIVER=smtp` with no `SMTP_HOST` → throws `SMTP_HOST is not set`
-- smtp happy path → `from` comes from `EMAIL_FROM`; returns the provider `messageId`
-- smtp rejection → throws, message preserved
-- `render()` → subject is the title, text contains the body, html contains the body and the
-  `APP_URL` link
-
-**`tests/unit/notificationPolicy.test.ts`** — `channelsFor(undefined)` is **exactly**
-`['in_app','sms']` (the regression guard for the 10 un-annotated call sites); `outcome` and
-`critical` include `email`; an unknown value falls back to activity.
-
-**`tests/integration/notifyEmail.test.ts`** — DB-bound, following the `trustScoreService.test.ts`
-idiom (`import db from '../../src/models'`, per-test users with randomised emails, cleanup by
-collected ids). Call `notify` with `req = undefined` so no Socket.IO is needed.
-- verified + `preferredChannel:'email'` + `category:'critical'` → `email` row `sent`, provider `log`, `sentAt` set
-- `preferredChannel:'none'` (the default) → `skipped` / `'not opted in'`
-- `preferredChannel:'email'` but `emailVerifiedAt` null → `skipped` / `'email not verified'`
-- `category` omitted → **no `email` row at all**, and the `in_app` + `sms` rows are unchanged
-- unknown `EMAIL_DRIVER` → `failed` with the provider name and the thrown message
-- `category` is not persisted onto the `Notification` row (guards the destructure)
-
-**`tests/integration/emailVerification.test.ts`** — send-verification sets a token and expiry;
-verify-email with it sets `emailVerifiedAt` and clears the token; a second use of the same token
-fails; an expired token fails; a resend inside the cooldown returns 429; the token never appears
-in any response body.
-
-**The race to plan for:** `deliverEmail` is `void`-ed, so its row appears *after* `notify`
-resolves. Add a polling helper to `tests/helpers/fixtures.ts`:
-
-```ts
-/** Delivery is dispatched without being awaited, so assertions must wait for it. */
-export const waitForDeliveries = async (notificationId, channel, { tries = 40, ms = 25 } = {}) => { /* poll, then throw a readable timeout */ };
-```
-
-Do **not** make `deliverEmail` awaited just to simplify the test — that would add SMTP latency
-to a user-visible action.
-
----
+1. `Plan the Pindo SMS integration` (this file)
+2. `Keep SMS text inside GSM-7` (`gsm7.ts` + tests)
+3. `Accept only Rwandan mobile numbers for SMS` (validation + tests)
+4. `Read Pindo's real response and stop waiting forever` (timeout, cost, balance, errors)
+5. `Let people confirm their phone number` (migration, endpoints, tests)
+6. `Only send SMS to confirmed numbers` (`notify.ts`, profile rule)
+7. `Record whether SMS actually arrived` (migration, webhook, tests)
+8. `Keep SMS for notices worth paying for` (policy + call-site review + one-segment text)
+9. `Offer SMS in Settings` (client, both locales)
+10. `Show SMS delivery and spend to admins`
+11. `Document the SMS channel and how to take it live`
+12. `Record the SMS plan as delivered` (refresh this file's status)
 
 ## Verification
 
-1. `cd server && npm run typecheck && npm run lint`
-2. `npm run migrate` then `npm run seed`; confirm `eric` reads `preferredChannel = 'sms'` —
-   proof the backfill preserved the one expressed preference in the data
-3. `npm run migrate:undo` once → both booleans come back with the right values → `migrate` again
-4. `npm test` — new files pass, nothing regresses. `tests/integration/api.test.ts` exercises
-   several `notify` paths and is the real guard that the single-fetch refactor is behaviour-neutral
-5. `node scripts/check-i18n-parity.mjs` → equal counts, no new untranslated warnings
-6. `cd client && npm run build`
-7. **Manual, no credentials.** Both dev servers up. Log in as `david@isoko.demo` →
-   Settings → **Notifications** → pick Email → the unverified alert appears → **Verify my
-   address** → the link prints to the server console as `[email:log] -> …` → open it →
-   the page confirms → Settings shows verified. As a worker, confirm **Credentials** and
-   **Passport** are still the 2nd and 3rd tabs and Notifications is last.
-8. Trigger a `critical` notice — admin-suspend a test user (`adminController.ts:282`) or post the
-   payment webhook against a seeded transaction. Console shows `[email:log]`;
-   `SELECT * FROM "NotificationDeliveries" WHERE channel='email'` shows `sent` / `log`.
-9. Switch back to in-app only, repeat → row is `skipped` / `'not opted in'`.
-10. **The noise check:** apply to a gig as a worker (`gigApplicationController.ts:82`, the
-    per-admin fan-out) → **no `email` rows**, with an opted-in verified admin.
-11. With a real Brevo key: `EMAIL_DRIVER=smtp SMTP_HOST=smtp-relay.brevo.com SMTP_USER=… SMTP_PASS=…`
-    → mail arrives at a Gmail address (**check spam**), `providerMessageId` populated. Then a bad
-    password → `failed` row carrying the provider message.
+- `cd server && npm run lint && npm run typecheck && npm test && npm run build`
+- `cd client && npx eslint src && npx tsc --noEmit -p tsconfig.app.json && npm test && npm run build`
+- `node scripts/check-i18n-parity.mjs`
+- Manual, on the `log` driver: the TESTING.md walkthrough above, at desktop width and 375 px.
+- Manual, on `pindo` (once Phase 0 allows): one real message to a team phone, its
+  delivery row moving `sent` → `delivered` through the webhook, and the cost on the admin card.
 
----
+## Risks
 
-## Commits
+| Risk | Mitigation |
+|---|---|
+| Sender ID not approved before assessment | The `log` driver demo is complete on its own. Start Phase 0 now |
+| Pindo can't send before "Isoko" is approved | Ask in Phase 0. Fallback is the `log` demo plus a recorded send once approved |
+| Missed delivery reports (no retries) | Count "no report after 24 h" separately; never infer delivery |
+| Pindo is a small team (no SDK, docs moved in 2025) | The driver seam stays. An Africa's Talking driver is about 40 lines if ever needed (research report) |
+| Credit runs out silently | Low-balance warning plus the admin card's last balance |
+| Code-sending endpoint abused to bill us | 60 s cooldown, Rwandan numbers only, authenticated users only. Add a per-user daily cap of 5 if abuse appears |
 
-Incremental and narrative, explaining why.
+## Out of scope (follow-ups)
 
-1. Migration + `User` model + `domain.ts` + `UPDATABLE_FIELDS` + seeders — *"Store one notification preference instead of two flags"* (why: an exclusive choice in two booleans has states the UI cannot produce)
-2. `lib/channels/email.ts` + its unit tests — *"Add an email driver that works with no credentials"* (why `log` is the default; why SMTP over a provider REST API)
-3. Auth handlers, routes and tests for verification — *"Confirm an address before sending anything to it"* (why the token is not returned in the response; why Google users are verified for free)
-4. `policy.ts` + `notify.ts` + integration test — *"Deliver notifications by email when the recipient asked for it"* (why one user fetch; why delivery is not awaited; why localisation waits)
-5. The eight `category:` annotations — *"Mark the notices worth an email"* (why each omission was omitted)
-6. Client: `userApi.ts`, `types/index.ts`, `NotificationPreferences.tsx`, `VerifyEmailPage.tsx`, `Settings.tsx`, both locales — *"Let people choose how they hear from us"* (why a live toggle rather than the profile form; why SMS is shown disabled)
-7. README env table, `.env.example`, "Before going live" — *"Document the email channel and what it still needs"*
-
-## Not in scope
-
-Localised notification bodies; a bounce/complaint webhook; making `forgotPassword` mail its
-link; SMS preference selection (the option ships disabled); per-category preferences; and any
-change to in-app or SMS delivery behaviour.
-
----
-
-## Deviations from the plan as written
-
-Two, both recorded here rather than silently absorbed:
-
-1. **`notify.ts`'s SMS opt-in check moved into Phase 1** rather than Phase 4.
-   Dropping the boolean columns stops the file compiling, and every commit has to
-   build on its own, so the one-line rename travelled with the schema change.
-
-2. **"Worker selected" was annotated and then reverted** to `activity`. It fires
-   from the client's own click to approve an application, so emailing it reports
-   their own action back to them, and "Worker confirmed" covers the same hiring
-   event once it actually resolves. Eight call sites carry a category, as planned.
-
-One addition the plan did not call for: `render()` escapes the notification title
-and body into the HTML part. Titles interpolate gig titles and user names, so a
-quote or an angle bracket from a real listing would otherwise break the markup.
+- Kinyarwanda SMS text: needs a server-side message catalogue, shared with email.
+- Quiet hours (holding non-critical SMS from 20:00–08:00): needs a send queue.
+- USSD for feature-phone workers: a costed next step (about RWF 26,000/month for a shared
+  code), prototyped in a sandbox if at all.
+- An Africa's Talking fallback driver.
+- NCSA data-controller registration and cross-border transfer paperwork for a real launch.
+  The consent line in Phase 5 covers the pilot.
