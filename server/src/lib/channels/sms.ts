@@ -1,21 +1,54 @@
 /**
  * SMS delivery, behind a driver so the pilot can run without a live account.
  *
- * The default driver logs instead of sending. That is not a placeholder for a
- * missing integration — a Rwandan sender ID needs a company registration
- * certificate and RURA approval taking about three weeks, so a student project
- * cannot assume live access exists on any particular date. Everything above
- * this layer is written as if it does, and swapping SMS_DRIVER is the whole
- * change when credentials arrive.
+ * The default driver logs instead of sending, so development, CI and the demo
+ * need no account. `pindo` sends for real. Its sender name has to be approved
+ * before the networks will carry it: a branded ID such as "Isoko" needs RURA
+ * whitelisting (free, about five days) and separate MTN and Airtel registration
+ * through the provider (about three weeks), both on an RDB company certificate.
+ * Until that exists the pilot sends from Pindo's shared `PindoTest` sender, and
+ * switching is SMS_SENDER_ID alone.
  */
+import { segmentCount, toGsm7 } from './gsm7';
+
 const PINDO_ENDPOINT = process.env.PINDO_ENDPOINT || 'https://api.pindo.io/v1/sms/';
 
 export interface SmsResult {
   provider: string;
   providerMessageId: string | null;
+  /** Billed segments, counted locally so every driver reports it. */
+  segments: number;
+  /** What the gateway charged, in its currency (USD for Pindo); null on log. */
+  cost: number | null;
+  /** Account balance after this message; null when the driver doesn't say. */
+  balance: number | null;
 }
 
-type SmsDriver = (message: { to: string; text: string }) => Promise<SmsResult>;
+type DriverResult = Omit<SmsResult, 'segments'>;
+type SmsDriver = (message: { to: string; text: string; segments: number }) => Promise<DriverResult>;
+
+let lastBalance: { amount: number; at: Date } | null = null;
+let warnedLowBalance = false;
+
+/** The balance the gateway last reported, kept for the admin view. */
+export const lastKnownBalance = () => lastBalance;
+
+const noteBalance = (balance: number | null) => {
+  if (balance === null) return;
+  lastBalance = { amount: balance, at: new Date() };
+  const floor = Number(process.env.SMS_LOW_BALANCE_USD ?? 2);
+  // Once per process: an empty account otherwise announces itself only as every
+  // SMS failing, by which point the pilot has already lost messages.
+  if (balance < floor && !warnedLowBalance) {
+    warnedLowBalance = true;
+    console.warn(`[sms] gateway balance is ${balance}, below SMS_LOW_BALANCE_USD=${floor}`);
+  }
+};
+
+const numberOrNull = (value: unknown): number | null => {
+  const n = typeof value === 'string' ? Number(value) : value;
+  return typeof n === 'number' && Number.isFinite(n) ? n : null;
+};
 
 const driverName = (): string => process.env.SMS_DRIVER || 'log';
 
@@ -50,9 +83,9 @@ const toRwandanMsisdn = (phone: string | null | undefined): string | null => {
 
 const drivers: Record<string, SmsDriver> = {
   /** Records what would have been sent, so the flow is exercised end to end. */
-  log: async ({ to, text }) => {
-    console.log(`[sms:log] -> ${to}: ${text}`);
-    return { provider: 'log', providerMessageId: null };
+  log: async ({ to, text, segments }) => {
+    console.log(`[sms:log] -> ${to} (${segments} segment${segments === 1 ? '' : 's'}): ${text}`);
+    return { provider: 'log', providerMessageId: null, cost: null, balance: null };
   },
 
   pindo: async ({ to, text }) => {
@@ -63,6 +96,9 @@ const drivers: Record<string, SmsDriver> = {
 
     const response = await fetch(PINDO_ENDPOINT, {
       method: 'POST',
+      // Without a bound, a stalled gateway holds the delivery open for as long
+      // as the socket allows; the row would sit unwritten the whole time.
+      signal: AbortSignal.timeout(Number(process.env.SMS_TIMEOUT_MS) || 10_000),
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -76,16 +112,29 @@ const drivers: Record<string, SmsDriver> = {
 
     const body = await response.text();
     if (!response.ok) {
+      // The two failures with a known cause get a message that says what to do;
+      // anything else keeps Pindo's own words.
+      if (response.status === 401) {
+        throw new Error('Pindo rejected the API token (401). Check PINDO_API_TOKEN.');
+      }
+      if (response.status === 409) {
+        throw new Error('Pindo cannot route this number or network (409).');
+      }
       throw new Error(`Pindo rejected the message (${response.status}): ${body.slice(0, 200)}`);
     }
 
-    let parsed: { sms_id?: string; id?: string };
+    let parsed: { sms_id?: string; id?: string; item_price?: unknown; remaining_balance?: unknown };
     try {
       parsed = JSON.parse(body);
     } catch {
       parsed = {};
     }
-    return { provider: 'pindo', providerMessageId: parsed.sms_id ?? parsed.id ?? null };
+    return {
+      provider: 'pindo',
+      providerMessageId: parsed.sms_id ?? parsed.id ?? null,
+      cost: numberOrNull(parsed.item_price),
+      balance: numberOrNull(parsed.remaining_balance),
+    };
   },
 };
 
@@ -95,6 +144,9 @@ const drivers: Record<string, SmsDriver> = {
  * Throws on failure rather than swallowing it, so the caller can record why a
  * delivery did not happen. A pilot needs to know a number was wrong or a
  * balance was empty, not merely that nothing arrived.
+ *
+ * Text is made GSM-7 here rather than by each caller, so none can forget it:
+ * one curly apostrophe would otherwise bill a short message as three.
  */
 export const send = async ({
   to,
@@ -112,7 +164,11 @@ export const send = async ({
   if (!msisdn) {
     throw new InvalidNumberError(to);
   }
-  return driver({ to: msisdn, text });
+  const safe = toGsm7(text);
+  const segments = segmentCount(safe);
+  const result = await driver({ to: msisdn, text: safe, segments });
+  noteBalance(result.balance);
+  return { ...result, segments };
 };
 
 export { driverName, toRwandanMsisdn };

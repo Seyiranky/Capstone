@@ -16,7 +16,8 @@
     "test": "cross-env NODE_ENV=test jest --runInBand",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json",
+    "sms:test": "tsx src/scripts/sendTestSms.ts"
   },
   "engines": {
     "node": ">=24"
