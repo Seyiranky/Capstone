@@ -13,4 +13,8 @@ module.exports = {
   // .ts must be resolvable for `require('../../src/models')` to find index.ts
   // while the tests themselves are still JavaScript.
   moduleFileExtensions: ['js', 'ts', 'json', 'node'],
+
+  // Runs before each test file, so no suite can reach a real SMS or mail
+  // gateway through a developer's .env.
+  setupFiles: ['<rootDir>/tests/helpers/env.ts'],
 };
