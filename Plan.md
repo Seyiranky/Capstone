@@ -3,7 +3,9 @@
 > Supersedes the email notification channel plan, which is built and committed
 > (`51feae8`..`8edb3d8`, 2 Oct 2026). That plan's text is in git history.
 >
-> **Status: planned** (10 Oct 2026). Nothing below is implemented yet.
+> **Status: in progress** (11 Oct 2026). A live send from Pindo's shared `PindoTest`
+> sender reached an MTN phone on 11 Oct, so the pilot sends from `PindoTest` and the
+> registered "Isoko" sender ID moves to the launch checklist (Phase 0, steps 0.1 and 0.4–0.6).
 > Provider research behind the choice: `reports/SMS provider for Isoko Talents.md`.
 
 ## Context
@@ -47,6 +49,8 @@ driver, so the demo and CI are unaffected.
 
 | Decision | Choice | Why |
 |---|---|---|
+| Pilot sender | **`PindoTest`**, Pindo's shared test sender, set by `SMS_SENDER_ID` | Verified live to MTN on 11 Oct 2026. Registering "Isoko" needs an RDB certificate and ~4 weeks; swapping is one env var once it exists |
+| Identifying the sender | **Every SMS starts `Isoko:`**, and Settings says texts arrive from `PindoTest` during the pilot | The sender name doesn't identify Isoko, and RURA's unsolicited-messages rules require that it is identifiable |
 | Provider | **Pindo** | Kigali company, $0.01/SMS (Twilio is ~$0.33), Irembo as a customer, and the driver already speaks its API. See the research report |
 | Phone verification | **Own 6-digit code sent through `sms.send()`**, not Pindo Verify | Works on the `log` driver, so it can be demonstrated and tested with no account. Mirrors the email flow. Pindo Verify costs the same $0.01, ties us to Pindo, and can't run offline |
 | Numbers accepted | **Rwandan mobile only**: `+250 7[2389]X XXX XXX` (MTN 078/079, Airtel 072/073) | Pindo returns `409` for unsupported countries or networks. Reject at input, not after billing |
@@ -81,6 +85,12 @@ methods (MoMo?).
 ---
 
 ## Phase 0 — Accounts and paperwork (no code; start first, it's the long pole)
+
+> **Pilot status (11 Oct 2026):** steps 0.2 and 0.3's first question are answered in
+> practice: the account works and `PindoTest` delivered to an MTN number. The pilot runs on
+> it. Steps 0.1 and 0.4–0.6 (the "Isoko" sender ID) are now the **launch** path, not a
+> prerequisite for the pilot. Still worth doing during the pilot: an Airtel test send, and
+> asking Pindo whether `PindoTest` may carry real user traffic.
 
 Phase 0 is everything that has to happen outside the codebase before a real SMS can carry
 the name "Isoko". None of it blocks Phases 1–6, which all run on the `log` driver, but the
@@ -298,7 +308,7 @@ driver and, if 0.2 worked, a recorded `PindoTest` send. Don't plan it around "Is
 | DLR webhook: custom header or query string? | | |
 | Minimum top-up; payment methods | | |
 | DPA / data location | | |
-| Test send result, MTN (0.2) | | |
+| Test send result, MTN (0.2) | `PindoTest` → +250 79… delivered | 11 Oct 2026 |
 | Test send result, Airtel (0.2) | | |
 
 **Phase 0 is done when** the answers table is filled in, the token is in `server/.env`,
