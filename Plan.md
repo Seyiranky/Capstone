@@ -3,9 +3,12 @@
 > Supersedes the email notification channel plan, which is built and committed
 > (`51feae8`..`8edb3d8`, 2 Oct 2026). That plan's text is in git history.
 >
-> **Status: in progress** (11 Oct 2026). A live send from Pindo's shared `PindoTest`
-> sender reached an MTN phone on 11 Oct, so the pilot sends from `PindoTest` and the
-> registered "Isoko" sender ID moves to the launch checklist (Phase 0, steps 0.1 and 0.4–0.6).
+> **Status: implemented** in commits `714bac0`..`ac3f5a2` (11 Oct 2026), for the pilot.
+> Phases 1–6 landed; deviations are listed at the end. A live send from Pindo's shared
+> `PindoTest` sender reached an MTN phone on 11 Oct, so the pilot sends from it, and the
+> registered "Isoko" sender ID (Phase 0, steps 0.1 and 0.4–0.6) is the launch step.
+> 325 server and 12 client tests green; locales in step.
+>
 > Provider research behind the choice: `reports/SMS provider for Isoko Talents.md`.
 
 ## Context
@@ -628,3 +631,40 @@ Each commit builds, lints and passes tests on its own, with no attribution trail
 - An Africa's Talking fallback driver.
 - NCSA data-controller registration and cross-border transfer paperwork for a real launch.
   The consent line in Phase 5 covers the pilot.
+
+## Deviations from the plan as written
+
+1. **No call site changed category.** Phase 4 suggested promoting notices that ask
+   a worker to act. The one candidate, "You were matched to a new gig", stays
+   `activity`, as the email plan left it: ranked matching sends several per gig,
+   so it would be the most expensive notice to text. Promoting it is one word in
+   `adminController.ts` if pilot feedback asks for it.
+2. **No link in the SMS.** `APP_URL` is a localhost address until deployment, and
+   a link would cost characters every message needs. The text says what happened;
+   the app holds the rest.
+3. **`deliveredAt` is when the report arrives**, not Pindo's `modified_at`, which
+   comes without a timezone. Reports follow delivery by seconds.
+4. **No `docker-compose.yml` change.** The server container mounts `./server`, so
+   `server/.env` reaches it the way the email settings already do.
+5. **The Settings screen names the sender from `VITE_SMS_SENDER_NAME`** (default
+   `PindoTest`). The client can't read the server's `SMS_SENDER_ID`, so the two are
+   kept in step by configuration, and both `.env.example` files say so.
+
+Additions the plan did not call for:
+
+- **Tests can't reach a real gateway.** `tests/helpers/env.ts` pins `SMS_DRIVER` and
+  `EMAIL_DRIVER` to `log` before dotenv runs. Without it, a developer `.env` set to
+  `pindo` would send billed texts on every test run.
+- **`npm run sms:test -- <phone>`** sends one message through the app's own SMS code,
+  to check an account before trusting notifications to it.
+- **The payment webhook's secret comparison moved to `lib/secrets.ts`**, shared with
+  the SMS webhook.
+
+Still open:
+
+- The Kinyarwanda strings for the SMS settings (`settings.notifications.sms*` in
+  `rw.json`) were written without a native speaker's review. Have one read them
+  before the pilot.
+- An Airtel test send (072/073) has not been made yet.
+- Pindo hasn't confirmed in writing that `PindoTest` may carry real user traffic.
+
