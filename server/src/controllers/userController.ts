@@ -33,7 +33,9 @@ const UPDATABLE_FIELDS = [
   'yearsExperience',
   'cvUrl',
   'certificateUrl',
-  'phone',
+  // Not 'phone': a number changes only through /auth/send-phone-code, which
+  // clears its confirmation. Writable here, a confirmed number could be swapped
+  // for an unconfirmed one and keep receiving SMS.
   'preferredChannel',
 ] as const;
 
@@ -62,6 +64,13 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     res
       .status(400)
       .json({ message: `preferredChannel must be one of ${PREFERRED_CHANNELS.join(', ')}` });
+    return;
+  }
+
+  // The server-side twin of the Settings screen's rule: SMS is chosen after the
+  // number is confirmed, never before, or notices would be skipped silently.
+  if (body.preferredChannel === 'sms' && !user.phoneVerifiedAt) {
+    res.status(400).json({ message: 'Confirm your phone number before choosing SMS.' });
     return;
   }
 

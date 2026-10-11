@@ -54,6 +54,11 @@ const deliverSms = async (notification: Notification, user: User | null) => {
   if (!user.phone) {
     return recordDelivery(notification.id, 'sms', { status: 'skipped', error: 'no phone number' });
   }
+  // Its own reason, like an unconfirmed email: this person asked for SMS and
+  // has not typed the code yet, which is someone to nudge, not someone who said no.
+  if (!user.phoneVerifiedAt) {
+    return recordDelivery(notification.id, 'sms', { status: 'skipped', error: 'phone not verified' });
+  }
 
   try {
     const result = await sms.send({
@@ -164,7 +169,7 @@ const notify = async (
   const needsUser = targets.includes('sms') || targets.includes('email');
   const user = needsUser
     ? await User.findByPk(fields.userId, {
-        attributes: ['id', 'phone', 'email', 'preferredChannel', 'emailVerifiedAt'],
+        attributes: ['id', 'phone', 'phoneVerifiedAt', 'email', 'preferredChannel', 'emailVerifiedAt'],
       })
     : null;
 
