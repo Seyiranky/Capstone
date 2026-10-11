@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
-import { User, Gig, Skill, Match, Transaction, UserSkill } from '../models';
+import { User, Gig, Skill, Match, Transaction, UserSkill, NotificationDelivery, sequelize } from '../models';
+import * as sms from '../lib/channels/sms';
 import notify from '../lib/notify';
 import * as pilotMetricsService from '../services/pilotMetricsService';
 import * as matchScoringService from '../services/matchScoringService';
@@ -314,4 +315,56 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 
   await user.destroy();
   res.json({ message: 'User deleted' });
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Whether SMS is reaching people, and what it costs, over the last seven days.
+ *
+ * The figure a pilot report needs is reach, not attempts, so "sent" is split
+ * by what the carrier said afterwards. Pindo does not retry a missed delivery
+ * report, so a message still `sent` a day later is counted on its own rather
+ * than assumed delivered.
+ */
+export const smsHealth = async (_req: Request, res: Response): Promise<void> => {
+  const since = new Date(Date.now() - 7 * DAY_MS);
+  const where = { channel: 'sms' as const, createdAt: { [Op.gte]: since } };
+
+  const [byStatus, totals, noReport, usersOnSms] = await Promise.all([
+    NotificationDelivery.findAll({
+      where,
+      attributes: ['status', [sequelize.fn('COUNT', sequelize.col('id')), 'count']],
+      group: ['status'],
+      raw: true,
+    }) as unknown as Promise<{ status: string; count: string }[]>,
+    NotificationDelivery.findOne({
+      where,
+      attributes: [
+        [sequelize.fn('SUM', sequelize.col('cost')), 'cost'],
+        [sequelize.fn('AVG', sequelize.col('segments')), 'segments'],
+      ],
+      raw: true,
+    }) as unknown as Promise<{ cost: string | null; segments: string | null } | null>,
+    NotificationDelivery.count({
+      where: { ...where, status: 'sent', sentAt: { [Op.lt]: new Date(Date.now() - DAY_MS) } },
+    }),
+    User.count({ where: { preferredChannel: 'sms', phoneVerifiedAt: { [Op.ne]: null } } }),
+  ]);
+
+  const counts: Record<string, number> = { sent: 0, delivered: 0, failed: 0, skipped: 0 };
+  for (const row of byStatus) counts[row.status] = Number(row.count);
+
+  const balance = sms.lastKnownBalance();
+  res.json({
+    since,
+    driver: sms.driverName(),
+    sender: process.env.SMS_SENDER_ID || 'Isoko',
+    usersOnSms,
+    counts,
+    noReportAfter24h: noReport,
+    cost: totals?.cost === null || totals?.cost === undefined ? 0 : Number(totals.cost),
+    averageSegments: totals?.segments ? Number(Number(totals.segments).toFixed(2)) : null,
+    balance: balance ? { amount: balance.amount, at: balance.at } : null,
+  });
 };

@@ -4,6 +4,7 @@ import { Card, Col, Empty, Row, Skeleton, Statistic } from 'antd';
 import { adminApi } from '../../api/adminApi';
 import PageContainer from '../Layout/PageContainer';
 import AdminNav from './AdminNav';
+import SmsHealthCard from './SmsHealthCard';
 import { ColumnChart, PieChart } from '../common/charts';
 import type { Gig, User } from '../../types';
 
@@ -106,6 +107,7 @@ const AdminDashboard = () => {
               </Card>
             </Col>
           </Row>
+          <SmsHealthCard />
         </>
       )}
     </PageContainer>

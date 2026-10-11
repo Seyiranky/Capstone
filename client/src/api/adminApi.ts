@@ -1,11 +1,13 @@
 import axiosClient from './axiosClient';
-import type { CollusionReport, Gig, User } from '../types';
+import type { CollusionReport, Gig, SmsHealth, User } from '../types';
 
 export const adminApi = {
   listUsers: () => axiosClient.get<User[]>('/admin/users').then((res) => res.data),
 
   collusionReport: () =>
     axiosClient.get<CollusionReport>('/admin/flagged').then((res) => res.data),
+
+  smsHealth: () => axiosClient.get<SmsHealth>('/admin/sms-health').then((res) => res.data),
 
   listReviewers: () => axiosClient.get<User[]>('/admin/reviewers').then((res) => res.data),
 

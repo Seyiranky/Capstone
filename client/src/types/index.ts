@@ -315,6 +315,22 @@ export interface CollusionFlag {
   evidence: Record<string, string | number>;
 }
 
+/** GET /admin/sms-health: reach and spend of SMS over the last seven days. */
+export interface SmsHealth {
+  since: string;
+  driver: string;
+  sender: string;
+  usersOnSms: number;
+  counts: { sent: number; delivered: number; failed: number; skipped: number };
+  /** Accepted by the gateway over a day ago with no carrier report since. */
+  noReportAfter24h: number;
+  /** In the gateway's currency (USD for Pindo). */
+  cost: number;
+  averageSegments: number | null;
+  /** Null until the first send since the server started. */
+  balance: { amount: number; at: string } | null;
+}
+
 export interface CollusionReport {
   generatedAt: string;
   summary: {
