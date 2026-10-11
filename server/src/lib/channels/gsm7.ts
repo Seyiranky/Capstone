@@ -80,5 +80,23 @@ export const segmentCount = (text: string): number => {
   return text.length <= 70 ? 1 : Math.ceil(text.length / 67);
 };
 
-/** The most GSM-7 characters that fit in `segments` segments. */
-export const capacity = (segments = 1): number => (segments <= 1 ? 160 : segments * 153);
+/**
+ * Shortens text to fit `segments` segments, ending in "...".
+ *
+ * Cuts at a word boundary when one is reasonably close, so a gig title is not
+ * left mid-word. Works in segments rather than characters because the limit
+ * depends on the encoding and on extension characters counting twice.
+ */
+export const fitSegments = (text: string, segments = 1): string => {
+  if (segmentCount(text) <= segments) return text;
+
+  const chars = Array.from(text);
+  for (let end = chars.length - 1; end > 0; end -= 1) {
+    const cut = chars.slice(0, end).join('');
+    const space = cut.lastIndexOf(' ');
+    const head = space > cut.length * 0.75 ? cut.slice(0, space) : cut;
+    const candidate = `${head.replace(/[\s,.;:!?-]+$/, '')}...`;
+    if (segmentCount(candidate) <= segments) return candidate;
+  }
+  return '';
+};

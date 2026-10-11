@@ -1,4 +1,4 @@
-import { isGsm7, segmentCount, toGsm7 } from '../../src/lib/channels/gsm7';
+import { fitSegments, isGsm7, segmentCount, toGsm7 } from '../../src/lib/channels/gsm7';
 
 describe('toGsm7', () => {
   test('straightens curly quotes and apostrophes', () => {
@@ -57,5 +57,27 @@ describe('segmentCount', () => {
       'Fungura porogaramu urebe ibisobanuro byose by akazi.';
     expect(segmentCount(text)).toBe(3);
     expect(segmentCount(toGsm7(text))).toBe(1);
+  });
+});
+
+describe('fitSegments', () => {
+  test('leaves text that already fits alone', () => {
+    expect(fitSegments('Isoko: Payment confirmed.')).toBe('Isoko: Payment confirmed.');
+  });
+
+  test('cuts long text at a word and marks the cut', () => {
+    const long = `Isoko: Application approved. ${'Your application for the gig was approved. '.repeat(6)}`;
+    const fitted = fitSegments(long);
+
+    expect(segmentCount(fitted)).toBe(1);
+    expect(fitted.endsWith('...')).toBe(true);
+    expect(fitted).not.toMatch(/\s\.\.\.$/);
+    expect(long.startsWith(fitted.slice(0, -3))).toBe(true);
+  });
+
+  test('respects the smaller limit when the text is UCS-2', () => {
+    const fitted = fitSegments(`漢 ${'word '.repeat(40)}`);
+    expect(segmentCount(fitted)).toBe(1);
+    expect(fitted.length).toBeLessThanOrEqual(70);
   });
 });

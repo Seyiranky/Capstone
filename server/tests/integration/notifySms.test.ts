@@ -56,6 +56,27 @@ describe('SMS delivery', () => {
     expect(row.status).toBe('sent');
     expect(row.provider).toBe('log');
     expect(row.sentAt).toBeInstanceOf(Date);
+    expect(row.segments).toBe(1);
+  });
+
+  test('a long notice is sent as one segment that says it is from Isoko', async () => {
+    const user = await db.User.findOne({ where: { email: emails.verified } });
+    logSpy.mockClear();
+
+    const notification = await notify(undefined, {
+      userId: user!.id,
+      title: 'Application approved',
+      body: `Your application for “${'Repair a cracked laptop screen and replace the keyboard '.repeat(3)}” was approved. Confirm you're still available to take it.`,
+      category: 'outcome',
+    });
+    const [row] = await waitForDeliveries(() =>
+      db.NotificationDelivery.findAll({ where: { notificationId: notification.id, channel: 'sms' } }),
+    );
+
+    expect(row.segments).toBe(1);
+    const line = logSpy.mock.calls.map((args) => String(args[0])).find((l) => l.startsWith('[sms:log]'));
+    expect(line).toContain(': Isoko: Application approved. Your application for "Repair');
+    expect(line).toMatch(/\.\.\.$/);
   });
 
   test('an unconfirmed number is skipped with its own reason', async () => {

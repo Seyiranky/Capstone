@@ -97,21 +97,21 @@ describe('email delivery', () => {
 });
 
 describe('category decides the channels', () => {
-  test('an un-annotated notification produces no email row at all', async () => {
+  test('an un-annotated notification produces no email or SMS row at all', async () => {
     // The regression guard for the notices left as activity: an opted-in,
-    // verified user must still not be emailed routine chatter.
+    // verified user must still not be emailed or texted routine chatter.
     const user = await db.User.findOne({ where: { email: emails.optedIn } });
 
     const notification = await send(user!.id);
 
-    // in_app is written by notify itself, so once it exists the fan-out is done.
+    // in_app is written by notify itself, and is awaited, so once it exists no
+    // off-app delivery was started.
     await waitForDeliveries(deliveriesFor(notification.id, 'in_app'));
-    await waitForDeliveries(deliveriesFor(notification.id, 'sms'));
 
-    const emailRows = await db.NotificationDelivery.findAll({
-      where: { notificationId: notification.id, channel: 'email' },
+    const offApp = await db.NotificationDelivery.findAll({
+      where: { notificationId: notification.id, channel: ['email', 'sms'] },
     });
-    expect(emailRows).toHaveLength(0);
+    expect(offApp).toHaveLength(0);
   });
 
   test('in-app and SMS still happen for an outcome, alongside email', async () => {

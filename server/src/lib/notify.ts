@@ -1,6 +1,7 @@
 import type { Request } from 'express';
 import { Notification, NotificationDelivery, User } from '../models';
 import * as sms from './channels/sms';
+import { fitSegments, toGsm7 } from './channels/gsm7';
 import * as email from './channels/email';
 import { channelsFor } from './channels/policy';
 import { ioFrom } from './io';
@@ -43,6 +44,18 @@ const recordDelivery = (
   });
 
 /**
+ * The SMS form of a notification: one segment, and recognisably from Isoko.
+ *
+ * "Isoko:" leads because the pilot sends from Pindo's shared `PindoTest`
+ * sender, which says nothing about who is writing; the regulations on
+ * unsolicited messages expect the sender to be identifiable. The body is cut
+ * rather than allowed to run to a second billed segment -- the app holds the
+ * full text, and the SMS only has to make someone open it.
+ */
+const smsText = ({ title, body }: { title: string; body: string }): string =>
+  fitSegments(toGsm7(`Isoko: ${title}. ${body}`), 1);
+
+/**
  * Sends SMS when the recipient has opted in and given a number.
  *
  * Every outcome is recorded, including the ones where nothing was sent. A
@@ -63,12 +76,7 @@ const deliverSms = async (notification: Notification, user: User | null) => {
   }
 
   try {
-    const result = await sms.send({
-      to: user.phone,
-      // The body alone, without the title, keeps a message inside one segment
-      // more often — which matters when each segment is separately billed.
-      text: `${notification.title}: ${notification.body}`,
-    });
+    const result = await sms.send({ to: user.phone, text: smsText(notification) });
     return recordDelivery(notification.id, 'sms', {
       status: 'sent',
       provider: result.provider,

@@ -8,15 +8,16 @@ import type { DeliveryChannel, NotificationCategory } from '../../types/domain';
  * that this is worth an email while a routine fan-out to admins is not.
  * Keeping the mapping here means the fan-out can be narrowed in one place.
  *
- * `activity` is the default and is exactly the channel list every call site
- * used before email existed, so an un-annotated notification is unchanged.
+ * `activity` is the default and stays in the app. It used to go by SMS as
+ * well, which cost nothing on the log driver; on a live gateway every message
+ * is billed, and routine notices -- a new application fanned out to every
+ * admin, a review left -- are not worth interrupting someone's phone for.
  *
- * `outcome` and `critical` resolve identically today. They stay distinct
- * because SMS is billed per segment once a real gateway is configured, and
- * narrowing *that* to `critical` alone is the next filter this table will need.
+ * `outcome` and `critical` resolve identically today. They stay distinct so
+ * that SMS can be narrowed to `critical` alone if pilot spend calls for it.
  */
 const POLICY: Record<NotificationCategory, DeliveryChannel[]> = {
-  activity: ['in_app', 'sms'],
+  activity: ['in_app'],
   outcome: ['in_app', 'sms', 'email'],
   critical: ['in_app', 'sms', 'email'],
 };
