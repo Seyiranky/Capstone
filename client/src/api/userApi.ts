@@ -10,7 +10,7 @@ export interface UpdateProfilePayload {
   yearsExperience?: number | null;
   experienceSummary?: string | null;
   preferredLanguage?: 'en' | 'rw';
-  phone?: string | null;
+  /** Choosing 'sms' needs a confirmed number; the number itself is set by authApi.sendPhoneCode. */
   preferredChannel?: PreferredChannel;
 }
 

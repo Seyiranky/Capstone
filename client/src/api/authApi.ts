@@ -40,4 +40,15 @@ export const authApi = {
 
   verifyEmail: (payload: { token: string }) =>
     axiosClient.post<{ message: string }>('/auth/verify-email', payload).then((res) => res.data),
+
+  sendPhoneCode: (payload: { phone: string }) =>
+    axiosClient
+      .post<{ message: string; phone?: string; retryAfter?: number; verified?: boolean }>(
+        '/auth/send-phone-code',
+        payload,
+      )
+      .then((res) => res.data),
+
+  verifyPhone: (payload: { code: string }) =>
+    axiosClient.post<{ message: string }>('/auth/verify-phone', payload).then((res) => res.data),
 };
