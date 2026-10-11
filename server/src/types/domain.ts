@@ -116,8 +116,10 @@ export type NotificationCategory = 'activity' | 'outcome' | 'critical';
 /**
  * NotificationDelivery.status — `skipped` is load-bearing: a pilot reporting
  * delivery has to tell "did not want SMS" apart from "tried and failed".
+ * `delivered` only ever comes from a carrier's report; `sent` means the gateway
+ * accepted the message and nothing more.
  */
-export type DeliveryStatus = 'pending' | 'sent' | 'failed' | 'skipped';
+export type DeliveryStatus = 'pending' | 'sent' | 'delivered' | 'failed' | 'skipped';
 
 /** What `verifyToken` attaches to the request. */
 export interface AuthUser {

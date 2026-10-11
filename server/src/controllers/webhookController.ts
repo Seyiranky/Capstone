@@ -1,23 +1,9 @@
-import crypto from 'crypto';
 import type { Request, Response } from 'express';
 import { Match, Gig, User } from '../models';
 import * as paymentService from '../services/paymentService';
 import notify from '../lib/notify';
 import { pathParam } from '../lib/query';
-
-/**
- * Compares two secrets without leaking their difference through timing.
- *
- * A webhook endpoint is public, so a naive === lets an attacker recover the
- * secret one character at a time by measuring how long rejection takes.
- */
-const secretMatches = (provided: string | undefined, expected: string): boolean => {
-  if (!provided || !expected) return false;
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
-};
+import { secretMatches } from '../lib/secrets';
 
 /**
  * Receives a provider's payment callback.

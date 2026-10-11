@@ -30,6 +30,10 @@ export class NotificationDelivery extends Model<
   declare providerMessageId: string | null;
   declare error: string | null;
   declare sentAt: Date | null;
+  declare deliveredAt: CreationOptional<Date | null>;
+  declare providerStatus: CreationOptional<string | null>;
+  declare segments: CreationOptional<number | null>;
+  declare cost: CreationOptional<number | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -57,12 +61,26 @@ export const initNotificationDelivery = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'pending',
-        validate: { isIn: [['pending', 'sent', 'failed', 'skipped']] },
+        validate: { isIn: [['pending', 'sent', 'delivered', 'failed', 'skipped']] },
       },
       provider: { type: DataTypes.STRING, allowNull: true },
       providerMessageId: { type: DataTypes.STRING, allowNull: true },
       error: { type: DataTypes.TEXT, allowNull: true },
       sentAt: { type: DataTypes.DATE, allowNull: true },
+      deliveredAt: { type: DataTypes.DATE, allowNull: true },
+      // The carrier's own word (DELIVRD, UNDELIV, ...), kept alongside the
+      // mapped status so nothing the gateway said is lost in translation.
+      providerStatus: { type: DataTypes.STRING, allowNull: true },
+      segments: { type: DataTypes.INTEGER, allowNull: true },
+      // DECIMAL comes back from pg as a string; read it as a number.
+      cost: {
+        type: DataTypes.DECIMAL(10, 4),
+        allowNull: true,
+        get(this: NotificationDelivery) {
+          const raw = this.getDataValue('cost') as unknown;
+          return raw === null || raw === undefined ? null : Number(raw);
+        },
+      },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

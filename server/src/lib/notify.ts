@@ -26,6 +26,8 @@ interface DeliveryRecord {
   providerMessageId?: string | null;
   error?: string | null;
   sentAt?: Date;
+  segments?: number | null;
+  cost?: number | null;
 }
 
 // In-app is the default channel for everyone and is never opted out of; SMS is
@@ -72,6 +74,8 @@ const deliverSms = async (notification: Notification, user: User | null) => {
       provider: result.provider,
       providerMessageId: result.providerMessageId,
       sentAt: new Date(),
+      segments: result.segments,
+      cost: result.cost,
     });
   } catch (error) {
     return recordDelivery(notification.id, 'sms', {
