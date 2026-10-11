@@ -48,6 +48,10 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare cvUrl: string | null;
   declare certificateUrl: string | null;
   declare phone: string | null;
+  declare phoneVerifiedAt: Date | null;
+  declare phoneVerificationCodeHash: string | null;
+  declare phoneVerificationExpiresAt: Date | null;
+  declare phoneVerificationAttempts: CreationOptional<number>;
   declare preferredChannel: CreationOptional<PreferredChannel>;
   declare emailVerifiedAt: Date | null;
   declare emailVerificationToken: string | null;
@@ -207,6 +211,25 @@ export const initUser = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      // Null until a code sent to `phone` is confirmed, and cleared whenever the
+      // number changes. SMS delivery checks this -- see lib/notify.ts.
+      phoneVerifiedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      phoneVerificationCodeHash: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      phoneVerificationExpiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      phoneVerificationAttempts: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
       // Validated rather than a DataTypes.ENUM, matching preferredLanguage and
       // every other union in this schema: the validator is the runtime check
       // the TypeScript union cannot perform on a body arriving from the network.
@@ -272,9 +295,18 @@ export const initUser = (sequelize: Sequelize) => {
       defaultScope: {
         // resetToken is a bearer credential for resetting a password, and
         // emailVerificationToken one for claiming an address — never serialize
-        // either on a normal query. The matching *ExpiresAt columns are harmless
-        // and stay visible, since both flows need to read them back.
-        attributes: { exclude: ['passwordHash', 'resetToken', 'emailVerificationToken'] },
+        // either on a normal query. The phone code's hash goes with them: it is
+        // six digits, so a leaked hash is a solved code. The matching
+        // *ExpiresAt columns are harmless and stay visible, since the flows
+        // need to read them back.
+        attributes: {
+          exclude: [
+            'passwordHash',
+            'resetToken',
+            'emailVerificationToken',
+            'phoneVerificationCodeHash',
+          ],
+        },
       },
       scopes: {
         withPassword: {

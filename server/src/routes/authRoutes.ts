@@ -1,5 +1,6 @@
 import express from 'express';
 import * as authController from '../controllers/authController';
+import * as phoneVerificationController from '../controllers/phoneVerificationController';
 import { verifyToken } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -14,5 +15,8 @@ router.post('/reset-password', authController.resetPassword);
 // in it is the proof.
 router.post('/send-verification', verifyToken, authController.sendVerificationEmail);
 router.post('/verify-email', authController.verifyEmail);
+// Both need a session: the code is typed into the app, not opened from a link.
+router.post('/send-phone-code', verifyToken, phoneVerificationController.sendPhoneCode);
+router.post('/verify-phone', verifyToken, phoneVerificationController.verifyPhone);
 
 export default router;
