@@ -491,10 +491,13 @@ function.
 | `PASSPORT_SIGNING_SECRET` | Signs skill passports and income statements. Kept separate from `JWT_SECRET` because a passport is a long-lived public credential |
 | `PAYMENT_PROVIDER` | `simulated-momo` today; the MTN adapter slots in here |
 | `PAYMENT_WEBHOOK_SECRET` | Shared secret on the payment callback endpoint |
-| `SMS_DRIVER` | `log` today, `pindo` once a sender ID is approved |
+| `SMS_DRIVER` | `log` prints instead of sending; `pindo` sends through Pindo |
 | `PINDO_API_TOKEN` | Pindo API key. Required only when `SMS_DRIVER=pindo` |
 | `PINDO_ENDPOINT` | Override the Pindo URL; defaults to their v1 SMS endpoint |
-| `SMS_SENDER_ID` | The alphanumeric sender shown on an SMS, once RURA approves one |
+| `SMS_SENDER_ID` | The sender name shown on an SMS: `PindoTest` for the pilot, `Isoko` once registered |
+| `SMS_WEBHOOK_SECRET` | Shared secret on Pindo's delivery-report webhook. **Required** in production, where an unset secret refuses every report |
+| `SMS_TIMEOUT_MS` | How long a send may take before it is recorded as failed; defaults to 10000 |
+| `SMS_LOW_BALANCE_USD` | Logs a warning once when Pindo's reported balance falls below this; defaults to 2 |
 | `EMAIL_DRIVER` | `log` today, `smtp` once a sending account exists |
 | `EMAIL_FROM` | `From` header, e.g. `Isoko Talents <notifications@example.com>` |
 | `SMTP_HOST` | Mail host. Required only when `EMAIL_DRIVER=smtp` |
@@ -508,12 +511,26 @@ function.
 - **Payments**: the adapter seam is in place but reconciliation is not. A dropped
   webhook currently leaves a transaction at `initiated` forever; a status-polling
   job is needed before real money moves.
-- **SMS**: a Rwandan alphanumeric sender ID needs RURA approval, roughly three
-  weeks. Apply before the pilot window, not during it.
-- **Notification volume**: SMS is still attempted on every notification, which
-  is billable chatter once a live provider is configured. Email no longer is —
-  `NotificationCategory` in `src/lib/channels/policy.ts` now decides channels per
-  notice, and narrowing SMS to `critical` is a one-line change to that table.
+- **SMS**: works end to end on the `log` driver and live through **Pindo**
+  (`SMS_DRIVER=pindo` plus `PINDO_API_TOKEN`). Users confirm their number with a
+  texted six-digit code before anything else is sent to it, and only `outcome`
+  and `critical` notices go by SMS, each cut to one 160-character segment and
+  starting `Isoko:`. Three things remain before a real launch:
+  - **Sender ID.** The pilot sends from Pindo's shared `PindoTest` sender, which
+    needs no registration but names nobody. A branded `Isoko` needs RURA
+    "Sender ID Whitelisting Authorization" (free, about five days, at
+    licensing.rura.rw) **and** separate MTN and Airtel registration filed
+    through Pindo (about three weeks). Both need an RDB company certificate, so
+    a student team files through a registered sponsor. Then set
+    `SMS_SENDER_ID=Isoko` and the client's `VITE_SMS_SENDER_NAME` to match. The
+    step-by-step is Phase 0 of `Plan.md`.
+  - **Delivery reports.** In Pindo's dashboard, under SMS → Configurations, set
+    the DLR webhook to `https://<api host>/api/webhooks/sms/pindo?secret=<SMS_WEBHOOK_SECRET>`.
+    Pindo does not retry a missed report, so the admin dashboard counts messages
+    with no report after 24 hours separately instead of assuming delivery.
+  - **Data protection.** Settings names Pindo as the processor when someone
+    chooses SMS, which covers the pilot. A launch also needs NCSA data-controller
+    registration (dpo.gov.rw) declaring Pindo and where the database is hosted.
 - **Email**: the channel works end to end on the `log` driver, which prints
   instead of sending, so no account is needed to demo or test it. For real mail,
   set `EMAIL_DRIVER=smtp` with the four `SMTP_*` variables. Isoko owns no domain,

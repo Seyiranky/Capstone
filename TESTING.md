@@ -84,7 +84,7 @@ working: `solange` and `admin` were assigned to the *same* task, which is the
 
 | Login | Trust | Reviewer? | State — why you'd pick this one |
 |---|---|---|---|
-| `eric@isoko.demo` | 4.25 | **peer** | Best-established worker. Verified web skill (`peer_reviewed`, 0.80) **plus one self-declared specialisation** — the only account where you can see both provenance tiers side by side. Phone set, so SMS delivery records appear. |
+| `eric@isoko.demo` | 4.25 | **peer** | Best-established worker. Verified web skill (`peer_reviewed`, 0.80) **plus one self-declared specialisation** — the only account where you can see both provenance tiers side by side. |
 | `aline@isoko.demo` | 4.26 | **peer** | Highest trust. Verified tailoring. Has a revoked passport to test revocation. |
 | `claudine@isoko.demo` | 4.12 | **peer** | Verified tutoring. |
 | `jeanbosco@isoko.demo` | 4.01 | **peer** | Verified electronics repair. |
@@ -212,6 +212,42 @@ As any worker, e.g. **`david@isoko.demo`**:
 5. **The noise check.** Opt an *admin* into verified email, then apply to a gig
    as a worker. "New gig application" fires to every admin, and it must produce
    **no email row at all** — only notices carrying a `category` are emailed.
+
+### 5c. SMS notifications
+
+No gateway account is needed: with `SMS_DRIVER=log` (the default) every text,
+including the confirmation code, is printed to the server console as
+`[sms:log] -> +2507… (1 segment): …`.
+
+As any worker, e.g. **`david@isoko.demo`**:
+
+1. **Settings → Notifications** → choose **SMS**. Nothing is saved yet; a box
+   asks for a number. Type `0252 123 456` → it is refused (landline). Type
+   `788 123 456` → **Send code**. The button counts down from 60 s.
+2. Copy the six digits from the server console line `Isoko code: …`. Type a
+   wrong code first → "That code is not right. 4 tries left." Then the right one
+   → SMS is selected and the number shows masked, `+250 78• ••• 456`.
+3. Trigger something **outcome** or **critical**: approve one of this worker's
+   applications as the gig's client, or have an admin suspend and reactivate a
+   test account. The console prints one line starting `Isoko:` and reporting
+   `(1 segment)`, however long the gig title. The SQL from 5b shows `sms` sent
+   with `provider = log` and `segments = 1`.
+4. **The noise check.** Opt an *admin* into SMS the same way, then apply to a gig
+   as a worker. "New gig application" must produce **no `sms` row at all**:
+   only notices carrying a `category` are texted.
+5. **Change number** → send a code to `0722 123 456`. Until it is confirmed,
+   notices are recorded as `skipped` with `phone not verified`.
+6. **Admin → Overview → SMS, last 7 days** shows delivered, failed, awaiting
+   report, cost and the last known balance.
+
+**Live, through Pindo:** set `SMS_DRIVER=pindo`, `PINDO_API_TOKEN` and
+`SMS_SENDER_ID=PindoTest` in `server/.env` and restart the API. First check
+the account alone with `npm run sms:test -- 07XXXXXXXX` from `server/`, then
+repeat steps 1–3 with your own phone. To see delivery reports arrive locally,
+expose the API with a tunnel (`cloudflared tunnel --url http://localhost:4000`)
+and set Pindo's DLR webhook to `<tunnel>/api/webhooks/sms/pindo?secret=<SMS_WEBHOOK_SECRET>`;
+the row moves from `sent` to `delivered`. Each live text costs about $0.01, so
+switch test accounts back to **In the app only** afterwards.
 
 ### 6. Language parity
 
