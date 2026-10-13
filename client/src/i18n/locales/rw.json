@@ -212,7 +212,11 @@
       "applicationRejectedNote": "Ubu busabe ntibwemewe.",
       "applicationPendingNote": "Ubusabe bwawe buri gusuzumwa.",
       "matchPercent": "Bihuye ku {{percent}}%",
-      "appliedOn": "Yasabye {{date}}"
+      "appliedOn": "Yasabye {{date}}",
+      "posted": "Byatanzwe {{when}}",
+      "aboutClient": "Ibyerekeye umukiliya",
+      "reviewsReceived": "Amasuzuma yahawe",
+      "memberSince": "Umunyamuryango kuva"
     },
     "postAGig": "Tanga akazi",
     "tabs": {
@@ -882,5 +886,16 @@
     "release": "Akazi kavuzwe ko karangiye: {{title}}",
     "releaseDetail": "Ishyura, cyangwa bizishyurwa nyuma y’amasaha 72",
     "handCode": "Kode yawe yo gusoza ni {{code}}"
+  },
+  "protection": {
+    "title": "Birinzwe na Isoko",
+    "escrow": "Ubwishyu bubikwa mu bubiko",
+    "escrowDetail": "Umukiliya yishyura iyo akazi kemewe; umukozi yishyurwa karangiye.",
+    "code": "Bitangwa hakoreshejwe kode",
+    "codeDetail": "Umukiliya atanga kode y’imibare 4 aho akazi gakorerwa. Nta kode, nta bwishyu.",
+    "dispute": "Impaka zikemurwa n’abagenzi",
+    "disputeDetail": "Abanyamuryango batatu batabogamye bafata icyemezo.",
+    "receipt": "Inyemezabwishyu kuri buri bwishyu",
+    "receiptDetail": "Umuntu wese ashobora kuyigenzura, kandi yanditse ku nyandiko y’amafaranga y’umukozi."
   }
 }

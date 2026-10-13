@@ -212,7 +212,11 @@
       "applicationRejectedNote": "This application was not accepted.",
       "applicationPendingNote": "Your application is with the reviewer.",
       "matchPercent": "{{percent}}% match",
-      "appliedOn": "Applied {{date}}"
+      "appliedOn": "Applied {{date}}",
+      "posted": "Posted {{when}}",
+      "aboutClient": "About the client",
+      "reviewsReceived": "Reviews received",
+      "memberSince": "Member since"
     },
     "postAGig": "Post a gig",
     "tabs": {
@@ -882,5 +886,16 @@
     "release": "Work reported done: {{title}}",
     "releaseDetail": "Release payment, or it releases on its own in 72 hours",
     "handCode": "Your completion code is {{code}}"
+  },
+  "protection": {
+    "title": "Protected by Isoko",
+    "escrow": "Payment held in escrow",
+    "escrowDetail": "The client pays in when the job is accepted; the worker is paid when it is done.",
+    "code": "Released with a completion code",
+    "codeDetail": "The client hands over a 4-digit code on site. No code, no release.",
+    "dispute": "Disputes settled by peers",
+    "disputeDetail": "Three independent members decide, never anyone tied to either side.",
+    "receipt": "A receipt for every payout",
+    "receiptDetail": "Checkable by anyone, and listed on the worker’s income statement."
   }
 }

@@ -18,11 +18,20 @@ import {
   Result,
   Row,
   Skeleton,
-  Space,
   Tag,
   Typography,
 } from 'antd';
-import { CloseOutlined, EditOutlined, HomeOutlined } from '@ant-design/icons';
+import {
+  CheckOutlined,
+  ClockCircleOutlined,
+  CloseOutlined,
+  EditOutlined,
+  EnvironmentOutlined,
+  HomeOutlined,
+} from '@ant-design/icons';
+import ActionMenu from '../common/ActionMenu';
+import ProtectionCard from './ProtectionCard';
+import { fromNow } from '../../lib/time';
 import WorkerPicker from '../Team/WorkerPicker';
 import GigForm from './GigForm';
 import ApplicantList from './ApplicantList';
@@ -125,11 +134,11 @@ const GigDetail = () => {
     }
   };
 
-  const handleGigDecision = async (decision: 'approved' | 'rejected') => {
+  const handleGigDecision = async (decision: 'approved' | 'rejected', note?: string) => {
     if (!id) return;
     setBusyId(id);
     try {
-      await adminApi.reviewGig(id, decision);
+      await adminApi.reviewGig(id, decision, note);
       refresh();
     } finally {
       setBusyId(null);
@@ -163,19 +172,25 @@ const GigDetail = () => {
           { title: gig.title },
         ]}
       />
-      {/* Header */}
-      <Space size={8} style={{ marginBottom: 8 }}>
-        <Tag
-          style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.04em', margin: 0 }}
-        >
-          {gig.skill?.name}
-        </Tag>
-        {gig.status !== 'open' && <StatusTag status={gig.status} />}
-      </Space>
-      <Flex justify="space-between" align="flex-start" gap={12} wrap="wrap" style={{ marginBottom: 24 }}>
-        <Typography.Title level={2} style={{ margin: 0 }}>
-          {gig.title}
-        </Typography.Title>
+      {/* Header: the title and one line of facts, the owner's edit action on the right. */}
+      <Flex justify="space-between" align="flex-start" gap={16} wrap="wrap" style={{ marginBottom: 24 }}>
+        <div style={{ minWidth: 0, flex: '1 1 420px' }}>
+          <Typography.Title level={2} style={{ margin: 0, fontFamily: 'var(--font-heading)', lineHeight: 1.25 }}>
+            {gig.title}
+          </Typography.Title>
+          <Flex align="center" gap="6px 14px" wrap="wrap" style={{ marginTop: 10 }}>
+            {gig.skill?.name && <Tag style={{ margin: 0 }}>{gig.skill.name}</Tag>}
+            {loc && (
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                <EnvironmentOutlined /> {loc}
+              </Typography.Text>
+            )}
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              <ClockCircleOutlined /> {t('marketplace.gigDetail.posted', { when: fromNow(gig.createdAt) })}
+            </Typography.Text>
+            <StatusTag status={gig.status} />
+          </Flex>
+        </div>
         {isOwner && (
           <Button icon={<EditOutlined />} onClick={() => setEditOpen(true)}>
             Edit gig
@@ -199,7 +214,7 @@ const GigDetail = () => {
                 alt=""
                 style={{
                   width: '100%',
-                  aspectRatio: '16 / 9',
+                  height: 280,
                   objectFit: 'cover',
                   display: 'block',
                 }}
@@ -224,22 +239,54 @@ const GigDetail = () => {
           )}
 
           {role === 'admin' && gig.status === 'pending_review' && (
-            <Card style={{ marginTop: 20 }} title={t('marketplace.gigDetail.approveThisGig')}>
-              <Typography.Paragraph type="secondary">
+            <Card
+              style={{ marginTop: 20 }}
+              title={t('marketplace.gigDetail.approveThisGig')}
+              extra={
+                <ActionMenu
+                  disabled={busyId === id}
+                  actions={[
+                    {
+                      key: 'approve',
+                      label: t('gigApproval.approve'),
+                      icon: <CheckOutlined />,
+                      confirmTitle: t('gigApproval.approveTitle', { title: gig.title }),
+                      confirmBody: t('gigApproval.approveBody'),
+                      onConfirm: () => handleGigDecision('approved'),
+                    },
+                    {
+                      key: 'reject',
+                      label: t('gigApproval.reject'),
+                      icon: <CloseOutlined />,
+                      danger: true,
+                      confirmTitle: t('gigApproval.rejectTitle', { title: gig.title }),
+                      confirmLabel: t('gigApproval.confirmReject'),
+                      reason: { placeholder: t('gigApproval.rejectReason') },
+                      onConfirm: (reason) => handleGigDecision('rejected', reason),
+                    },
+                  ]}
+                />
+              }
+            >
+              <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
                 {t('marketplace.gigDetail.approveInstructions')}
               </Typography.Paragraph>
-              <Space>
-                <Button
-                  type="primary"
-                  loading={busyId === id}
-                  onClick={() => handleGigDecision('approved')}
-                >
-                  {t('marketplace.gigDetail.approve')}
-                </Button>
-                <Button danger loading={busyId === id} onClick={() => handleGigDecision('rejected')}>
-                  {t('marketplace.gigDetail.reject')}
-                </Button>
-              </Space>
+            </Card>
+          )}
+
+        {showChat && gig.client && (
+          <Card style={{ marginTop: 20 }} title={t('marketplace.gigDetail.messageClient')}>
+              <Typography.Paragraph type="secondary" style={{ fontSize: 13 }}>
+                {t('marketplace.gigDetail.messageClientHint', { name: gig.client.name })}
+              </Typography.Paragraph>
+              <ChatThread
+                recipientId={gig.client.id}
+                recipientName={gig.client.name}
+                placeholder={t('marketplace.gigDetail.messagePlaceholder', {
+                  name: gig.client.name,
+                })}
+                emptyText={t('marketplace.gigDetail.messageEmpty')}
+              />
             </Card>
           )}
 
@@ -294,7 +341,7 @@ const GigDetail = () => {
 
         {/* Sidebar */}
         <Col xs={24} lg={9}>
-          <div style={{ position: 'sticky', top: 84, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <Card>
               <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                 Budget
@@ -308,13 +355,6 @@ const GigDetail = () => {
 
               <MetaRow label={t('common.category')}>{gig.skill?.name}</MetaRow>
               <MetaRow label={t('common.location')}>{loc ?? '—'}</MetaRow>
-              <MetaRow label={t('marketplace.gigDetail.postedBy')}>
-                {gig.client ? (
-                  <IdentityLink id={gig.client.id} name={gig.client.name} size={20} />
-                ) : (
-                  '—'
-                )}
-              </MetaRow>
 
               {role === 'worker' && !myApplication && (
                 <>
@@ -342,21 +382,25 @@ const GigDetail = () => {
               )}
             </Card>
 
-            {showChat && gig.client && (
-              <Card title={t('marketplace.gigDetail.messageClient')}>
-                <Typography.Paragraph type="secondary" style={{ fontSize: 13 }}>
-                  {t('marketplace.gigDetail.messageClientHint', { name: gig.client.name })}
-                </Typography.Paragraph>
-                <ChatThread
-                  recipientId={gig.client.id}
-                  recipientName={gig.client.name}
-                  placeholder={t('marketplace.gigDetail.messagePlaceholder', {
-                    name: gig.client.name,
-                  })}
-                  emptyText={t('marketplace.gigDetail.messageEmpty')}
-                />
+            {gig.client && (
+              <Card title={t('marketplace.gigDetail.aboutClient')}>
+                <IdentityLink id={gig.client.id} name={gig.client.name} size={36} />
+                <div style={{ marginTop: 12 }}>
+                  <MetaRow label={t('dashboard.trustScore')}>
+                    {gig.client.reviewCount ? `${Number(gig.client.trustScore).toFixed(1)} / 5` : t('match.reason.trustProvisional')}
+                  </MetaRow>
+                  <MetaRow label={t('marketplace.gigDetail.reviewsReceived')}>{gig.client.reviewCount ?? 0}</MetaRow>
+                  {gig.client.createdAt && (
+                    <MetaRow label={t('marketplace.gigDetail.memberSince')}>
+                      {new Date(gig.client.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                    </MetaRow>
+                  )}
+                </div>
               </Card>
             )}
+
+            <ProtectionCard />
+
           </div>
         </Col>
       </Row>
