@@ -275,6 +275,8 @@ Each fix is covered by `server/tests/integration/security.test.ts`.
 | Payment webhook accepted unsigned callbacks when no secret was set | In production, anyone could mark a payment paid | Refused in production without `PAYMENT_WEBHOOK_SECRET` |
 | JWT algorithm not pinned | Defence in depth | Signed and verified as HS256 only |
 | A client could edit a gig after a worker accepted it, including its budget | Terms changed under an agreed job and its escrow | Edits allowed only before a match; values validated; rewording an approved gig sends it back to review |
+| Dependencies with published advisories (axios, multer, proxy-addr, qs, morgan, moment) | Known vulnerabilities shipped with the app | Updated with `npm audit fix`; the client's production dependencies report none. One remains on the server: `uuid` inside Sequelize 6, which only affects calls passing a buffer argument; the app never makes them, and npm's suggested "fix" is a downgrade to Sequelize 3 |
+| Final sweep for common web vulnerabilities | SQL injection, XSS, open redirects | No raw SQL with interpolated values, no `dangerouslySetInnerHTML`/`eval`, no redirects built from user input |
 
 
 Already sound and kept: bcrypt password hashes; role and suspension re-read from the database
