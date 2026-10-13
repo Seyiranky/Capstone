@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, Flex, Tooltip, Typography } from 'antd';
 import { HeartFilled, HeartOutlined } from '@ant-design/icons';
 import { useSavedGigs } from '../../hooks/useSavedGigs';
-import { gigImageSrc } from '../../utils/gigImage';
+import GigCover from '../common/GigCover';
 import { locationName } from '../../utils/locationName';
 import type { Gig } from '../../types';
 
@@ -14,7 +15,9 @@ interface GigCardProps {
 const GigCard = ({ gig, footNote }: GigCardProps) => {
   const navigate = useNavigate();
   const { isSaved, toggle } = useSavedGigs();
-  const src = gigImageSrc(gig);
+  const { t } = useTranslation();
+  // Posted in the last three days.
+  const isNew = Date.now() - new Date(gig.createdAt).getTime() < 3 * 24 * 60 * 60 * 1000;
   const loc = locationName(gig.locationLat, gig.locationLng);
   const saved = isSaved(gig.id);
 
@@ -25,23 +28,11 @@ const GigCard = ({ gig, footNote }: GigCardProps) => {
       styles={{ body: { padding: 14 } }}
       style={{ height: '100%' }}
       cover={
-        <div
-          style={{
-            position: 'relative',
-            aspectRatio: '16 / 10',
-            overflow: 'hidden',
-            background: 'var(--ant-color-fill-tertiary, #f1f1f2)',
-            borderBottom: '1px solid var(--ant-color-border-secondary, #e4e4e7)',
-          }}
+        <GigCover
+          gig={gig}
+          style={{ aspectRatio: '16 / 9', borderBottom: '1px solid var(--ant-color-border-secondary, #e4e4e7)' }}
         >
-          {src && (
-            <img
-              src={src}
-              alt=""
-              loading="lazy"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            />
-          )}
+          {isNew && <span className="isoko-cover__chip">{t('marketplace.newBadge')}</span>}
           <Tooltip title={saved ? 'Remove from saved' : 'Save gig'}>
             <button
               type="button"
@@ -68,7 +59,7 @@ const GigCard = ({ gig, footNote }: GigCardProps) => {
               {saved ? <HeartFilled /> : <HeartOutlined />}
             </button>
           </Tooltip>
-        </div>
+        </GigCover>
       }
     >
       <Typography.Text

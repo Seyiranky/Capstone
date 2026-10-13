@@ -45,7 +45,7 @@ import { adminApi } from '../../api/adminApi';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import ChatThread from '../common/ChatThread';
-import { gigImageSrc } from '../../utils/gigImage';
+import GigCover from '../common/GigCover';
 import { locationName } from '../../utils/locationName';
 import type { Gig, GigApplication, RejectionReason } from '../../types';
 
@@ -111,7 +111,6 @@ const GigDetail = () => {
     if (bScore !== null) return 1;
     return (b.worker?.trustScore ?? 0) - (a.worker?.trustScore ?? 0);
   });
-  const cover = gigImageSrc(gig);
   const loc = locationName(gig.locationLat, gig.locationLng);
 
   const handleApply = async () => {
@@ -200,27 +199,16 @@ const GigDetail = () => {
 
       <Row gutter={[24, 24]}>
         <Col xs={24} xl={15}>
-          {cover && (
-            <div
-              style={{
-                borderRadius: 6,
-                overflow: 'hidden',
-                border: '1px solid var(--ant-color-border-secondary, #e4e4e7)',
-                marginBottom: 20,
-              }}
-            >
-              <img
-                src={cover}
-                alt=""
-                style={{
-                  width: '100%',
-                  height: 280,
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
-              />
-            </div>
-          )}
+          <div
+            style={{
+              borderRadius: 6,
+              overflow: 'hidden',
+              border: '1px solid var(--ant-color-border-secondary, #e4e4e7)',
+              marginBottom: 20,
+            }}
+          >
+            <GigCover gig={gig} iconSize={36} style={{ height: 240 }} />
+          </div>
 
           <Card title={t('common.about')}>
             <Typography.Paragraph style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7 }}>

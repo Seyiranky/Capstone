@@ -1,28 +1,21 @@
-import { skillPhoto } from '../../utils/skillPhotos';
+import { CoverArt } from './GigCover';
 import type { SkillCategory } from '../../types';
 
 interface SkillThumbnailProps {
   category?: SkillCategory | string | null;
   size?: number;
+  seed?: string;
 }
 
-const SkillThumbnail = ({ category, size = 40 }: SkillThumbnailProps) => {
-  const src = skillPhoto(category);
-  if (!src) return null;
-  return (
-    <img
-      src={src}
-      alt=""
-      style={{
-        width: size,
-        height: size,
-        borderRadius: 8,
-        objectFit: 'cover',
-        flexShrink: 0,
-        display: 'block',
-      }}
-    />
-  );
-};
+/** A small square in the trade's cover style, for lists. */
+const SkillThumbnail = ({ category, size = 40, seed }: SkillThumbnailProps) => (
+  <CoverArt
+    category={category}
+    seed={seed}
+    tile="center"
+    iconSize={Math.round(size * 0.3)}
+    style={{ width: size, height: size, borderRadius: 8, flexShrink: 0 }}
+  />
+);
 
 export default SkillThumbnail;

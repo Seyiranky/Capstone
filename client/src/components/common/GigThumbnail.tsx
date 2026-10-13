@@ -3,7 +3,7 @@ import SkillThumbnail from './SkillThumbnail';
 import type { Gig } from '../../types';
 
 interface GigThumbnailProps {
-  gig: Pick<Gig, 'imageUrl' | 'skill'>;
+  gig: Pick<Gig, 'id' | 'imageUrl' | 'skill'>;
   size?: number;
 }
 
@@ -24,7 +24,7 @@ const GigThumbnail = ({ gig, size = 40 }: GigThumbnailProps) => {
       />
     );
   }
-  return <SkillThumbnail category={gig.skill?.category} size={size} />;
+  return <SkillThumbnail category={gig.skill?.category} size={size} seed={gig.id} />;
 };
 
 export default GigThumbnail;
