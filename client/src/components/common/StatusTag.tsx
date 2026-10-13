@@ -1,7 +1,7 @@
 // Soft fill, strong text and a dot (see .isoko-status in theme/global.css).
 // antd's preset tag colours derive from the primary colour, which made
 // "processing" dark-on-dark; these are set explicitly for contrast in both themes.
-const SUCCESS = new Set(['completed', 'approved', 'confirmed', 'active', 'verified', 'released', 'decided', 'joined', 'endorsed']);
+const SUCCESS = new Set(['completed', 'approved', 'confirmed', 'active', 'verified', 'released', 'decided', 'joined', 'endorsed', 'resolved']);
 const WARNING = new Set(['pending', 'initiated', 'pending_review', 'held', 'awaiting', 'invited', 'escalated']);
 const ERROR = new Set(['rejected', 'cancelled', 'failed', 'suspended', 'declined']);
 const INFO = new Set(['open', 'accepted', 'matched']);

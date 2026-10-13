@@ -854,7 +854,8 @@
     "metricsSub": "Ibipimo by’ibibazo by’ubushakashatsi: ese gutondekanya bituma akazi kemerwa, kandi abashya babona amahirwe angana?",
     "marketSub": "Ibyo akazi kishyurwa koko muri buri mwuga, n’impamvu ubusabe bwangwa.",
     "systemSub": "Niba ubutumwa bugera ku bantu.",
-    "fairwork": "Ikarita ya Fairwork"
+    "fairwork": "Ikarita ya Fairwork",
+    "safety": "Impuruza z’umutekano"
   },
   "actions": {
     "more": "Ibindi",
@@ -1026,5 +1027,37 @@
     "date": "Itariki",
     "rating": "Amanota y’umukiliya",
     "verify": "Buri nimero y’inyemezabwishyu igenzurwa kuri {{origin}}/r/<nimero>."
+  },
+  "safety": {
+    "title": "Umutekano",
+    "contactHelp": "Uwo wizera abona ubutumwa iyo ugeze ku kazi, iyo ukavuyemo, n’ako kanya iyo ukanze SOS.",
+    "contactName": "Izina rye",
+    "contactNamePlaceholder": "Urugero: Mama, cyangwa inshuti",
+    "contactPhone": "Nimero ye ya telefoni",
+    "contactPhoneHelp": "Nimero ya MTN cyangwa Airtel Rwanda.",
+    "save": "Bika",
+    "saved": "Uwo wizera yabitswe.",
+    "safeVisit": "Gusura mu mutekano",
+    "checkIn": "Nageze",
+    "checkOut": "Ndavuye",
+    "checkedIn": "Wanditse ko wageze. Uwo wizera yamenyeshejwe.",
+    "checkedOut": "Wanditse ko wavuye. Uwo wizera yamenyeshejwe ko wavuye amahoro.",
+    "checkedInSince": "Wageze saa {{time}}",
+    "sosTitle": "Kohereza SOS?",
+    "sosBody": "Uwo wizera ahita amenyeshwa n’abayobozi bose ba Isoko, n’aho uri niba telefoni ibyemera.",
+    "sosConfirm": "Ohereza SOS",
+    "sosSent": "SOS yoherejwe. Ubufasha buramenyeshejwe.",
+    "noContact": "Nta muntu wizera uranditse, nta wuzamenyeshwa.",
+    "addContact": "Mwongereho mu Igenamiterere",
+    "adminTitle": "Impuruza z’umutekano",
+    "adminSub": "SOS n’ibisurwa bitavuyemo. Bikemure, hanyuma ubyandike.",
+    "noAlerts": "Nta mpuruza.",
+    "sosAlert": "SOS",
+    "overdueAlert": "Ntiyanditse ko yavuye",
+    "contactTexted": "uwo yizera yamenyeshejwe",
+    "contactNotTexted": "nta wamenyeshejwe",
+    "map": "ikarita",
+    "markHandled": "Byakemuwe",
+    "resolved": "Byanditswe ko byakemuwe."
   }
 }

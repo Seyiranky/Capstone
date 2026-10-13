@@ -32,6 +32,7 @@ export const NAV_ENTRIES: NavEntry[] = [
   { key: '/admin/reviews', labelKey: 'adminNav.skillReviews', roles: ['admin'], group: 'adminNav.operations' },
   { key: '/admin/jobs', labelKey: 'adminNav.jobs', roles: ['admin'], group: 'adminNav.operations' },
   { key: '/disputes', labelKey: 'sidebar.disputes', roles: ['admin'], group: 'adminNav.operations' },
+  { key: '/admin/safety', labelKey: 'adminNav.safety', roles: ['admin'], group: 'adminNav.operations' },
   { key: '/marketplace', labelKey: 'sidebar.marketplace', roles: ['admin'], group: 'adminNav.operations' },
 
   { key: '/admin/payments', labelKey: 'adminNav.payments', roles: ['admin'], group: 'adminNav.money' },

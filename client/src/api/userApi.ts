@@ -15,6 +15,8 @@ export interface UpdateProfilePayload {
   availability?: 'available' | 'busy' | 'away';
   availableFrom?: string | null;
   monthlyGoal?: number | null;
+  trustedContactName?: string;
+  trustedContactPhone?: string;
 }
 
 export const userApi = {

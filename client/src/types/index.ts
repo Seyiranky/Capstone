@@ -69,6 +69,8 @@ export interface User {
   emailVerifiedAt?: string | null;
   createdAt?: string;
   reviewerTier?: 'admin' | 'peer' | null;
+  trustedContactName?: string | null;
+  trustedContactPhone?: string | null;
 }
 
 export interface Skill {

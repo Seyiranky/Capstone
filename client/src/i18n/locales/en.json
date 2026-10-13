@@ -854,7 +854,8 @@
     "metricsSub": "The measurements behind the research questions: does ranking get work accepted, and do newcomers get a fair start?",
     "marketSub": "What jobs actually pay in each trade, and why applications are turned down.",
     "systemSub": "Whether notifications are reaching people.",
-    "fairwork": "Fairwork scorecard"
+    "fairwork": "Fairwork scorecard",
+    "safety": "Safety alerts"
   },
   "actions": {
     "more": "More actions",
@@ -1026,5 +1027,37 @@
     "date": "Date",
     "rating": "Client rating",
     "verify": "Each receipt number can be checked at {{origin}}/r/<number>. Evidence tiers: self-declared, supervised, certificate seen, peer reviewed, proven by paid work."
+  },
+  "safety": {
+    "title": "Safety",
+    "contactHelp": "Your trusted contact gets a text when you arrive at a job, when you leave it, and at once if you press SOS.",
+    "contactName": "Contact’s name",
+    "contactNamePlaceholder": "For example: Mama, or a friend",
+    "contactPhone": "Contact’s mobile number",
+    "contactPhoneHelp": "MTN or Airtel Rwanda number.",
+    "save": "Save contact",
+    "saved": "Trusted contact saved.",
+    "safeVisit": "Safe visit",
+    "checkIn": "Check in",
+    "checkOut": "Check out",
+    "checkedIn": "Checked in. Your contact was texted.",
+    "checkedOut": "Checked out. Your contact was told you left safely.",
+    "checkedInSince": "Checked in since {{time}}",
+    "sosTitle": "Send an SOS?",
+    "sosBody": "Your trusted contact is texted at once and every Isoko admin is alerted, with your location if your phone shares it.",
+    "sosConfirm": "Send SOS",
+    "sosSent": "SOS sent. Help is being alerted.",
+    "noContact": "No trusted contact yet, so nobody will be texted.",
+    "addContact": "Add one in Settings",
+    "adminTitle": "Safety alerts",
+    "adminSub": "SOS calls and visits that were never checked out of. Handle each, then mark it.",
+    "noAlerts": "No safety alerts.",
+    "sosAlert": "SOS",
+    "overdueAlert": "Visit not checked out",
+    "contactTexted": "trusted contact texted",
+    "contactNotTexted": "no contact texted",
+    "map": "map",
+    "markHandled": "Mark handled",
+    "resolved": "Marked as handled."
   }
 }

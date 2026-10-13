@@ -8,6 +8,7 @@ import {
   LockOutlined,
   SafetyCertificateOutlined,
   UserOutlined,
+  AlertOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
 import { useThemeMode } from '../../theme/ThemeProvider';
@@ -17,6 +18,7 @@ import ExportDataButton from './ExportDataButton';
 import NotificationPreferences from './NotificationPreferences';
 import PassportPanel from '../Profile/PassportPanel';
 import MySkillsPanel from '../Verification/MySkillsPanel';
+import TrustedContactForm from '../Safety/TrustedContactForm';
 
 const Settings = () => {
   const { t, i18n } = useTranslation();
@@ -159,6 +161,20 @@ const Settings = () => {
         </Space>
       ),
       children: <PassportPanel />,
+    });
+    items.push({
+      key: 'safety',
+      label: (
+        <Space>
+          <AlertOutlined />
+          {t('safety.title')}
+        </Space>
+      ),
+      children: (
+        <Card title={t('safety.title')}>
+          <TrustedContactForm />
+        </Card>
+      ),
     });
   }
 

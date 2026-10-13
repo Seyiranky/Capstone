@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu } from 'antd';
 import {
+  AlertOutlined,
   AppstoreOutlined,
   AuditOutlined,
   BarChartOutlined,
@@ -46,6 +47,7 @@ const ICONS: Record<string, ReactNode> = {
   '/admin/market': <FundOutlined />,
   '/admin/system': <WifiOutlined />,
   '/admin/fairwork': <TrophyOutlined />,
+  '/admin/safety': <AlertOutlined />,
 };
 
 const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void }) => {
