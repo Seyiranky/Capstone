@@ -85,6 +85,14 @@ const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: Appl
               )}
             </Flex>
 
+            {a.crew && a.crew.length > 0 && (
+              <Typography.Text style={{ fontSize: 13, display: 'block', marginTop: 6, paddingInlineStart: 36 }}>
+                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                  {t('team.crewLine')}:{' '}
+                </Typography.Text>
+                {a.crew.map((c) => `${c.name ?? '—'} (${c.sharePercent}%)`).join(', ')}
+              </Typography.Text>
+            )}
             {a.quoteNote && (
               <Typography.Paragraph
                 type="secondary"

@@ -149,6 +149,7 @@ export interface GigApplication {
   quoteNote?: string | null;
   rejectionReason?: RejectionReason | null;
   rejectionNote?: string | null;
+  crew?: CrewMember[] | null;
   createdAt: string;
   gig?: Gig;
   worker?: User;
@@ -184,6 +185,7 @@ export interface Match {
   completedVia?: 'code' | 'client' | 'auto' | 'dispute' | null;
   agreedAmount?: number | string | null;
   photos?: JobPhoto[];
+  members?: MatchMember[];
   createdAt: string;
   updatedAt: string;
   gig?: Gig;
@@ -243,7 +245,7 @@ export type ReviewerTier = 'admin' | 'peer';
 export type EvidenceKind = 'photo' | 'video' | 'voice' | 'link' | 'document';
 
 /** How a competence claim was established, ascending in credibility. */
-export type Provenance = 'self_declared' | 'document_sighted' | 'peer_reviewed' | 'work_earned';
+export type Provenance = 'self_declared' | 'supervised' | 'document_sighted' | 'peer_reviewed' | 'work_earned';
 
 export type SkillTaskKind = 'demonstration' | 'certificate';
 
@@ -423,6 +425,7 @@ export interface AppNotification {
 
 export interface Receipt {
   number: string;
+  role?: 'lead' | 'crew' | 'apprentice';
   amount: number;
   currency: string;
   releasedAt: string;
@@ -483,6 +486,7 @@ export interface WorkHistoryEntry {
   skill: string | null;
   completedAt: string;
   completedVia: 'code' | 'client' | 'auto' | 'dispute' | null;
+  role?: 'lead' | 'crew' | 'apprentice';
   rating: number | null;
   comment: string | null;
   photos: JobPhoto[];
@@ -497,4 +501,31 @@ export interface RateGuide {
   p25: number | null;
   median: number | null;
   p75: number | null;
+}
+
+export interface MatchMember {
+  id: string;
+  matchId: string;
+  userId: string;
+  role: 'crew' | 'apprentice';
+  sharePercent: number;
+  status: 'invited' | 'joined' | 'declined';
+  endorsement: 'endorsed' | 'notEndorsed' | null;
+  user?: { id: string; name: string; trustScore?: number; reviewCount?: number };
+}
+
+/** A crew member named on an application, with their agreed share. */
+export interface CrewMember {
+  userId: string;
+  sharePercent: number;
+  name?: string | null;
+  trustScore?: number | null;
+  reviewCount?: number;
+}
+
+export interface WorkerHit {
+  id: string;
+  name: string;
+  trustScore: number;
+  reviewCount: number;
 }

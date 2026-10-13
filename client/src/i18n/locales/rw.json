@@ -316,7 +316,8 @@
         "self_declared": "Avuga ko akora aka kazi",
         "document_sighted": "Icyemezo cyabonywe n’usuzuma",
         "peer_reviewed": "Akazi kasuzumwe n’abasuzuma bigenga",
-        "work_earned": "Byemejwe n’akazi yarangije kuri Isoko"
+        "work_earned": "Byemejwe n’akazi yarangije kuri Isoko",
+        "supervised": "Yashyigikiwe nyuma y'akazi kishyuwe n'umukozi wemejwe"
       }
     },
     "weightLabel": "{{percent}}% by’amanota",
@@ -530,13 +531,15 @@
       "self_declared": "Yivugiye",
       "document_sighted": "Icyemezo cyabonywe",
       "peer_reviewed": "Byasuzumwe n’abigenga",
-      "work_earned": "Byabonetse binyuze mu kazi karangiye"
+      "work_earned": "Byabonetse binyuze mu kazi karangiye",
+      "supervised": "Akazi kagenzuwe"
     },
     "tierHelp": {
       "self_declared": "Umukozi yatubwiye ko akora ibi. Nta wurabigenzura.",
       "document_sighted": "Usuzuma yarebye icyemezo umukozi yatanze. Ibyo byemeza ko inyandiko yabonywe — si ukugenzura niba icyemezo ubwacyo ari ukuri.",
       "peer_reviewed": "Abasuzuma bigenga barebye ibimenyetso by’akazi barabyemeza. Abasuzuma bahabwa akazi mu buryo bwikora, umukozi ntashobora kubatoranya.",
-      "work_earned": "Byubatswe ku kazi karangiye kandi gasuzumwe kuri Isoko."
+      "work_earned": "Byubatswe ku kazi karangiye kandi gasuzumwe kuri Isoko.",
+      "supervised": "Umukozi wemejwe yamushyigikiye nyuma y'akazi bishyuwe hamwe. Ni uburambe nyabwo, ariko uwamushyigikiye ntabogamye, bityo bifite agaciro gake ugereranyije n'isuzuma."
     },
     "addTitle": "Ongeraho icyemezo",
     "addHint": "Fata ifoto y’icyemezo cyanditse cyangwa ushyireho PDF. Usuzuma azemeza ko yakibonye. Ntidushobora kugenzura icyemezo ubwacyo.",
@@ -746,5 +749,40 @@
     "less": "Bike",
     "open": "Fungura akazi",
     "waiting": "{{count}} bitegereje"
+  },
+  "team": {
+    "title": "Itsinda",
+    "lead": "Uyobora",
+    "crew": "Itsinda",
+    "apprentice": "Umunyeshuri",
+    "invited": "Yatumiwe",
+    "joined": "Yinjiye",
+    "declined": "Yanze",
+    "share": "{{percent}}% by’ubwishyu",
+    "join": "Injira",
+    "decline": "Wanga",
+    "youWereInvited": "Watumiwe kuri aka kazi nka {{role}}.",
+    "addApprentice": "Ongeramo umunyeshuri",
+    "apprenticeTitle": "Zana umunyeshuri",
+    "apprenticeHelp": "Umuntu wiga umwuga akorana nawe kuri aka kazi. Ushobora kumuha igice cy’ubwishyu, kugeza kuri 30%. Abakozi bemejwe muri uyu mwuga ni bo bonyine bashobora kugira umunyeshuri.",
+    "pickWorker": "Shakisha umukozi ku izina",
+    "apprenticeShare": "Igice cy’ubwishyu cye",
+    "invite": "Tumira",
+    "endorseTitle": "Umunyeshuri wawe yakoze ate?",
+    "endorseHelp": "Kumushyigikira byandika aka kazi nk’uburambe bwagenzuwe ku mwirondoro we. Ntibyemeza ubumenyi.",
+    "endorse": "Shyigikira",
+    "notThisTime": "Si ubu",
+    "endorsed": "Yashyigikiwe",
+    "notEndorsed": "Ntiyashyigikiwe",
+    "notePlaceholder": "Ni iki yakoze neza? (si ngombwa)",
+    "crewApply": "Saba nk’itsinda",
+    "crewHelp": "Vuga abantu bagera kuri 4 mukorana n’igice cy’ubwishyu cyabo. Wowe usigarana nibura 10%.",
+    "addMember": "Ongeramo umunyamuryango",
+    "youKeep": "Usigarana {{percent}}%",
+    "crewLine": "Itsinda",
+    "memberOnly": "Uri kuri aka kazi nka {{role}}. Uyobora ni we ukurikirana ubwishyu.",
+    "roleLabel_lead": "Uyobora",
+    "roleLabel_crew": "Itsinda",
+    "roleLabel_apprentice": "Umunyeshuri"
   }
 }

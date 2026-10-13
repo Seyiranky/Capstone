@@ -44,6 +44,11 @@ const WorkHistory = ({ workerId }: { workerId: string }) => {
                   </Typography.Text>
                   <Flex gap={8} align="center" wrap="wrap" style={{ marginTop: 2 }}>
                     {e.skill && <Tag style={{ margin: 0 }}>{e.skill}</Tag>}
+                    {e.role && e.role !== 'lead' && (
+                      <Tag color="cyan" style={{ margin: 0 }}>
+                        {t(`team.roleLabel_${e.role}`)}
+                      </Tag>
+                    )}
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                       {new Date(e.completedAt).toLocaleDateString(i18n.resolvedLanguage, {
                         month: 'short',

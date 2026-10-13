@@ -18,6 +18,9 @@ export const matchApi = {
     return axiosClient.post<Match>(`/matches/${id}/photos`, form).then((res) => res.data);
   },
 
+  inviteApprentice: (id: string, apprenticeId: string, sharePercent: number) =>
+    axiosClient.post(`/matches/${id}/apprentice`, { apprenticeId, sharePercent }).then((res) => res.data),
+
   markWorkDone: (id: string) =>
     axiosClient.post<Match>(`/matches/${id}/work-done`).then((res) => res.data),
 };

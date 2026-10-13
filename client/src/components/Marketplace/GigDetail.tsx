@@ -10,6 +10,7 @@ import {
   Divider,
   Drawer,
   Empty,
+  Checkbox,
   Flex,
   Input,
   InputNumber,
@@ -21,7 +22,8 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import { EditOutlined, HomeOutlined } from '@ant-design/icons';
+import { CloseOutlined, EditOutlined, HomeOutlined } from '@ant-design/icons';
+import WorkerPicker from '../Team/WorkerPicker';
 import GigForm from './GigForm';
 import ApplicantList from './ApplicantList';
 import ApplicationProgress from './ApplicationProgress';
@@ -60,6 +62,11 @@ const GigDetail = () => {
   const [applyOpen, setApplyOpen] = useState(false);
   const [quoteAmount, setQuoteAmount] = useState<number | null>(null);
   const [quoteNote, setQuoteNote] = useState('');
+  const [crewOn, setCrewOn] = useState(false);
+  const [crew, setCrew] = useState<{ userId?: string; sharePercent: number }[]>([]);
+  const crewTotal = crew.reduce((sum, c) => sum + (c.sharePercent || 0), 0);
+  const crewValid =
+    !crewOn || (crew.length > 0 && crew.every((c) => c.userId && c.sharePercent >= 1) && crewTotal <= 90);
   const [editOpen, setEditOpen] = useState(false);
 
   const refresh = () => {
@@ -106,6 +113,7 @@ const GigDetail = () => {
         // Quoting the budget itself is the same as not quoting.
         quoteAmount: quoteAmount && quoteAmount !== Number(gig.budget) ? quoteAmount : null,
         quoteNote: quoteNote.trim() || undefined,
+        crew: crewOn ? crew.map((c) => ({ userId: c.userId as string, sharePercent: c.sharePercent })) : undefined,
       });
       setApplyOpen(false);
       message.success('Application sent to the client.');
@@ -359,7 +367,7 @@ const GigDetail = () => {
         okText={t('quote.submit')}
         confirmLoading={applying}
         onOk={handleApply}
-        okButtonProps={{ disabled: !quoteAmount || quoteAmount < 100 }}
+        okButtonProps={{ disabled: !quoteAmount || quoteAmount < 100 || !crewValid }}
         onCancel={() => setApplyOpen(false)}
         destroyOnHidden
       >
@@ -393,6 +401,61 @@ const GigDetail = () => {
           placeholder={t('quote.notePlaceholder')}
           style={{ marginBottom: 16 }}
         />
+        <Checkbox
+          checked={crewOn}
+          onChange={(e) => {
+            setCrewOn(e.target.checked);
+            if (e.target.checked && crew.length === 0) setCrew([{ sharePercent: 20 }]);
+          }}
+        >
+          {t('team.crewApply')}
+        </Checkbox>
+        {crewOn && (
+          <div style={{ marginTop: 8 }}>
+            <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 8 }}>
+              {t('team.crewHelp')}
+            </Typography.Paragraph>
+            <Flex vertical gap={8}>
+              {crew.map((c, i) => (
+                <Flex key={i} gap={6} align="center">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <WorkerPicker
+                      value={c.userId}
+                      exclude={crew.map((x) => x.userId ?? '').concat(profile?.id ?? '')}
+                      onChange={(id) => setCrew((cur) => cur.map((x, j) => (j === i ? { ...x, userId: id } : x)))}
+                    />
+                  </div>
+                  <InputNumber
+                    min={1}
+                    max={90}
+                    value={c.sharePercent}
+                    onChange={(v) => setCrew((cur) => cur.map((x, j) => (j === i ? { ...x, sharePercent: v ?? 1 } : x)))}
+                    addonAfter="%"
+                    style={{ width: 96 }}
+                  />
+                  <Button
+                    type="text"
+                    icon={<CloseOutlined />}
+                    aria-label="Remove"
+                    onClick={() => setCrew((cur) => cur.filter((_, j) => j !== i))}
+                  />
+                </Flex>
+              ))}
+            </Flex>
+            <Flex justify="space-between" align="center" style={{ marginTop: 8 }}>
+              {crew.length < 4 ? (
+                <Button size="small" onClick={() => setCrew((cur) => [...cur, { sharePercent: 10 }])}>
+                  {t('team.addMember')}
+                </Button>
+              ) : (
+                <span />
+              )}
+              <Typography.Text type={crewTotal > 90 ? 'danger' : 'secondary'} style={{ fontSize: 12 }}>
+                {t('team.youKeep', { percent: 100 - crewTotal })}
+              </Typography.Text>
+            </Flex>
+          </div>
+        )}
       </Modal>
 
       <Drawer

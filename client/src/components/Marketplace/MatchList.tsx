@@ -24,6 +24,7 @@ import StatusTag from '../common/StatusTag';
 import MatchExplanation from '../common/MatchExplanation';
 import JobEscrowPanel from './JobEscrowPanel';
 import JobPhotos from './JobPhotos';
+import TeamSection from '../Team/TeamSection';
 import { disputeApi } from '../../api/disputeApi';
 import type { Dispute, Match, MatchStatus } from '../../types';
 
@@ -171,6 +172,9 @@ const MatchList = () => {
       <Row gutter={[16, 16]}>
         {matches.map((match) => {
           const alreadyReviewed = match.reviews?.some((r) => r.authorId === profile.id);
+          // Crew and apprentices see the job too; money and handover stay with the lead.
+          const isLead = !isWorker || match.workerId === profile.id;
+          const myMembership = match.members?.find((m) => m.userId === profile.id);
           const counterparty = isWorker ? match.gig?.client : match.worker;
           return (
             <Col xs={24} sm={12} lg={8} key={match.id}>
@@ -225,12 +229,19 @@ const MatchList = () => {
                   </Space>
                 )}
 
+                <TeamSection match={match} onChanged={refresh} />
+
                 {match.status === 'accepted' && (
                   <div style={{ marginBottom: 10 }}>
-                    <JobPhotos match={match} canAdd={isWorker} onChanged={refresh} />
+                    <JobPhotos match={match} canAdd={isWorker && isLead} onChanged={refresh} />
                   </div>
                 )}
-                {match.status === 'accepted' && (
+                {match.status === 'accepted' && !isLead && myMembership && (
+                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                    {t('team.memberOnly', { role: t(`team.roleLabel_${myMembership.role}`).toLowerCase() })}
+                  </Typography.Text>
+                )}
+                {match.status === 'accepted' && isLead && (
                   <JobEscrowPanel
                     match={match}
                     isWorker={isWorker}
@@ -241,7 +252,7 @@ const MatchList = () => {
 
                 {match.status === 'completed' && match.transaction && (
                   <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    <JobPhotos match={match} canAdd={isWorker} onChanged={refresh} />
+                    <JobPhotos match={match} canAdd={isWorker && isLead} onChanged={refresh} />
                     <Flex align="center" gap={8} wrap="wrap">
                       <StatusTag
                         status={
@@ -256,7 +267,7 @@ const MatchList = () => {
                         </Typography.Text>
                       )}
                     </Flex>
-                    {match.transaction.receiptNumber && (
+                    {isLead && match.transaction.receiptNumber && (
                       <Link to={`/r/${match.transaction.receiptNumber}`} style={{ fontSize: 13 }}>
                         {t('receipt.view')} · {match.transaction.receiptNumber}
                       </Link>
@@ -273,7 +284,7 @@ const MatchList = () => {
                         {t('escrow.fundButton')}
                       </Button>
                     )}
-                    {match.transaction.status === 'confirmed' &&
+                    {isLead && match.transaction.status === 'confirmed' &&
                       (alreadyReviewed ? (
                         <Typography.Text type="secondary">
                           {t('matches.alreadyReviewed')}

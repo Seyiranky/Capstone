@@ -93,7 +93,10 @@ const ReceiptPage = () => {
         <Row label={t('receipt.releasedOn')}>{date}</Row>
         <Row label={t('receipt.job')}>{receipt.gig ?? '—'}</Row>
         {receipt.skill && <Row label={t('receipt.skill')}>{receipt.skill}</Row>}
-        <Row label={t('receipt.worker')}>{receipt.worker ?? '—'}</Row>
+        <Row label={t('receipt.worker')}>
+          {receipt.worker ?? '—'}
+          {receipt.role && receipt.role !== 'lead' ? ` (${t(`team.roleLabel_${receipt.role}`)})` : ''}
+        </Row>
         <Row label={t('receipt.client')}>{receipt.client ?? '—'}</Row>
         {receipt.completedVia && (
           <Row label={t('receipt.method')}>{t(`escrow.completedVia_${receipt.completedVia}`)}</Row>

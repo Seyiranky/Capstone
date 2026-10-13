@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { PreferredChannel, PublicProfile, User, UserSkill, WorkHistoryEntry } from '../types';
+import type { PreferredChannel, PublicProfile, User, UserSkill, WorkerHit, WorkHistoryEntry } from '../types';
 
 export interface UpdateProfilePayload {
   name?: string;
@@ -26,6 +26,9 @@ export const userApi = {
 
   getWorkHistory: (id: string) =>
     axiosClient.get<WorkHistoryEntry[]>(`/users/${id}/work-history`).then((res) => res.data),
+
+  searchWorkers: (q: string) =>
+    axiosClient.get<WorkerHit[]>('/users/search', { params: { q } }).then((res) => res.data),
 
   exportMyData: () => axiosClient.get<Record<string, unknown>>('/users/me/export').then((res) => res.data),
 };

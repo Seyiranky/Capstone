@@ -316,7 +316,8 @@
         "self_declared": "Says they do this work",
         "document_sighted": "Certificate seen by a reviewer",
         "peer_reviewed": "Work checked by independent reviewers",
-        "work_earned": "Proven by completed jobs on Isoko"
+        "work_earned": "Proven by completed jobs on Isoko",
+        "supervised": "Endorsed after a paid job with a verified worker"
       }
     },
     "weightLabel": "{{percent}}% of score",
@@ -530,13 +531,15 @@
       "self_declared": "Self-declared",
       "document_sighted": "Certificate seen",
       "peer_reviewed": "Independently reviewed",
-      "work_earned": "Earned through completed work"
+      "work_earned": "Earned through completed work",
+      "supervised": "Supervised work"
     },
     "tierHelp": {
       "self_declared": "The worker told us they do this. Nobody has checked it yet.",
       "document_sighted": "A reviewer looked at a certificate the worker provided. That confirms the document was seen — it is not a check of whether the award itself is genuine.",
       "peer_reviewed": "Independent reviewers examined evidence of the work and approved it. The reviewers are assigned automatically and cannot be chosen by the worker.",
-      "work_earned": "Built from jobs completed and reviewed on Isoko."
+      "work_earned": "Built from jobs completed and reviewed on Isoko.",
+      "supervised": "A verified worker endorsed them after a paid job together. It is real experience, but the endorser is not independent, so it counts for less than a review."
     },
     "addTitle": "Add a certificate",
     "addHint": "Photograph a paper certificate or upload a PDF. A reviewer will confirm they have seen it. We cannot verify the award itself.",
@@ -746,5 +749,40 @@
     "less": "Show less",
     "open": "Open gig",
     "waiting": "{{count}} waiting"
+  },
+  "team": {
+    "title": "Team",
+    "lead": "Lead",
+    "crew": "Crew",
+    "apprentice": "Apprentice",
+    "invited": "Invited",
+    "joined": "Joined",
+    "declined": "Declined",
+    "share": "{{percent}}% of the pay",
+    "join": "Join",
+    "decline": "Decline",
+    "youWereInvited": "You were invited to this job as {{role}}.",
+    "addApprentice": "Add an apprentice",
+    "apprenticeTitle": "Bring an apprentice",
+    "apprenticeHelp": "Someone learning the trade works alongside you on this job. You can give them a share of the pay, up to 30%. Only workers verified in this trade can take an apprentice.",
+    "pickWorker": "Search workers by name",
+    "apprenticeShare": "Their share of the pay",
+    "invite": "Invite",
+    "endorseTitle": "How did your apprentice do?",
+    "endorseHelp": "Endorsing records this job as supervised experience on their profile. It does not verify the skill.",
+    "endorse": "Endorse",
+    "notThisTime": "Not this time",
+    "endorsed": "Endorsed",
+    "notEndorsed": "Not endorsed",
+    "notePlaceholder": "What did they do well? (optional)",
+    "crewApply": "Apply as a crew",
+    "crewHelp": "Name up to 4 people working with you and their share of the pay. You keep at least 10%.",
+    "addMember": "Add a crew member",
+    "youKeep": "You keep {{percent}}%",
+    "crewLine": "Crew",
+    "memberOnly": "You are on this job as {{role}}. The lead handles payment.",
+    "roleLabel_lead": "Lead",
+    "roleLabel_crew": "Crew",
+    "roleLabel_apprentice": "Apprentice"
   }
 }

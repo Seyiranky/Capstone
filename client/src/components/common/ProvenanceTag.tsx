@@ -6,6 +6,7 @@ import type { Provenance } from '../../types';
 // reader does not have to decode the label to see which is stronger.
 const COLOUR: Record<Provenance, string> = {
   self_declared: 'default',
+  supervised: 'cyan',
   document_sighted: 'blue',
   peer_reviewed: 'green',
   work_earned: 'gold',

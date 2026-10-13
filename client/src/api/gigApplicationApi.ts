@@ -1,8 +1,11 @@
 import axiosClient from './axiosClient';
-import type { GigApplication, Match, RejectionReason } from '../types';
+import type { CrewMember, GigApplication, Match, RejectionReason } from '../types';
 
 export const gigApplicationApi = {
-  applyToGig: (gigId: string, quote: { quoteAmount?: number | null; quoteNote?: string } = {}) =>
+  applyToGig: (
+    gigId: string,
+    quote: { quoteAmount?: number | null; quoteNote?: string; crew?: CrewMember[] } = {},
+  ) =>
     axiosClient
       .post<GigApplication>('/gig-applications', { gigId, ...quote })
       .then((res) => res.data),

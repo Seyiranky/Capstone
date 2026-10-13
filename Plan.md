@@ -3,8 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: core delivered** (13 Oct 2026). Phases 0–6 are built and committed; 7–9 (stretch)
-> are not started. Walkthrough for a tester: `TESTING.md`, section 7.
+> **Status:** Phases 0–8 are built and committed (14 Oct 2026); Phase 9 (USSD) is not started. Walkthrough for a tester: `TESTING.md`, section 7.
 
 ## Context
 
@@ -188,7 +187,7 @@ Findings so far:
   ran again on 2 Oct and inserted copies). The seeder now inserts only missing categories.
   The four unused 2 Oct copies are still in the dev database, awaiting a decision to delete.
 
-### Phase 7 — Apprentice seats (in progress, 14 Oct 2026)
+### Phase 7 — Apprentice seats (done, 14 Oct 2026)
 *Not offered by any platform surveyed.*
 
 **Changed from the first draft.** The draft counted a senior's endorsement as one peer
@@ -204,7 +203,7 @@ verification the defence rests on. Instead:
   job, alongside a verified worker) but not independent. It never counts as a peer review.
 - Apprentices get their own payout, receipt and work-history entry.
 
-### Phase 8 — Crew gigs (in progress, 14 Oct 2026)
+### Phase 8 — Crew gigs (done, 14 Oct 2026)
 *Borrowed from:* Upwork agencies.
 
 - A worker applies with named crew members and agreed shares (the lead keeps at least 10%).
@@ -213,6 +212,10 @@ verification the defence rests on. Instead:
 - **Payouts.** Release now creates one payout per person (lead, crew, apprentice), each with
   its own receipt. Income statements, wallets, work history and paid-job counts read payouts,
   so each person sees only their share. Existing payouts are backfilled one-per-job.
+- As built: crew and apprentices see the job on their match list, with a "you are on this
+  job as …" line; payment, the code and disputes stay with the lead. A worker who was
+  *invited* by the ranking (rather than applying) cannot name a crew, since crew is declared
+  on the application; they can still take an apprentice. 13 new tests in `teams.test.ts`.
 
 ### Phase 9 — USSD (stretch)
 *Borrowed from:* Ayambe, M-Pesa menus, SA Youth zero-rating.
