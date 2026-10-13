@@ -6,6 +6,7 @@ import { ExperimentAllocation, initExperimentAllocation } from './ExperimentAllo
 import { Gig, initGig } from './Gig';
 import { GigApplication, initGigApplication } from './GigApplication';
 import { IdempotencyKey, initIdempotencyKey } from './IdempotencyKey';
+import { JobPhoto, initJobPhoto } from './JobPhoto';
 import { Match, initMatch } from './Match';
 import { MatchWeightProfile, initMatchWeightProfile } from './MatchWeightProfile';
 import { Message, initMessage } from './Message';
@@ -80,6 +81,7 @@ initExperimentAllocation(sequelize);
 initGig(sequelize);
 initGigApplication(sequelize);
 initIdempotencyKey(sequelize);
+initJobPhoto(sequelize);
 initMatch(sequelize);
 initMatchWeightProfile(sequelize);
 initMessage(sequelize);
@@ -106,6 +108,7 @@ export const models = {
   Gig,
   GigApplication,
   IdempotencyKey,
+  JobPhoto,
   Match,
   MatchWeightProfile,
   Message,
@@ -143,6 +146,7 @@ export {
   Gig,
   GigApplication,
   IdempotencyKey,
+  JobPhoto,
   Match,
   MatchWeightProfile,
   Message,

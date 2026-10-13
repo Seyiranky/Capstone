@@ -8,6 +8,7 @@ import type { EvidenceKind } from '../types/domain';
 const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 const GIG_IMAGE_DIR = path.join(UPLOAD_ROOT, 'gigs');
 const EVIDENCE_DIR = path.join(UPLOAD_ROOT, 'evidence');
+const JOB_PHOTO_DIR = path.join(UPLOAD_ROOT, 'jobs');
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
@@ -106,6 +107,14 @@ export const uploadGigImage = multer({
   storage: diskStorage(GIG_IMAGE_DIR),
   fileFilter: gigImageFilter,
   limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+/** Photos of finished work: images only, a few per job, sized for mobile uploads. */
+export const MAX_JOB_PHOTOS = 3;
+export const uploadJobPhotos = multer({
+  storage: diskStorage(JOB_PHOTO_DIR),
+  fileFilter: gigImageFilter,
+  limits: { fileSize: 10 * 1024 * 1024, files: MAX_JOB_PHOTOS },
 });
 
 export const uploadEvidence = multer({

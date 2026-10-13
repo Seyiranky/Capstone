@@ -4,6 +4,7 @@ import { User, UserSkill, Skill, SkillTask, SkillPassport, Match } from '../mode
 import { passportSigningSecret } from '../config/env';
 import type { Role } from '../types/domain';
 import type { TrustBreakdown } from '../types/scoring';
+import * as workHistoryService from './workHistoryService';
 
 export interface PassportSkillClaim {
   skill: string | undefined;
@@ -12,6 +13,8 @@ export interface PassportSkillClaim {
   verifiedAt: Date;
   /** How many independent people approved it — never who they were. */
   independentApprovals: number;
+  /** Jobs in this skill the holder was paid for through escrow. */
+  paidJobs: number;
 }
 
 export interface PassportClaims {
@@ -74,6 +77,7 @@ const buildClaimsFor = async (userId: string): Promise<PassportClaims | null> =>
     Match.count({ where: { workerId: userId, status: 'completed' } }),
   ]);
 
+  const paidJobs = await workHistoryService.paidJobsBySkill(userId);
   const skills = await Promise.all(
     userSkills.map(async (us) => {
       const approvals = await SkillTask.count({
@@ -85,6 +89,10 @@ const buildClaimsFor = async (userId: string): Promise<PassportClaims | null> =>
         proficiencyLevel: us.proficiencyLevel,
         verifiedAt: us.updatedAt,
         independentApprovals: approvals,
+        // Paid work in this skill: evidence from the market, alongside the
+        // peers' judgement. Not part of the signed summary, so passports
+        // issued before it existed still verify.
+        paidJobs: paidJobs.get(us.skillId) ?? 0,
       };
     }),
   );

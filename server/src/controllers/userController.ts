@@ -12,6 +12,7 @@ import {
 } from '../models';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
+import * as workHistoryService from '../services/workHistoryService';
 
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
@@ -167,4 +168,9 @@ export const exportMyData = async (req: Request, res: Response): Promise<void> =
     messagesSent,
     messagesReceived,
   });
+};
+
+/** A worker's paid jobs, with ratings and photos of the work, for their profile. */
+export const getWorkHistory = async (req: Request, res: Response): Promise<void> => {
+  res.json(await workHistoryService.forWorker(pathParam(req, 'id')));
 };

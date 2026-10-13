@@ -14,5 +14,6 @@ router.get('/me/income-statement', verifyToken, passportController.incomeStateme
 router.post('/income-statement/verify', passportController.verifyIncomeStatement);
 router.get('/:id', verifyToken, userController.getPublicProfile);
 router.get('/:id/skills', verifyToken, userController.getUserSkills);
+router.get('/:id/work-history', verifyToken, userController.getWorkHistory);
 
 export default router;

@@ -1,7 +1,10 @@
 import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import type { Includeable } from 'sequelize';
-import { Match, Gig, User, Transaction, Review, GigApplication } from '../models';
+import fs from 'fs';
+import crypto from 'crypto';
+import { Match, Gig, User, Transaction, Review, GigApplication, JobPhoto } from '../models';
+import { MAX_JOB_PHOTOS } from '../middleware/upload';
 import { MAX_CODE_ATTEMPTS, amountToCollect } from '../services/escrowRules';
 import * as trustScoreService from '../services/trustScoreService';
 import * as escrowService from '../services/escrowService';
@@ -15,6 +18,7 @@ const MATCH_INCLUDES: Includeable[] = [
   { model: User, as: 'worker' },
   { model: Transaction, as: 'transaction' },
   { model: Review, as: 'reviews' },
+  { model: JobPhoto, as: 'photos', attributes: ['id', 'url', 'sha256', 'createdAt'] },
 ];
 
 export const listMatches = async (req: Request, res: Response): Promise<void> => {
@@ -308,4 +312,53 @@ export const markWorkDone = async (req: Request, res: Response): Promise<void> =
     }
   }
   res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
+};
+
+/**
+ * The worker attaches photos of the finished work, while the job is in progress
+ * or after it is done. They become the job's entry in the worker's work history,
+ * and, during a dispute, something the mediators can look at.
+ */
+export const addJobPhotos = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+  const discard = () => files.forEach((f) => fs.rm(f.path, { force: true }, () => undefined));
+
+  const match = await Match.findByPk(pathParam(req, 'id'));
+  if (!match) {
+    discard();
+    res.status(404).json({ message: 'Match not found' });
+    return;
+  }
+  if (match.workerId !== caller.id) {
+    discard();
+    res.status(403).json({ message: 'Only the worker on this job may add photos' });
+    return;
+  }
+  if (match.status !== 'accepted' && match.status !== 'completed') {
+    discard();
+    res.status(409).json({ message: 'Photos can only be added to a job in progress or done' });
+    return;
+  }
+  if (files.length === 0) {
+    res.status(400).json({ message: 'Attach at least one photo' });
+    return;
+  }
+  const existing = await JobPhoto.count({ where: { matchId: match.id } });
+  if (existing + files.length > MAX_JOB_PHOTOS) {
+    discard();
+    res.status(409).json({ message: `A job can have at most ${MAX_JOB_PHOTOS} photos` });
+    return;
+  }
+
+  await JobPhoto.bulkCreate(
+    files.map((file) => ({
+      matchId: match.id,
+      url: `/uploads/jobs/${file.filename}`,
+      mimeType: file.mimetype,
+      sizeBytes: file.size,
+      sha256: crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex'),
+    })),
+  );
+  res.status(201).json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
 };

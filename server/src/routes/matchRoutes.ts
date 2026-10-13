@@ -1,6 +1,7 @@
 import express from 'express';
 import * as matchController from '../controllers/matchController';
 import { verifyToken } from '../middleware/authMiddleware';
+import { MAX_JOB_PHOTOS, uploadJobPhotos } from '../middleware/upload';
 
 const router = express.Router();
 
@@ -8,5 +9,6 @@ router.get('/', verifyToken, matchController.listMatches);
 router.put('/:id/status', verifyToken, matchController.updateMatchStatus);
 router.post('/:id/complete', verifyToken, matchController.completeWithCode);
 router.post('/:id/work-done', verifyToken, matchController.markWorkDone);
+router.post('/:id/photos', verifyToken, uploadJobPhotos.array('photos', MAX_JOB_PHOTOS), matchController.addJobPhotos);
 
 export default router;
