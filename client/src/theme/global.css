@@ -2,13 +2,15 @@
    plain CSS and inline styles can use the same palette as the components. */
 
 :root {
-  --isoko-navy: #1e3a5f;
-  --isoko-navy-soft: #eef2f7;
-  --isoko-ink: #101828;
-  --isoko-muted: #667085;
+  /* Named for the role, not the hue: the accent is near-black in the
+     monochrome theme. */
+  --isoko-navy: #18181b;
+  --isoko-navy-soft: #f4f4f5;
+  --isoko-ink: #18181b;
+  --isoko-muted: #71717a;
   --isoko-surface: #ffffff;
-  --isoko-border: #e4e7ec;
-  --isoko-bubble-own: #1e3a5f;
+  --isoko-border: #e4e4e7;
+  --isoko-bubble-own: #18181b;
 }
 :root[data-theme='dark'] {
   --isoko-navy: #e4e4e7;
@@ -21,15 +23,15 @@
 }
 
 body {
-  background: var(--ant-color-bg-layout, #ffffff);
+  background: var(--ant-color-bg-layout, #f5f5f6);
 }
 
 a {
-  color: var(--ant-color-link, #1e3a5f);
+  color: var(--ant-color-link, #18181b);
   text-decoration: none;
 }
 a:hover {
-  color: var(--ant-color-link-hover, #b5562f);
+  color: var(--ant-color-link-hover, #52525b);
 }
 
 /* Status labels: soft fill, strong text, and a dot; readable in both themes. */
@@ -56,8 +58,8 @@ a:hover {
 .isoko-status--success { background: #e7f6ee; color: #146c43; border-color: #c8ead6; }
 .isoko-status--warning { background: #fdf3df; color: #8a5a05; border-color: #f4dfb4; }
 .isoko-status--error { background: #fdecea; color: #a8321f; border-color: #f6cdc6; }
-.isoko-status--info { background: #eef2f7; color: #1e3a5f; border-color: #d5dfec; }
-.isoko-status--neutral { background: #f2f4f7; color: #475467; border-color: #e4e7ec; }
+.isoko-status--info { background: #f4f4f5; color: #18181b; border-color: #e4e4e7; }
+.isoko-status--neutral { background: #fafafa; color: #52525b; border-color: #e4e4e7; }
 :root[data-theme='dark'] .isoko-status--success { background: rgba(52, 168, 104, 0.16); color: #7fd6a4; border-color: transparent; }
 :root[data-theme='dark'] .isoko-status--warning { background: rgba(217, 160, 50, 0.16); color: #f0c46b; border-color: transparent; }
 :root[data-theme='dark'] .isoko-status--error { background: rgba(224, 92, 70, 0.16); color: #f19a89; border-color: transparent; }

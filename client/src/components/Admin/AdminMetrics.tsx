@@ -110,7 +110,7 @@ const AdminMetrics = () => {
           </Col>
           <Col xs={24} md={12}>
             <Typography.Text>Accepted jobs going to newcomers</Typography.Text>
-            <Progress percent={Math.round((na.acceptedMatches.share ?? 0) * 100)} strokeColor="#4C6E96" />
+            <Progress percent={Math.round((na.acceptedMatches.share ?? 0) * 100)} strokeColor="#71717a" />
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {na.acceptedMatches.byNewcomers} of {na.acceptedMatches.total} · {na.newcomers} newcomers,{' '}
               {na.newcomersNeverInvited} never invited yet
