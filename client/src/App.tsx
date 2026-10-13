@@ -31,6 +31,7 @@ import GrowthPage from './components/Growth/GrowthPage';
 import RplPack from './components/Growth/RplPack';
 import AdminFairwork from './components/Admin/AdminFairwork';
 import AdminSafety from './components/Admin/AdminSafety';
+import AdminReports from './components/Admin/AdminReports';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -98,6 +99,7 @@ function App() {
             <Route path="/admin/system" element={<AdminSystem />} />
             <Route path="/admin/fairwork" element={<AdminFairwork />} />
             <Route path="/admin/safety" element={<AdminSafety />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/audit" element={<AdminAuditPage />} />
           </Route>
 

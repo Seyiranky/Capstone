@@ -13,6 +13,7 @@ import { KIGALI_LOCATIONS } from '../../constants/locations';
 import { locationName as lookupLocationName } from '../../utils/locationName';
 import type { Gig, Skill } from '../../types';
 import RateHint from './RateHint';
+import { apiErrorMessage } from '../../utils/apiError';
 
 interface GigFormProps {
   gig?: Gig;
@@ -112,8 +113,8 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
         message.success('Gig posted — an admin will review it shortly.');
       }
       onPosted?.();
-    } catch {
-      setError(t('marketplace.gigForm.submitError'));
+    } catch (err) {
+      setError(apiErrorMessage(err, t('marketplace.gigForm.submitError')));
     } finally {
       setSubmitting(false);
     }

@@ -16,24 +16,79 @@ const GIG_INCLUDES: Includeable[] = [
   { model: Skill, as: 'skill' },
 ];
 
+// Limits on what a gig may say and cost. The budget bounds match the quote
+// bounds on applications.
+const TITLE_MAX = 120;
+const DESCRIPTION_MAX = 4000;
+const BUDGET_MIN = 500;
+const BUDGET_MAX = 50_000_000;
+
+/**
+ * Checks the fields a client can set on a gig. With `partial`, absent fields
+ * are skipped (an edit); otherwise title, description, budget and location are
+ * required (a new gig). Returns the cleaned values, or the first problem.
+ */
+const checkGigFields = (
+  body: Record<string, unknown>,
+  partial: boolean,
+): { error: string } | { values: Record<string, unknown> } => {
+  const values: Record<string, unknown> = {};
+  const has = (k: string) => body[k] !== undefined && body[k] !== null && body[k] !== '';
+  for (const k of ['title', 'description']) {
+    if (!has(k)) {
+      if (!partial) return { error: 'title, description, budget, skillId, locationLat, and locationLng are required' };
+      continue;
+    }
+    const text = String(body[k]).trim();
+    const max = k === 'title' ? TITLE_MAX : DESCRIPTION_MAX;
+    if (!text) return { error: `${k} cannot be empty` };
+    if (text.length > max) return { error: `${k} must be at most ${max} characters` };
+    values[k] = text;
+  }
+  if (has('budget')) {
+    const budget = Number(body.budget);
+    if (!Number.isFinite(budget) || budget < BUDGET_MIN || budget > BUDGET_MAX) {
+      return { error: `budget must be between ${BUDGET_MIN} and ${BUDGET_MAX.toLocaleString()} RWF` };
+    }
+    values.budget = Math.round(budget);
+  } else if (!partial) {
+    return { error: 'title, description, budget, skillId, locationLat, and locationLng are required' };
+  }
+  for (const [k, limit] of [
+    ['locationLat', 90],
+    ['locationLng', 180],
+  ] as const) {
+    if (!has(k)) {
+      if (!partial) return { error: 'title, description, budget, skillId, locationLat, and locationLng are required' };
+      continue;
+    }
+    const v = Number(body[k]);
+    if (!Number.isFinite(v) || Math.abs(v) > limit) return { error: `${k} is not a valid coordinate` };
+    values[k] = v;
+  }
+  if (body.requiredLevel !== undefined) {
+    const raw = body.requiredLevel;
+    const level = raw === null || raw === '' ? null : Number(raw);
+    if (level !== null && (!Number.isInteger(level) || level < 1 || level > 5)) {
+      return { error: 'requiredLevel must be an integer from 1 to 5' };
+    }
+    values.requiredLevel = level;
+  }
+  return { values };
+};
+
 export const createGig = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
-  const { title, description, budget, skillId, requiredLevel, locationLat, locationLng } =
-    req.body ?? {};
+  const skillId = req.body?.skillId;
   const image = fieldFile(req, 'image');
   const voice = fieldFile(req, 'voice');
   const discard = () => [image, voice].forEach((f) => f && fs.rmSync(f.path, { force: true }));
-  if (
-    !title ||
-    !description ||
-    budget === undefined ||
-    !skillId ||
-    locationLat === undefined ||
-    locationLng === undefined
-  ) {
+
+  const checked = checkGigFields((req.body ?? {}) as Record<string, unknown>, false);
+  if ('error' in checked || !skillId) {
     discard();
     res.status(400).json({
-      message: 'title, description, budget, skillId, locationLat, and locationLng are required',
+      message: 'error' in checked ? checked.error : 'title, description, budget, skillId, locationLat, and locationLng are required',
     });
     return;
   }
@@ -45,16 +100,6 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const level =
-    requiredLevel === undefined || requiredLevel === null || requiredLevel === ''
-      ? null
-      : Number(requiredLevel);
-  if (level !== null && (!Number.isInteger(level) || level < 1 || level > 5)) {
-    discard();
-    res.status(400).json({ message: 'requiredLevel must be an integer from 1 to 5' });
-    return;
-  }
-
   const voiceCheck = voice ? checkVoiceNote(voice, req.body?.voiceDurationSec) : null;
   if (voiceCheck && 'error' in voiceCheck) {
     discard();
@@ -62,15 +107,16 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  const { values } = checked;
   const gig = await Gig.create({
     clientId: caller.id,
-    title,
-    description,
-    budget: Number(budget),
+    title: values.title as string,
+    description: values.description as string,
+    budget: values.budget as number,
     skillId,
-    requiredLevel: level,
-    locationLat: Number(locationLat),
-    locationLng: Number(locationLng),
+    requiredLevel: (values.requiredLevel as number | null | undefined) ?? null,
+    locationLat: values.locationLat as number,
+    locationLng: values.locationLng as number,
     status: 'pending_review',
     imageUrl: image ? `/uploads/gigs/${image.filename}` : null,
     voiceNoteUrl: voice ? `/uploads/gigs/${voice.filename}` : null,
@@ -191,15 +237,27 @@ export const updateGig = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const body = (req.body ?? {}) as Record<string, unknown>;
-  const updates: Record<string, unknown> = {};
-  for (const field of UPDATABLE_FIELDS) {
-    if (body[field] !== undefined) {
-      updates[field] = body[field];
-    }
+  // Once a worker is matched the terms are what they agreed to, and escrow
+  // holds that budget; a finished or cancelled gig is a record.
+  if (gig.status !== 'pending_review' && gig.status !== 'open') {
+    res.status(409).json({ message: 'A gig can only be edited before a worker is matched' });
+    return;
   }
 
-  await gig.update(updates);
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const allowed = Object.fromEntries(UPDATABLE_FIELDS.filter((f) => body[f] !== undefined).map((f) => [f, body[f]]));
+  const checked = checkGigFields(allowed, true);
+  if ('error' in checked) {
+    res.status(400).json({ message: checked.error });
+    return;
+  }
+
+  // Approved wording that changes goes back to an admin, so what workers see
+  // is always something a person has checked.
+  const reworded = ['title', 'description'].some(
+    (k) => k in checked.values && checked.values[k] !== gig.get(k as 'title' | 'description'),
+  );
+  await gig.update({ ...checked.values, ...(reworded && gig.status === 'open' ? { status: 'pending_review' } : {}) });
   res.json(gig);
 };
 

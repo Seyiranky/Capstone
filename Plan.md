@@ -274,10 +274,20 @@ Each fix is covered by `server/tests/integration/security.test.ts`.
 | Sign-up accepted any email or password; emails case-sensitive | Junk accounts; `Grace@` and `grace@` as two accounts | Email format, 8-character passwords, lower-cased emails |
 | Payment webhook accepted unsigned callbacks when no secret was set | In production, anyone could mark a payment paid | Refused in production without `PAYMENT_WEBHOOK_SECRET` |
 | JWT algorithm not pinned | Defence in depth | Signed and verified as HS256 only |
+| A client could edit a gig after a worker accepted it, including its budget | Terms changed under an agreed job and its escrow | Edits allowed only before a match; values validated; rewording an approved gig sends it back to review |
+
 
 Already sound and kept: bcrypt password hashes; role and suspension re-read from the database
 on every request; per-record ownership checks in every controller; allowlisted profile updates;
 timing-safe webhook secrets; parameterised queries throughout (Sequelize).
+
+### Trust between clients and workers
+
+- **Confirmed contact before business**: posting a gig or applying needs a confirmed email or phone, so a throwaway account cannot transact.
+- **Verification shown, details hidden**: applicant rows and profiles show "Phone confirmed" and "Email confirmed"; the number and address are never shown.
+- **Off-platform warning**: a message that shares contact details or mentions paying outside Isoko (MoMo, `*182*`, "pay me directly", Kinyarwanda phrases) is delivered as written but carries a note that only money in escrow is protected. Warned, not blocked: sharing a number for directions is normal.
+- **Reports**: anyone can report a user from chat or a profile (asked to pay outside, fake profile, no-show, harassment, other). Admins see them under People & trust › Reports with how often the person has been reported, close each as handled or dismissed (the reporter is told), and can suspend from the same menu. The reported user never learns who reported them.
+
 
 ## Round 2 — proposed (research of 14 Oct 2026)
 

@@ -217,7 +217,8 @@
       "posted": "Posted {{when}}",
       "aboutClient": "About the client",
       "reviewsReceived": "Reviews received",
-      "memberSince": "Member since"
+      "memberSince": "Member since",
+      "applyFailed": "Could not send your application."
     },
     "postAGig": "Post a gig",
     "tabs": {
@@ -385,7 +386,45 @@
     },
     "penalty": "Reduced by {{points}} points: {{count}} job dropped after accepting in the last 90 days.",
     "formulaNote": "Scoring method {{version}}. Recent reviews count for more, and a long record counts for more than a single rating.",
-    "viewBreakdown": "See how this is calculated"
+    "viewBreakdown": "See how this is calculated",
+    "report": "Report",
+    "reportTitle": "Report {{name}}",
+    "reportSend": "Send report",
+    "reportIntro": "Tell the Isoko team what happened. They will look into it; the person is not told who reported them.",
+    "reportNote": "What happened? (optional)",
+    "reportSent": "Report sent. An admin will look into it.",
+    "reportFailed": "Could not send the report. Try again.",
+    "reason": {
+      "payment_outside": "Asked to pay outside Isoko",
+      "fake_profile": "Fake profile or false skills",
+      "no_show": "Did not show up or left the job",
+      "harassment": "Rude, threatening or harassing",
+      "other": "Something else"
+    },
+    "phoneConfirmed": "Phone confirmed",
+    "emailConfirmed": "Email confirmed",
+    "phoneConfirmedHint": "Confirmed with a code sent to their phone",
+    "emailConfirmedHint": "Confirmed through a link sent to their inbox",
+    "notConfirmedHint": "Not confirmed yet",
+    "paymentOther": "Careful: only money paid through Isoko is held safely until the job is done. If you pay outside, a dispute cannot get it back.",
+    "paymentOwn": "Keep payment on Isoko: money in escrow protects both of you, and it counts towards your work history.",
+    "contactNote": "Sharing a number is fine for arranging the visit. Keep payment on Isoko so the job stays protected.",
+    "adminTitle": "Reports",
+    "adminSub": "What users have reported about each other. Close each as handled or dismissed; the reporter is told which.",
+    "noReports": "No reports. Good.",
+    "timesReported_one": "Reported {{count}} time",
+    "timesReported_other": "Reported {{count}} times",
+    "reportedBy": "Reported by {{name}}",
+    "markHandled": "Mark handled",
+    "handledBody": "Use this when you have acted, for example by warning the user. The reporter is told it was handled.",
+    "dismiss": "Dismiss",
+    "dismissBody": "Use this when nothing needs doing. The reporter is told it was reviewed.",
+    "resolutionNote": "Note for the record (optional)",
+    "suspend": "Suspend {{name}}",
+    "suspendBody": "They are signed out at once and cannot log in until an admin reactivates them. The report is closed as handled.",
+    "suspendedNote": "Account suspended",
+    "markedHandled": "Report marked handled",
+    "markedDismissed": "Report dismissed"
   },
   "matches": {
     "pendingWorkerPrompt": "You were selected for this gig. Confirm you're still available.",
@@ -856,7 +895,8 @@
     "marketSub": "What jobs actually pay in each trade, and why applications are turned down.",
     "systemSub": "Whether notifications are reaching people.",
     "fairwork": "Fairwork scorecard",
-    "safety": "Safety alerts"
+    "safety": "Safety alerts",
+    "reports": "Reports"
   },
   "actions": {
     "more": "More actions",

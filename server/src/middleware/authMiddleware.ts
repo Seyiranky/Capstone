@@ -68,3 +68,24 @@ export const optionalAuth = async (req: Request, _res: Response, next: NextFunct
   }
   next();
 };
+
+/**
+ * Doing business needs a confirmed email or phone, so a throwaway account
+ * cannot post gigs or apply for work. Off under the test suite, whose fixture
+ * users are created unconfirmed, unless a test turns it on to check it.
+ */
+export const requireConfirmedContact = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (process.env.NODE_ENV === 'test' && process.env.CONTACT_GATE_IN_TESTS !== '1') {
+    next();
+    return;
+  }
+  const user = req.user ? await User.findByPk(req.user.id) : null;
+  if (!user?.emailVerifiedAt && !user?.phoneVerifiedAt) {
+    res.status(403).json({
+      message: 'Confirm your email or phone number in Settings before posting gigs or applying for work.',
+      code: 'CONTACT_NOT_CONFIRMED',
+    });
+    return;
+  }
+  next();
+};

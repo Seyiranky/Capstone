@@ -23,6 +23,7 @@ import {
   RiseOutlined,
   TrophyOutlined,
   WifiOutlined,
+  FlagOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
 import { activeNavKey, visibleNavEntries } from './navConfig';
@@ -48,6 +49,7 @@ const ICONS: Record<string, ReactNode> = {
   '/admin/system': <WifiOutlined />,
   '/admin/fairwork': <TrophyOutlined />,
   '/admin/safety': <AlertOutlined />,
+  '/admin/reports': <FlagOutlined />,
 };
 
 const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void }) => {

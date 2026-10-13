@@ -217,7 +217,8 @@
       "posted": "Byatanzwe {{when}}",
       "aboutClient": "Ibyerekeye umukiliya",
       "reviewsReceived": "Amasuzuma yahawe",
-      "memberSince": "Umunyamuryango kuva"
+      "memberSince": "Umunyamuryango kuva",
+      "applyFailed": "Ubusabe bwawe ntibwoherejwe."
     },
     "postAGig": "Tanga akazi",
     "tabs": {
@@ -385,7 +386,45 @@
     },
     "penalty": "Yagabanyijwe amanota {{points}}: akazi {{count}} yaretse amaze kwemera mu minsi 90 ishize.",
     "formulaNote": "Uburyo bwo kubara {{version}}. Ibitekerezo bya vuba bifite uburemere bwinshi, kandi amateka maremare aruta igitekerezo kimwe.",
-    "viewBreakdown": "Reba uko aya manota abarwa"
+    "viewBreakdown": "Reba uko aya manota abarwa",
+    "report": "Tanga ikirego",
+    "reportTitle": "Tanga ikirego kuri {{name}}",
+    "reportSend": "Ohereza ikirego",
+    "reportIntro": "Bwira itsinda rya Isoko ibyabaye. Bazabikurikirana; uwo uregwa ntabwirwa uwamureze.",
+    "reportNote": "Byagenze bite? (si ngombwa)",
+    "reportSent": "Ikirego cyoherejwe. Umuyobozi azagikurikirana.",
+    "reportFailed": "Ikirego nticyoherejwe. Ongera ugerageze.",
+    "reason": {
+      "payment_outside": "Yansabye kwishyura hanze ya Isoko",
+      "fake_profile": "Umwirondoro w'impimbano cyangwa ubumenyi bubeshya",
+      "no_show": "Ntiyaje cyangwa yataye akazi",
+      "harassment": "Ikinyabupfura gike, iterabwoba cyangwa guhohotera",
+      "other": "Ikindi"
+    },
+    "phoneConfirmed": "Telefoni yemejwe",
+    "emailConfirmed": "Imeyili yemejwe",
+    "phoneConfirmedHint": "Yemejwe na kode yoherejwe kuri telefoni ye",
+    "emailConfirmedHint": "Yemejwe n'ihuza ryoherejwe muri imeyili ye",
+    "notConfirmedHint": "Ntiremezwa",
+    "paymentOther": "Witondere: amafaranga yishyuwe binyuze kuri Isoko gusa ni yo abikwa neza kugeza akazi karangiye. Niwishyura hanze, impaka ntizishobora kuyagarura.",
+    "paymentOwn": "Kwishyura bikorerwe kuri Isoko: amafaranga abitswe arabarinda mwembi, kandi abarwa mu mateka y'akazi kawe.",
+    "contactNote": "Gutanga nimero ni byiza mu gutegura uruzinduko. Kwishyura bikorerwe kuri Isoko kugira ngo akazi kabe karinzwe.",
+    "adminTitle": "Ibirego",
+    "adminSub": "Ibyo abakoresha bareze bagenzi babo. Funga buri kimwe nk'icyakemuwe cyangwa icyanzwe; uwareze arabimenyeshwa.",
+    "noReports": "Nta birego. Ni byiza.",
+    "timesReported_one": "Yarezwe inshuro {{count}}",
+    "timesReported_other": "Yarezwe inshuro {{count}}",
+    "reportedBy": "Yarezwe na {{name}}",
+    "markHandled": "Byakemuwe",
+    "handledBody": "Koresha ibi iyo wagize icyo ukora, urugero kuburira umukoresha. Uwareze abwirwa ko byakemuwe.",
+    "dismiss": "Anga",
+    "dismissBody": "Koresha ibi iyo nta gikenewe gukorwa. Uwareze abwirwa ko byasuzumwe.",
+    "resolutionNote": "Icyitonderwa (si ngombwa)",
+    "suspend": "Hagarika {{name}}",
+    "suspendBody": "Ahita asohorwa kandi ntashobora kwinjira kugeza umuyobozi amusubije. Ikirego gifungwa nk'icyakemuwe.",
+    "suspendedNote": "Konti yahagaritswe",
+    "markedHandled": "Ikirego cyakemuwe",
+    "markedDismissed": "Ikirego cyanzwe"
   },
   "matches": {
     "pendingWorkerPrompt": "Watoranyijwe kuri aka kazi. Emeza ko uracyaboneka.",
@@ -856,7 +895,8 @@
     "marketSub": "Ibyo akazi kishyurwa koko muri buri mwuga, n’impamvu ubusabe bwangwa.",
     "systemSub": "Niba ubutumwa bugera ku bantu.",
     "fairwork": "Ikarita ya Fairwork",
-    "safety": "Impuruza z’umutekano"
+    "safety": "Impuruza z’umutekano",
+    "reports": "Ibirego"
   },
   "actions": {
     "more": "Ibindi",

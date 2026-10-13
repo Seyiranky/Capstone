@@ -10,6 +10,8 @@ import Avatar from './Avatar';
 import { clipFile, useVoiceRecorder } from '../../hooks/useVoiceRecorder';
 import VoiceNoteDraft from '../Voice/VoiceNoteDraft';
 import VoiceNotePlayer from '../Voice/VoiceNotePlayer';
+import OffPlatformNote from '../Trust/OffPlatformNote';
+import ReportUserButton from '../Trust/ReportUserButton';
 import type { Message } from '../../types';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -165,7 +167,10 @@ const ChatThread = ({
       {showHeader && recipientName && (
         <Flex align="center" gap={8} style={{ marginBottom: 12 }}>
           <Avatar name={recipientName} size={28} />
-          <Typography.Text strong>{recipientName}</Typography.Text>
+          <Typography.Text strong style={{ flex: 1, minWidth: 0 }} ellipsis>
+            {recipientName}
+          </Typography.Text>
+          <ReportUserButton userId={recipientId} name={recipientName} />
         </Flex>
       )}
 
@@ -231,6 +236,7 @@ const ChatThread = ({
                 )}
                 {message.body && <div style={{ textAlign: 'left' }}>{message.body}</div>}
               </div>
+              {message.offPlatformFlag && <OffPlatformNote flag={message.offPlatformFlag} own={own} />}
               <Typography.Text
                 type="secondary"
                 style={{ fontSize: 11, display: 'block', textAlign: own ? 'right' : 'left', marginTop: 2 }}

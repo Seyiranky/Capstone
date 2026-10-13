@@ -100,3 +100,9 @@ a:hover {
 @keyframes isoko-rec { 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) { .isoko-rec-dot { animation: none; } }
 .isoko-cover__chip--end { top: auto; left: auto; right: 10px; bottom: 10px; font-variant-numeric: tabular-nums; }
+
+/* Reminder under chat messages that move a deal off the platform. */
+.isoko-offplatform { display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; padding: 6px 9px; border-radius: 8px; font-size: 12px; line-height: 1.45; text-align: left; background: var(--ant-color-fill-quaternary); color: var(--isoko-muted); }
+.isoko-offplatform .anticon { margin-top: 2px; }
+.isoko-offplatform--payment { background: #fef3c7; color: #92400e; }
+:root[data-theme='dark'] .isoko-offplatform--payment { background: rgba(217, 160, 50, 0.16); color: #f0c46b; }

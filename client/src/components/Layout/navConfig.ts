@@ -39,6 +39,7 @@ export const NAV_ENTRIES: NavEntry[] = [
 
   { key: '/admin/users', labelKey: 'adminNav.users', roles: ['admin'], group: 'adminNav.people' },
   { key: '/admin/reviewers', labelKey: 'adminNav.reviewers', roles: ['admin'], group: 'adminNav.people' },
+  { key: '/admin/reports', labelKey: 'adminNav.reports', roles: ['admin'], group: 'adminNav.people' },
   { key: '/admin/audit', labelKey: 'adminNav.audit', roles: ['admin'], group: 'adminNav.people' },
 
   { key: '/admin', labelKey: 'adminNav.analytics', roles: ['admin'], group: 'adminNav.insights' },

@@ -51,6 +51,7 @@ import VoiceNotePlayer from '../Voice/VoiceNotePlayer';
 import { resolveAssetUrl } from '../../utils/assetUrl';
 import { locationName } from '../../utils/locationName';
 import type { Gig, GigApplication, RejectionReason } from '../../types';
+import { apiErrorMessage } from '../../utils/apiError';
 
 const MetaRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <Flex justify="space-between" align="center" gap={12} style={{ padding: '9px 0' }}>
@@ -129,8 +130,8 @@ const GigDetail = () => {
       setApplyOpen(false);
       message.success('Application sent to the client.');
       refresh();
-    } catch {
-      message.error('Could not send your application.');
+    } catch (err) {
+      message.error(apiErrorMessage(err, t('marketplace.gigDetail.applyFailed')));
     } finally {
       setApplying(false);
     }
@@ -193,9 +194,10 @@ const GigDetail = () => {
             <StatusTag status={gig.status} />
           </Flex>
         </div>
-        {isOwner && (
+        {/* Editable until a worker is matched; the server refuses later edits. */}
+        {isOwner && (gig.status === 'pending_review' || gig.status === 'open') && (
           <Button icon={<EditOutlined />} onClick={() => setEditOpen(true)}>
-            Edit gig
+            {t('common.editGig')}
           </Button>
         )}
       </Flex>

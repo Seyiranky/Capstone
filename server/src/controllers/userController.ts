@@ -146,6 +146,9 @@ export const getPublicProfile = async (req: Request, res: Response): Promise<voi
     reviewCount: user.reviewCount,
     completedJobCount: user.completedJobCount,
     createdAt: user.createdAt,
+    // Whether, not what: a client sees that the contact details were confirmed, never the details.
+    phoneVerified: Boolean(user.phoneVerifiedAt),
+    emailVerified: Boolean(user.emailVerifiedAt),
     availability: user.availability,
     availableFrom: user.availableFrom,
     level: user.role === 'worker' ? (await levelService.forWorker(user)).level : null,

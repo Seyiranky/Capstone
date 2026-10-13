@@ -6,6 +6,7 @@ import { Message, User } from '../models';
 import { authed } from '../lib/authed';
 import { ioFrom } from '../lib/io';
 import { stringParam } from '../lib/query';
+import { offPlatformFlag } from '../lib/offPlatform';
 import { bareMime, checkVoiceNote, fieldFile } from '../middleware/upload';
 import type { Role } from '../types/domain';
 
@@ -64,6 +65,7 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
   }
 
   const message = await Message.create({
+    offPlatformFlag: offPlatformFlag(body),
     senderId: user.id,
     recipientId,
     body,

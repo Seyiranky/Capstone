@@ -29,6 +29,8 @@ import TrustReceipt from '../common/TrustReceipt';
 import type { PublicProfile, Review, UserSkill } from '../../types';
 import WorkHistory from './WorkHistory';
 import LevelBadge from '../Growth/LevelBadge';
+import VerificationBadges from '../Trust/VerificationBadges';
+import ReportUserButton from '../Trust/ReportUserButton';
 
 const WorkerProfile = () => {
   const { t } = useTranslation();
@@ -108,6 +110,10 @@ const WorkerProfile = () => {
                   </span>
                 )}
               </Flex>
+              <VerificationBadges phone={profile.phoneVerified} email={profile.emailVerified} />
+              {viewerProfile && viewerProfile.id !== profile.id && viewerRole !== 'admin' && (
+                <ReportUserButton userId={profile.id} name={profile.name} />
+              )}
               <Progress
                 type="dashboard"
                 size={120}

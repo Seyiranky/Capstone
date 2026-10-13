@@ -249,6 +249,8 @@ export interface PublicProfile {
   availability?: 'available' | 'busy' | 'away';
   availableFrom?: string | null;
   level?: LevelKey | null;
+  phoneVerified?: boolean;
+  emailVerified?: boolean;
 }
 
 export type ReviewerTier = 'admin' | 'peer';
@@ -415,6 +417,8 @@ export interface Message {
   /** A voice note; its length is as the sender's device measured it. */
   audioUrl?: string | null;
   audioDurationSec?: number | null;
+  /** Set when the text shares contact details or talks about paying outside Isoko. */
+  offPlatformFlag?: 'contact' | 'payment' | null;
   readAt: string | null;
   createdAt: string;
   /** Present on messages pushed in real time, so the recipient knows who wrote. */

@@ -6,6 +6,7 @@ import ActionMenu from '../common/ActionMenu';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import MatchExplanation from '../common/MatchExplanation';
+import VerificationBadges from '../Trust/VerificationBadges';
 import type { GigApplication, RejectionReason } from '../../types';
 
 const REASONS: RejectionReason[] = ['skillLevel', 'distance', 'timing', 'choseAnother', 'other'];
@@ -85,6 +86,12 @@ const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: Appl
                 </Typography.Text>
               )}
             </Flex>
+
+            {a.worker && (
+              <div style={{ marginTop: 6, paddingInlineStart: 36 }}>
+                <VerificationBadges phone={a.worker.phoneVerifiedAt} email={a.worker.emailVerifiedAt} size="small" />
+              </div>
+            )}
 
             {a.crew && a.crew.length > 0 && (
               <Typography.Text style={{ fontSize: 13, display: 'block', marginTop: 6, paddingInlineStart: 36 }}>

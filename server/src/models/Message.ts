@@ -24,6 +24,8 @@ export class Message extends Model<InferAttributes<Message>, InferCreationAttrib
   declare audioUrl: CreationOptional<string | null>;
   declare audioMimeType: CreationOptional<string | null>;
   declare audioDurationSec: CreationOptional<number | null>;
+  /** Set when the text shares contact details or talks about paying outside Isoko. */
+  declare offPlatformFlag: CreationOptional<'contact' | 'payment' | null>;
   declare readAt: Date | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
@@ -77,6 +79,7 @@ export const initMessage = (sequelize: Sequelize) => {
       },
       audioMimeType: { type: DataTypes.STRING, allowNull: true },
       audioDurationSec: { type: DataTypes.INTEGER, allowNull: true },
+      offPlatformFlag: { type: DataTypes.STRING, allowNull: true },
       readAt: {
         type: DataTypes.DATE,
         allowNull: true,
