@@ -185,7 +185,7 @@ const NotificationCenter = () => {
                           padding: '10px 12px',
                           borderRadius: 4,
                           borderBlockEnd: 'none',
-                          background: active ? 'rgba(24,24,27,0.05)' : undefined,
+                          background: active ? 'var(--isoko-navy-soft)' : undefined,
                         }}
                       >
                         <List.Item.Meta
@@ -261,7 +261,7 @@ const NotificationCenter = () => {
                 />
               ) : (
                 <Flex vertical align="center" justify="center" gap={8} style={{ minHeight: 380 }}>
-                  <InboxOutlined style={{ fontSize: 40, color: '#d4d4d8' }} />
+                  <InboxOutlined style={{ fontSize: 40, color: 'var(--isoko-border)' }} />
                   <Typography.Text type="secondary">
                     Select a conversation to start messaging.
                   </Typography.Text>
@@ -291,7 +291,7 @@ const NotificationCenter = () => {
                   onClick={() => markRead(n)}
                   style={{
                     cursor: n.readAt ? 'default' : 'pointer',
-                    background: n.readAt ? undefined : 'rgba(24,24,27,0.025)',
+                    background: n.readAt ? undefined : 'var(--ant-color-fill-quaternary)',
                     borderRadius: 4,
                     paddingInline: 12,
                   }}
@@ -302,7 +302,7 @@ const NotificationCenter = () => {
                         <AntAvatar
                           shape="square"
                           size={36}
-                          style={{ background: '#f4f4f5', color: '#52525b' }}
+                          style={{ background: 'var(--isoko-navy-soft)', color: 'var(--isoko-navy)' }}
                           icon={<BellOutlined />}
                         />
                       </Badge>

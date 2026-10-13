@@ -94,7 +94,7 @@ const CommandPalette = ({ open, onClose }: CommandPaletteProps) => {
         variant="borderless"
         placeholder={t('common.searchPalette')}
         value={query}
-        prefix={<span style={{ color: '#a1a1aa' }}>⌘K</span>}
+        prefix={<span style={{ color: 'var(--isoko-muted)' }}>⌘K</span>}
         onChange={(e) => {
           setQuery(e.target.value);
           setCursor(0);
@@ -128,13 +128,13 @@ const CommandPalette = ({ open, onClose }: CommandPaletteProps) => {
                 padding: '10px 12px',
                 borderRadius: 4,
                 cursor: 'pointer',
-                background: i === cursor ? 'rgba(24,24,27,0.06)' : undefined,
+                background: i === cursor ? 'var(--isoko-navy-soft)' : undefined,
               }}
             >
               {item.kind === 'gig' ? (
-                <FileTextOutlined style={{ color: '#71717a' }} />
+                <FileTextOutlined style={{ color: 'var(--isoko-muted)' }} />
               ) : (
-                <AppstoreOutlined style={{ color: '#71717a' }} />
+                <AppstoreOutlined style={{ color: 'var(--isoko-muted)' }} />
               )}
               <div style={{ minWidth: 0, flex: 1 }}>
                 <Typography.Text ellipsis style={{ display: 'block' }}>
@@ -147,7 +147,7 @@ const CommandPalette = ({ open, onClose }: CommandPaletteProps) => {
                 )}
               </div>
               {item.kind === 'page' && <Tag style={{ margin: 0 }}>Page</Tag>}
-              {i === cursor && <ArrowRightOutlined style={{ color: '#a1a1aa' }} />}
+              {i === cursor && <ArrowRightOutlined style={{ color: 'var(--isoko-muted)' }} />}
             </div>
           ))
         )}

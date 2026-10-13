@@ -109,38 +109,22 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
 
       <Space size={screens.sm ? 8 : 2} align="center" style={{ flexShrink: 0 }}>
         {screens.sm ? (
-          <button
-            type="button"
-            onClick={onSearch}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              height: 32,
-              padding: '0 10px',
-              borderRadius: 4,
-              border: '1px solid var(--ant-color-border, #e4e4e7)',
-              background: 'var(--ant-color-fill-quaternary, #fafafa)',
-              color: '#71717a',
-              cursor: 'pointer',
-              font: 'inherit',
-              fontSize: 13,
-            }}
-          >
-            <SearchOutlined />
-            <span>{t('common.searchLabel')}</span>
+          <Button onClick={onSearch} icon={<SearchOutlined />} style={{ color: 'var(--isoko-muted)', paddingInline: 10 }}>
+            <span style={{ marginInlineEnd: 18 }}>{t('common.searchLabel')}</span>
             <kbd
               style={{
                 fontSize: 11,
-                padding: '1px 5px',
-                borderRadius: 3,
-                border: '1px solid var(--ant-color-border, #e4e4e7)',
-                background: 'var(--ant-color-bg-container, #fff)',
+                lineHeight: '16px',
+                padding: '0 5px',
+                borderRadius: 4,
+                border: '1px solid var(--isoko-border)',
+                background: 'var(--ant-color-fill-quaternary)',
+                fontFamily: 'inherit',
               }}
             >
               ⌘K
             </kbd>
-          </button>
+          </Button>
         ) : (
           <Button type="text" aria-label="Search" icon={<SearchOutlined />} onClick={onSearch} />
         )}

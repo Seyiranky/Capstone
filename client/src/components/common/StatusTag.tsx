@@ -1,25 +1,23 @@
-import { Tag } from 'antd';
+// Soft fill, strong text and a dot (see .isoko-status in theme/global.css).
+// antd's preset tag colours derive from the primary colour, which made
+// "processing" dark-on-dark; these are set explicitly for contrast in both themes.
+const SUCCESS = new Set(['completed', 'approved', 'confirmed', 'active', 'verified', 'released', 'decided', 'joined', 'endorsed']);
+const WARNING = new Set(['pending', 'initiated', 'pending_review', 'held', 'awaiting', 'invited', 'escalated']);
+const ERROR = new Set(['rejected', 'cancelled', 'failed', 'suspended', 'declined']);
+const INFO = new Set(['open', 'accepted', 'matched']);
 
-// antd preset colors: success / warning / error / processing / default
-const SUCCESS = new Set(['completed', 'approved', 'confirmed', 'active', 'verified', 'released']);
-const WARNING = new Set(['pending', 'initiated', 'pending_review', 'held']);
-const ERROR = new Set(['rejected', 'cancelled', 'failed', 'suspended']);
-const PROCESSING = new Set(['open', 'accepted', 'matched']);
-
-const colorFor = (status: string): string => {
+const toneFor = (status: string): string => {
   if (SUCCESS.has(status)) return 'success';
   if (WARNING.has(status)) return 'warning';
   if (ERROR.has(status)) return 'error';
-  if (PROCESSING.has(status)) return 'processing';
-  return 'default';
+  if (INFO.has(status)) return 'info';
+  return 'neutral';
 };
 
 const label = (status: string) => status.replace(/_/g, ' ');
 
 const StatusTag = ({ status }: { status: string }) => (
-  <Tag color={colorFor(status)} style={{ textTransform: 'capitalize', marginInlineEnd: 0 }}>
-    {label(status)}
-  </Tag>
+  <span className={`isoko-status isoko-status--${toneFor(status)}`}>{label(status)}</span>
 );
 
 export default StatusTag;

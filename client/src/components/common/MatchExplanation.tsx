@@ -60,7 +60,7 @@ const MatchExplanation = ({
                 percent={Math.round(component.value * 100)}
                 size="small"
                 showInfo={false}
-                strokeColor="#1f1f1f"
+                strokeColor="var(--isoko-navy)"
               />
             </Tooltip>
           </div>

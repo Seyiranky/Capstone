@@ -9,7 +9,7 @@ import type { Gig } from '../../types';
 const pinIcon = L.divIcon({
   className: 'isoko-pin',
   html: `<svg width="24" height="32" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 0C5.4 0 0 5.37 0 12c0 9 12 20 12 20s12-11 12-20C24 5.37 18.6 0 12 0z" fill="#18181b"/>
+    <path d="M12 0C5.4 0 0 5.37 0 12c0 9 12 20 12 20s12-11 12-20C24 5.37 18.6 0 12 0z" fill="#1E3A5F"/>
     <circle cx="12" cy="12" r="4.4" fill="#fff"/>
   </svg>`,
   iconSize: [24, 32],

@@ -1,114 +1,91 @@
-/* Editorial polish layer on top of Ant Design. */
+/* Polish layer on top of Ant Design. Brand values mirror theme/tokens.ts so
+   plain CSS and inline styles can use the same palette as the components. */
+
+:root {
+  --isoko-navy: #1e3a5f;
+  --isoko-navy-soft: #eef2f7;
+  --isoko-ink: #101828;
+  --isoko-muted: #667085;
+  --isoko-surface: #ffffff;
+  --isoko-border: #e4e7ec;
+  --isoko-bubble-own: #1e3a5f;
+}
+:root[data-theme='dark'] {
+  --isoko-navy: #7fa6d6;
+  --isoko-navy-soft: rgba(127, 166, 214, 0.12);
+  --isoko-ink: #e6eaf0;
+  --isoko-muted: #98a2b3;
+  --isoko-surface: #151a21;
+  --isoko-border: #2a313c;
+  --isoko-bubble-own: #2c4f7c;
+}
+
+body {
+  background: var(--ant-color-bg-layout, #ffffff);
+}
 
 a {
-  color: var(--ant-color-link, #18181b);
+  color: var(--ant-color-link, #1e3a5f);
   text-decoration: none;
 }
 a:hover {
-  color: var(--ant-color-link-hover, #52525b);
+  color: var(--ant-color-link-hover, #b5562f);
 }
 
-/* Cards: hairline border, no ambient shadow. Interactive ones lift a touch. */
-.ant-card {
-  box-shadow: none;
-  border-color: var(--ant-color-border-secondary, #e4e4e7);
-}
-.ant-card-hoverable:hover {
-  border-color: #d4d4d8;
-  box-shadow: 0 2px 8px rgba(24, 24, 27, 0.06);
-}
-:root[data-theme='dark'] .ant-card-hoverable:hover {
-  border-color: #3f3f46;
-  box-shadow: none;
-}
-
-.ant-card-head {
-  min-height: 46px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-/* Header row */
-.ant-layout-header {
-  line-height: normal;
-  display: flex;
+/* Status labels: soft fill, strong text, and a dot; readable in both themes. */
+.isoko-status {
+  display: inline-flex;
   align-items: center;
-  padding-inline: 18px;
-}
-
-/* Tables: flat, tight, hairline separators. */
-.ant-table-wrapper .ant-table {
-  border-radius: 0;
-}
-.ant-table-wrapper .ant-table-thead > tr > th {
-  font-weight: 600;
+  gap: 6px;
+  padding: 1px 9px;
+  border-radius: 999px;
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-/* Keep long content from forcing horizontal page scroll. */
-.ant-layout-content {
-  overflow-x: hidden;
-}
-
-/* Page title spacing */
-.ant-typography + .ant-typography {
-  margin-top: 0;
-}
-
-/* Segmented controls (tab-like rows) scroll sideways instead of being clipped
-   when their options don't fit, which is most of them on a phone. */
-.ant-segmented {
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.ant-segmented::-webkit-scrollbar {
-  display: none;
-}
-
-/* Drawers sized for desktop (480px forms) must not run off a phone screen. */
-.ant-drawer-content-wrapper {
-  max-width: 100vw;
-}
-
-/* Phones: 24px card padding on a 375px screen leaves too little for content. */
-@media (max-width: 575px) {
-  .ant-card .ant-card-body {
-    padding: 16px;
-  }
-  .ant-card .ant-card-head {
-    padding-inline: 16px;
-  }
-}
-
-/* Statistics: a figure and its unit stay on one line, and the unit reads as a
-   unit rather than a second number. */
-.ant-statistic .ant-statistic-content {
+  font-weight: 600;
+  line-height: 20px;
   white-space: nowrap;
+  border: 1px solid transparent;
+  text-transform: capitalize;
 }
-.ant-statistic .ant-statistic-content-suffix {
-  font-size: 13px;
-  color: var(--ant-color-text-secondary, #71717a);
+.isoko-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
-@media (max-width: 575px) {
-  .ant-statistic .ant-statistic-content {
-    font-size: 20px;
-  }
-  .ant-statistic .ant-statistic-title {
-    font-size: 12px;
-  }
+.isoko-status--success { background: #e7f6ee; color: #146c43; border-color: #c8ead6; }
+.isoko-status--warning { background: #fdf3df; color: #8a5a05; border-color: #f4dfb4; }
+.isoko-status--error { background: #fdecea; color: #a8321f; border-color: #f6cdc6; }
+.isoko-status--info { background: #eef2f7; color: #1e3a5f; border-color: #d5dfec; }
+.isoko-status--neutral { background: #f2f4f7; color: #475467; border-color: #e4e7ec; }
+:root[data-theme='dark'] .isoko-status--success { background: rgba(52, 168, 104, 0.16); color: #7fd6a4; border-color: transparent; }
+:root[data-theme='dark'] .isoko-status--warning { background: rgba(217, 160, 50, 0.16); color: #f0c46b; border-color: transparent; }
+:root[data-theme='dark'] .isoko-status--error { background: rgba(224, 92, 70, 0.16); color: #f19a89; border-color: transparent; }
+:root[data-theme='dark'] .isoko-status--info { background: rgba(127, 166, 214, 0.16); color: #a9c4e6; border-color: transparent; }
+:root[data-theme='dark'] .isoko-status--neutral { background: rgba(255, 255, 255, 0.07); color: #c3c9d4; border-color: transparent; }
+
+/* Stat tiles: a quiet icon badge in the brand navy. */
+.isoko-stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  background: var(--isoko-navy-soft);
+  color: var(--isoko-navy);
+  flex-shrink: 0;
 }
 
-/* Phones: tables inside cards already sit inside 16px of card padding, so the
-   default 16px cell padding pushes the last column off screen. */
+/* Rows in a side panel: a hairline between rows, none above the first. */
+.isoko-siderow + .isoko-siderow {
+  border-top: 1px solid var(--isoko-border);
+}
+
+/* Phones: two stat tiles share a row; the number needs the width more than the icon. */
 @media (max-width: 575px) {
-  .ant-table-wrapper .ant-table-thead > tr > th,
-  .ant-table-wrapper .ant-table-tbody > tr > td {
-    padding: 10px 8px;
-  }
-  .ant-table-wrapper .ant-table-tbody > tr > td {
-    font-size: 13px;
+  .isoko-stat-tile-icon {
+    display: none;
   }
 }

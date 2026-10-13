@@ -222,7 +222,7 @@ const CollusionReport = () => {
                   percent={Math.round((row.share / maxShare) * 100)}
                   showInfo={false}
                   size="small"
-                  strokeColor="#1f1f1f"
+                  strokeColor="var(--isoko-navy)"
                 />
               </div>
             ))}

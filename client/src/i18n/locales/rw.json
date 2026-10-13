@@ -112,7 +112,37 @@
       "postFirstGig": "Shyiraho umurimo wawe wa mbere",
       "postGig": "Shyiraho umurimo"
     },
-    "matchesByStatus": "Akazi ukurikije uko gahagaze"
+    "matchesByStatus": "Akazi ukurikije uko gahagaze",
+    "hero": {
+      "greeting": "Muraho, {{name}}",
+      "findWork": "Shaka akazi",
+      "postGig": "Tanga akazi",
+      "reviewGigs": "Suzuma akazi ({{count}})",
+      "reviewSkills": "Isuzuma ry’ubumenyi ({{count}})",
+      "sub_worker": "Ubumenyi bwawe bwemejwe, akazi wishyuwe n’icyizere bijyana nawe. Dore uko akazi kawe kagenda.",
+      "sub_client": "Koresha abakozi bemejwe bo hafi, wishyure binyuze mu bubiko, kandi ubone inyemezabwishyu kuri buri kazi.",
+      "sub_admin": "Ibikeneye icyemezo uyu munsi, n’uko sisitemu ihagaze."
+    },
+    "thisMonth": "Winjije uku kwezi",
+    "allTime": "{{amount}} RWF kuva watangira",
+    "inEscrow": "Mu bubiko",
+    "activeJobs": "Akazi gakomeje",
+    "openGigs": "Akazi gafunguye",
+    "liveDisputes": "Ibirego bifunguye",
+    "gigsForYou": "Akazi mu mwuga wawe",
+    "seeAll": "Reba byose",
+    "noGigsForYou": "Nta kazi gafunguye mu mwuga wawe ubu. Ongeraho ubumenyi kugira ngo ubone byinshi.",
+    "earnedByMonth": "Winjije, amezi 6 ashize",
+    "paidByMonth": "Wishyuye, amezi 6 ashize",
+    "nothingYetMonths": "Nta kintu mu mezi atandatu ashize.",
+    "yourGigs": "Akazi watanze",
+    "noGigsYet": "Ntiwari watanga akazi.",
+    "add": "Ongeraho",
+    "viewProfile": "Reba umwirondoro wawe",
+    "atAGlance": "Muri make",
+    "awaitingPayment": "Bitegereje kwishyurwa",
+    "paidOut": "Byishyuwe",
+    "open": "Fungura"
   },
   "marketplace": {
     "gigForm": {
@@ -748,7 +778,12 @@
     "more": "Byinshi",
     "less": "Bike",
     "open": "Fungura akazi",
-    "waiting": "{{count}} bitegereje"
+    "waiting": "{{count}} bitegereje",
+    "approveTitle": "Kwemeza “{{title}}”?",
+    "approveBody": "Gahita gatangira kandi abakozi ba mbere bagatumirwa.",
+    "rejectTitle": "Kwanga “{{title}}”?",
+    "approved": "byemejwe",
+    "rejected": "byanzwe"
   },
   "team": {
     "title": "Itsinda",
@@ -814,5 +849,38 @@
     "metricsSub": "Ibipimo by’ibibazo by’ubushakashatsi: ese gutondekanya bituma akazi kemerwa, kandi abashya babona amahirwe angana?",
     "marketSub": "Ibyo akazi kishyurwa koko muri buri mwuga, n’impamvu ubusabe bwangwa.",
     "systemSub": "Niba ubutumwa bugera ku bantu."
+  },
+  "actions": {
+    "more": "Ibindi",
+    "approveApplicant": "Kwemeza {{name}}?",
+    "approveApplicantBody": "Arasabwa kwemeza ko akiboneka; abandi basabye bategereza kugeza abyemeje.",
+    "suspend": "Hagarika",
+    "suspendTitle": "Guhagarika {{name}}?",
+    "suspendBody": "Arasohorwa kandi ntashobora kwinjira kugeza yongeye gukora.",
+    "reactivate": "Ongera ukoreshe",
+    "reactivateTitle": "Kongera gukoresha {{name}}?",
+    "delete": "Siba",
+    "deleteTitle": "Gusiba {{name}}?",
+    "deleteBody": "Bisiba burundu konti ye n’ibiyifitanye isano byose. Ntibishobora gusubizwa inyuma."
+  },
+  "attention": {
+    "title": "Bikeneye ko ubyitaho",
+    "allClear": "Nta kintu gisigaye.",
+    "teamInvite": "Ubutumire bw’itsinda: {{title}}",
+    "teamInviteDetail": "Injira ku {{percent}}% by’ubwishyu, cyangwa wange",
+    "invitation": "Ubutumire: {{title}}",
+    "invitationDetail": "Emeza ko uboneka, cyangwa wange",
+    "inProgress": "Birakomeje: {{title}}",
+    "enterCode": "Injiza kode y’umukiliya akazi karangiye",
+    "awaitingFunds": "Bitegereje ubwishyu: {{title}}",
+    "awaitingFundsDetail": "Umukiliya ntarishyura mu bubiko",
+    "review": "Isuzuma: {{title}}",
+    "reviewDetailWorker": "Tanga amanota ku mukiliya usoze akazi",
+    "reviewDetailClient": "Tanga amanota ku mukozi usoze akazi",
+    "fund": "Ishyura mu bubiko: {{title}}",
+    "fundDetail": "{{amount}} RWF, bibikwa kugeza akazi karangiye",
+    "release": "Akazi kavuzwe ko karangiye: {{title}}",
+    "releaseDetail": "Ishyura, cyangwa bizishyurwa nyuma y’amasaha 72",
+    "handCode": "Kode yawe yo gusoza ni {{code}}"
   }
 }

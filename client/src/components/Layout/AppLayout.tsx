@@ -51,7 +51,7 @@ const AppLayout = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const hairline = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(24,24,27,0.08)';
+  const hairline = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(30,58,95,0.10)';
 
   const renderNav = (narrow: boolean) => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -67,16 +67,26 @@ const AppLayout = () => {
           borderBottom: `1px solid ${hairline}`,
         }}
       >
-        <img
-          src={logo}
-          alt="Isoko Talents"
+        {/* The wordmark is navy; on the dark sider it sits on a white backing so it stays legible. */}
+        <span
           style={{
-            height: narrow ? 26 : 32,
-            width: 'auto',
-            objectFit: 'contain',
-            display: 'block',
+            display: 'inline-flex',
+            padding: isDark ? '4px 8px' : 0,
+            background: isDark ? '#ffffff' : 'transparent',
+            borderRadius: 6,
           }}
-        />
+        >
+          <img
+            src={logo}
+            alt="Isoko Talents"
+            style={{
+              height: narrow ? 26 : 32,
+              width: 'auto',
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
+        </span>
       </Link>
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: 8 }}>
         <SideNav dark={isDark} />

@@ -112,7 +112,37 @@
       "postFirstGig": "Post your first gig",
       "postGig": "Post a gig"
     },
-    "matchesByStatus": "Matches by status"
+    "matchesByStatus": "Matches by status",
+    "hero": {
+      "greeting": "Muraho, {{name}}",
+      "findWork": "Find work",
+      "postGig": "Post a gig",
+      "reviewGigs": "Review gigs ({{count}})",
+      "reviewSkills": "Skill reviews ({{count}})",
+      "sub_worker": "Your verified skills, paid jobs and trust travel with you. Here is how your work is going.",
+      "sub_client": "Hire verified local workers, pay through escrow, and get a receipt for every job.",
+      "sub_admin": "What needs a decision today, and how the platform is doing."
+    },
+    "thisMonth": "Earned this month",
+    "allTime": "{{amount}} RWF all time",
+    "inEscrow": "In escrow",
+    "activeJobs": "Active jobs",
+    "openGigs": "Open gigs",
+    "liveDisputes": "Live disputes",
+    "gigsForYou": "Gigs in your trades",
+    "seeAll": "See all",
+    "noGigsForYou": "No open gigs in your trades right now. Add a skill to see more.",
+    "earnedByMonth": "Earned, last 6 months",
+    "paidByMonth": "Paid, last 6 months",
+    "nothingYetMonths": "Nothing in the last six months yet.",
+    "yourGigs": "Your gigs",
+    "noGigsYet": "You have not posted a gig yet.",
+    "add": "Add",
+    "viewProfile": "View your public profile",
+    "atAGlance": "At a glance",
+    "awaitingPayment": "Awaiting payment",
+    "paidOut": "Paid out",
+    "open": "Open"
   },
   "marketplace": {
     "gigForm": {
@@ -748,7 +778,12 @@
     "more": "Show more",
     "less": "Show less",
     "open": "Open gig",
-    "waiting": "{{count}} waiting"
+    "waiting": "{{count}} waiting",
+    "approveTitle": "Approve “{{title}}”?",
+    "approveBody": "It goes live at once and the top-ranked workers are invited.",
+    "rejectTitle": "Reject “{{title}}”?",
+    "approved": "approved",
+    "rejected": "rejected"
   },
   "team": {
     "title": "Team",
@@ -814,5 +849,38 @@
     "metricsSub": "The measurements behind the research questions: does ranking get work accepted, and do newcomers get a fair start?",
     "marketSub": "What jobs actually pay in each trade, and why applications are turned down.",
     "systemSub": "Whether notifications are reaching people."
+  },
+  "actions": {
+    "more": "More actions",
+    "approveApplicant": "Approve {{name}}?",
+    "approveApplicantBody": "They are asked to confirm they are still available; the other applicants stay pending until they do.",
+    "suspend": "Suspend",
+    "suspendTitle": "Suspend {{name}}?",
+    "suspendBody": "They are signed out and cannot sign in until reactivated.",
+    "reactivate": "Reactivate",
+    "reactivateTitle": "Reactivate {{name}}?",
+    "delete": "Delete",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteBody": "Permanently removes their account and everything tied to it. This cannot be undone."
+  },
+  "attention": {
+    "title": "Needs your attention",
+    "allClear": "You are all caught up.",
+    "teamInvite": "Team invite: {{title}}",
+    "teamInviteDetail": "Join for {{percent}}% of the pay, or decline",
+    "invitation": "Invitation: {{title}}",
+    "invitationDetail": "Confirm you are available, or decline",
+    "inProgress": "In progress: {{title}}",
+    "enterCode": "Enter the client’s code when the job is done",
+    "awaitingFunds": "Waiting for payment: {{title}}",
+    "awaitingFundsDetail": "The client has not paid into escrow yet",
+    "review": "Review: {{title}}",
+    "reviewDetailWorker": "Rate the client to finish the job",
+    "reviewDetailClient": "Rate the worker to finish the job",
+    "fund": "Pay into escrow: {{title}}",
+    "fundDetail": "{{amount}} RWF, held until the job is done",
+    "release": "Work reported done: {{title}}",
+    "releaseDetail": "Release payment, or it releases on its own in 72 hours",
+    "handCode": "Your completion code is {{code}}"
   }
 }

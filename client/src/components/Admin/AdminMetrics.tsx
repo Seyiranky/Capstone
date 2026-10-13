@@ -102,7 +102,7 @@ const AdminMetrics = () => {
         <Row gutter={[24, 16]}>
           <Col xs={24} md={12}>
             <Typography.Text>Invitations going to newcomers</Typography.Text>
-            <Progress percent={Math.round((na.invitations.share ?? 0) * 100)} strokeColor="#18181b" />
+            <Progress percent={Math.round((na.invitations.share ?? 0) * 100)} strokeColor="var(--isoko-navy)" />
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {na.invitations.toNewcomers} of {na.invitations.total} · {na.invitations.byReason.exploration} through the
               exploration slot, {na.invitations.byReason.ranked} on merit
@@ -110,7 +110,7 @@ const AdminMetrics = () => {
           </Col>
           <Col xs={24} md={12}>
             <Typography.Text>Accepted jobs going to newcomers</Typography.Text>
-            <Progress percent={Math.round((na.acceptedMatches.share ?? 0) * 100)} strokeColor="#52525b" />
+            <Progress percent={Math.round((na.acceptedMatches.share ?? 0) * 100)} strokeColor="#4C6E96" />
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {na.acceptedMatches.byNewcomers} of {na.acceptedMatches.total} · {na.newcomers} newcomers,{' '}
               {na.newcomersNeverInvited} never invited yet

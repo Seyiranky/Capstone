@@ -104,17 +104,17 @@ const WorkerProfile = () => {
                   profile.trustScoreBreakdown?.isProvisional ? (
                     // The long explanation lives in the breakdown below; inside
                     // the dial it would overflow the ring.
-                    <span style={{ fontSize: 24, color: '#a1a1aa' }}>—</span>
+                    <span style={{ fontSize: 24, color: 'var(--isoko-muted)' }}>—</span>
                   ) : (
                     <span>
                       <span style={{ fontSize: 22, fontWeight: 700 }}>
                         {profile.trustScore.toFixed(1)}
                       </span>
-                      <span style={{ fontSize: 12, color: '#71717a' }}> / 5</span>
+                      <span style={{ fontSize: 12, color: 'var(--isoko-muted)' }}> / 5</span>
                     </span>
                   )
                 }
-                strokeColor="#18181b"
+                strokeColor="var(--isoko-navy)"
               />
               <Typography.Text type="secondary">
                 {profile.trustScoreBreakdown?.isProvisional

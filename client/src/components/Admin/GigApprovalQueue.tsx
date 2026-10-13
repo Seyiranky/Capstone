@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { App, Button, Empty, Flex, Input, Tag, Typography } from 'antd';
-import { EnvironmentOutlined } from '@ant-design/icons';
+import { App, Empty, Flex, Tag, Typography } from 'antd';
+import { CheckOutlined, CloseOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import ActionMenu from '../common/ActionMenu';
 import { adminApi } from '../../api/adminApi';
 import IdentityLink from '../common/IdentityLink';
 import GigThumbnail from '../common/GigThumbnail';
@@ -21,23 +22,20 @@ interface GigApprovalQueueProps {
 /**
  * Gigs waiting for approval, laid open so an admin decides without opening
  * anything: what the job is, who posted it, where, and whether its budget is
- * out of line with what the trade usually pays. Rejecting asks for an optional
- * reason in place, which the client receives.
+ * out of line with what the trade usually pays. Decisions sit behind a "⋯" menu
+ * and a confirmation, so a stray tap cannot approve or reject; a rejection can
+ * carry a reason, which the client receives.
  */
 const GigApprovalQueue = ({ gigs, onReviewed, limit }: GigApprovalQueueProps) => {
   const { t } = useTranslation();
   const { message } = App.useApp();
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [rejectingId, setRejectingId] = useState<string | null>(null);
-  const [note, setNote] = useState('');
 
-  const decide = async (gig: Gig, decision: 'approved' | 'rejected') => {
+  const decide = async (gig: Gig, decision: 'approved' | 'rejected', note?: string) => {
     setBusyId(gig.id);
     try {
-      await adminApi.reviewGig(gig.id, decision, decision === 'rejected' ? note.trim() || undefined : undefined);
-      message.success(`${gig.title}: ${decision === 'approved' ? t('gigApproval.approve') : t('gigApproval.reject')}`);
-      setRejectingId(null);
-      setNote('');
+      await adminApi.reviewGig(gig.id, decision, note);
+      message.success(`${gig.title}: ${decision === 'approved' ? t('gigApproval.approved') : t('gigApproval.rejected')}`);
       onReviewed();
     } finally {
       setBusyId(null);
@@ -55,7 +53,6 @@ const GigApprovalQueue = ({ gigs, onReviewed, limit }: GigApprovalQueueProps) =>
     <div>
       {shown.map((gig, i) => {
         const place = locationName(gig.locationLat, gig.locationLng);
-        const rejecting = rejectingId === gig.id;
         return (
           <div
             key={gig.id}
@@ -71,9 +68,34 @@ const GigApprovalQueue = ({ gigs, onReviewed, limit }: GigApprovalQueueProps) =>
                   <Link to={`/gigs/${gig.id}`} style={{ fontWeight: 600 }}>
                     {gig.title}
                   </Link>
-                  <Typography.Text strong style={{ whiteSpace: 'nowrap' }}>
-                    {Number(gig.budget).toLocaleString()} RWF
-                  </Typography.Text>
+                  <Flex align="center" gap={10}>
+                    <Typography.Text strong style={{ whiteSpace: 'nowrap' }}>
+                      {Number(gig.budget).toLocaleString()} RWF
+                    </Typography.Text>
+                    <ActionMenu
+                      disabled={busyId === gig.id}
+                      actions={[
+                        {
+                          key: 'approve',
+                          label: t('gigApproval.approve'),
+                          icon: <CheckOutlined />,
+                          confirmTitle: t('gigApproval.approveTitle', { title: gig.title }),
+                          confirmBody: t('gigApproval.approveBody'),
+                          onConfirm: () => decide(gig, 'approved'),
+                        },
+                        {
+                          key: 'reject',
+                          label: t('gigApproval.reject'),
+                          icon: <CloseOutlined />,
+                          danger: true,
+                          confirmTitle: t('gigApproval.rejectTitle', { title: gig.title }),
+                          confirmLabel: t('gigApproval.confirmReject'),
+                          reason: { placeholder: t('gigApproval.rejectReason') },
+                          onConfirm: (reason) => decide(gig, 'rejected', reason),
+                        },
+                      ]}
+                    />
+                  </Flex>
                 </Flex>
                 <Flex gap="4px 10px" wrap="wrap" align="center" style={{ marginTop: 4 }}>
                   {gig.skill?.name && <Tag style={{ margin: 0 }}>{gig.skill.name}</Tag>}
@@ -96,42 +118,6 @@ const GigApprovalQueue = ({ gigs, onReviewed, limit }: GigApprovalQueueProps) =>
                   {gig.description}
                 </Typography.Paragraph>
 
-                {rejecting ? (
-                  <Flex vertical gap={8} style={{ marginTop: 10 }}>
-                    <Input.TextArea
-                      autoFocus
-                      rows={2}
-                      maxLength={280}
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder={t('gigApproval.rejectReason')}
-                    />
-                    <Flex gap={8}>
-                      <Button danger type="primary" size="small" loading={busyId === gig.id} onClick={() => decide(gig, 'rejected')}>
-                        {t('gigApproval.confirmReject')}
-                      </Button>
-                      <Button size="small" onClick={() => setRejectingId(null)}>
-                        {t('gigApproval.cancel')}
-                      </Button>
-                    </Flex>
-                  </Flex>
-                ) : (
-                  <Flex gap={8} style={{ marginTop: 10 }}>
-                    <Button type="primary" size="small" loading={busyId === gig.id} onClick={() => decide(gig, 'approved')}>
-                      {t('gigApproval.approve')}
-                    </Button>
-                    <Button
-                      danger
-                      size="small"
-                      onClick={() => {
-                        setNote('');
-                        setRejectingId(gig.id);
-                      }}
-                    >
-                      {t('gigApproval.reject')}
-                    </Button>
-                  </Flex>
-                )}
               </div>
             </Flex>
           </div>

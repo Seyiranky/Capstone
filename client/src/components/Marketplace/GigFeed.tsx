@@ -88,7 +88,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
       <Flex wrap="wrap" gap={12} align="center" style={{ marginBottom: 18 }}>
         <Input
           allowClear
-          prefix={<SearchOutlined style={{ color: '#a1a1aa' }} />}
+          prefix={<SearchOutlined style={{ color: 'var(--isoko-muted)' }} />}
           placeholder={t('common.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -144,7 +144,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
         <Row gutter={[16, 16]}>
           {[0, 1, 2, 3].map((i) => (
             <Col xs={24} sm={12} lg={8} xl={6} key={i}>
-              <Card cover={<div style={{ aspectRatio: '16 / 10', background: '#f4f4f5' }} />}>
+              <Card cover={<div style={{ aspectRatio: '16 / 10', background: 'var(--ant-color-fill-secondary)' }} />}>
                 <Skeleton active paragraph={{ rows: 2 }} />
               </Card>
             </Col>

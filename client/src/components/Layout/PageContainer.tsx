@@ -19,7 +19,7 @@ const PageContainer = ({ title, subtitle, extra, children }: PageContainerProps)
       style={{ marginBottom: 24 }}
     >
       <div>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+        <Typography.Title level={3} style={{ margin: 0, fontFamily: 'var(--font-heading)' }}>
           {title}
         </Typography.Title>
         {subtitle && (

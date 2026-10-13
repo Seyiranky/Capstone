@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { App, Button, Card, Input, Popconfirm, Space, Table, Tag } from 'antd';
+import { App, Card, Input, Table, Tag } from 'antd';
 import { DeleteOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { adminApi } from '../../api/adminApi';
 import { useAppSelector } from '../../store/hooks';
 import { useTranslation } from 'react-i18next';
 import PageContainer from '../Layout/PageContainer';
+import ActionMenu from '../common/ActionMenu';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import type { User } from '../../types';
@@ -115,42 +116,46 @@ const AdminUsers = () => {
     {
       title: '',
       key: 'actions',
-      width: 84,
+      width: 60,
       fixed: 'right',
       render: (_, u) => {
         const isSelf = u.id === profile?.id;
         if (u.role === 'admin' || isSelf) {
-          return <span style={{ color: '#a1a1aa' }}>{isSelf ? 'You' : '—'}</span>;
+          return <span style={{ color: 'var(--isoko-muted)' }}>{isSelf ? 'You' : '—'}</span>;
         }
         return (
-          <Space>
-            {u.status === 'active' ? (
-              <Button
-                size="small"
-                danger
-                icon={<StopOutlined />}
-                loading={busyId === u.id}
-                onClick={() => moderate(u, 'suspend')}
-                aria-label={`Suspend ${u.name}`}
-              />
-            ) : (
-              <Button
-                size="small"
-                icon={<UndoOutlined />}
-                loading={busyId === u.id}
-                onClick={() => moderate(u, 'activate')}
-                aria-label={`Reactivate ${u.name}`}
-              />
-            )}
-            <Popconfirm
-              title={`Delete ${u.name}?`}
-              description="Permanently removes their account and everything tied to it."
-              okButtonProps={{ danger: true }}
-              onConfirm={() => remove(u)}
-            >
-              <Button size="small" danger icon={<DeleteOutlined />} aria-label={`Delete ${u.name}`} />
-            </Popconfirm>
-          </Space>
+          <ActionMenu
+            size="small"
+            disabled={busyId === u.id}
+            actions={[
+              u.status === 'active'
+                ? {
+                    key: 'suspend',
+                    label: t('actions.suspend'),
+                    icon: <StopOutlined />,
+                    danger: true,
+                    confirmTitle: t('actions.suspendTitle', { name: u.name }),
+                    confirmBody: t('actions.suspendBody'),
+                    onConfirm: () => moderate(u, 'suspend'),
+                  }
+                : {
+                    key: 'activate',
+                    label: t('actions.reactivate'),
+                    icon: <UndoOutlined />,
+                    confirmTitle: t('actions.reactivateTitle', { name: u.name }),
+                    onConfirm: () => moderate(u, 'activate'),
+                  },
+              {
+                key: 'delete',
+                label: t('actions.delete'),
+                icon: <DeleteOutlined />,
+                danger: true,
+                confirmTitle: t('actions.deleteTitle', { name: u.name }),
+                confirmBody: t('actions.deleteBody'),
+                onConfirm: () => remove(u),
+              },
+            ]}
+          />
         );
       },
     },

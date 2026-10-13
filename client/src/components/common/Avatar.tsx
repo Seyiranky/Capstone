@@ -1,7 +1,8 @@
 import { Avatar as AntdAvatar } from 'antd';
 
 // Monochrome greys, picked deterministically from the name.
-const GREYS = ['#3f3f46', '#52525b', '#71717a', '#27272a', '#5b5b64'];
+// Drawn from the logo's palette: navy, terracotta, ochre, slate blue, olive.
+const GREYS = ['#1E3A5F', '#B5562F', '#9A7A2E', '#4C6E96', '#6B7A4B'];
 
 const initialsOf = (name: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);

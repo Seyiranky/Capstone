@@ -17,9 +17,9 @@ const SideFooter = ({ collapsed, dark }: SideFooterProps) => {
   const dispatch = useAppDispatch();
   const { profile, role } = useAppSelector((state) => state.auth);
 
-  const nameColor = dark ? '#fff' : '#18181b';
-  const subColor = dark ? 'rgba(255,255,255,0.5)' : '#71717a';
-  const border = dark ? 'rgba(255,255,255,0.08)' : 'rgba(24,24,27,0.08)';
+  const nameColor = dark ? '#fff' : 'var(--isoko-ink)';
+  const subColor = dark ? 'rgba(255,255,255,0.5)' : 'var(--isoko-muted)';
+  const border = dark ? 'rgba(255,255,255,0.08)' : 'rgba(30,58,95,0.10)';
 
   const menu = {
     items: [

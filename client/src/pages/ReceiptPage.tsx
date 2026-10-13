@@ -84,7 +84,7 @@ const ReceiptPage = () => {
         </Typography.Text>
         <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.2, marginBottom: 8 }}>
           {receipt.amount.toLocaleString()}{' '}
-          <span style={{ fontSize: 15, fontWeight: 400, color: '#71717a' }}>{receipt.currency}</span>
+          <span style={{ fontSize: 15, fontWeight: 400, color: 'var(--isoko-muted)' }}>{receipt.currency}</span>
         </div>
 
         <Row label={t('receipt.number')}>

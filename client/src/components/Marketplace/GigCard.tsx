@@ -62,7 +62,7 @@ const GigCard = ({ gig, footNote }: GigCardProps) => {
                 border: 'none',
                 cursor: 'pointer',
                 background: 'rgba(255,255,255,0.92)',
-                color: saved ? '#e11d48' : '#52525b',
+                color: saved ? '#e11d48' : 'var(--isoko-muted)',
               }}
             >
               {saved ? <HeartFilled /> : <HeartOutlined />}

@@ -52,7 +52,7 @@ const TrustReceipt = ({ breakdown }: { breakdown: TrustScoreBreakdown }) => {
               percent={Math.round(component.value * 100)}
               size="small"
               showInfo={false}
-              strokeColor="#1f1f1f"
+              strokeColor="var(--isoko-navy)"
             />
             {detail && (
               <Typography.Text type="secondary" style={{ fontSize: 11 }}>

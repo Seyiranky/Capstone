@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Flex, Input, Modal, Radio, Space, Typography } from 'antd';
-import { DownOutlined, UpOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import ActionMenu from '../common/ActionMenu';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import MatchExplanation from '../common/MatchExplanation';
@@ -136,28 +137,31 @@ const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: Appl
                   <span />
                 )}
                 {canDecide && a.status === 'pending' && (
-                  <Flex gap={8}>
-                    <Button
-                      size="small"
-                      type="primary"
-                      loading={busyId === a.id}
-                      onClick={() => onDecide(a.id, 'approved')}
-                    >
-                      {t('marketplace.gigDetail.approve')}
-                    </Button>
-                    <Button
-                      size="small"
-                      danger
-                      loading={busyId === a.id}
-                      onClick={() => {
-                        setReason(null);
-                        setNote('');
-                        setRejecting(a);
-                      }}
-                    >
-                      {t('marketplace.gigDetail.reject')}
-                    </Button>
-                  </Flex>
+                  <ActionMenu
+                    size="small"
+                    disabled={busyId === a.id}
+                    actions={[
+                      {
+                        key: 'approve',
+                        label: t('marketplace.gigDetail.approve'),
+                        icon: <CheckOutlined />,
+                        confirmTitle: t('actions.approveApplicant', { name: a.worker?.name ?? '' }),
+                        confirmBody: t('actions.approveApplicantBody'),
+                        onConfirm: () => onDecide(a.id, 'approved'),
+                      },
+                      {
+                        key: 'reject',
+                        label: t('marketplace.gigDetail.reject'),
+                        icon: <CloseOutlined />,
+                        danger: true,
+                        onSelect: () => {
+                          setReason(null);
+                          setNote('');
+                          setRejecting(a);
+                        },
+                      },
+                    ]}
+                  />
                 )}
               </Flex>
             )}

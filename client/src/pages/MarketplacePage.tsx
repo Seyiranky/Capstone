@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Badge, Button, Drawer, Segmented } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
@@ -16,8 +17,15 @@ const MarketplacePage = () => {
   const { t } = useTranslation();
   const role = useAppSelector((state) => state.auth.role);
   const { savedIds } = useSavedGigs();
-  const [tab, setTab] = useState<Tab>('gigs');
-  const [postingGig, setPostingGig] = useState(false);
+  // ?tab=matches (and the others) lets the Dashboard link straight to a tab.
+  const [params] = useSearchParams();
+  const initial = params.get('tab') as Tab | null;
+  const [tab, setTab] = useState<Tab>(
+    initial && ['gigs', 'saved', 'applications', 'matches'].includes(initial) ? initial : 'gigs',
+  );
+  // Clients open the post form from the Dashboard with ?post=1.
+  const wantsPost = params.get('post') === '1';
+  const [postingGig, setPostingGig] = useState(wantsPost);
 
   const options = [
     {

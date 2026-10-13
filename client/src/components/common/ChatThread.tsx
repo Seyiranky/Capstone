@@ -186,9 +186,9 @@ const ChatThread = ({
                   padding: src && !message.body ? 4 : '7px 11px',
                   borderRadius: 12,
                   fontSize: 13,
-                  background: own ? '#18181b' : 'var(--ant-color-bg-container, #ffffff)',
+                  background: own ? 'var(--isoko-bubble-own)' : 'var(--ant-color-bg-container, #ffffff)',
                   color: own ? '#fff' : 'inherit',
-                  border: own ? 'none' : '1px solid rgba(24,24,27,0.1)',
+                  border: own ? 'none' : '1px solid var(--isoko-border)',
                   overflowWrap: 'anywhere',
                 }}
               >

@@ -301,7 +301,7 @@ const GigDetail = () => {
               </Typography.Text>
               <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.1, marginTop: 2 }}>
                 {Number(gig.budget).toLocaleString()}{' '}
-                <span style={{ fontSize: 14, fontWeight: 400, color: '#71717a' }}>RWF</span>
+                <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--isoko-muted)' }}>RWF</span>
               </div>
 
               <Divider style={{ margin: '14px 0' }} />

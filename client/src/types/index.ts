@@ -209,6 +209,8 @@ export interface Transaction {
   releasedAt?: string | null;
   refundedAt?: string | null;
   receiptNumber?: string | null;
+  /** Set when only part of the amount went to the worker (a split dispute). */
+  releasedAmount?: number | string | null;
   currency?: string;
   provider: string;
   reference: string;

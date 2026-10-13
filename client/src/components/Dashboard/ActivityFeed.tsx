@@ -15,6 +15,7 @@ interface ActivityFeedProps {
   matches: Match[];
   transactions: Transaction[];
   tasks: SkillTask[];
+  limit?: number;
 }
 
 interface Event {
@@ -23,7 +24,7 @@ interface Event {
   text: string;
 }
 
-const ActivityFeed = ({ role, matches, transactions, tasks }: ActivityFeedProps) => {
+const ActivityFeed = ({ role, matches, transactions, tasks, limit = 8 }: ActivityFeedProps) => {
   const { t } = useTranslation();
   const events: Event[] = [];
 
@@ -57,7 +58,7 @@ const ActivityFeed = ({ role, matches, transactions, tasks }: ActivityFeedProps)
   const sorted = events
     .filter((e) => e.at)
     .sort((a, b) => b.at.localeCompare(a.at))
-    .slice(0, 8);
+    .slice(0, limit);
 
   return (
     <Card title={t('common.recentActivity')} style={{ height: '100%' }}>

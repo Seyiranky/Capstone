@@ -46,16 +46,27 @@ interface Bar {
   value: number;
 }
 
-export const ColumnChart = ({ data, height = 240 }: { data: Bar[]; height?: number }) => (
+export const ColumnChart = ({
+  data,
+  height = 240,
+  single = false,
+}: {
+  data: Bar[];
+  height?: number;
+  /** One colour for every bar, for a series over time rather than categories. */
+  single?: boolean;
+}) => (
   <Column
     data={data}
     xField="label"
     yField="value"
-    colorField="label"
+    colorField={single ? undefined : 'label'}
     height={height}
     autoFit
     theme={useChartTheme()}
-    scale={{ color: { range: CHART_COLORS } }}
+    scale={single ? undefined : { color: { range: CHART_COLORS } }}
+    style={single ? { fill: CHART_COLORS[0], radiusTopLeft: 4, radiusTopRight: 4, maxWidth: 36 } : undefined}
+    axis={single ? { y: { labelFormatter: (v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`) } } : undefined}
     legend={false}
   />
 );

@@ -18,20 +18,20 @@ const OnboardingChecklist = ({ items }: { items: ChecklistItem[] }) => {
   if (doneCount === items.length) return null;
 
   return (
-    <Card title={t('common.getSetUp')} style={{ marginBottom: 16 }}>
+    <Card title={t('common.getSetUp')}>
       <Flex align="center" gap={20} wrap="wrap">
         <Progress
           type="circle"
           size={72}
           percent={pct}
-          strokeColor="#18181b"
+          strokeColor="var(--isoko-navy)"
           format={() => `${doneCount}/${items.length}`}
         />
         <div style={{ flex: 1, minWidth: 240 }}>
           {items.map((item) => (
             <Flex key={item.key} align="center" gap={10} style={{ padding: '7px 0' }}>
               {item.done ? (
-                <CheckCircleFilled style={{ color: '#18181b', fontSize: 16 }} />
+                <CheckCircleFilled style={{ color: 'var(--isoko-navy)', fontSize: 16 }} />
               ) : (
                 <span
                   style={{
