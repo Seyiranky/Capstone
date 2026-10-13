@@ -82,3 +82,21 @@ a:hover {
     padding-inline: 16px;
   }
 }
+
+/* Statistics: a figure and its unit stay on one line, and the unit reads as a
+   unit rather than a second number. */
+.ant-statistic .ant-statistic-content {
+  white-space: nowrap;
+}
+.ant-statistic .ant-statistic-content-suffix {
+  font-size: 13px;
+  color: var(--ant-color-text-secondary, #71717a);
+}
+@media (max-width: 575px) {
+  .ant-statistic .ant-statistic-content {
+    font-size: 20px;
+  }
+  .ant-statistic .ant-statistic-title {
+    font-size: 12px;
+  }
+}

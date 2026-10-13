@@ -187,37 +187,28 @@ const WorkerProfile = () => {
                   dataSource={reviews}
                   renderItem={(review) => (
                     <List.Item>
-                      <List.Item.Meta
-                        avatar={
-                          review.author ? (
-                            <Avatar name={review.author.name} size={32} />
-                          ) : undefined
-                        }
-                        title={
-                          <Flex justify="space-between">
-                            <Rate disabled value={review.rating} style={{ fontSize: 14 }} />
-                            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                              {new Date(review.createdAt).toLocaleDateString()}
-                            </Typography.Text>
-                          </Flex>
-                        }
-                        description={
-                          <>
-                            {review.comment && (
-                              <Typography.Paragraph style={{ marginBottom: 4 }}>
-                                {review.comment}
-                              </Typography.Paragraph>
-                            )}
-                            {review.author && (
-                              <IdentityLink
-                                id={review.author.id}
-                                name={review.author.name}
-                                size={20}
-                              />
-                            )}
-                          </>
-                        }
-                      />
+                      {/* One identity per review: author and date on top, then the
+                          rating and comment. */}
+                      <div style={{ width: '100%' }}>
+                        <Flex justify="space-between" align="center" gap={12}>
+                          <div style={{ minWidth: 0 }}>
+                            {review.author ? (
+                              <IdentityLink id={review.author.id} name={review.author.name} size={28} />
+                            ) : null}
+                          </div>
+                          <Typography.Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </Typography.Text>
+                        </Flex>
+                        <div style={{ paddingInlineStart: 36, marginTop: 4 }}>
+                          <Rate disabled value={review.rating} style={{ fontSize: 13 }} />
+                          {review.comment && (
+                            <Typography.Paragraph style={{ margin: '6px 0 0' }}>
+                              {review.comment}
+                            </Typography.Paragraph>
+                          )}
+                        </div>
+                      </div>
                     </List.Item>
                   )}
                 />

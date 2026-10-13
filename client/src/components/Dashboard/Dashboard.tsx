@@ -157,8 +157,16 @@ const Dashboard = () => {
           ]
         : [];
 
-  const kpi = (title: string, value: number | string, suffix?: string, accent?: string) => (
-    <Col xs={12} lg={8}>
+  // Three tiles: two share a row on phones, the last takes the full width
+  // rather than sitting alone at half width.
+  const kpi = (
+    title: string,
+    value: number | string,
+    suffix?: string,
+    accent?: string,
+    last = false,
+  ) => (
+    <Col xs={last ? 24 : 12} sm={8}>
       <Card size="small" style={{ height: '100%' }}>
         <Statistic title={title} value={value} suffix={suffix} valueStyle={accent ? { color: accent } : undefined} />
       </Card>
@@ -189,7 +197,7 @@ const Dashboard = () => {
       <Row gutter={[16, 16]}>
         {isEarner ? (
           <>
-            <Col xs={12} lg={8}>
+            <Col xs={12} sm={8}>
               <Card size="small" style={{ height: '100%' }}>
                 {/* An unrated worker must not be shown a mid-scale number as
                     though it were a verdict on them. */}
@@ -219,7 +227,7 @@ const Dashboard = () => {
               </Card>
             </Col>
             {kpi(role === 'client' ? t('dashboard.totalPaid') : t('dashboard.totalEarned'), confirmedTotal, 'RWF')}
-            {kpi(t('dashboard.activeMatches'), activeMatches)}
+            {kpi(t('dashboard.activeMatches'), activeMatches, undefined, undefined, true)}
           </>
         ) : (
           <>
@@ -230,6 +238,7 @@ const Dashboard = () => {
               pendingGigs.length,
               undefined,
               pendingGigs.length ? '#b45309' : undefined,
+              true,
             )}
           </>
         )}
@@ -250,7 +259,7 @@ const Dashboard = () => {
             </Card>
           </Col>
           <Col xs={24} lg={10}>
-            <Card title={t('dashboard.yourMatches')} styles={{ body: { minHeight: 140 } }}>
+            <Card title={t('dashboard.matchesByStatus')} styles={{ body: { minHeight: 140 } }}>
               {matchStatusSlices.length > 0 ? (
                 <PieChart data={matchStatusSlices} height={220} />
               ) : (

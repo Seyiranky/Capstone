@@ -5,7 +5,7 @@ import { adminApi } from '../../api/adminApi';
 import PageContainer from '../Layout/PageContainer';
 import AdminNav from './AdminNav';
 import SmsHealthCard from './SmsHealthCard';
-import { ColumnChart, PieChart } from '../common/charts';
+import { BarChart, ColumnChart, PieChart } from '../common/charts';
 import type { Gig, User } from '../../types';
 
 const GIG_STAGES: { key: Gig['status']; label: string }[] = [
@@ -95,7 +95,7 @@ const AdminDashboard = () => {
             <Col xs={24} lg={8}>
               <Card title="Gigs by category" styles={{ body: { minHeight: 260 } }}>
                 {categoryBars.length ? (
-                  <ColumnChart data={categoryBars} height={220} />
+                  <BarChart data={categoryBars} />
                 ) : (
                   <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No data" />
                 )}

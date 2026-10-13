@@ -110,7 +110,8 @@
       "editProfile": "Hindura umwirondoro",
       "postFirstGig": "Shyiraho umurimo wawe wa mbere",
       "postGig": "Shyiraho umurimo"
-    }
+    },
+    "matchesByStatus": "Akazi ukurikije uko gahagaze"
   },
   "marketplace": {
     "gigForm": {
@@ -298,7 +299,7 @@
       "trust": "Amanota y’ikizere {{score}} avuye mu bitekerezo {{reviews}}",
       "trustProvisional": "Mushya — nta bitekerezo birahari",
       "busy": "Afite akazi {{activeMatches}} agikora",
-      "busy_plural": "Afite akazi {{activeMatches}} agikora",
+      "busy_other": "Afite akazi {{activeMatches}} agikora",
       "skill": {
         "verified": "Ubumenyi bwemejwe",
         "pending": "Kwemeza biracyakorwa",
@@ -340,10 +341,10 @@
     },
     "detail": {
       "rating": "Bivuye mu gitekerezo {{count}}",
-      "rating_plural": "Bivuye mu bitekerezo {{count}}",
+      "rating_other": "Bivuye mu bitekerezo {{count}}",
       "completion": "{{completed}} yarangije, {{abandoned}} yaretse amaze kwemera",
       "verification": "Ubumenyi {{count}} bwemejwe n’usuzuma",
-      "verification_plural": "Ubumenyi {{count}} bwemejwe n’usuzuma"
+      "verification_other": "Ubumenyi {{count}} bwemejwe n’usuzuma"
     },
     "penalty": "Yagabanyijwe amanota {{points}}: akazi {{count}} yaretse amaze kwemera mu minsi 90 ishize.",
     "formulaNote": "Uburyo bwo kubara {{version}}. Ibitekerezo bya vuba bifite uburemere bwinshi, kandi amateka maremare aruta igitekerezo kimwe.",
@@ -417,7 +418,7 @@
     "verifiedSkills": "Ubumenyi bwemejwe",
     "level": "Urwego rwa {{level}}",
     "approvals": "Byemejwe n’usuzuma {{count}} wigenga",
-    "approvals_plural": "Byemejwe n’abasuzuma {{count}} bigenga",
+    "approvals_other": "Byemejwe n’abasuzuma {{count}} bigenga",
     "footer": "Ubumenyi bwemejwe bwasuzumwe n’abasuzuma bahawe akazi mu buryo bwikora, umukozi atabashobora gutoranya. Abasuzuma ntibavugwa amazina, kugira ngo bagume bigenga.",
     "invalidHelp": "Saba umukozi umurongo mushya.",
     "invalid": {
@@ -515,7 +516,7 @@
     "hint": "Bwira abakiriya ibyo wakoze mbere. Bigaragara ku mwirondoro wawe rusange.",
     "yearsLabel": "Imyaka umaze ukora aka kazi",
     "yearsSuffix": "Umwaka {{count}}",
-    "yearsSuffix_plural": "Imyaka {{count}}",
+    "yearsSuffix_other": "Imyaka {{count}}",
     "summaryLabel": "Ibyo wakoze",
     "summaryPlaceholder": "Urugero: imyaka itanu nsana telefoni i Nyamirambo, cyane cyane ibirahure n’aho bashyira umuriro.",
     "empty": "Nta burambe bwatanzwe."
@@ -552,12 +553,12 @@
   },
   "offline": {
     "offline": "Nta murandasi ufite. Igikorwa {{count}} cyabitswe, kizoherezwa nubwo uzagaruka kuri interineti.",
-    "offline_plural": "Nta murandasi ufite. Ibikorwa {{count}} byabitswe, bizoherezwa nubwo uzagaruka kuri interineti.",
+    "offline_other": "Nta murandasi ufite. Ibikorwa {{count}} byabitswe, bizoherezwa nubwo uzagaruka kuri interineti.",
     "syncing": "Kohereza igikorwa {{count}} cyabitswe…",
-    "syncing_plural": "Kohereza ibikorwa {{count}} byabitswe…",
+    "syncing_other": "Kohereza ibikorwa {{count}} byabitswe…",
     "savedOffline": "Byabitswe. Bizoherezwa igihe uzagaruka kuri interineti.",
     "failed": "Igikorwa {{count}} cyabitswe nticyashoboye koherezwa.",
-    "failed_plural": "Ibikorwa {{count}} byabitswe ntibyashoboye koherezwa."
+    "failed_other": "Ibikorwa {{count}} byabitswe ntibyashoboye koherezwa."
   },
   "verifyEmail": {
     "checking": "Turimo kwemeza aderesi yawe...",

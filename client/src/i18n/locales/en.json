@@ -110,7 +110,8 @@
       "editProfile": "Edit profile",
       "postFirstGig": "Post your first gig",
       "postGig": "Post a gig"
-    }
+    },
+    "matchesByStatus": "Matches by status"
   },
   "marketplace": {
     "gigForm": {
@@ -298,7 +299,7 @@
       "trust": "{{score}} trust from {{reviews}} reviews",
       "trustProvisional": "New — no reviews yet",
       "busy": "{{activeMatches}} job in progress",
-      "busy_plural": "{{activeMatches}} jobs in progress",
+      "busy_other": "{{activeMatches}} jobs in progress",
       "skill": {
         "verified": "Verified in this skill",
         "pending": "Verification in progress",
@@ -340,10 +341,10 @@
     },
     "detail": {
       "rating": "From {{count}} review",
-      "rating_plural": "From {{count}} reviews",
+      "rating_other": "From {{count}} reviews",
       "completion": "{{completed}} completed, {{abandoned}} dropped after accepting",
       "verification": "{{count}} skill verified by a reviewer",
-      "verification_plural": "{{count}} skills verified by a reviewer"
+      "verification_other": "{{count}} skills verified by a reviewer"
     },
     "penalty": "Reduced by {{points}} points: {{count}} job dropped after accepting in the last 90 days.",
     "formulaNote": "Scoring method {{version}}. Recent reviews count for more, and a long record counts for more than a single rating.",
@@ -417,7 +418,7 @@
     "verifiedSkills": "Verified skills",
     "level": "Level {{level}}",
     "approvals": "Approved by {{count}} independent reviewer",
-    "approvals_plural": "Approved by {{count}} independent reviewers",
+    "approvals_other": "Approved by {{count}} independent reviewers",
     "footer": "Verified skills were each approved by reviewers assigned automatically, who cannot be chosen by the worker. Reviewers are not named, to keep them independent.",
     "invalidHelp": "Ask the worker for a current link.",
     "invalid": {
@@ -515,7 +516,7 @@
     "hint": "Tell clients what you have done before. This is shown on your public profile.",
     "yearsLabel": "Years doing this work",
     "yearsSuffix": "{{count}} year",
-    "yearsSuffix_plural": "{{count}} years",
+    "yearsSuffix_other": "{{count}} years",
     "summaryLabel": "What you have worked on",
     "summaryPlaceholder": "For example: five years repairing phones in Nyamirambo, mostly screens and charging ports.",
     "empty": "No experience added yet."
@@ -552,12 +553,12 @@
   },
   "offline": {
     "offline": "You are offline. {{count}} action saved and will send when you reconnect.",
-    "offline_plural": "You are offline. {{count}} actions saved and will send when you reconnect.",
+    "offline_other": "You are offline. {{count}} actions saved and will send when you reconnect.",
     "syncing": "Sending {{count}} saved action…",
-    "syncing_plural": "Sending {{count}} saved actions…",
+    "syncing_other": "Sending {{count}} saved actions…",
     "savedOffline": "Saved. This will be sent when you are back online.",
     "failed": "{{count}} saved action could not be sent.",
-    "failed_plural": "{{count}} saved actions could not be sent."
+    "failed_other": "{{count}} saved actions could not be sent."
   },
   "verifyEmail": {
     "checking": "Confirming your address...",

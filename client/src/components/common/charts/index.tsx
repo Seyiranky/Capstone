@@ -1,4 +1,4 @@
-import { Column, Line, Pie } from '@ant-design/charts';
+import { Bar as HorizontalBar, Column, Line, Pie } from '@ant-design/charts';
 import { useThemeMode } from '../../../theme/ThemeProvider';
 import { CHART_COLORS } from '../../../theme/tokens';
 
@@ -57,5 +57,21 @@ export const ColumnChart = ({ data, height = 240 }: { data: Bar[]; height?: numb
     theme={useChartTheme()}
     scale={{ color: { range: CHART_COLORS } }}
     legend={false}
+  />
+);
+
+/** Horizontal bars, for categories whose names are too long to sit under a column. */
+export const BarChart = ({ data, height }: { data: Bar[]; height?: number }) => (
+  <HorizontalBar
+    data={data}
+    xField="label"
+    yField="value"
+    colorField="label"
+    height={height ?? Math.max(160, data.length * 40 + 40)}
+    autoFit
+    theme={useChartTheme()}
+    scale={{ color: { range: CHART_COLORS } }}
+    legend={false}
+    axis={{ x: { title: false }, y: { title: false } }}
   />
 );
