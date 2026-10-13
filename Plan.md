@@ -332,10 +332,12 @@ Built in this order, each committed with its tests:
    escrow: 2% of the price (minimum 300 RWF), covering medical costs up to 300,000 RWF for the
    job's day. Simulated insurer; policy number on the receipt. The covered worker files a claim
    from the job card within 7 days; an admin approves or declines it with a reason.
-3. **USSD** (Phase 9). `POST /api/ussd` in Africa's Talking's format (sessionId, phoneNumber,
+3. ✓ **USSD** (Phase 9; done 14 Oct: `POST /api/ussd/gateway` for the gateway, `Basic phone` page for workers as a simulator). `POST /api/ussd` in Africa's Talking's format (sessionId, phoneNumber,
    text, replying `CON`/`END`). A worker's confirmed phone number is their login. Menus: open jobs
    in my trades, my active job (enter the completion code), earnings this month, language. An
-   on-screen phone simulator under System lets the panel see it working.
+   on-screen phone simulator (worker sidebar › Basic phone) lets the panel see it working.
+   To dial it from a real handset: an Africa's Talking account and service code, the API on a
+   public URL, its callback set to `/api/ussd/gateway?secret=…` with `USSD_WEBHOOK_SECRET`.
 
 ## Round 3 — the worker's side (research of 14 Oct 2026, done 14 Oct)
 

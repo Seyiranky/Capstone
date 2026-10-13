@@ -35,6 +35,7 @@ import AdminReports from './components/Admin/AdminReports';
 import AdminVoice from './components/Admin/AdminVoice';
 import AdminCover from './components/Admin/AdminCover';
 import WorkerVoicePage from './components/WorkerVoice/WorkerVoicePage';
+import UssdPage from './components/Ussd/UssdPage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -84,6 +85,7 @@ function App() {
             <Route path="/growth" element={<GrowthPage />} />
             <Route path="/growth/rpl" element={<RplPack />} />
             <Route path="/voice" element={<WorkerVoicePage />} />
+            <Route path="/ussd" element={<UssdPage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<AdminPage />} />

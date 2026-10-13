@@ -24,6 +24,7 @@ import safetyNetRoutes from './routes/safetyNetRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import reportRoutes from './routes/reportRoutes';
 import voiceRoutes from './routes/voiceRoutes';
+import ussdRoutes from './routes/ussdRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { notFound, errorHandler } from './middleware/errorMiddleware';
 import { corsOptions, securityHeaders } from './middleware/security';
@@ -67,6 +68,7 @@ app.use('/api/fairwork', fairworkRoutes);
 app.use('/api/safety-net', safetyNetRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/voice', voiceRoutes);
+app.use('/api/ussd', ussdRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 

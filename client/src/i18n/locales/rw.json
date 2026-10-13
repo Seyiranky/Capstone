@@ -66,7 +66,8 @@
     "profile": "Umwirondoro",
     "disputes": "Ibirego",
     "growth": "Iterambere",
-    "voice": "Ijwi ry'Abakozi"
+    "voice": "Ijwi ry'Abakozi",
+    "ussd": "Telefoni isanzwe"
   },
   "dashboard": {
     "welcome": "Murakaza neza, {{name}}",
@@ -1246,5 +1247,21 @@
     "declineHint": "Impamvu byanzwe",
     "approvedMsg": "Ubusabe bwemejwe.",
     "declinedMsg": "Ubusabe bwanzwe."
+  },
+  "ussd": {
+    "title": "Telefoni isanzwe",
+    "subtitle": "Nta telefoni igezweho cyangwa interineti ufite? Shaka akazi, urangize akazi ukoresheje kode y'umukiriya kandi urebe ibyo winjije ukanze kode ngufi kuri telefoni iyo ari yo yose.",
+    "idle": "Kanda {{code}} utangire.",
+    "loading": "Tegereza...",
+    "dial": "Kanda {{code}}",
+    "reply": "Ihitamo ryawe",
+    "send": "Ohereza",
+    "cancel": "Hagarika",
+    "ok": "Sawa",
+    "failed": "Hari ikitagenze neza. Ongera ukande.",
+    "howTitle": "Uko bikora",
+    "how1": "Kuri telefoni iyo ari yo yose, kanda {{code}} ukoresheje nimero wemeje muri Igenamiterere. Nta interineti cyangwa porogaramu bikenewe, kandi nta kiguzi ku mukozi.",
+    "how2": "Hitamo ukoresheje umubare: 1 ikwereka akazi gafunguye mu byo ukora ukagasaba, 2 ikwereka akazi urimo ikakira kode y'imibare 4 y'umukiriya kugira ngo wishyurwe, 3 ikwereka ibyo winjije, 4 ihindura ururimi. 0 isubira inyuma.",
+    "how3": "Uru rupapuro rukoresha ibikubiyemo bimwe na konti yawe, ushobora kubigerageza hano. Mu igerageza kode ngufi itangwa binyuze kuri USSD gateway nka Africa's Talking."
   }
 }
