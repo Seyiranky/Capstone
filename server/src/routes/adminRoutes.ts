@@ -12,6 +12,8 @@ router.get('/metrics', verifyToken, authorize('admin'), adminController.pilotMet
 router.get('/sms-health', verifyToken, authorize('admin'), adminController.smsHealth);
 router.get('/reviewers', verifyToken, authorize('admin'), adminController.listReviewers);
 router.get('/rejection-reasons', verifyToken, authorize('admin'), adminController.rejectionReasons);
+router.get('/payments', verifyToken, authorize('admin'), adminController.payments);
+router.get('/rates', verifyToken, authorize('admin'), adminController.rates);
 router.put('/users/:id/reviewer-tier', verifyToken, authorize('admin'), adminController.setReviewerTier);
 router.put('/gigs/:id/review', verifyToken, authorize('admin'), adminController.reviewGig);
 router.put('/users/:id/moderate', verifyToken, authorize('admin'), adminController.moderateUser);

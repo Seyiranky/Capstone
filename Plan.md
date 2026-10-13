@@ -234,6 +234,19 @@ verification the defence rests on. Instead:
   and the sender sees "Seen" under their last message, live over the existing socket.
 - 6 new tests in `messagePhotos.test.ts`; checked with two browsers at once.
 
+### Added on request — an admin console in the sidebar (done, 14 Oct 2026)
+
+- The admin tab bar is gone. Every admin page is a sidebar entry, grouped: **Operations**
+  (gig approvals, skill reviews, jobs, disputes, marketplace), **Money** (payments & escrow),
+  **People & trust** (users, reviewers, integrity audit), **Insights** (analytics, research
+  metrics, market & pricing), **System** (delivery health).
+- New pages, all on live data: *Payments & escrow* (awaiting, held, paid out, refunded, with
+  every transaction and receipt); *Research metrics* (RQ2 acceptance by arm, newcomer access,
+  time to first match, review turnaround, RQ3 allocation, from `/api/admin/metrics`, which
+  had no screen before); *Reviewers* (enrol peers; the server still enforces eligibility);
+  *Market & pricing* (usual pay per trade, rejection reasons by skill); *Jobs*; *Skill
+  reviews*. Gig approvals and skill reviews are laid open; nothing sits behind a pop-up.
+
 ## Decisions taken
 
 | Decision | Choice | Why |

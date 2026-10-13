@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
-import { User, Gig, GigApplication, Skill, Match, Transaction, UserSkill, NotificationDelivery, sequelize } from '../models';
+import { User, Gig, GigApplication, Skill, Match, Transaction, UserSkill, NotificationDelivery, Payout, Dispute, sequelize } from '../models';
+import * as rateService from '../services/rateService';
 import * as sms from '../lib/channels/sms';
 import notify from '../lib/notify';
 import * as pilotMetricsService from '../services/pilotMetricsService';
@@ -397,5 +398,79 @@ export const rejectionReasons = async (_req: Request, res: Response): Promise<vo
     [...bySkill.entries()]
       .map(([skill, counts]) => ({ skill, counts, total: Object.values(counts).reduce((a, b) => a + b, 0) }))
       .sort((a, b) => (b.counts.skillLevel ?? 0) - (a.counts.skillLevel ?? 0) || b.total - a.total),
+  );
+};
+
+/**
+ * Money on the platform at a glance: what is waiting to be collected, held in
+ * escrow, paid out and refunded, plus the latest transactions with their
+ * receipts. Amounts are totals of the transactions in each state.
+ */
+export const payments = async (_req: Request, res: Response): Promise<void> => {
+  const transactions = (await Transaction.findAll({
+    include: [
+      {
+        model: Match,
+        as: 'match',
+        attributes: ['id', 'workerId', 'status', 'completedVia'],
+        include: [
+          { model: Gig, as: 'gig', attributes: ['id', 'title'], include: [{ model: User, as: 'client', attributes: ['id', 'name'] }] },
+          { model: User, as: 'worker', attributes: ['id', 'name'] },
+        ],
+      },
+    ],
+    order: [['updatedAt', 'DESC']],
+  })) as (Transaction & { match?: Match & { gig?: Gig & { client?: User }; worker?: User } })[];
+
+  const bucket = (tx: Transaction): 'awaiting' | 'held' | 'released' | 'refunded' | 'failed' =>
+    tx.status === 'failed'
+      ? 'failed'
+      : tx.status === 'initiated'
+        ? 'awaiting'
+        : tx.escrowStatus === 'held'
+          ? 'held'
+          : tx.escrowStatus === 'refunded'
+            ? 'refunded'
+            : 'released';
+
+  const totals: Record<string, { count: number; amount: number }> = {};
+  for (const tx of transactions) {
+    const key = bucket(tx);
+    totals[key] = totals[key] ?? { count: 0, amount: 0 };
+    totals[key].count += 1;
+    totals[key].amount += Number(key === 'released' ? (tx.releasedAmount ?? tx.amount) : tx.amount);
+  }
+  const [payoutCount, liveDisputes] = await Promise.all([
+    Payout.count(),
+    Dispute.count({ where: { status: ['open', 'escalated'] } }),
+  ]);
+
+  res.json({
+    totals,
+    payoutCount,
+    liveDisputes,
+    recent: transactions.slice(0, 50).map((tx) => ({
+      id: tx.id,
+      state: bucket(tx),
+      amount: Number(tx.amount),
+      releasedAmount: tx.releasedAmount != null ? Number(tx.releasedAmount) : null,
+      currency: tx.currency,
+      receiptNumber: tx.receiptNumber,
+      updatedAt: tx.updatedAt,
+      gig: tx.match?.gig ? { id: tx.match.gig.id, title: tx.match.gig.title } : null,
+      client: tx.match?.gig?.client ? { id: tx.match.gig.client.id, name: tx.match.gig.client.name } : null,
+      worker: tx.match?.worker ? { id: tx.match.worker.id, name: tx.match.worker.name } : null,
+      completedVia: tx.match?.completedVia ?? null,
+    })),
+  });
+};
+
+/** The usual price range for every trade, for the market view. */
+export const rates = async (_req: Request, res: Response): Promise<void> => {
+  const categories = (await Skill.findAll({ where: { parentId: null }, attributes: ['name', 'category'] }));
+  res.json(
+    await Promise.all(
+      categories.map(async (c) => ({ name: c.name, ...(await rateService.forCategory(c.category)) })),
+    ),
   );
 };

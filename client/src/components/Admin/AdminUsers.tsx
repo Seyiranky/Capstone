@@ -4,13 +4,14 @@ import { DeleteOutlined, StopOutlined, UndoOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { adminApi } from '../../api/adminApi';
 import { useAppSelector } from '../../store/hooks';
+import { useTranslation } from 'react-i18next';
 import PageContainer from '../Layout/PageContainer';
-import AdminNav from './AdminNav';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import type { User } from '../../types';
 
 const AdminUsers = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const { profile } = useAppSelector((state) => state.auth);
   const [users, setUsers] = useState<User[]>([]);
@@ -157,10 +158,9 @@ const AdminUsers = () => {
 
   return (
     <PageContainer
-      title="Users"
-      subtitle="Suspend an account to block sign-in immediately, or delete it permanently."
+      title={t('adminNav.users')}
+      subtitle={t('adminNav.usersSub')}
     >
-      <AdminNav />
       <Card>
         <Input.Search
           placeholder="Search name or email"

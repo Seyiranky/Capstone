@@ -4,12 +4,22 @@ import { useTranslation } from 'react-i18next';
 import { Menu } from 'antd';
 import {
   AppstoreOutlined,
+  AuditOutlined,
+  BarChartOutlined,
   BellOutlined,
+  CheckSquareOutlined,
   DashboardOutlined,
+  DollarOutlined,
+  ExperimentOutlined,
+  FileSearchOutlined,
+  FundOutlined,
   SafetyCertificateOutlined,
   SettingOutlined,
+  SolutionOutlined,
+  TeamOutlined,
+  ToolOutlined,
   WalletOutlined,
-  AuditOutlined,
+  WifiOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
 import { activeNavKey, visibleNavEntries } from './navConfig';
@@ -20,8 +30,18 @@ const ICONS: Record<string, ReactNode> = {
   '/wallet': <WalletOutlined />,
   '/disputes': <AuditOutlined />,
   '/notifications': <BellOutlined />,
-  '/admin': <SafetyCertificateOutlined />,
   '/settings': <SettingOutlined />,
+  '/admin/gigs/pending': <CheckSquareOutlined />,
+  '/admin/reviews': <SafetyCertificateOutlined />,
+  '/admin/jobs': <ToolOutlined />,
+  '/admin/payments': <DollarOutlined />,
+  '/admin/users': <TeamOutlined />,
+  '/admin/reviewers': <SolutionOutlined />,
+  '/admin/audit': <FileSearchOutlined />,
+  '/admin': <BarChartOutlined />,
+  '/admin/metrics': <ExperimentOutlined />,
+  '/admin/market': <FundOutlined />,
+  '/admin/system': <WifiOutlined />,
 };
 
 const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void }) => {
@@ -30,15 +50,27 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const items = useMemo(
-    () =>
-      visibleNavEntries(role).map((entry) => ({
-        key: entry.key,
-        icon: ICONS[entry.key],
-        label: t(entry.labelKey),
-      })),
-    [role, t],
-  );
+  // Entries without a group come first, flat; grouped ones sit under a heading.
+  // A collapsed sider hides the headings (antd shows a divider instead).
+  const items = useMemo(() => {
+    const entries = visibleNavEntries(role);
+    const item = (entry: (typeof entries)[number]) => ({
+      key: entry.key,
+      icon: ICONS[entry.key],
+      label: t(entry.labelKey),
+    });
+    const flat = entries.filter((e) => !e.group).map(item);
+    const groups: { type: 'group'; key: string; label: string; children: ReturnType<typeof item>[] }[] = [];
+    for (const entry of entries.filter((e) => e.group)) {
+      let group = groups.find((g) => g.key === entry.group);
+      if (!group) {
+        group = { type: 'group', key: entry.group as string, label: t(entry.group as string), children: [] };
+        groups.push(group);
+      }
+      group.children.push(item(entry));
+    }
+    return [...flat, ...groups];
+  }, [role, t]);
 
   const selected = activeNavKey(location.pathname);
 

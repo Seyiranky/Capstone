@@ -68,6 +68,7 @@ export interface User {
   /** Null until the address is confirmed; email is not sent before then. */
   emailVerifiedAt?: string | null;
   createdAt?: string;
+  reviewerTier?: 'admin' | 'peer' | null;
 }
 
 export interface Skill {
@@ -528,4 +529,75 @@ export interface WorkerHit {
   name: string;
   trustScore: number;
   reviewCount: number;
+}
+
+export interface AdminPayments {
+  totals: Partial<Record<'awaiting' | 'held' | 'released' | 'refunded' | 'failed', { count: number; amount: number }>>;
+  payoutCount: number;
+  liveDisputes: number;
+  recent: {
+    id: string;
+    state: 'awaiting' | 'held' | 'released' | 'refunded' | 'failed';
+    amount: number;
+    releasedAmount: number | null;
+    currency: string;
+    receiptNumber: string | null;
+    updatedAt: string;
+    gig: { id: string; title: string } | null;
+    client: { id: string; name: string } | null;
+    worker: { id: string; name: string } | null;
+    completedVia: string | null;
+  }[];
+}
+
+export interface TimeSummary {
+  n: number;
+  meanHours: number | null;
+  medianHours: number | null;
+}
+
+export interface AcceptanceStats {
+  total: number;
+  awaitingResponse: number;
+  responded: number;
+  accepted: number;
+  declined: number;
+  acceptanceRate: number | null;
+  responseTime: TimeSummary;
+  queuedOffline: number;
+}
+
+export interface PilotMetrics {
+  matchAcceptance: {
+    overall: AcceptanceStats;
+    byOrigin: Record<string, AcceptanceStats>;
+    byInvitationReason: Record<string, AcceptanceStats>;
+  };
+  newcomerAccess: {
+    threshold: { reviewsBelow: number };
+    newcomers: number;
+    establishedWorkers: number;
+    invitations: { total: number; toNewcomers: number; share: number | null; byReason: { ranked: number; exploration: number } };
+    acceptedMatches: { total: number; byNewcomers: number; share: number | null };
+    newcomersNeverInvited: number;
+  };
+  experimentAllocation: {
+    experiment: string;
+    total: number;
+    claimed: number;
+    remaining: number;
+    byArm: Record<string, number>;
+    imbalance: number;
+  };
+  timeToFirstMatch: {
+    gigsOpened: number;
+    openedNeverMatched: number;
+    toFirstMatch: TimeSummary;
+    toFirstAcceptedMatch: TimeSummary;
+  };
+  skillReviewTurnaround: { submitted: number; pending: number; approved: number; rejected: number; turnaround: TimeSummary };
+}
+
+export interface TradeRate extends RateGuide {
+  name: string;
 }

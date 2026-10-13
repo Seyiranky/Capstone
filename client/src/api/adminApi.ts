@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { CollusionReport, Gig, RejectionBreakdown, SmsHealth, User } from '../types';
+import type { AdminPayments, CollusionReport, Gig, PilotMetrics, RejectionBreakdown, SmsHealth, TradeRate, User } from '../types';
 
 export const adminApi = {
   listUsers: () => axiosClient.get<User[]>('/admin/users').then((res) => res.data),
@@ -18,6 +18,12 @@ export const adminApi = {
 
   rejectionReasons: () =>
     axiosClient.get<RejectionBreakdown[]>('/admin/rejection-reasons').then((res) => res.data),
+
+  payments: () => axiosClient.get<AdminPayments>('/admin/payments').then((res) => res.data),
+
+  rates: () => axiosClient.get<TradeRate[]>('/admin/rates').then((res) => res.data),
+
+  metrics: () => axiosClient.get<PilotMetrics>('/admin/metrics').then((res) => res.data),
 
   listGigs: () => axiosClient.get<Gig[]>('/admin/gigs').then((res) => res.data),
 

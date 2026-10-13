@@ -117,4 +117,18 @@ describe('rejection reasons', () => {
     });
     expect(notice?.body).toContain('Budget too low for 20 uniforms');
   });
+
+  test('admins can see payments by state and the usual rates per trade', async () => {
+    const payments = await request(app).get('/api/admin/payments').set(as('admin'));
+    expect(payments.status).toBe(200);
+    expect(Array.isArray(payments.body.recent)).toBe(true);
+    expect(typeof payments.body.payoutCount).toBe('number');
+    const rates = await request(app).get('/api/admin/rates').set(as('admin'));
+    expect(rates.status).toBe(200);
+    expect(rates.body.map((r: { category: string }) => r.category)).toEqual(
+      expect.arrayContaining(['digital_web', 'tailoring', 'tutoring', 'electronics_repair']),
+    );
+    const forbidden = await request(app).get('/api/admin/payments').set(as('client'));
+    expect(forbidden.status).toBe(403);
+  });
 });

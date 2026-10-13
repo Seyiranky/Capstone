@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Col, Empty, Row, Skeleton, Statistic } from 'antd';
 import { adminApi } from '../../api/adminApi';
+import { useTranslation } from 'react-i18next';
 import PageContainer from '../Layout/PageContainer';
-import AdminNav from './AdminNav';
-import SmsHealthCard from './SmsHealthCard';
-import RejectionBreakdownCard from './RejectionBreakdownCard';
 import { BarChart, ColumnChart, PieChart } from '../common/charts';
 import type { Gig, User } from '../../types';
 
@@ -17,6 +15,7 @@ const GIG_STAGES: { key: Gig['status']; label: string }[] = [
 ];
 
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [gigs, setGigs] = useState<Gig[]>([]);
@@ -67,8 +66,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <PageContainer title="Admin" subtitle="Platform activity at a glance.">
-      <AdminNav />
+    <PageContainer title={t('adminNav.analytics')} subtitle={t('adminNav.analyticsSub')}>
       {loading ? (
         <Skeleton active />
       ) : (
@@ -108,8 +106,6 @@ const AdminDashboard = () => {
               </Card>
             </Col>
           </Row>
-          <RejectionBreakdownCard />
-          <SmsHealthCard />
         </>
       )}
     </PageContainer>

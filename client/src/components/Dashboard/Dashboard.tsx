@@ -33,7 +33,6 @@ import StatusTag from '../common/StatusTag';
 import ActivityFeed from './ActivityFeed';
 import OnboardingChecklist, { type ChecklistItem } from './OnboardingChecklist';
 import SkillVerificationForm from '../Verification/SkillVerificationForm';
-import AdminReviewQueue from '../Verification/AdminReviewQueue';
 import GigApprovalQueue from '../Admin/GigApprovalQueue';
 import type { Gig, SkillTask, Transaction, UserSkill } from '../../types';
 
@@ -48,7 +47,7 @@ const Dashboard = () => {
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [myGigCount, setMyGigCount] = useState(0);
   const [myApplicationCount, setMyApplicationCount] = useState(0);
-  const [modal, setModal] = useState<'skill' | 'review' | null>(null);
+  const [modal, setModal] = useState<'skill' | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   // Arriving from a "verify this skill" link on a rejected application opens the
@@ -288,9 +287,7 @@ const Dashboard = () => {
               <Card
                 title={t('dashboard.skillReviews')}
                 extra={
-                  <Button type="link" onClick={() => setModal('review')}>
-                    {t('dashboard.reviewSubmissions')}
-                  </Button>
+                  <Link to="/admin/reviews">{t('dashboard.reviewSubmissions')}</Link>
                 }
                 style={{ height: '100%' }}
               >
@@ -413,9 +410,6 @@ const Dashboard = () => {
 
       <Modal open={modal === 'skill'} title={t('dashboard.addSkillModalTitle')} footer={null} onCancel={() => setModal(null)} destroyOnHidden>
         <SkillVerificationForm tasks={tasks} onSubmitted={refreshTasks} />
-      </Modal>
-      <Modal open={modal === 'review'} title={t('dashboard.skillReviewModalTitle')} footer={null} width={640} onCancel={() => setModal(null)} destroyOnHidden>
-        <AdminReviewQueue tasks={tasks} onReviewed={refreshTasks} />
       </Modal>
     </PageContainer>
   );

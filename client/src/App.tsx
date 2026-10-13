@@ -15,7 +15,13 @@ import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminPendingGigsPage from './pages/AdminPendingGigsPage';
-import AdminCompletedGigsPage from './pages/AdminCompletedGigsPage';
+import AdminJobs from './components/Admin/AdminJobs';
+import AdminPayments from './components/Admin/AdminPayments';
+import AdminSkillReviews from './components/Admin/AdminSkillReviews';
+import AdminReviewers from './components/Admin/AdminReviewers';
+import AdminMetrics from './components/Admin/AdminMetrics';
+import AdminMarket from './components/Admin/AdminMarket';
+import AdminSystem from './components/Admin/AdminSystem';
 import AdminAuditPage from './pages/AdminAuditPage';
 import PassportPage from './pages/PassportPage';
 import ReceiptPage from './pages/ReceiptPage';
@@ -72,7 +78,14 @@ function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/gigs/pending" element={<AdminPendingGigsPage />} />
-            <Route path="/admin/gigs/completed" element={<AdminCompletedGigsPage />} />
+            <Route path="/admin/gigs/completed" element={<Navigate to="/admin/jobs" replace />} />
+            <Route path="/admin/jobs" element={<AdminJobs />} />
+            <Route path="/admin/reviews" element={<AdminSkillReviews />} />
+            <Route path="/admin/payments" element={<AdminPayments />} />
+            <Route path="/admin/reviewers" element={<AdminReviewers />} />
+            <Route path="/admin/metrics" element={<AdminMetrics />} />
+            <Route path="/admin/market" element={<AdminMarket />} />
+            <Route path="/admin/system" element={<AdminSystem />} />
             <Route path="/admin/audit" element={<AdminAuditPage />} />
           </Route>
 
