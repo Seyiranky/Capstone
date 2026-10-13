@@ -27,11 +27,14 @@ const VoiceNoteDraft = ({ recorder }: { recorder: VoiceRecorder }) => {
       {recorder.state === 'recording' ? (
         <>
           <span className="isoko-rec-dot" aria-hidden="true" />
-          <span style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
             {formatClock(recorder.elapsed)}
             <span style={{ color: 'var(--isoko-muted)' }}> / {formatClock(VOICE_MAX_SECONDS)}</span>
           </span>
-          <span style={{ flex: 1, fontSize: 12.5, color: 'var(--isoko-muted)' }}>{t('voice.recording')}</span>
+          <span className="isoko-composer__rec-label" style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: 'var(--isoko-muted)' }}>
+            {t('voice.recording')}
+          </span>
+          <span className="isoko-composer__rec-spacer" />
           <Tooltip title={t('voice.discard')}>
             <Button type="text" icon={<DeleteOutlined />} aria-label={t('voice.discard')} onClick={recorder.discard} />
           </Tooltip>

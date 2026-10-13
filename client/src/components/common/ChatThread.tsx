@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { App, Button, Empty, Flex, Image, Input, Tooltip, Typography } from 'antd';
-import { AudioOutlined, CloseOutlined, PictureOutlined, SendOutlined } from '@ant-design/icons';
+import { AudioOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, PictureOutlined, SendOutlined } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
 import { messageApi } from '../../api/messageApi';
 import { connectSocket } from '../../lib/socket';
 import { resolveAssetUrl } from '../../utils/assetUrl';
 import Avatar from './Avatar';
-import { clipFile, useVoiceRecorder } from '../../hooks/useVoiceRecorder';
-import VoiceNoteDraft from '../Voice/VoiceNoteDraft';
+import { clipFile, useVoiceRecorder, VOICE_MAX_SECONDS } from '../../hooks/useVoiceRecorder';
+import { formatClock } from '../../utils/formatClock';
 import VoiceNotePlayer from '../Voice/VoiceNotePlayer';
 import OffPlatformNote from '../Trust/OffPlatformNote';
 import ReportUserButton from '../Trust/ReportUserButton';
@@ -252,36 +252,9 @@ const ChatThread = ({
         <div ref={endRef} />
       </div>
 
-      {preview && (
-        <Flex align="center" gap={8} style={{ marginTop: 10 }}>
-          <div style={{ position: 'relative' }}>
-            <img
-              src={preview}
-              alt={t('chat.photo')}
-              style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 6, display: 'block' }}
-            />
-            <Button
-              size="small"
-              shape="circle"
-              icon={<CloseOutlined />}
-              aria-label={t('chat.removePhoto')}
-              onClick={clearImage}
-              style={{ position: 'absolute', top: -8, right: -8 }}
-            />
-          </div>
-          <Typography.Text type="secondary" ellipsis style={{ fontSize: 12, maxWidth: 200 }}>
-            {image?.name}
-          </Typography.Text>
-        </Flex>
-      )}
-
-      {recorder.state !== 'idle' && (
-        <div style={{ marginTop: 10 }}>
-          <VoiceNoteDraft recorder={recorder} />
-        </div>
-      )}
-
-      <Flex gap={8} style={{ marginTop: 12 }}>
+      {/* One composer box: attachments as chips on top, the writing line below.
+          While recording, the writing line becomes the recording bar in place. */}
+      <div className="isoko-composer">
         <input
           ref={fileRef}
           type="file"
@@ -289,37 +262,100 @@ const ChatThread = ({
           hidden
           onChange={(e) => pickImage(e.target.files?.[0])}
         />
-        <Tooltip title={t('chat.attach')}>
-          <Button
-            icon={<PictureOutlined />}
-            aria-label={t('chat.attach')}
-            onClick={() => fileRef.current?.click()}
-          />
-        </Tooltip>
-        <Tooltip title={t('voice.record')}>
-          <Button
-            icon={<AudioOutlined />}
-            aria-label={t('voice.record')}
-            disabled={recorder.state !== 'idle'}
-            onClick={recorder.start}
-          />
-        </Tooltip>
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onPressEnter={handleSend}
-          maxLength={4000}
-          placeholder={placeholder ?? t('chat.placeholder', { name: recipientName ?? '' })}
-        />
-        <Button
-          type="primary"
-          icon={<SendOutlined />}
-          aria-label={t('chat.send')}
-          loading={sending}
-          disabled={(!draft.trim() && !image && !clip) || recorder.state === 'recording'}
-          onClick={handleSend}
-        />
-      </Flex>
+
+        {(preview || clip) && (
+          <Flex vertical gap={8} className="isoko-composer__attachments">
+            {preview && (
+              <Flex align="center" gap={10} className="isoko-composer__chip">
+                <img src={preview} alt={t('chat.photo')} className="isoko-composer__thumb" />
+                <Typography.Text ellipsis style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
+                  {image?.name}
+                </Typography.Text>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<CloseOutlined />}
+                  aria-label={t('chat.removePhoto')}
+                  onClick={clearImage}
+                />
+              </Flex>
+            )}
+            {clip && (
+              <Flex align="center" gap={10} className="isoko-composer__chip">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <VoiceNotePlayer src={clip.url} durationSec={clip.durationSec} width="100%" />
+                </div>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  aria-label={t('voice.discard')}
+                  onClick={recorder.discard}
+                />
+              </Flex>
+            )}
+          </Flex>
+        )}
+
+        {recorder.state === 'recording' ? (
+          <Flex align="center" gap={10} className="isoko-composer__line">
+            <span className="isoko-rec-dot" aria-hidden="true" />
+            <Typography.Text style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+              {formatClock(recorder.elapsed)}
+              <Typography.Text type="secondary"> / {formatClock(VOICE_MAX_SECONDS)}</Typography.Text>
+            </Typography.Text>
+            {/* The dot and timer already say it; the word is dropped where space is short. */}
+            <Typography.Text type="secondary" ellipsis className="isoko-composer__rec-label" style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
+              {t('voice.recording')}
+            </Typography.Text>
+            <span className="isoko-composer__rec-spacer" />
+            <Tooltip title={t('voice.discard')}>
+              <Button type="text" icon={<DeleteOutlined />} aria-label={t('voice.discard')} onClick={recorder.discard} />
+            </Tooltip>
+            <Button type="primary" icon={<CheckOutlined />} onClick={recorder.stop}>
+              {t('voice.done')}
+            </Button>
+          </Flex>
+        ) : (
+          <Flex align="center" gap={4} className="isoko-composer__line">
+            <Tooltip title={t('chat.attach')}>
+              <Button
+                type="text"
+                icon={<PictureOutlined />}
+                aria-label={t('chat.attach')}
+                onClick={() => fileRef.current?.click()}
+              />
+            </Tooltip>
+            <Tooltip title={t('voice.record')}>
+              <Button
+                type="text"
+                icon={<AudioOutlined />}
+                aria-label={t('voice.record')}
+                disabled={Boolean(clip)}
+                onClick={recorder.start}
+              />
+            </Tooltip>
+            <Input
+              variant="borderless"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onPressEnter={handleSend}
+              maxLength={4000}
+              placeholder={placeholder ?? t('chat.placeholder', { name: recipientName ?? '' })}
+              style={{ flex: 1, minWidth: 0 }}
+            />
+            <Button
+              type="primary"
+              shape="circle"
+              icon={<SendOutlined />}
+              aria-label={t('chat.send')}
+              loading={sending}
+              disabled={!draft.trim() && !image && !clip}
+              onClick={handleSend}
+            />
+          </Flex>
+        )}
+      </div>
     </div>
   );
 };

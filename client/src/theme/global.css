@@ -105,3 +105,16 @@ a:hover {
 .isoko-offplatform .anticon { margin-top: 2px; }
 .isoko-offplatform--payment { background: #fef3c7; color: #92400e; }
 :root[data-theme='dark'] .isoko-offplatform--payment { background: rgba(217, 160, 50, 0.16); color: #f0c46b; }
+
+/* Chat composer: one box holding attachments and the writing line. */
+.isoko-composer { margin-top: 12px; padding: 6px; border: 1px solid var(--isoko-border); border-radius: 14px; background: var(--ant-color-bg-container); }
+.isoko-composer:focus-within { border-color: var(--isoko-muted); }
+.isoko-composer__attachments { padding: 4px 4px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--isoko-border); }
+.isoko-composer__chip { padding: 6px 6px 6px 8px; border-radius: 10px; background: var(--ant-color-fill-quaternary); min-width: 0; }
+.isoko-composer__thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; display: block; flex-shrink: 0; }
+.isoko-composer__line { min-height: 40px; padding: 0 2px; }
+.isoko-composer__rec-spacer { display: none; flex: 1; }
+@media (max-width: 575px) {
+  .isoko-composer__rec-label { display: none !important; }
+  .isoko-composer__rec-spacer { display: block; }
+}
