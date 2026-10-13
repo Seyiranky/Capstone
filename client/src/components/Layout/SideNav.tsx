@@ -19,6 +19,7 @@ import {
   TeamOutlined,
   ToolOutlined,
   WalletOutlined,
+  TrophyOutlined,
   WifiOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
@@ -42,6 +43,7 @@ const ICONS: Record<string, ReactNode> = {
   '/admin/metrics': <ExperimentOutlined />,
   '/admin/market': <FundOutlined />,
   '/admin/system': <WifiOutlined />,
+  '/admin/fairwork': <TrophyOutlined />,
 };
 
 const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void }) => {

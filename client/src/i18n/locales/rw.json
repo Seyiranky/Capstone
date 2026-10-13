@@ -852,7 +852,8 @@
     "analyticsSub": "Sisitemu muri make.",
     "metricsSub": "Ibipimo by’ibibazo by’ubushakashatsi: ese gutondekanya bituma akazi kemerwa, kandi abashya babona amahirwe angana?",
     "marketSub": "Ibyo akazi kishyurwa koko muri buri mwuga, n’impamvu ubusabe bwangwa.",
-    "systemSub": "Niba ubutumwa bugera ku bantu."
+    "systemSub": "Niba ubutumwa bugera ku bantu.",
+    "fairwork": "Ikarita ya Fairwork"
   },
   "actions": {
     "more": "Ibindi",
@@ -897,5 +898,42 @@
     "disputeDetail": "Abanyamuryango batatu batabogamye bafata icyemezo.",
     "receipt": "Inyemezabwishyu kuri buri bwishyu",
     "receiptDetail": "Umuntu wese ashobora kuyigenzura, kandi yanditse ku nyandiko y’amafaranga y’umukozi."
+  },
+  "fairwork": {
+    "title": "Ikarita ya Fairwork",
+    "subtitle": "Isoko isuzumwe hakurikijwe amahame atanu ya Fairwork ku kazi ko kuri porogaramu, hashingiwe ku nyandiko zayo, bibarwa buri gihe iyi paji ifunguwe.",
+    "about": "Fairwork, yo muri Oxford Internet Institute, isuzuma porogaramu z’akazi mu bihugu 38 ku bwishyu, imiterere, amasezerano, imiyoborere n’uburenganzira bwo guhagararirwa, amanota abiri kuri buri hame. Natwe twisuzuma ku mahame amwe, ako kanya, tukerekana umubare uri inyuma ya buri nota.",
+    "score": "Amanota {{score}} kuri {{outOf}}",
+    "met": "Byujujwe",
+    "notMet": "Ntibiruzuzwa",
+    "measured": "Byapimwe {{value}}, bikenewe {{threshold}}",
+    "basis": "Hashingiwe ku nyandiko {{count}}",
+    "computed": "Byabazwe {{when}}",
+    "p_pay": "Ubwishyu buboneye",
+    "p_conditions": "Imiterere iboneye",
+    "p_contracts": "Amasezerano aboneye",
+    "p_management": "Imiyoborere iboneye",
+    "p_representation": "Guhagararirwa kuboneye",
+    "c_payAtFloor": "Akazi kishyurwa nibura igiciro gito gisanzwe mu mwuga",
+    "c_payAtFloor_d": "Igice cy’ubwishyu kiri kuri cyangwa hejuru y’igiciro gito gisanzwe muri uwo mwuga kuri Isoko.",
+    "c_noCommission": "Abakozi bahabwa igiciro cyose bumvikanye",
+    "c_noCommission_d": "Igice cy’ubwishyu kitavanwamo komisiyo y’umukozi.",
+    "c_escrowProtected": "Ubwishyu burinzwe mbere y’uko akazi gatangira",
+    "c_escrowProtected_d": "Igice cy’akazi karangiye ubwishyu bwako bwabitswe kandi bukishyurwa.",
+    "c_disputesOnTime": "Impaka zifatwaho icyemezo mu minsi 5",
+    "c_disputesOnTime_d": "Igice cy’impaka zafashweho icyemezo, cyangwa zikiri mu minsi 5.",
+    "c_receipts": "Buri bwishyu bufite inyemezabwishyu igenzurwa",
+    "c_receipts_d": "Igice cy’ubwishyu bwatanzwe bufite inyemezabwishyu.",
+    "c_explained": "Gutondekanya birasobanurwa",
+    "c_explained_d": "Igice cy’ubusabe n’ubutumire bifite impamvu zo gutondekanywa.",
+    "c_appealsHandled": "Ubujurire burasubizwa",
+    "c_appealsHandled_d": "Igice cy’ubujurire bwafashweho icyemezo, cyangwa bukiri mu minsi 14.",
+    "c_reasonsGiven": "Abanzwe babwirwa impamvu",
+    "c_reasonsGiven_d": "Igice cy’ubusabe bwanzwe bufite impamvu.",
+    "c_peerReviewers": "Abakozi basuzuma abakozi",
+    "c_peerReviewers_d": "Abakozi banditswe nk’abasuzuma ibimenyetso by’ubumenyi.",
+    "c_workerVoice": "Abakozi batora ku mategeko ya porogaramu",
+    "c_workerVoice_d": "Ntibirakorwa. Biteganyijwe: amatora ku mategeko, afunguye ku bakozi bishyuwe.",
+    "basis_other": "Hashingiwe ku nyandiko {{count}}"
   }
 }

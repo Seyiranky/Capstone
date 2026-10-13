@@ -603,3 +603,19 @@ export interface PilotMetrics {
 export interface TradeRate extends RateGuide {
   name: string;
 }
+
+export interface FairworkCheck {
+  key: string;
+  met: boolean;
+  value: number | null;
+  threshold: number;
+  unit: 'ratio' | 'count' | 'days';
+  basis: number;
+}
+
+export interface FairworkScorecard {
+  score: number;
+  outOf: number;
+  computedAt: string;
+  principles: { key: 'pay' | 'conditions' | 'contracts' | 'management' | 'representation'; checks: FairworkCheck[] }[];
+}

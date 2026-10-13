@@ -20,6 +20,7 @@ import passportRoutes from './routes/passportRoutes';
 import receiptRoutes from './routes/receiptRoutes';
 import disputeRoutes from './routes/disputeRoutes';
 import teamRoutes from './routes/teamRoutes';
+import fairworkRoutes from './routes/fairworkRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { notFound, errorHandler } from './middleware/errorMiddleware';
@@ -52,6 +53,7 @@ app.use('/api/passports', passportRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/team', teamRoutes);
+app.use('/api/fairwork', fairworkRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 

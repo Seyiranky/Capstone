@@ -42,6 +42,7 @@ export const NAV_ENTRIES: NavEntry[] = [
   { key: '/admin', labelKey: 'adminNav.analytics', roles: ['admin'], group: 'adminNav.insights' },
   { key: '/admin/metrics', labelKey: 'adminNav.metrics', roles: ['admin'], group: 'adminNav.insights' },
   { key: '/admin/market', labelKey: 'adminNav.market', roles: ['admin'], group: 'adminNav.insights' },
+  { key: '/admin/fairwork', labelKey: 'adminNav.fairwork', roles: ['admin'], group: 'adminNav.insights' },
 
   { key: '/admin/system', labelKey: 'adminNav.systemHealth', roles: ['admin'], group: 'adminNav.system' },
   { key: '/notifications', labelKey: 'sidebar.notifications', roles: ['admin'], group: 'adminNav.account' },

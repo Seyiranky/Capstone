@@ -852,7 +852,8 @@
     "analyticsSub": "The platform at a glance.",
     "metricsSub": "The measurements behind the research questions: does ranking get work accepted, and do newcomers get a fair start?",
     "marketSub": "What jobs actually pay in each trade, and why applications are turned down.",
-    "systemSub": "Whether notifications are reaching people."
+    "systemSub": "Whether notifications are reaching people.",
+    "fairwork": "Fairwork scorecard"
   },
   "actions": {
     "more": "More actions",
@@ -897,5 +898,42 @@
     "disputeDetail": "Three independent members decide, never anyone tied to either side.",
     "receipt": "A receipt for every payout",
     "receiptDetail": "Checkable by anyone, and listed on the worker’s income statement."
+  },
+  "fairwork": {
+    "title": "Fairwork scorecard",
+    "subtitle": "Isoko scored against the five Fairwork principles for platform work, from its own records, recomputed every time this page loads.",
+    "about": "Fairwork, at the Oxford Internet Institute, rates gig platforms in 38 countries on fair pay, conditions, contracts, management and representation, two points each. We apply the same principles to ourselves, live, and show the number behind every point.",
+    "score": "{{score}} of {{outOf}} points",
+    "met": "Met",
+    "notMet": "Not yet",
+    "measured": "Measured {{value}}, needs {{threshold}}",
+    "basis": "From {{count}} record",
+    "computed": "Computed {{when}}",
+    "p_pay": "Fair pay",
+    "p_conditions": "Fair conditions",
+    "p_contracts": "Fair contracts",
+    "p_management": "Fair management",
+    "p_representation": "Fair representation",
+    "c_payAtFloor": "Jobs pay at least the usual low end for the trade",
+    "c_payAtFloor_d": "Share of payouts at or above the 25th percentile of what that trade pays on Isoko.",
+    "c_noCommission": "Workers keep the full agreed price",
+    "c_noCommission_d": "Share of payouts with no platform commission taken from the worker.",
+    "c_escrowProtected": "Pay is protected before work starts",
+    "c_escrowProtected_d": "Share of completed jobs whose payment was held in escrow and released.",
+    "c_disputesOnTime": "Disputes are decided within 5 days",
+    "c_disputesOnTime_d": "Share of disputes decided, or still within, the 5 days promised.",
+    "c_receipts": "Every payout has a checkable receipt",
+    "c_receipts_d": "Share of released payments that produced receipted payouts.",
+    "c_explained": "Rankings are explained",
+    "c_explained_d": "Share of applications and invitations that carry the reasons behind their ranking.",
+    "c_appealsHandled": "Appeals are answered",
+    "c_appealsHandled_d": "Share of appeals against reviewers decided, or still within 14 days.",
+    "c_reasonsGiven": "Rejected applicants are told why",
+    "c_reasonsGiven_d": "Share of rejected applications that carry a reason.",
+    "c_peerReviewers": "Workers judge workers",
+    "c_peerReviewers_d": "Workers enrolled as peer reviewers of skill evidence.",
+    "c_workerVoice": "Workers vote on platform rules",
+    "c_workerVoice_d": "Not built yet. Planned: polls on platform rules, open to workers with a paid job.",
+    "basis_other": "From {{count}} records"
   }
 }
