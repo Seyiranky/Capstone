@@ -100,3 +100,15 @@ a:hover {
     font-size: 12px;
   }
 }
+
+/* Phones: tables inside cards already sit inside 16px of card padding, so the
+   default 16px cell padding pushes the last column off screen. */
+@media (max-width: 575px) {
+  .ant-table-wrapper .ant-table-thead > tr > th,
+  .ant-table-wrapper .ant-table-tbody > tr > td {
+    padding: 10px 8px;
+  }
+  .ant-table-wrapper .ant-table-tbody > tr > td {
+    font-size: 13px;
+  }
+}

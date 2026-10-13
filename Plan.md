@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: proposed** (13 Oct 2026). Nothing in this plan is built yet.
+> **Status: in progress** (13 Oct 2026). Phase 0 is done; Phase 1 is next.
 
 ## Context
 
@@ -63,7 +63,7 @@ Phases 0–6 are the core. Phases 7–9 are stretch, ordered by how much they ad
 defence relative to effort. Each phase is committed on its own, with tests, and leaves
 the app working on the simulated payment adapter and the `log` SMS driver.
 
-### Phase 0 — Responsive and visual pass (in progress)
+### Phase 0 — Responsive and visual pass (done, 13 Oct 2026)
 
 Audited every route as worker, client, admin and visitor at 375px and 1280px with Playwright.
 Findings so far:
@@ -76,7 +76,13 @@ Findings so far:
   Replace it with a responsive applicant list (one card per applicant, with match details
   that expand).
 - Header: the unread badge overflows the right edge at 375px.
-- Remaining routes: work through the screenshots one by one; record each fix in the commit.
+- Done as well: stat figures stay on one line and the third tile spans the row on phones;
+  the admin category chart is horizontal; the wallet history is a two-line list on phones;
+  the wallet how-to is a plain numbered list; each review shows one identity, not two;
+  the dashboard charts sit side by side from tablet width; phone tables use tighter cells.
+- Bug found on the way: the locale files used i18next's pre-v21 `_plural` suffix, which
+  v26 ignores ("From 5 review"). Renamed to `_other`.
+- Checked at 375px, 820px and 1280px with no element past the right edge.
 
 ### Phase 1 — Escrow with a completion code
 *Borrowed from:* Upwork escrow, KayaHelp/Handymesh held payments, Bolt/Glovo handover PINs.

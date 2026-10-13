@@ -246,7 +246,7 @@ const Dashboard = () => {
 
       {showCharts && (
         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-          <Col xs={24} lg={14}>
+          <Col xs={24} md={14}>
             <Card
               title={role === 'client' ? t('dashboard.totalPaid') : t('dashboard.totalEarned')}
               styles={{ body: { minHeight: 140 } }}
@@ -258,7 +258,7 @@ const Dashboard = () => {
               )}
             </Card>
           </Col>
-          <Col xs={24} lg={10}>
+          <Col xs={24} md={10}>
             <Card title={t('dashboard.matchesByStatus')} styles={{ body: { minHeight: 140 } }}>
               {matchStatusSlices.length > 0 ? (
                 <PieChart data={matchStatusSlices} height={220} />
