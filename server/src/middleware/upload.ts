@@ -9,6 +9,7 @@ const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 const GIG_IMAGE_DIR = path.join(UPLOAD_ROOT, 'gigs');
 const EVIDENCE_DIR = path.join(UPLOAD_ROOT, 'evidence');
 const JOB_PHOTO_DIR = path.join(UPLOAD_ROOT, 'jobs');
+const MESSAGE_IMAGE_DIR = path.join(UPLOAD_ROOT, 'messages');
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
@@ -107,6 +108,13 @@ export const uploadGigImage = multer({
   storage: diskStorage(GIG_IMAGE_DIR),
   fileFilter: gigImageFilter,
   limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+/** One photo per message, images only. */
+export const uploadMessageImage = multer({
+  storage: diskStorage(MESSAGE_IMAGE_DIR),
+  fileFilter: gigImageFilter,
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
 });
 
 /** Photos of finished work: images only, a few per job, sized for mobile uploads. */

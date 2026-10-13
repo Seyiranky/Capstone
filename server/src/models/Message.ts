@@ -14,7 +14,11 @@ export class Message extends Model<InferAttributes<Message>, InferCreationAttrib
   declare id: CreationOptional<string>;
   declare senderId: string;
   declare recipientId: string;
-  declare body: string;
+  declare body: CreationOptional<string>;
+  /** A photo sent with (or instead of) text. Served from /uploads by an unguessable name. */
+  declare imageUrl: string | null;
+  declare imageMimeType: string | null;
+  declare imageSha256: string | null;
   declare readAt: Date | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
@@ -47,7 +51,11 @@ export const initMessage = (sequelize: Sequelize) => {
       body: {
         type: DataTypes.TEXT,
         allowNull: false,
+        defaultValue: '',
       },
+      imageUrl: { type: DataTypes.STRING, allowNull: true },
+      imageMimeType: { type: DataTypes.STRING, allowNull: true },
+      imageSha256: { type: DataTypes.STRING(64), allowNull: true },
       readAt: {
         type: DataTypes.DATE,
         allowNull: true,
