@@ -339,6 +339,17 @@ Built in this order, each committed with its tests:
    To dial it from a real handset: an Africa's Talking account and service code, the API on a
    public URL, its callback set to `/api/ussd/gateway?secret=…` with `USSD_WEBHOOK_SECRET`.
 
+## Find workers (done 14 Oct 2026)
+
+Clients can choose instead of only waiting for applications. `Find workers` (client sidebar)
+lists active workers with level, trust score, paid jobs, availability, area, which contact
+details are confirmed, and each skill with how it was proven (withheld for the research control
+arm, as on ranked lists). Filters: name or skill, trade, area, proven skills only, available now;
+sorted by trust, paid jobs or newest. From a card the client can message the worker or offer one
+of their open gigs: a `direct` invitation the worker confirms, after which the client pays into
+escrow as for any match. At most 5 direct invitations wait on a gig at once; posting and offering
+need a confirmed contact.
+
 ## Round 3 — the worker's side (research of 14 Oct 2026, done 14 Oct)
 
 What worker-facing platforms give their workers, and how Isoko does it differently.

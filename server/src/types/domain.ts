@@ -56,7 +56,8 @@ export const REJECTION_REASONS: RejectionReason[] = ['skillLevel', 'distance', '
 export type MatchStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';
 
 /** Match.origin — which path produced the match, and the RQ2 comparison axis. */
-export type MatchOrigin = 'manual' | 'ranked';
+/** manual: an approved application; ranked: invited from the shortlist; direct: a client invited this worker. */
+export type MatchOrigin = 'manual' | 'ranked' | 'direct';
 
 /**
  * Match.invitationReason — an invitation received through the reserved

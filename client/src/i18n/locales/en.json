@@ -67,7 +67,8 @@
     "disputes": "Disputes",
     "growth": "Growth",
     "voice": "Worker Voice",
-    "ussd": "Basic phone"
+    "ussd": "Basic phone",
+    "workers": "Find workers"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -438,7 +439,9 @@
     "suspendBody": "They are signed out at once and cannot log in until an admin reactivates them. The report is closed as handled.",
     "suspendedNote": "Account suspended",
     "markedHandled": "Report marked handled",
-    "markedDismissed": "Report dismissed"
+    "markedDismissed": "Report dismissed",
+    "phoneNotConfirmed": "Phone not confirmed",
+    "emailNotConfirmed": "Email not confirmed"
   },
   "matches": {
     "pendingWorkerPrompt": "You were selected for this gig. Confirm you're still available.",
@@ -1263,5 +1266,37 @@
     "how1": "From any phone, dial {{code}} on a number you have confirmed in Settings. No internet or app is needed, and it costs nothing to the worker.",
     "how2": "Choose by number: 1 lists open jobs in your trades and lets you apply, 2 shows the job you are doing and takes the client's 4-digit code to get paid, 3 shows your earnings, 4 switches between Kinyarwanda and English. 0 goes back.",
     "how3": "This screen runs the same menus as your own account, so you can try it here. In the pilot the short code is served through a USSD gateway such as Africa's Talking."
+  },
+  "workers": {
+    "title": "Find workers",
+    "subtitle": "Choose who does the job. Every skill shows how it was proven, and you pay into escrow only once the worker accepts.",
+    "searchPlaceholder": "Search by name or skill",
+    "allTrades": "All trades",
+    "anyArea": "Any area",
+    "sort_trust": "Highest trust",
+    "sort_jobs": "Most paid jobs",
+    "sort_newest": "Newest",
+    "provenOnly": "Proven skills only",
+    "availableOnly": "Available now",
+    "count_one": "{{count}} worker",
+    "count_other": "{{count}} workers",
+    "none": "No workers match. Try fewer filters.",
+    "new": "New",
+    "noReviews": "no reviews yet",
+    "reviews_one": "{{count}} review",
+    "reviews_other": "{{count}} reviews",
+    "paidJobs_one": "{{count}} paid job",
+    "paidJobs_other": "{{count}} paid jobs",
+    "years_one": "{{count}} year",
+    "years_other": "{{count}} years",
+    "message": "Message",
+    "offer": "Offer a gig",
+    "offerTitle": "Offer a gig to {{name}}",
+    "offerIntro": "Choose one of your open gigs. {{name}} is asked to confirm; then you pay into escrow as usual.",
+    "sendOffer": "Send offer",
+    "offered": "Offer sent to {{name}}. You will be told when they answer.",
+    "offerFailed": "Could not send the offer. Try again.",
+    "noOpenGigs": "You have no open gig to offer yet. Gigs open once an admin approves them.",
+    "postFirst": "Post a gig"
   }
 }

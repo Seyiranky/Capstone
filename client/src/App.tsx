@@ -36,6 +36,7 @@ import AdminVoice from './components/Admin/AdminVoice';
 import AdminCover from './components/Admin/AdminCover';
 import WorkerVoicePage from './components/WorkerVoice/WorkerVoicePage';
 import UssdPage from './components/Ussd/UssdPage';
+import FindWorkersPage from './components/Workers/FindWorkersPage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -80,6 +81,9 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['worker', 'client']} />}>
             <Route path="/wallet" element={<WalletPage />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={['client', 'admin']} />}>
+            <Route path="/workers" element={<FindWorkersPage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['worker']} />}>
             <Route path="/growth" element={<GrowthPage />} />

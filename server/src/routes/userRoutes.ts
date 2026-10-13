@@ -1,4 +1,5 @@
 import express from 'express';
+import * as workerDirectoryController from '../controllers/workerDirectoryController';
 import * as userController from '../controllers/userController';
 import { verifyToken } from '../middleware/authMiddleware';
 import { authorize } from '../middleware/roleMiddleware';
@@ -12,6 +13,7 @@ router.get('/me/export', verifyToken, userController.exportMyData);
 router.get('/me/growth', verifyToken, authorize('worker'), userController.getGrowth);
 // Before '/:id', which would otherwise take 'search' as an id.
 router.get('/search', verifyToken, userController.searchWorkers);
+router.get('/directory', verifyToken, authorize('client', 'admin'), workerDirectoryController.list);
 // Distinct from the export above: that is a data dump for the holder, this is
 // a signed attestation of earnings intended for a lender.
 router.get('/me/income-statement', verifyToken, passportController.incomeStatement);

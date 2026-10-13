@@ -22,8 +22,8 @@ const VerificationBadges = ({ phone, email, size = 'default' }: VerificationBadg
   );
   return (
     <Flex gap={12} wrap="wrap" align="center">
-      {item(Boolean(phone), t('trust.phoneConfirmed'), t(phone ? 'trust.phoneConfirmedHint' : 'trust.notConfirmedHint'))}
-      {item(Boolean(email), t('trust.emailConfirmed'), t(email ? 'trust.emailConfirmedHint' : 'trust.notConfirmedHint'))}
+      {item(Boolean(phone), t(phone ? 'trust.phoneConfirmed' : 'trust.phoneNotConfirmed'), t(phone ? 'trust.phoneConfirmedHint' : 'trust.notConfirmedHint'))}
+      {item(Boolean(email), t(email ? 'trust.emailConfirmed' : 'trust.emailNotConfirmed'), t(email ? 'trust.emailConfirmedHint' : 'trust.notConfirmedHint'))}
     </Flex>
   );
 };

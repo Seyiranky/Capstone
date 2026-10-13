@@ -38,6 +38,7 @@ const ICONS: Record<string, ReactNode> = {
   '/growth': <RiseOutlined />,
   '/voice': <CommentOutlined />,
   '/ussd': <MobileOutlined />,
+  '/workers': <TeamOutlined />,
   '/admin/voice': <CommentOutlined />,
   '/admin/cover': <MedicineBoxOutlined />,
   '/disputes': <AuditOutlined />,

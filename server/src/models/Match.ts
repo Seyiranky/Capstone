@@ -98,7 +98,7 @@ export const initMatch = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'manual',
-        validate: { isIn: [['manual', 'ranked']] },
+        validate: { isIn: [['manual', 'ranked', 'direct']] },
       },
       respondedAt: {
         type: DataTypes.DATE,

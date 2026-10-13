@@ -22,6 +22,7 @@ export interface NavEntry {
 export const NAV_ENTRIES: NavEntry[] = [
   { key: '/dashboard', labelKey: 'sidebar.dashboard' },
   { key: '/marketplace', labelKey: 'sidebar.marketplace', roles: ['worker', 'client'] },
+  { key: '/workers', labelKey: 'sidebar.workers', roles: ['client'] },
   { key: '/wallet', labelKey: 'sidebar.wallet', roles: ['worker', 'client'] },
   { key: '/growth', labelKey: 'sidebar.growth', roles: ['worker'] },
   { key: '/voice', labelKey: 'sidebar.voice', roles: ['worker'] },

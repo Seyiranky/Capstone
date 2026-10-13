@@ -67,7 +67,8 @@
     "disputes": "Ibirego",
     "growth": "Iterambere",
     "voice": "Ijwi ry'Abakozi",
-    "ussd": "Telefoni isanzwe"
+    "ussd": "Telefoni isanzwe",
+    "workers": "Shaka abakozi"
   },
   "dashboard": {
     "welcome": "Murakaza neza, {{name}}",
@@ -438,7 +439,9 @@
     "suspendBody": "Ahita asohorwa kandi ntashobora kwinjira kugeza umuyobozi amusubije. Ikirego gifungwa nk'icyakemuwe.",
     "suspendedNote": "Konti yahagaritswe",
     "markedHandled": "Ikirego cyakemuwe",
-    "markedDismissed": "Ikirego cyanzwe"
+    "markedDismissed": "Ikirego cyanzwe",
+    "phoneNotConfirmed": "Telefoni ntiremezwa",
+    "emailNotConfirmed": "Imeyili ntiremezwa"
   },
   "matches": {
     "pendingWorkerPrompt": "Watoranyijwe kuri aka kazi. Emeza ko uracyaboneka.",
@@ -1263,5 +1266,37 @@
     "how1": "Kuri telefoni iyo ari yo yose, kanda {{code}} ukoresheje nimero wemeje muri Igenamiterere. Nta interineti cyangwa porogaramu bikenewe, kandi nta kiguzi ku mukozi.",
     "how2": "Hitamo ukoresheje umubare: 1 ikwereka akazi gafunguye mu byo ukora ukagasaba, 2 ikwereka akazi urimo ikakira kode y'imibare 4 y'umukiriya kugira ngo wishyurwe, 3 ikwereka ibyo winjije, 4 ihindura ururimi. 0 isubira inyuma.",
     "how3": "Uru rupapuro rukoresha ibikubiyemo bimwe na konti yawe, ushobora kubigerageza hano. Mu igerageza kode ngufi itangwa binyuze kuri USSD gateway nka Africa's Talking."
+  },
+  "workers": {
+    "title": "Shaka abakozi",
+    "subtitle": "Hitamo ukora akazi. Buri bumenyi bwerekana uko bwemejwe, kandi wishyura muri escrow ari uko umukozi yemeye.",
+    "searchPlaceholder": "Shakisha izina cyangwa ubumenyi",
+    "allTrades": "Imyuga yose",
+    "anyArea": "Ahantu hose",
+    "sort_trust": "Icyizere kinini",
+    "sort_jobs": "Akazi kenshi kishyuwe",
+    "sort_newest": "Abashya",
+    "provenOnly": "Ubumenyi bwemejwe gusa",
+    "availableOnly": "Bari hafi ubu",
+    "count_one": "Umukozi {{count}}",
+    "count_other": "Abakozi {{count}}",
+    "none": "Nta mukozi uhuye. Gabanya amayunguruzo.",
+    "new": "Mushya",
+    "noReviews": "nta bitekerezo",
+    "reviews_one": "igitekerezo {{count}}",
+    "reviews_other": "ibitekerezo {{count}}",
+    "paidJobs_one": "akazi {{count}} kishyuwe",
+    "paidJobs_other": "akazi {{count}} kishyuwe",
+    "years_one": "umwaka {{count}}",
+    "years_other": "imyaka {{count}}",
+    "message": "Andikira",
+    "offer": "Mwohereze akazi",
+    "offerTitle": "Ohereza akazi kuri {{name}}",
+    "offerIntro": "Hitamo kimwe mu kazi kawe gafunguye. {{name}} arasabwa kwemeza; hanyuma wishyura muri escrow nk'uko bisanzwe.",
+    "sendOffer": "Ohereza",
+    "offered": "Akazi koherejwe kuri {{name}}. Uzamenyeshwa igisubizo.",
+    "offerFailed": "Ntibyoherejwe. Ongera ugerageze.",
+    "noOpenGigs": "Nta kazi gafunguye ufite. Akazi gafunguka umuyobozi amaze kukemeza.",
+    "postFirst": "Tanga akazi"
   }
 }
