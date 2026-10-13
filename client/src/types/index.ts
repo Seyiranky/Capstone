@@ -164,6 +164,11 @@ export interface Match {
   acceptedAt?: string | null;
   declineReason?: string | null;
   scoreBreakdown?: MatchScoreBreakdown | null;
+  /** Only ever present for the client, and only while the job is in progress. */
+  completionCode?: string | null;
+  completionCodeAttempts?: number;
+  workDoneAt?: string | null;
+  completedVia?: 'code' | 'client' | 'auto' | null;
   createdAt: string;
   updatedAt: string;
   gig?: Gig;
@@ -174,11 +179,18 @@ export interface Match {
 
 export type TransactionStatus = 'initiated' | 'confirmed' | 'failed';
 
+export type EscrowStatus = 'none' | 'held' | 'released' | 'refunded';
+
 export interface Transaction {
   id: string;
   matchId: string;
   amount: number;
   status: TransactionStatus;
+  escrowStatus: EscrowStatus;
+  heldAt?: string | null;
+  releasedAt?: string | null;
+  refundedAt?: string | null;
+  currency?: string;
   provider: string;
   reference: string;
   createdAt: string;

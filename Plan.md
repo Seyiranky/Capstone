@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: in progress** (13 Oct 2026). Phase 0 is done; Phase 1 is next.
+> **Status: in progress** (13 Oct 2026). Phases 0–1 are done; Phase 2 is next.
 
 ## Context
 
@@ -84,7 +84,7 @@ Findings so far:
   v26 ignores ("From 5 review"). Renamed to `_other`.
 - Checked at 375px, 820px and 1280px with no element past the right edge.
 
-### Phase 1 — Escrow with a completion code
+### Phase 1 — Escrow with a completion code (done, 13 Oct 2026)
 *Borrowed from:* Upwork escrow, KayaHelp/Handymesh held payments, Bolt/Glovo handover PINs.
 
 - When the worker accepts, the client funds the agreed amount. Through the existing
@@ -101,6 +101,11 @@ Findings so far:
   the same thing after 14 days; 72 hours suits small local jobs.
 - Migration, model, service, controller, routes, client "Job in progress" card, tests
   covering the transitions, idempotent release, and lockout.
+- As built: the code is stored as plain digits but excluded by `Match`'s default scope, so
+  only the client's own match list returns it. Hashing it would stop the client seeing it
+  again, and the 5-try lockout is what protects it. Only the client can complete a match
+  directly now; the worker uses the code or "report done". Income statements, wallets and
+  dashboards count a worker's money only once released. 14 new tests in `escrow.test.ts`.
 
 ### Phase 2 — Quotes and receipts
 *Borrowed from:* Upwork proposals, Thumbtack quotes, Fundis receipts.

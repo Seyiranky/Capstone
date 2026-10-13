@@ -1,3 +1,4 @@
+import { countsAsMoved, movedAt } from '../../lib/money';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -86,21 +87,21 @@ const Dashboard = () => {
     (m) => m.status === 'pending' || m.status === 'accepted',
   ).length;
   const confirmedTotal = transactions
-    .filter((x) => x.status === 'confirmed')
+    .filter((x) => countsAsMoved(x, role))
     .reduce((sum, x) => sum + Number(x.amount), 0);
   const needsLocation =
     role === 'worker' && (profile?.locationLat == null || profile?.locationLng == null);
 
   const earningsSeries = useMemo(() => {
     const byDay = new Map<string, number>();
-    for (const tx of transactions.filter((x) => x.status === 'confirmed')) {
-      const day = new Date(tx.createdAt).toISOString().slice(0, 10);
+    for (const tx of transactions.filter((x) => countsAsMoved(x, role))) {
+      const day = new Date(movedAt(tx, role)).toISOString().slice(0, 10);
       byDay.set(day, (byDay.get(day) ?? 0) + Number(tx.amount));
     }
     return [...byDay.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([day, y]) => ({ x: day.slice(5), y }));
-  }, [transactions]);
+  }, [transactions, role]);
 
   const matchStatusSlices = useMemo(() => {
     const counts = new Map<string, number>();

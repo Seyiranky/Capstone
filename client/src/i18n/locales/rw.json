@@ -205,7 +205,7 @@
     "subtitleWorker": "Kurikirana ibyo winjije ukoresheje Isoko Talents.",
     "totalPaid": "Byose byishyuwe (byemejwe)",
     "totalEarned": "Byose winjije (byemejwe)",
-    "pending": "Bitegereje",
+    "pending": "Mu bubiko",
     "transactions": "Ibikorwa by'imari",
     "howPaymentsWork": "Uko ubwishyu bukora",
     "simulatedNotice": "Isoko Talents ikoresha uburyo bwigana MTN Mobile Money kuri iyi demo — nta mafaranga nyayo atangwa.",
@@ -220,16 +220,16 @@
     "colDate": "Itariki",
     "workerStep1Title": "Guhuzwa n'umurimo",
     "workerStep1Body": "Saba umurimo ufunguye maze wemezwe n'ubuyobozi, bigatuma uhuzwa n'uwo mukorana.",
-    "workerStep2Title": "Rangiza umurimo",
-    "workerStep2Body": "Rangiza akazi. Igihe urangije, umukiriya azabishyiraho ko byarangiye.",
-    "workerStep3Title": "Kwishyurwa binyuze kuri MTN MoMo",
-    "workerStep3Body": "Umukiriya yemeza ubwishyu bwigana bwa MTN MoMo maze amafaranga akagaragara hano nk'ayemejwe.",
+    "workerStep2Title": "Menya ko amafaranga ahari",
+    "workerStep2Body": "Iyo wemeye, umukiliya yishyura mu bubiko. Ubona ko abitswe mbere yo gutangira.",
+    "workerStep3Title": "Ishyurwa ukoresheje kode",
+    "workerStep3Body": "Urangije, umukiliya aguha kode y’imibare 4. Uyinjije, amafaranga aba ayawe.",
     "clientStep1Title": "Shyiraho umurimo",
     "clientStep1Body": "Sobanura akazi maze ushyireho ingengo y'imari. Ubuyobozi burabisuzuma mbere yo kubugaragariza abakozi.",
-    "clientStep2Title": "Emeza akazi karangiye",
-    "clientStep2Body": "Igihe umukozi wahuriyeho arangije akazi, shyiraho ko byarangiye.",
-    "clientStep3Title": "Ishyura ukoresheje MTN MoMo",
-    "clientStep3Body": "Emeza ubwishyu bwigana bwa MTN MoMo kugira ngo amafaranga ashyikirizwe umukozi."
+    "clientStep2Title": "Ishyura mu bubiko",
+    "clientStep2Body": "Umukozi namara kwemera, ishyura na MoMo. Isoko ibika amafaranga kugeza akazi karangiye.",
+    "clientStep3Title": "Tanga kode",
+    "clientStep3Body": "Wishimiye akazi, ha umukozi kode yo gusoza. Ibyo bituma yishyurwa."
   },
   "settings": {
     "title": "Igenamiterere",
@@ -358,8 +358,8 @@
     "declineTitle": "Kwanga “{{title}}”?",
     "declineExplainer": "Aka kazi kazasubira ku isoko kugira ngo umukiriya atoranye undi.",
     "declineReasonPlaceholder": "Impamvu (si ngombwa) — urugero: nari mfite akandi kazi",
-    "markCompleted": "Emeza ko byarangiye",
-    "invitedBadge": "Twaguhuje na aka kazi"
+    "invitedBadge": "Twaguhuje na aka kazi",
+    "alreadyReviewed": "Wamaze gutanga isuzuma kuri aka kazi."
   },
   "profile": {
     "about": "Ibimuranga",
@@ -568,5 +568,32 @@
     "failedBody": "Ashobora kuba yarangiye cyangwa yakoreshejwe. Saba undi mushya muri Igenamiterere.",
     "missingToken": "Uyu muhuza wuzuye. Ongera ufungure umuhuza uri muri imeyili yawe.",
     "backToSettings": "Subira mu igenamiterere"
+  },
+  "escrow": {
+    "fundTitle": "Ishyura mu bubiko",
+    "fundBody": "Ishyura {{amount}} RWF ubu. Isoko izabibika, ibihe umukozi ari uko akazi karangiye.",
+    "fundButton": "Ishyura na MoMo",
+    "waitingFunding": "Dutegereje ko umukiliya yishyura mu bubiko. Uzamenyeshwa amafaranga amaze kubikwa.",
+    "secured": "{{amount}} RWF bibitswe mu bubiko kuri aka kazi.",
+    "codeLabel": "Kode yo gusoza",
+    "codeHint": "Iha umukozi iyi kode akazi karangiye. Kuyinjiza bituma yishyurwa.",
+    "releaseButton": "Ishyura umukozi ubu",
+    "releaseConfirmTitle": "Kohereza {{amount}} RWF?",
+    "releaseConfirmBody": "Amafaranga ajya kuri {{name}} kandi akazi kakemezwa ko karangiye. Ntibishobora gusubizwa inyuma.",
+    "enterCodeLabel": "Injiza kode y'umukiliya kugira ngo usoze akazi",
+    "completeButton": "Soza akazi",
+    "wrongCode": "Iyo kode si yo. Usigaje amahirwe {{count}}.",
+    "locked": "Kode yafunzwe kubera kwibeshya kenshi. Saba umukiliya akwishyure muri porogaramu.",
+    "reportDone": "Umukiliya ntahari? Menyesha ko akazi karangiye",
+    "reportDoneHint": "Umukiliya azasabwa kukwishyura. Natabikora, uzishyurwa ku wa {{date}}.",
+    "workDoneClient": "Umukozi yavuze ko akazi karangiye. Azishyurwa ku wa {{date}} keretse umwishyuye mbere.",
+    "autoReleaseOn": "Azishyurwa ku wa {{date}}",
+    "released": "Yishyuwe",
+    "refunded": "Byasubijwe umukiliya",
+    "inEscrow": "Mu bubiko",
+    "paidOut": "Byishyuwe",
+    "completedVia_code": "Byasojwe hakoreshejwe kode",
+    "completedVia_client": "Umukiliya yarishyuye",
+    "completedVia_auto": "Byishyuwe nyuma y’amasaha 72"
   }
 }

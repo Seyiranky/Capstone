@@ -1,8 +1,8 @@
 import { Tag } from 'antd';
 
 // antd preset colors: success / warning / error / processing / default
-const SUCCESS = new Set(['completed', 'approved', 'confirmed', 'active', 'verified']);
-const WARNING = new Set(['pending', 'initiated', 'pending_review']);
+const SUCCESS = new Set(['completed', 'approved', 'confirmed', 'active', 'verified', 'released']);
+const WARNING = new Set(['pending', 'initiated', 'pending_review', 'held']);
 const ERROR = new Set(['rejected', 'cancelled', 'failed', 'suspended']);
 const PROCESSING = new Set(['open', 'accepted', 'matched']);
 

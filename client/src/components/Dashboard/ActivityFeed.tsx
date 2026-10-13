@@ -1,3 +1,4 @@
+import { countsAsMoved, movedAt } from '../../lib/money';
 import { Card, Empty, Timeline, Typography } from 'antd';
 import {
   CheckCircleOutlined,
@@ -35,9 +36,9 @@ const ActivityFeed = ({ role, matches, transactions, tasks }: ActivityFeedProps)
     }
   }
   for (const tx of transactions) {
-    if (tx.status === 'confirmed') {
+    if (countsAsMoved(tx, role)) {
       events.push({
-        at: tx.createdAt,
+        at: movedAt(tx, role),
         icon: <DollarOutlined />,
         text: `${role === 'client' ? 'Paid' : 'Received'} ${Number(tx.amount).toLocaleString()} RWF`,
       });

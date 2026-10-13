@@ -8,4 +8,10 @@ export const matchApi = {
     axiosClient
       .put<Match>(`/matches/${id}/status`, { status, declineReason })
       .then((res) => res.data),
+
+  completeWithCode: (id: string, code: string) =>
+    axiosClient.post<Match>(`/matches/${id}/complete`, { code }).then((res) => res.data),
+
+  markWorkDone: (id: string) =>
+    axiosClient.post<Match>(`/matches/${id}/work-done`).then((res) => res.data),
 };

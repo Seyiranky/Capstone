@@ -7,7 +7,12 @@ import { transactionApi } from '../../api/transactionApi';
 import PageContainer from '../Layout/PageContainer';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
+import { countsAsMoved, isHeld } from '../../lib/money';
 import type { Transaction } from '../../types';
+
+/** A collected payment is described by where it is now, not just that it was collected. */
+const escrowLabel = (tx: Transaction): string =>
+  tx.status === 'confirmed' && tx.escrowStatus !== 'none' ? tx.escrowStatus : tx.status;
 
 const Wallet = () => {
   const { t } = useTranslation();
@@ -26,11 +31,9 @@ const Wallet = () => {
   }, []);
 
   const confirmedTotal = transactions
-    .filter((x) => x.status === 'confirmed')
+    .filter((x) => countsAsMoved(x, role))
     .reduce((sum, x) => sum + Number(x.amount), 0);
-  const pendingTotal = transactions
-    .filter((x) => x.status === 'initiated')
-    .reduce((sum, x) => sum + Number(x.amount), 0);
+  const heldTotal = transactions.filter(isHeld).reduce((sum, x) => sum + Number(x.amount), 0);
 
   const steps = isClient
     ? [
@@ -68,7 +71,7 @@ const Wallet = () => {
     {
       title: t('wallet.colStatus'),
       key: 'status',
-      render: (_, tx) => <StatusTag status={tx.status} />,
+      render: (_, tx) => <StatusTag status={escrowLabel(tx)} />,
     },
     {
       title: t('wallet.colDate'),
@@ -95,7 +98,7 @@ const Wallet = () => {
         </Col>
         <Col xs={12} sm={8}>
           <Card size="small" style={{ height: '100%' }}>
-            <Statistic title={t('wallet.pending')} value={pendingTotal} suffix="RWF" />
+            <Statistic title={t('wallet.pending')} value={heldTotal} suffix="RWF" />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
@@ -175,7 +178,7 @@ const Wallet = () => {
                     <Typography.Text strong style={{ whiteSpace: 'nowrap' }}>
                       {Number(tx.amount).toLocaleString()} RWF
                     </Typography.Text>
-                    <StatusTag status={tx.status} />
+                    <StatusTag status={escrowLabel(tx)} />
                   </Flex>
                 </Flex>
               </List.Item>

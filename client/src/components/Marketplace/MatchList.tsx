@@ -22,6 +22,7 @@ import { reviewApi } from '../../api/reviewApi';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import MatchExplanation from '../common/MatchExplanation';
+import JobEscrowPanel from './JobEscrowPanel';
 import type { Match, MatchStatus } from '../../types';
 
 const ReviewModal = ({
@@ -204,40 +205,45 @@ const MatchList = () => {
                 )}
 
                 {match.status === 'accepted' && (
-                  <Button
-                    type="primary"
-                    block
-                    loading={busyId === match.id}
-                    onClick={() => transition(match.id, 'completed')}
-                  >
-                    {t('matches.markCompleted')}
-                  </Button>
+                  <JobEscrowPanel match={match} isWorker={isWorker} onChanged={refresh} />
                 )}
 
                 {match.status === 'completed' && match.transaction && (
                   <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    <Typography.Text type="secondary">
-                      Payment ({match.transaction.provider}):{' '}
-                      <StatusTag status={match.transaction.status} />
-                    </Typography.Text>
-                    {match.transaction.status === 'initiated' && (
+                    <Flex align="center" gap={8} wrap="wrap">
+                      <StatusTag
+                        status={
+                          match.transaction.escrowStatus === 'released'
+                            ? 'released'
+                            : match.transaction.status
+                        }
+                      />
+                      {match.completedVia && (
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                          {t(`escrow.completedVia_${match.completedVia}`)}
+                        </Typography.Text>
+                      )}
+                    </Flex>
+                    {/* A job completed before it was funded is paid now, and the
+                        money goes straight to the worker. */}
+                    {match.transaction.status === 'initiated' && !isWorker && (
                       <Button
                         type="primary"
                         block
                         loading={busyId === match.transaction.id}
                         onClick={() => confirmPayment(match.transaction!.id)}
                       >
-                        Confirm payment
+                        {t('escrow.fundButton')}
                       </Button>
                     )}
                     {match.transaction.status === 'confirmed' &&
                       (alreadyReviewed ? (
                         <Typography.Text type="secondary">
-                          You've reviewed this match.
+                          {t('matches.alreadyReviewed')}
                         </Typography.Text>
                       ) : (
                         <Button block onClick={() => setReviewMatch(match)}>
-                          Leave review
+                          {t('common.leaveReview')}
                         </Button>
                       ))}
                   </Space>

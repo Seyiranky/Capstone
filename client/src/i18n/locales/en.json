@@ -205,7 +205,7 @@
     "subtitleWorker": "Track what you’ve earned through Isoko Talents.",
     "totalPaid": "Total paid (confirmed)",
     "totalEarned": "Total earned (confirmed)",
-    "pending": "Pending",
+    "pending": "In escrow",
     "transactions": "Transactions",
     "howPaymentsWork": "How payments work",
     "simulatedNotice": "Isoko Talents uses a simulated MTN Mobile Money integration for this demo — no real money moves.",
@@ -220,16 +220,16 @@
     "colDate": "Date",
     "workerStep1Title": "Get matched to a gig",
     "workerStep1Body": "Apply to an open gig and get approved by an admin, so a match is created for you.",
-    "workerStep2Title": "Complete the work",
-    "workerStep2Body": "Finish the job. Once you’re done, the client marks the match as completed.",
-    "workerStep3Title": "Get paid via MTN MoMo",
-    "workerStep3Body": "The client confirms the simulated MTN MoMo payment and the funds show up here as confirmed.",
+    "workerStep2Title": "Know the money is there",
+    "workerStep2Body": "When you accept, the client pays into escrow. You can see it is secured before you start.",
+    "workerStep3Title": "Get paid with the code",
+    "workerStep3Body": "When you finish, the client gives you a 4-digit code. Enter it and the money is yours.",
     "clientStep1Title": "Post a gig",
     "clientStep1Body": "Describe the job and set a budget. An admin reviews it before it goes live to workers.",
-    "clientStep2Title": "Approve completed work",
-    "clientStep2Body": "Once your matched worker finishes the job, mark the match as completed.",
-    "clientStep3Title": "Pay via MTN MoMo",
-    "clientStep3Body": "Confirm the simulated MTN MoMo payment to release the funds to the worker."
+    "clientStep2Title": "Pay into escrow",
+    "clientStep2Body": "When a worker accepts, pay with MoMo. Isoko holds the money until the job is done.",
+    "clientStep3Title": "Hand over the code",
+    "clientStep3Body": "When you are happy with the work, give the worker your completion code. That releases the payment."
   },
   "settings": {
     "title": "Settings",
@@ -358,8 +358,8 @@
     "declineTitle": "Decline “{{title}}”?",
     "declineExplainer": "The gig goes back on the marketplace so the client can pick someone else.",
     "declineReasonPlaceholder": "Reason (optional) — e.g. already booked that week",
-    "markCompleted": "Mark completed",
-    "invitedBadge": "Matched for you"
+    "invitedBadge": "Matched for you",
+    "alreadyReviewed": "You've reviewed this job."
   },
   "profile": {
     "about": "About",
@@ -568,5 +568,32 @@
     "failedBody": "It may have expired or already been used. Request a new one from Settings.",
     "missingToken": "This link is incomplete. Open the link from your email again.",
     "backToSettings": "Back to settings"
+  },
+  "escrow": {
+    "fundTitle": "Pay into escrow",
+    "fundBody": "Pay {{amount}} RWF now. Isoko holds it and releases it to the worker only when the job is done.",
+    "fundButton": "Pay with MoMo",
+    "waitingFunding": "Waiting for the client to pay into escrow. You will be told when the money is secured.",
+    "secured": "{{amount}} RWF is held in escrow for this job.",
+    "codeLabel": "Completion code",
+    "codeHint": "Give this code to the worker when the job is done. Entering it releases the payment.",
+    "releaseButton": "Release payment now",
+    "releaseConfirmTitle": "Release {{amount}} RWF?",
+    "releaseConfirmBody": "The money goes to {{name}} and the job is marked complete. This cannot be undone.",
+    "enterCodeLabel": "Enter the client's code to finish the job",
+    "completeButton": "Finish job",
+    "wrongCode": "That code isn't right. {{count}} tries left.",
+    "locked": "The code is locked after too many wrong tries. Ask the client to release payment in the app.",
+    "reportDone": "Client not here? Report the job done",
+    "reportDoneHint": "The client is asked to release payment. If they do not, it releases automatically on {{date}}.",
+    "workDoneClient": "The worker reported this job done. It releases automatically on {{date}} unless you release it sooner.",
+    "autoReleaseOn": "Releases automatically on {{date}}",
+    "released": "Payment released",
+    "refunded": "Refunded to the client",
+    "inEscrow": "In escrow",
+    "paidOut": "Paid out",
+    "completedVia_code": "Completed with the code",
+    "completedVia_client": "Released by the client",
+    "completedVia_auto": "Released automatically after 72 hours"
   }
 }
