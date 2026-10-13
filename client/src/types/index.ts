@@ -144,6 +144,9 @@ export interface GigApplication {
   status: GigApplicationStatus;
   rankScore?: number | null;
   scoreBreakdown?: MatchScoreBreakdown | null;
+  /** DECIMAL columns arrive as strings. */
+  quoteAmount?: number | string | null;
+  quoteNote?: string | null;
   createdAt: string;
   gig?: Gig;
   worker?: User;
@@ -169,6 +172,7 @@ export interface Match {
   completionCodeAttempts?: number;
   workDoneAt?: string | null;
   completedVia?: 'code' | 'client' | 'auto' | null;
+  agreedAmount?: number | string | null;
   createdAt: string;
   updatedAt: string;
   gig?: Gig;
@@ -190,6 +194,7 @@ export interface Transaction {
   heldAt?: string | null;
   releasedAt?: string | null;
   refundedAt?: string | null;
+  receiptNumber?: string | null;
   currency?: string;
   provider: string;
   reference: string;
@@ -390,4 +395,18 @@ export interface AppNotification {
   body: string;
   readAt: string | null;
   createdAt: string;
+}
+
+export interface Receipt {
+  number: string;
+  amount: number;
+  currency: string;
+  releasedAt: string;
+  paymentReference: string;
+  provider: string;
+  completedVia: 'code' | 'client' | 'auto' | null;
+  gig: string | null;
+  skill: string | null;
+  worker: string | null;
+  client: string | null;
 }

@@ -36,7 +36,7 @@ const JobEscrowPanel = ({ match, isWorker, onChanged }: JobEscrowPanelProps) => 
   const [locked, setLocked] = useState((match.completionCodeAttempts ?? 0) >= MAX_CODE_ATTEMPTS);
 
   const tx = match.transaction;
-  const amount = Number(tx?.amount ?? match.gig?.budget ?? 0).toLocaleString();
+  const amount = Number(tx?.amount ?? match.agreedAmount ?? match.gig?.budget ?? 0).toLocaleString();
   const held = tx?.status === 'confirmed' && tx.escrowStatus === 'held';
   const autoReleaseDate = match.workDoneAt
     ? new Date(new Date(match.workDoneAt).getTime() + AUTO_RELEASE_AFTER_MS).toLocaleString(

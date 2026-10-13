@@ -595,5 +595,35 @@
     "completedVia_code": "Completed with the code",
     "completedVia_client": "Released by the client",
     "completedVia_auto": "Released automatically after 72 hours"
+  },
+  "quote": {
+    "applyTitle": "Apply to “{{title}}”",
+    "priceLabel": "Your price (RWF)",
+    "priceHelp": "The client's budget is {{budget}} RWF. Quote what the job is worth to you. The agreed price is what the client pays into escrow.",
+    "noteLabel": "Note to the client (optional)",
+    "notePlaceholder": "For example: includes materials, can start Monday",
+    "submit": "Send application",
+    "yourQuote": "Your quote",
+    "quoteLine": "Quote {{amount}} RWF",
+    "overBudget": "above budget",
+    "underBudget": "below budget"
+  },
+  "receipt": {
+    "title": "Payment receipt",
+    "verified": "Checked against Isoko Talents' records",
+    "number": "Receipt number",
+    "amount": "Amount paid",
+    "releasedOn": "Released on",
+    "job": "Job",
+    "skill": "Skill",
+    "worker": "Paid to",
+    "client": "Paid by",
+    "reference": "Payment reference",
+    "method": "How it was released",
+    "print": "Print",
+    "scanHint": "Scan to check this receipt against Isoko's records.",
+    "notFound": "No receipt with that number",
+    "notFoundHelp": "Check the number on the printed receipt. Receipts exist only for money released to a worker.",
+    "view": "View receipt"
   }
 }

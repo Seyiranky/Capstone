@@ -38,7 +38,13 @@ const MyApplications = () => {
       key: 'budget',
       responsive: ['sm'],
       align: 'right',
-      render: (_, a) => (a.gig ? `${Number(a.gig.budget).toLocaleString()} RWF` : '—'),
+      // The worker's own quote when they gave one, since that is the price on the table.
+      render: (_, a) =>
+        a.quoteAmount != null
+          ? `${Number(a.quoteAmount).toLocaleString()} RWF`
+          : a.gig
+            ? `${Number(a.gig.budget).toLocaleString()} RWF`
+            : '—',
     },
     {
       title: t('marketplace.myApplications.status'),

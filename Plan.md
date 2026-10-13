@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: in progress** (13 Oct 2026). Phases 0–1 are done; Phase 2 is next.
+> **Status: in progress** (13 Oct 2026). Phases 0–2 are done; Phase 3 is next.
 
 ## Context
 
@@ -107,7 +107,7 @@ Findings so far:
   directly now; the worker uses the code or "report done". Income statements, wallets and
   dashboards count a worker's money only once released. 14 new tests in `escrow.test.ts`.
 
-### Phase 2 — Quotes and receipts
+### Phase 2 — Quotes and receipts (done, 13 Oct 2026)
 *Borrowed from:* Upwork proposals, Thumbtack quotes, Fundis receipts.
 
 - An application can carry a **quote** (amount and a short note). The default is the gig
@@ -116,6 +116,10 @@ Findings so far:
 - Each release issues a **receipt** with a number, both parties, the gig, and the amount,
   signed the same way as the income statement and checkable at a public URL with a QR code.
 - The income statement lists receipt numbers, so a lender can check any line.
+- As built: receipt numbers are random (`ISK-XXXX-XXXX`, Crockford base32, 40 bits), not
+  signed, because the public page at `/r/<number>` reads Isoko's own record and that is the
+  check. Payouts released before this existed were numbered by the migration. The receipt
+  shows names and the job, never contact details. 8 new tests in `quotesAndReceipts.test.ts`.
 
 ### Phase 3 — Disputes settled by screened peers
 *Borrowed from:* Upwork disputes; jury-style resolution.

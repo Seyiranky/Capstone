@@ -224,6 +224,11 @@ const MatchList = () => {
                         </Typography.Text>
                       )}
                     </Flex>
+                    {match.transaction.receiptNumber && (
+                      <Link to={`/r/${match.transaction.receiptNumber}`} style={{ fontSize: 13 }}>
+                        {t('receipt.view')} · {match.transaction.receiptNumber}
+                      </Link>
+                    )}
                     {/* A job completed before it was funded is paid now, and the
                         money goes straight to the worker. */}
                     {match.transaction.status === 'initiated' && !isWorker && (

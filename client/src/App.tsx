@@ -18,6 +18,7 @@ import AdminPendingGigsPage from './pages/AdminPendingGigsPage';
 import AdminCompletedGigsPage from './pages/AdminCompletedGigsPage';
 import AdminAuditPage from './pages/AdminAuditPage';
 import PassportPage from './pages/PassportPage';
+import ReceiptPage from './pages/ReceiptPage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -45,6 +46,7 @@ function App() {
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       {/* Public by design: a client checks a passport without an account. */}
       <Route path="/p/:token" element={<PassportPage />} />
+      <Route path="/r/:number" element={<ReceiptPage />} />
       {/* Verification now lives as a section on the Dashboard. */}
       <Route path="/verification" element={<Navigate to="/dashboard" replace />} />
       {/* Mentorship is now folded into the broader Notifications section. */}

@@ -9,6 +9,7 @@ import type { GigApplication } from '../../types';
 
 interface ApplicantListProps {
   applicants: GigApplication[];
+  budget: number;
   canDecide: boolean;
   busyId: string | null;
   onDecide: (applicationId: string, decision: 'approved' | 'rejected') => void;
@@ -21,7 +22,7 @@ interface ApplicantListProps {
  * clipped the ranking explanation on desktop. Each row here wraps on its own:
  * identity and status on top, the score and reasons beneath, actions last.
  */
-const ApplicantList = ({ applicants, canDecide, busyId, onDecide }: ApplicantListProps) => {
+const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: ApplicantListProps) => {
   const { t } = useTranslation();
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -55,6 +56,17 @@ const ApplicantList = ({ applicants, canDecide, busyId, onDecide }: ApplicantLis
               <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                 {t('match.component.trust')}: <Typography.Text style={{ fontSize: 13 }}>{trust}</Typography.Text>
               </Typography.Text>
+              {a.quoteAmount != null && (
+                <Typography.Text style={{ fontSize: 13 }}>
+                  {t('quote.quoteLine', { amount: Number(a.quoteAmount).toLocaleString() })}
+                  {Number(a.quoteAmount) !== budget && (
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      {' '}
+                      ({Number(a.quoteAmount) > budget ? t('quote.overBudget') : t('quote.underBudget')})
+                    </Typography.Text>
+                  )}
+                </Typography.Text>
+              )}
               {breakdown && (
                 <Typography.Text strong style={{ fontSize: 13 }}>
                   {t('marketplace.gigDetail.matchPercent', {
@@ -63,6 +75,15 @@ const ApplicantList = ({ applicants, canDecide, busyId, onDecide }: ApplicantLis
                 </Typography.Text>
               )}
             </Flex>
+
+            {a.quoteNote && (
+              <Typography.Paragraph
+                type="secondary"
+                style={{ fontSize: 13, margin: '6px 0 0', paddingInlineStart: 36 }}
+              >
+                “{a.quoteNote}”
+              </Typography.Paragraph>
+            )}
 
             {breakdown && (
               <div style={{ marginTop: 8, paddingInlineStart: 36 }}>

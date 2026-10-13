@@ -11,6 +11,9 @@ import {
   Drawer,
   Empty,
   Flex,
+  Input,
+  InputNumber,
+  Modal,
   Result,
   Row,
   Skeleton,
@@ -52,6 +55,9 @@ const GigDetail = () => {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(false);
+  const [quoteAmount, setQuoteAmount] = useState<number | null>(null);
+  const [quoteNote, setQuoteNote] = useState('');
   const [editOpen, setEditOpen] = useState(false);
 
   const refresh = () => {
@@ -94,7 +100,12 @@ const GigDetail = () => {
     if (!id) return;
     setApplying(true);
     try {
-      await gigApplicationApi.applyToGig(id);
+      await gigApplicationApi.applyToGig(id, {
+        // Quoting the budget itself is the same as not quoting.
+        quoteAmount: quoteAmount && quoteAmount !== Number(gig.budget) ? quoteAmount : null,
+        quoteNote: quoteNote.trim() || undefined,
+      });
+      setApplyOpen(false);
       message.success('Application sent to the client.');
       refresh();
     } catch {
@@ -234,6 +245,15 @@ const GigDetail = () => {
                 </Typography.Text>
               </Flex>
               <ApplicationProgress status={myApplication.status} />
+              {myApplication.quoteAmount != null && (
+                <Typography.Text type="secondary" style={{ display: 'block', marginTop: 14, fontSize: 13 }}>
+                  {t('quote.yourQuote')}:{' '}
+                  <Typography.Text strong style={{ fontSize: 13 }}>
+                    {Number(myApplication.quoteAmount).toLocaleString()} RWF
+                  </Typography.Text>
+                  {myApplication.quoteNote ? ` · ${myApplication.quoteNote}` : ''}
+                </Typography.Text>
+              )}
             </Card>
           )}
 
@@ -250,6 +270,7 @@ const GigDetail = () => {
               ) : (
                 <ApplicantList
                   applicants={sortedApplicants}
+                  budget={Number(gig.budget)}
                   canDecide={role === 'admin'}
                   busyId={busyId}
                   onDecide={handleApplicationDecision}
@@ -287,7 +308,15 @@ const GigDetail = () => {
                 <>
                   <Divider style={{ margin: '14px 0' }} />
                   {gig.status === 'open' ? (
-                    <Button type="primary" size="large" block loading={applying} onClick={handleApply}>
+                    <Button
+                      type="primary"
+                      size="large"
+                      block
+                      onClick={() => {
+                        setQuoteAmount(Number(gig.budget));
+                        setApplyOpen(true);
+                      }}
+                    >
                       {t('marketplace.gigDetail.applyButton')}
                     </Button>
                   ) : (
@@ -319,6 +348,47 @@ const GigDetail = () => {
           </div>
         </Col>
       </Row>
+
+      <Modal
+        open={applyOpen}
+        title={t('quote.applyTitle', { title: gig.title })}
+        okText={t('quote.submit')}
+        confirmLoading={applying}
+        onOk={handleApply}
+        okButtonProps={{ disabled: !quoteAmount || quoteAmount < 100 }}
+        onCancel={() => setApplyOpen(false)}
+        destroyOnHidden
+      >
+        <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>
+          {t('quote.priceLabel')}
+        </Typography.Text>
+        <InputNumber
+          value={quoteAmount}
+          onChange={(v) => setQuoteAmount(v)}
+          min={100}
+          max={99_999_999}
+          step={1000}
+          style={{ width: '100%' }}
+          formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+          parser={(v) => Number((v ?? '').replace(/,/g, ''))}
+          addonAfter="RWF"
+        />
+        <Typography.Paragraph type="secondary" style={{ fontSize: 13, margin: '6px 0 16px' }}>
+          {t('quote.priceHelp', { budget: Number(gig.budget).toLocaleString() })}
+        </Typography.Paragraph>
+        <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>
+          {t('quote.noteLabel')}
+        </Typography.Text>
+        <Input.TextArea
+          rows={3}
+          maxLength={280}
+          showCount
+          value={quoteNote}
+          onChange={(e) => setQuoteNote(e.target.value)}
+          placeholder={t('quote.notePlaceholder')}
+          style={{ marginBottom: 16 }}
+        />
+      </Modal>
 
       <Drawer
         title={t('common.editGig')}

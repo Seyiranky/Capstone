@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Card, Col, Flex, Grid, List, Row, Statistic, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppSelector } from '../../store/hooks';
@@ -72,6 +73,13 @@ const Wallet = () => {
       title: t('wallet.colStatus'),
       key: 'status',
       render: (_, tx) => <StatusTag status={escrowLabel(tx)} />,
+    },
+    {
+      title: t('receipt.number'),
+      key: 'receipt',
+      responsive: ['md'],
+      render: (_, tx) =>
+        tx.receiptNumber ? <Link to={`/r/${tx.receiptNumber}`}>{tx.receiptNumber}</Link> : '—',
     },
     {
       title: t('wallet.colDate'),
@@ -173,6 +181,11 @@ const Wallet = () => {
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                       {new Date(tx.createdAt).toLocaleDateString()}
                     </Typography.Text>
+                    {tx.receiptNumber && (
+                      <Link to={`/r/${tx.receiptNumber}`} style={{ display: 'block', fontSize: 12 }}>
+                        {t('receipt.view')}
+                      </Link>
+                    )}
                   </div>
                   <Flex vertical align="flex-end" gap={4} style={{ flexShrink: 0 }}>
                     <Typography.Text strong style={{ whiteSpace: 'nowrap' }}>

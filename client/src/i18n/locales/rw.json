@@ -595,5 +595,35 @@
     "completedVia_code": "Byasojwe hakoreshejwe kode",
     "completedVia_client": "Umukiliya yarishyuye",
     "completedVia_auto": "Byishyuwe nyuma y’amasaha 72"
+  },
+  "quote": {
+    "applyTitle": "Saba “{{title}}”",
+    "priceLabel": "Igiciro cyawe (RWF)",
+    "priceHelp": "Ingengo y'imari y'umukiliya ni {{budget}} RWF. Vuga igiciro ukwiye. Igiciro mwumvikanyeho ni cyo umukiliya ashyira mu bubiko.",
+    "noteLabel": "Ubutumwa ku mukiliya (si ngombwa)",
+    "notePlaceholder": "Urugero: harimo ibikoresho, nshobora gutangira ku wa mbere",
+    "submit": "Ohereza ubusabe",
+    "yourQuote": "Igiciro wavuze",
+    "quoteLine": "Igiciro {{amount}} RWF",
+    "overBudget": "hejuru y'ingengo",
+    "underBudget": "munsi y'ingengo"
+  },
+  "receipt": {
+    "title": "Inyemezabwishyu",
+    "verified": "Byemejwe n'inyandiko za Isoko Talents",
+    "number": "Nimero y'inyemezabwishyu",
+    "amount": "Amafaranga yishyuwe",
+    "releasedOn": "Yishyuwe ku wa",
+    "job": "Akazi",
+    "skill": "Ubumenyi",
+    "worker": "Yishyuwe",
+    "client": "Yishyuwe na",
+    "reference": "Nimero y'ubwishyu",
+    "method": "Uko yishyuwe",
+    "print": "Capa",
+    "scanHint": "Sikana ugenzure iyi nyemezabwishyu mu nyandiko za Isoko.",
+    "notFound": "Nta nyemezabwishyu ifite iyo nimero",
+    "notFoundHelp": "Reba nimero iri ku nyemezabwishyu yacapwe. Inyemezabwishyu zibaho gusa ku mafaranga yahawe umukozi.",
+    "view": "Reba inyemezabwishyu"
   }
 }
