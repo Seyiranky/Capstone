@@ -84,6 +84,36 @@ const receiptNumberFor = () => {
   return `ISK-${chars.slice(0, 4)}-${chars.slice(4)}`;
 };
 
+// Real descriptions, written as clients post them.
+const DESCRIPTIONS = {
+  "Landing page for a salon": "One-page site for our hair salon in Kimironko: services, prices, opening hours and a WhatsApp booking button. We have photos ready.",
+  "Fix a broken contact form": "The contact form on our shop website stopped sending emails last week. Need it fixed and tested.",
+  "Set up an online menu": "Put our restaurant menu online with prices and photos, readable on phones, with a QR code for the tables.",
+  "Small business website": "Five-page website for a hardware shop: products, location map, contact page. Must load quickly on mobile data.",
+  "Logo and social banners": "Simple logo for a new juice bar plus banners for Instagram and Facebook in the same colours.",
+  "Alter a wedding dress": "Take in the waist and shorten a wedding dress. Two fittings at my home before the 20th.",
+  "Hem twelve school uniforms": "Hem twelve school skirts and trousers for the new term. Fabric and thread provided.",
+  "Restaurant curtains": "Measure, sew and hang curtains for six windows in a small restaurant. Fabric already bought.",
+  "Repair two suit jackets": "Two suit jackets: one torn lining, one loose button and sleeve repair.",
+  "Replace a laptop screen": "Cracked 15-inch laptop screen needs replacing. I can buy the part if you tell me which one.",
+  "Fix a phone charging port": "Phone only charges at a certain angle. Probably the charging port.",
+  "Repair a kitchen blender": "Blender motor runs but the blade does not turn. Need it checked and repaired.",
+  "S6 maths revision block": "Ten maths revision sessions for an S6 student before national exams, two evenings a week.",
+  "Primary English tutoring": "English reading and writing support for a P5 pupil, Saturday mornings at home.",
+  "Holiday reading support": "Reading support for two children (P3 and P4) during the school holidays, three mornings a week.",
+  "Fix a slow website": "Our company website takes too long to load. Find out why and fix it.",
+  "Update product photos": "Replace old product photos on our online shop with the new ones and resize them for the web.",
+  "Urgent laptop diagnostics": "Laptop shuts down after a few minutes. Need a diagnosis and a quote for the repair.",
+  "Rebuild an old shopfront site": "Rebuild an old website for a clothing shop so it works on phones and shows current stock."
+};
+
+// Named Kigali areas (as the app offers them), cycled through so each job shows a place.
+const AREAS = [
+  [-1.9441, 30.0619], [-1.9706, 30.0394], [-1.9558, 30.1044], [-1.9889, 30.1], [-1.935, 30.0889],
+  [-1.9833, 30.0667], [-1.95, 30.09], [-1.935, 30.04], [-1.9167, 30.0667], [-1.9706, 30.1361],
+];
+let areaTurn = 0;
+
 module.exports = {
   async up(queryInterface) {
     const [skills] = await queryInterface.sequelize.query('SELECT id, category FROM "Skills";');
@@ -116,10 +146,10 @@ module.exports = {
         clientId,
         skillId: skillIdByCategory[category],
         title,
-        description: `${title}. Seeded pilot history.`,
+        description: DESCRIPTIONS[title] ?? title,
         budget: amount,
-        locationLat: -1.95 + (Math.random() - 0.5) * 0.06,
-        locationLng: 30.08 + (Math.random() - 0.5) * 0.08,
+        locationLat: AREAS[areaTurn % AREAS.length][0],
+        locationLng: AREAS[areaTurn++ % AREAS.length][1],
         status: status === 'completed' ? 'completed' : 'open',
         openedAt,
         createdAt: openedAt,
@@ -241,8 +271,10 @@ module.exports = {
   },
 
   async down(queryInterface) {
+    // Older seeds marked their description; newer ones are matched by title.
     await queryInterface.sequelize.query(
-      `DELETE FROM "Gigs" WHERE "description" LIKE '%Seeded pilot history.';`,
+      `DELETE FROM "Gigs" WHERE "description" LIKE '%Seeded pilot history.' OR "title" IN (:titles);`,
+      { replacements: { titles: Object.keys(DESCRIPTIONS) } },
     );
   },
 };
