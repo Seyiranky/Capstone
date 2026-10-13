@@ -15,21 +15,19 @@ import {
   Row,
   Skeleton,
   Space,
-  Steps,
-  Table,
   Tag,
   Typography,
 } from 'antd';
 import { EditOutlined, HomeOutlined } from '@ant-design/icons';
 import GigForm from './GigForm';
-import type { ColumnsType } from 'antd/es/table';
+import ApplicantList from './ApplicantList';
+import ApplicationProgress from './ApplicationProgress';
 import { useAppSelector } from '../../store/hooks';
 import { gigApi } from '../../api/gigApi';
 import { gigApplicationApi } from '../../api/gigApplicationApi';
 import { adminApi } from '../../api/adminApi';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
-import MatchExplanation from '../common/MatchExplanation';
 import ChatThread from '../common/ChatThread';
 import { gigImageSrc } from '../../utils/gigImage';
 import { locationName } from '../../utils/locationName';
@@ -131,69 +129,6 @@ const GigDetail = () => {
     }
   };
 
-  const applicantColumns: ColumnsType<GigApplication> = [
-    {
-      title: 'Worker',
-      key: 'worker',
-      render: (_, a) =>
-        a.worker ? <IdentityLink id={a.worker.id} name={a.worker.name} size={26} /> : '—',
-    },
-    {
-      title: t('match.component.trust'),
-      key: 'trust',
-      responsive: ['sm'],
-      width: 80,
-      render: (_, a) =>
-        a.worker?.reviewCount === 0
-          ? t('match.reason.trustProvisional')
-          : (a.worker?.trustScore.toFixed(1) ?? '—'),
-    },
-    {
-      title: t('match.explainTitle'),
-      key: 'match',
-      responsive: ['md'],
-      render: (_, a) =>
-        a.scoreBreakdown ? (
-          <Space direction="vertical" size={4} style={{ width: '100%' }}>
-            <Typography.Text strong style={{ fontSize: 12 }}>
-              {Math.round(a.scoreBreakdown.score * 100)}%
-            </Typography.Text>
-            <MatchExplanation breakdown={a.scoreBreakdown} compact />
-          </Space>
-        ) : (
-          '—'
-        ),
-    },
-    { title: 'Status', key: 'status', width: 110, render: (_, a) => <StatusTag status={a.status} /> },
-    {
-      title: '',
-      key: 'actions',
-      width: 170,
-      fixed: 'right',
-      render: (_, a) =>
-        role === 'admin' && a.status === 'pending' ? (
-          <Space>
-            <Button
-              size="small"
-              type="primary"
-              loading={busyId === a.id}
-              onClick={() => handleApplicationDecision(a.id, 'approved')}
-            >
-              {t('marketplace.gigDetail.approve')}
-            </Button>
-            <Button
-              size="small"
-              danger
-              loading={busyId === a.id}
-              onClick={() => handleApplicationDecision(a.id, 'rejected')}
-            >
-              {t('marketplace.gigDetail.reject')}
-            </Button>
-          </Space>
-        ) : null,
-    },
-  ];
-
   const showChat = role === 'worker' && gig.client;
 
   return (
@@ -288,27 +223,17 @@ const GigDetail = () => {
 
           {role === 'worker' && myApplication && (
             <Card style={{ marginTop: 20 }} title={t('marketplace.gigDetail.yourApplication')}>
-              <Flex align="center" gap={10} style={{ marginBottom: 16 }}>
+              <Flex align="center" gap="6px 10px" wrap="wrap" style={{ marginBottom: 16 }}>
                 <StatusTag status={myApplication.status} />
                 <Typography.Text type="secondary">
                   {myApplication.status === 'approved'
-                    ? "You're approved for this gig."
+                    ? t('marketplace.gigDetail.applicationApprovedNote')
                     : myApplication.status === 'rejected'
-                      ? 'This application was not accepted.'
-                      : 'Your application is with the reviewer.'}
+                      ? t('marketplace.gigDetail.applicationRejectedNote')
+                      : t('marketplace.gigDetail.applicationPendingNote')}
                 </Typography.Text>
               </Flex>
-              <Steps
-                size="small"
-                progressDot
-                current={myApplication.status === 'approved' ? 2 : 1}
-                status={myApplication.status === 'rejected' ? 'error' : 'process'}
-                items={[
-                  { title: t('marketplace.gigDetail.steps.applied') },
-                  { title: t('marketplace.gigDetail.steps.underReview') },
-                  { title: t('marketplace.gigDetail.steps.approved') },
-                ]}
-              />
+              <ApplicationProgress status={myApplication.status} />
             </Card>
           )}
 
@@ -323,20 +248,11 @@ const GigDetail = () => {
                   description={t('marketplace.gigDetail.noApplicationsYet')}
                 />
               ) : (
-                <Table
-                  rowKey="id"
-                  size="small"
-                  pagination={false}
-                  columns={applicantColumns}
-                  scroll={{ x: 'max-content' }}
-                  dataSource={sortedApplicants}
-                  expandable={{
-                    rowExpandable: (a) => Boolean(a.scoreBreakdown),
-                    expandedRowRender: (a) =>
-                      a.scoreBreakdown ? (
-                        <MatchExplanation breakdown={a.scoreBreakdown} />
-                      ) : null,
-                  }}
+                <ApplicantList
+                  applicants={sortedApplicants}
+                  canDecide={role === 'admin'}
+                  busyId={busyId}
+                  onDecide={handleApplicationDecision}
                 />
               )}
             </Card>

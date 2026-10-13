@@ -141,7 +141,7 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
             />
           </Tooltip>
         )}
-        <Badge count={unread} size="small" offset={[-2, 4]}>
+        <Badge count={unread} size="small" overflowCount={99} offset={[-6, 6]}>
           <Button
             type="text"
             aria-label={t('sidebar.notifications')}

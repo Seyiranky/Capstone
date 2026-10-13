@@ -125,7 +125,7 @@ const AppLayout = () => {
             top: 0,
             zIndex: 10,
             borderBottom: `1px solid ${hairline}`,
-            paddingInline: isMobile ? 8 : undefined,
+            paddingInline: isMobile ? 12 : undefined,
           }}
         >
           <AppHeader

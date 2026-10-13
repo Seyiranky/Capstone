@@ -173,8 +173,14 @@
       "steps": {
         "applied": "Applied",
         "underReview": "Under review",
-        "approved": "Approved"
-      }
+        "approved": "Approved",
+        "notAccepted": "Not accepted"
+      },
+      "applicationApprovedNote": "You're approved for this gig.",
+      "applicationRejectedNote": "This application was not accepted.",
+      "applicationPendingNote": "Your application is with the reviewer.",
+      "matchPercent": "{{percent}}% match",
+      "appliedOn": "Applied {{date}}"
     },
     "postAGig": "Post a gig",
     "tabs": {

@@ -173,8 +173,14 @@
       "steps": {
         "applied": "Byasabwe",
         "underReview": "Birimo gusuzumwa",
-        "approved": "Byemejwe"
-      }
+        "approved": "Byemejwe",
+        "notAccepted": "Ntibyemewe"
+      },
+      "applicationApprovedNote": "Wemerewe aka kazi.",
+      "applicationRejectedNote": "Ubu busabe ntibwemewe.",
+      "applicationPendingNote": "Ubusabe bwawe buri gusuzumwa.",
+      "matchPercent": "Bihuye ku {{percent}}%",
+      "appliedOn": "Yasabye {{date}}"
     },
     "postAGig": "Tanga akazi",
     "tabs": {
