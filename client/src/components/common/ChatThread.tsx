@@ -191,7 +191,7 @@ const ChatThread = ({
         {messages.length === 0 && (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={emptyText ?? 'No messages yet — say hello.'}
+            description={emptyText ?? t('chat.empty')}
           />
         )}
         {messages.map((message) => {
@@ -309,12 +309,12 @@ const ChatThread = ({
           onChange={(e) => setDraft(e.target.value)}
           onPressEnter={handleSend}
           maxLength={4000}
-          placeholder={placeholder ?? (recipientName ? `Message ${recipientName}` : 'Message')}
+          placeholder={placeholder ?? t('chat.placeholder', { name: recipientName ?? '' })}
         />
         <Button
           type="primary"
           icon={<SendOutlined />}
-          aria-label="Send"
+          aria-label={t('chat.send')}
           loading={sending}
           disabled={(!draft.trim() && !image && !clip) || recorder.state === 'recording'}
           onClick={handleSend}

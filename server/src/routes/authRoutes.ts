@@ -18,6 +18,7 @@ router.post('/send-verification', verifyToken, emailLinkLimiter, authController.
 router.post('/verify-email', emailLinkLimiter, authController.verifyEmail);
 // Both need a session: the code is typed into the app, not opened from a link.
 router.post('/send-phone-code', verifyToken, smsCodeLimiter, phoneVerificationController.sendPhoneCode);
+router.put('/password', verifyToken, loginLimiter, authController.changePassword);
 router.post('/verify-phone', verifyToken, smsCodeLimiter, phoneVerificationController.verifyPhone);
 
 export default router;

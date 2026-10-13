@@ -266,9 +266,40 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  await user.update({ passwordHash, resetToken: null, resetTokenExpiresAt: null });
+  await user.update({ passwordHash, passwordChangedAt: new Date(), resetToken: null, resetTokenExpiresAt: null });
 
   res.json({ message: 'Password updated. You can now log in.' });
+};
+
+/**
+ * Changes the password of the signed-in user, who must give the current one.
+ * Every other session is signed out; this one gets a fresh token.
+ */
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
+  const { currentPassword, newPassword } = req.body ?? {};
+  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword) {
+    res.status(400).json({ message: 'currentPassword and newPassword are required' });
+    return;
+  }
+  if (newPassword.length < MIN_PASSWORD_LENGTH || newPassword.length > 128) {
+    res.status(400).json({ message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
+    return;
+  }
+  const user = await userWithPassword().findByPk(authed(req).id);
+  if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+    res.status(401).json({ message: 'Your current password is not right' });
+    return;
+  }
+  if (await bcrypt.compare(newPassword, user.passwordHash)) {
+    res.status(400).json({ message: 'Choose a password you have not used here' });
+    return;
+  }
+  // A second back, so the token issued below is not refused as older than the change.
+  await user.update({
+    passwordHash: await bcrypt.hash(newPassword, SALT_ROUNDS),
+    passwordChangedAt: new Date(Math.floor(Date.now() / 1000) * 1000 - 1000),
+  });
+  res.json({ message: 'Password changed. Other devices have been signed out.', token: signToken(user) });
 };
 
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;

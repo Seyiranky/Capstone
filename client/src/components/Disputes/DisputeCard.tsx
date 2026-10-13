@@ -220,7 +220,7 @@ const DisputeCard = ({ dispute, onChanged }: { dispute: Dispute; onChanged: () =
                   <li key={v.id} style={{ fontSize: 13 }}>
                     {v.mediator?.name ? `${v.mediator.name}: ` : ''}
                     {t(`dispute.vote_${v.vote}`)}
-                    {v.rationale ? ` — “${v.rationale}”` : ''}
+                    {v.rationale ? `: “${v.rationale}”` : ''}
                   </li>
                 ))}
             </ul>

@@ -69,6 +69,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   /** Share of every payout set aside toward Ejo Heza, 0–20%. */
   declare savingsPercent: CreationOptional<number>;
   declare reviewerTier: ReviewerTier | null;
+  /** Sessions issued before this are refused: see authMiddleware. */
+  declare passwordChangedAt: CreationOptional<Date | null>;
   declare resetToken: string | null;
   declare resetTokenExpiresAt: Date | null;
   declare createdAt: CreationOptional<Date>;
@@ -211,6 +213,7 @@ export const initUser = (sequelize: Sequelize) => {
         unique: true,
         validate: { isEmail: true },
       },
+      passwordChangedAt: { type: DataTypes.DATE, allowNull: true },
       passwordHash: {
         type: DataTypes.STRING,
         allowNull: false,

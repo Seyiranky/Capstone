@@ -128,7 +128,7 @@ const GigDetail = () => {
         crew: crewOn ? crew.map((c) => ({ userId: c.userId as string, sharePercent: c.sharePercent })) : undefined,
       });
       setApplyOpen(false);
-      message.success('Application sent to the client.');
+      message.success(t('marketplace.gigDetail.applySent'));
       refresh();
     } catch (err) {
       message.error(apiErrorMessage(err, t('marketplace.gigDetail.applyFailed')));

@@ -62,7 +62,7 @@ const AdminDashboard = () => {
     { label: 'Users', value: users.length, to: '/admin/users' },
     { label: 'Suspended', value: suspended, to: '/admin/users' },
     { label: 'Pending approvals', value: pendingGigs, to: '/admin/gigs/pending' },
-    { label: 'Completed gigs', value: completedGigs, to: '/admin/gigs/completed' },
+    { label: 'Completed gigs', value: completedGigs, to: '/admin/jobs' },
   ];
 
   return (

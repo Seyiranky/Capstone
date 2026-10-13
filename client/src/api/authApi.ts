@@ -25,6 +25,9 @@ export const authApi = {
   googleLogin: (payload: { credential: string; role?: Role }) =>
     axiosClient.post<GoogleLoginResponse>('/auth/google', payload).then((res) => res.data),
 
+  changePassword: (payload: { currentPassword: string; newPassword: string }) =>
+    axiosClient.put<{ message: string; token: string }>('/auth/password', payload).then((res) => res.data),
+
   forgotPassword: (payload: { email: string }) =>
     axiosClient
       .post<{ message: string }>('/auth/forgot-password', payload)

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Grid, Space, Typography, theme } from 'antd';
 import LanguageToggle from '../common/LanguageToggle';
 import authHeroPhoto from '../../assets/auth-hero.jpg';
@@ -15,6 +16,7 @@ const Proof = ({ value, label }: { value: string; label: string }) => (
 
 const AuthLayout = ({ children }: { children: ReactNode }) => {
   const { token } = useToken();
+  const { t } = useTranslation();
   const screens = Grid.useBreakpoint();
   const showBrand = screens.md;
 
@@ -55,16 +57,15 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 20 }}>
             <img src={logo} alt="Isoko Talents" style={{ height: 44, alignSelf: 'flex-start' }} />
             <Typography.Title level={1} style={{ color: '#fff', margin: 0, maxWidth: 460 }}>
-              Turn your skills into income.
+              {t('authPanel.title')}
             </Typography.Title>
             <Typography.Paragraph style={{ color: 'rgba(255,255,255,0.85)', fontSize: 16, maxWidth: 440 }}>
-              Isoko Talents connects verified workers with clients across Kigali — post a gig, get
-              matched, get paid.
+              {t('authPanel.body')}
             </Typography.Paragraph>
             <Space size={48} style={{ marginTop: 12 }}>
-              <Proof value="4 trades" label="Verified skill tracks" />
-              <Proof value="Trust-scored" label="Every worker profile" />
-              <Proof value="Mobile-money" label="Simulated payments" />
+              <Proof value={t('authPanel.escrow')} label={t('authPanel.escrowLabel')} />
+              <Proof value={t('authPanel.verified')} label={t('authPanel.verifiedLabel')} />
+              <Proof value={t('authPanel.language')} label={t('authPanel.languageLabel')} />
             </Space>
           </div>
         </div>

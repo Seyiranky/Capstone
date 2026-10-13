@@ -24,7 +24,6 @@ import { SkillTask, initSkillTask } from './SkillTask';
 import { SkillTaskAppeal, initSkillTaskAppeal } from './SkillTaskAppeal';
 import { SkillTaskAssignment, initSkillTaskAssignment } from './SkillTaskAssignment';
 import { SkillTaskEvidence, initSkillTaskEvidence } from './SkillTaskEvidence';
-import { SurveyResponse, initSurveyResponse } from './SurveyResponse';
 import { Transaction, initTransaction } from './Transaction';
 import { TrustScoreSnapshot, initTrustScoreSnapshot } from './TrustScoreSnapshot';
 import { User, initUser } from './User';
@@ -104,7 +103,6 @@ initSkillTask(sequelize);
 initSkillTaskAppeal(sequelize);
 initSkillTaskAssignment(sequelize);
 initSkillTaskEvidence(sequelize);
-initSurveyResponse(sequelize);
 initTransaction(sequelize);
 initTrustScoreSnapshot(sequelize);
 initUser(sequelize);
@@ -136,7 +134,6 @@ export const models = {
   SkillTaskAppeal,
   SkillTaskAssignment,
   SkillTaskEvidence,
-  SurveyResponse,
   Transaction,
   TrustScoreSnapshot,
   User,
@@ -179,7 +176,6 @@ export {
   SkillTaskAppeal,
   SkillTaskAssignment,
   SkillTaskEvidence,
-  SurveyResponse,
   Transaction,
   TrustScoreSnapshot,
   User,

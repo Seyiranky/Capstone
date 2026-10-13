@@ -61,10 +61,6 @@ function App() {
       <Route path="/p/:token" element={<PassportPage />} />
       <Route path="/r/:number" element={<ReceiptPage />} />
       <Route path="/fairwork" element={<FairworkPage />} />
-      {/* Verification now lives as a section on the Dashboard. */}
-      <Route path="/verification" element={<Navigate to="/dashboard" replace />} />
-      {/* Mentorship is now folded into the broader Notifications section. */}
-      <Route path="/mentorship" element={<Navigate to="/notifications" replace />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
@@ -89,7 +85,6 @@ function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/gigs/pending" element={<AdminPendingGigsPage />} />
-            <Route path="/admin/gigs/completed" element={<Navigate to="/admin/jobs" replace />} />
             <Route path="/admin/jobs" element={<AdminJobs />} />
             <Route path="/admin/reviews" element={<AdminSkillReviews />} />
             <Route path="/admin/payments" element={<AdminPayments />} />

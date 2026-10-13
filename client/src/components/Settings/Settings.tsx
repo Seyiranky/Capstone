@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Flex, Grid, Segmented, Space, Tabs, Typography } from 'antd';
+import { Card, Flex, Grid, Segmented, Space, Tabs, Typography } from 'antd';
 import {
   BellOutlined,
   BgColorsOutlined,
@@ -16,6 +15,7 @@ import PageContainer from '../Layout/PageContainer';
 import ProfileEditor from './ProfileEditor';
 import ExportDataButton from './ExportDataButton';
 import NotificationPreferences from './NotificationPreferences';
+import ChangePasswordForm from './ChangePasswordForm';
 import PassportPanel from '../Profile/PassportPanel';
 import MySkillsPanel from '../Verification/MySkillsPanel';
 import TrustedContactForm from '../Safety/TrustedContactForm';
@@ -102,9 +102,7 @@ const Settings = () => {
           <Typography.Paragraph type="secondary">
             {t('settings.securityDesc')}
           </Typography.Paragraph>
-          <Link to="/forgot-password">
-            <Button icon={<LockOutlined />}>{t('settings.resetPasswordLink')}</Button>
-          </Link>
+          <ChangePasswordForm />
         </Card>
       ),
     },

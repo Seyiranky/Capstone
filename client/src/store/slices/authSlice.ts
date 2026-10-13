@@ -88,6 +88,11 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    /** A new session token for the same user, e.g. after changing the password. */
+    tokenRefreshed: (state, action: PayloadAction<string>) => {
+      state.token = action.payload;
+      localStorage.setItem('token', action.payload);
+    },
     logout: (state) => {
       state.userId = null;
       state.role = null;
@@ -146,5 +151,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, tokenRefreshed } = authSlice.actions;
 export default authSlice.reducer;

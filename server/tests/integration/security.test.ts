@@ -181,6 +181,25 @@ describe('sign-up and sign-in', () => {
   });
 });
 
+describe('changing the password', () => {
+  test('needs the current password, and signs out every other session', async () => {
+    const other = tokens.other;
+    // A second device, signed in a moment earlier.
+    await new Promise((r) => setTimeout(r, 1100));
+    expect(
+      (await request(app).put('/api/auth/password').set(as('other')).send({ currentPassword: 'wrong', newPassword: 'brand-new-pass' })).status,
+    ).toBe(401);
+    const res = await request(app)
+      .put('/api/auth/password')
+      .set(as('other'))
+      .send({ currentPassword: password, newPassword: 'brand-new-pass' });
+    expect(res.status).toBe(200);
+    expect((await request(app).get('/api/users/me').set({ Authorization: `Bearer ${other}` })).status).toBe(401);
+    expect((await request(app).get('/api/users/me').set({ Authorization: `Bearer ${res.body.token}` })).status).toBe(200);
+    expect((await request(app).post('/api/auth/login').send({ email: emails.other, password: 'brand-new-pass' })).status).toBe(200);
+  });
+});
+
 describe('transport', () => {
   test('sends security headers and hides the framework', async () => {
     const res = await request(app).get('/health');

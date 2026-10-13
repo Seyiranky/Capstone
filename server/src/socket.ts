@@ -4,6 +4,7 @@ import type { Server as HttpServer } from 'http';
 import { User } from './models';
 import { jwtSecret } from './config/env';
 import { allowedOrigins } from './middleware/security';
+import { sessionStillValid } from './middleware/authMiddleware';
 
 /**
  * The per-socket state this server keeps.
@@ -45,7 +46,7 @@ export const initSocket = (httpServer: HttpServer): IsokoServer => {
     }
 
     const user = await User.findByPk(decoded.id);
-    if (!user) {
+    if (!user || !sessionStillValid(user, decoded)) {
       return next(new Error('Invalid or expired token'));
     }
     if (user.status === 'suspended') {

@@ -223,9 +223,9 @@ const NotificationCenter = () => {
                                 {contact.lastMessage.fromMe ? `${t('chat.you')}: ` : ''}
                                 {contact.lastMessage.body ||
                                   (contact.lastMessage.hasAudio
-                                    ? `🎤 ${t('chat.sentVoice')}`
+                                    ? t('chat.sentVoice')
                                     : contact.lastMessage.hasImage
-                                      ? `📷 ${t('chat.sentPhoto')}`
+                                      ? t('chat.sentPhoto')
                                       : '')}
                               </Typography.Text>
                             )

@@ -23,7 +23,11 @@ createRoot(document.getElementById('root')!).render(
     {/* Google's script takes its language once, at load. Left unset it infers
         one from geography, and the sign-in button can appear in French beside
         an interface the user set to English or Kinyarwanda. */}
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID} locale={i18n.language}>
+    {/* Google has no Kinyarwanda button and falls back to French for "rw"; English is clearer. */}
+    <GoogleOAuthProvider
+      clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+      locale={i18n.language === 'rw' ? 'en' : i18n.language}
+    >
       <Provider store={store}>
         <ThemeProvider>
           <BrowserRouter>

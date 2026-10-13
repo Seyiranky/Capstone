@@ -156,7 +156,9 @@
       "removePhoto": "Kuraho ifoto",
       "submitError": "Kohereza umurimo byanze. Reba ibyo wanditse.",
       "submit": "Shyiraho umurimo",
-      "submitting": "Kohereza..."
+      "submitting": "Kohereza...",
+      "updated": "Akazi kavuguruwe.",
+      "posted": "Akazi katanzwe. Umuyobozi arakagenzura vuba."
     },
     "gigFeed": {
       "loading": "Biratunganywa...",
@@ -176,7 +178,7 @@
       "gigCount_other": "Imirimo {{count}}",
       "gigCountOnMap_one": "Umurimo {{count}} ku ikarita",
       "gigCountOnMap_other": "Imirimo {{count}} ku ikarita",
-      "emptySaved": "Nta murimo wabitse — kanda ku mutima kuri umurimo kugira ngo uwubike.",
+      "emptySaved": "Nta murimo wabitse. Kanda ku mutima kuri umurimo kugira ngo uwubike.",
       "emptyFiltered": "Nta murimo uhuye n’ibyo washakishije."
     },
     "gigDetail": {
@@ -202,7 +204,7 @@
       "messageClient": "Ohereza ubutumwa kuri nyiri umurimo",
       "messageClientHint": "Ufite ibibazo kuri uyu murimo? Ohereza {{name}} ubutumwa.",
       "messagePlaceholder": "Andikira {{name}}",
-      "messageEmpty": "Nta butumwa buraboneka — imenyekanishe.",
+      "messageEmpty": "Nta butumwa buraboneka. Imenyekanishe.",
       "steps": {
         "applied": "Byasabwe",
         "underReview": "Birimo gusuzumwa",
@@ -218,7 +220,8 @@
       "aboutClient": "Ibyerekeye umukiliya",
       "reviewsReceived": "Amasuzuma yahawe",
       "memberSince": "Umunyamuryango kuva",
-      "applyFailed": "Ubusabe bwawe ntibwoherejwe."
+      "applyFailed": "Ubusabe bwawe ntibwoherejwe.",
+      "applySent": "Ubusabe bwoherejwe."
     },
     "postAGig": "Tanga akazi",
     "tabs": {
@@ -245,10 +248,10 @@
     "pending": "Mu bubiko",
     "transactions": "Ibikorwa by'imari",
     "howPaymentsWork": "Uko ubwishyu bukora",
-    "simulatedNotice": "Isoko Talents ikoresha uburyo bwigana MTN Mobile Money kuri iyi demo — nta mafaranga nyayo atangwa.",
+    "simulatedNotice": "Isoko Talents ikoresha uburyo bwigana MTN Mobile Money kuri iyi demo. Nta mafaranga nyayo atangwa.",
     "transactionHistory": "Amateka y'ibikorwa by'imari",
     "loading": "Biratunganywa...",
-    "noTransactions": "Nta bikorwa by'imari burahaba — rangiza umurimo kugira ngo ubibone hano.",
+    "noTransactions": "Nta bikorwa by'imari burahaba. Rangiza umurimo kugira ngo ubibone hano.",
     "colGig": "Umurimo",
     "colWorker": "Umukozi",
     "colClient": "Umukiriya",
@@ -280,10 +283,10 @@
     "saving": "Kubika...",
     "saved": "Byabitswe.",
     "security": "Umutekano",
-    "securityDesc": "Hindura ijambo ry'ibanga ukoresheje uburyo bumwe wakoresha iyo uribagiwe.",
+    "securityDesc": "Hindura ijambo ry'ibanga hano. Izindi telefoni cyangwa mudasobwa zinjiye kuri konti yawe zirasohorwa.",
     "resetPasswordLink": "Hindura ijambo ry'ibanga",
     "yourData": "Amakuru yawe",
-    "exportDesc": "Kuramo kopi y'ibyose Isoko Talents ifite kuri konti yawe — umwirondoro wawe, ubuhanga bwoherejwe, imirimo, imirimo mwahuriyeho, ubwishyu, ibitekerezo, n'ubutumwa — nk'idosiye ya JSON.",
+    "exportDesc": "Kuramo kopi y'ibyose Isoko Talents ifite kuri konti yawe: umwirondoro wawe, ubuhanga bwoherejwe, imirimo, imirimo mwahuriyeho, ubwishyu, ibitekerezo, n'ubutumwa: nk'idosiye ya JSON.",
     "exportButton": "Kuramo amakuru yanjye",
     "exporting": "Gutegura gukuramo...",
     "notifications": {
@@ -320,7 +323,16 @@
       "verifyFailed": "Umuhuza ntiwashoboye koherezwa. Ongera ugerageze.",
       "verifiedNotice": "Aderesi ya imeyili yawe yemejwe.",
       "saveFailed": "Ntibyashoboye kubikwa. Ongera ugerageze."
-    }
+    },
+    "currentPassword": "Ijambo ry'ibanga usanzwe ukoresha",
+    "newPassword": "Ijambo ry'ibanga rishya",
+    "confirmPassword": "Ongera wandike ijambo ry'ibanga rishya",
+    "passwordRule": "Nibura inyuguti 8.",
+    "passwordMismatch": "Amagambo y'ibanga yombi ntabwo ari kimwe.",
+    "changePassword": "Hindura ijambo ry'ibanga",
+    "passwordChanged": "Ijambo ry'ibanga ryahinduwe. Ibindi bikoresho byasohowe.",
+    "passwordChangeFailed": "Ntibyakunze guhindura ijambo ry'ibanga. Ongera ugerageze.",
+    "forgotCurrent": "Wibagiwe ijambo ry'ibanga usanzwe ukoresha?"
   },
   "match": {
     "component": {
@@ -334,7 +346,7 @@
       "distance": "Ku ntera ya km {{km}}",
       "noLocation": "Nta hantu habitswe",
       "trust": "Amanota y’ikizere {{score}} avuye mu bitekerezo {{reviews}}",
-      "trustProvisional": "Mushya — nta bitekerezo birahari",
+      "trustProvisional": "Mushya, nta bitekerezo birahari",
       "busy": "Afite akazi {{activeMatches}} agikora",
       "busy_other": "Afite akazi {{activeMatches}} agikora",
       "skill": {
@@ -346,8 +358,8 @@
       "relatedSpecialisation": "Ubumenyi bufitanye isano",
       "categoryOnly": "Akora uyu mwuga, nta bwihariye bwatanzwe",
       "level": "Yasuzumwe ku rwego {{level}}",
-      "levelMeets": "Urwego {{level}} — ruhuye n’urwasabwe",
-      "levelBelow": "Urwego {{level}} — ruri hasi y’urwego {{required}} rwasabwe",
+      "levelMeets": "Urwego {{level}}, ruhuye n’urwasabwe",
+      "levelBelow": "Urwego {{level}}, ruri hasi y’urwego {{required}} rwasabwe",
       "provenance": {
         "self_declared": "Avuga ko akora aka kazi",
         "document_sighted": "Icyemezo cyabonywe n’usuzuma",
@@ -371,7 +383,7 @@
   },
   "trust": {
     "title": "Amanota y’ikizere",
-    "provisional": "Mushya kuri Isoko — nta bitekerezo birahari. Ntabwo ari amanota make, ni uko atagira isuzuma.",
+    "provisional": "Mushya kuri Isoko. Nta bitekerezo birahari. Ntabwo ari amanota make, ni uko atagira isuzuma.",
     "component": {
       "rating": "Ibitekerezo yahawe",
       "completion": "Akazi yarangije amaze kwemera",
@@ -433,7 +445,7 @@
     "decline": "Anga",
     "declineTitle": "Kwanga “{{title}}”?",
     "declineExplainer": "Aka kazi kazasubira ku isoko kugira ngo umukiriya atoranye undi.",
-    "declineReasonPlaceholder": "Impamvu (si ngombwa) — urugero: nari mfite akandi kazi",
+    "declineReasonPlaceholder": "Impamvu (si ngombwa), urugero: nari mfite akandi kazi",
     "invitedBadge": "Twaguhuje na aka kazi",
     "alreadyReviewed": "Wamaze gutanga isuzuma kuri aka kazi."
   },
@@ -530,7 +542,7 @@
     "allConversations": "Ibiganiro byose",
     "nothingYet": "Nta kintu kirahari.",
     "unknownCounterparty": "Uwo mukorana ntazwi",
-    "noMatches": "Nta guhuzwa birahari — tanga akazi cyangwa uhuzwe na ko mbere.",
+    "noMatches": "Nta guhuzwa birahari. Tanga akazi cyangwa uhuzwe na ko mbere.",
     "rating": "Amanota",
     "commentOptional": "Igitekerezo (si ngombwa)",
     "leaveReview": "Tanga igitekerezo",
@@ -558,7 +570,8 @@
       "worker": "Umukozi",
       "client": "Umukiriya",
       "admin": "Umuyobozi"
-    }
+    },
+    "saveChanges": "Bika impinduka"
   },
   "review": {
     "awaitingYou": "Ibyoherejwe bitegereje isuzuma ryawe",
@@ -568,7 +581,7 @@
     "approve": "Emeza",
     "reject": "Anga",
     "confidenceLabel": "Ni gute wizeye?",
-    "confidenceHint": "Niba udahamya, bivuge — undi musuzuma azazanwa aho kukubireka wenyine.",
+    "confidenceHint": "Niba udahamya, bivuge. Undi musuzuma azazanwa aho kukubireka wenyine.",
     "levelLabel": "Urwego rw’ubumenyi wabonye",
     "notesLabel": "Ibisobanuro ku mukozi (si ngombwa)"
   },
@@ -578,15 +591,15 @@
     "specialisationHint": "Si ngombwa. Guhitamo bidufasha kuguhuza n’akazi kakwiye.",
     "anySpecialisation": "Ikindi cyose / simbizi",
     "requiredLevelLabel": "Urwego rw’ubumenyi rukenewe",
-    "requiredLevelHint": "Si ngombwa. Abakozi bari hasi y’uru rwego baracyashobora gusaba — bashyirwa hasi ku rutonde, ntibahishwe.",
+    "requiredLevelHint": "Si ngombwa. Abakozi bari hasi y’uru rwego baracyashobora gusaba. Bashyirwa hasi ku rutonde, ntibahishwe.",
     "anyLevel": "Urwego urwo ari rwo rwose",
     "level": "Urwego {{level}}",
     "levelName": {
-      "1": "Urwego 1 — atangira",
-      "2": "Urwego 2 — afite uburambe buke",
-      "3": "Urwego 3 — arabishoboye",
-      "4": "Urwego 4 — afite uburambe",
-      "5": "Urwego 5 — impuguke"
+      "1": "Urwego 1: atangira",
+      "2": "Urwego 2: afite uburambe buke",
+      "3": "Urwego 3: arabishoboye",
+      "4": "Urwego 4: afite uburambe",
+      "5": "Urwego 5: impuguke"
     }
   },
   "experience": {
@@ -610,7 +623,7 @@
     },
     "tierHelp": {
       "self_declared": "Umukozi yatubwiye ko akora ibi. Nta wurabigenzura.",
-      "document_sighted": "Usuzuma yarebye icyemezo umukozi yatanze. Ibyo byemeza ko inyandiko yabonywe — si ukugenzura niba icyemezo ubwacyo ari ukuri.",
+      "document_sighted": "Usuzuma yarebye icyemezo umukozi yatanze. Ibyo byemeza ko inyandiko yabonywe. Si ukugenzura niba icyemezo ubwacyo ari ukuri.",
       "peer_reviewed": "Abasuzuma bigenga barebye ibimenyetso by’akazi barabyemeza. Abasuzuma bahabwa akazi mu buryo bwikora, umukozi ntashobora kubatoranya.",
       "work_earned": "Byubatswe ku kazi karangiye kandi gasuzumwe kuri Isoko.",
       "supervised": "Umukozi wemejwe yamushyigikiye nyuma y'akazi bishyuwe hamwe. Ni uburambe nyabwo, ariko uwamushyigikiye ntabogamye, bityo bifite agaciro gake ugereranyije n'isuzuma."
@@ -624,7 +637,7 @@
     "issuedOnLabel": "Umwaka cyatangiwe (si ngombwa)",
     "submit": "Ohereza gusuzumwa",
     "declareTitle": "Ongeraho ubumenyi ufite",
-    "declareHint": "Bwira abakiriya icyo ukora. Ushobora kongeraho ibimenyetso nyuma — ubumenyi butagira ibimenyetso buracyagaragara, bwanditseho ko wivugiye.",
+    "declareHint": "Bwira abakiriya icyo ukora. Ushobora kongeraho ibimenyetso nyuma. Ubumenyi butagira ibimenyetso buracyagaragara, bwanditseho ko wivugiye.",
     "declareSubmit": "Ongeraho ubumenyi",
     "declared": "Ubumenyi bwongeweho.",
     "mySkills": "Ubumenyi bwawe",
@@ -772,7 +785,10 @@
     "notImage": "Hemewe amafoto gusa.",
     "open": "Fungura",
     "failed": "Ntibyoherejwe. Ongera ugerageze.",
-    "sentVoice": "Yohereje ubutumwa bw'ijwi"
+    "sentVoice": "Yohereje ubutumwa bw'ijwi",
+    "empty": "Nta butumwa buraboneka. Vuga muraho.",
+    "placeholder": "Andikira {{name}}",
+    "send": "Ohereza"
   },
   "jobPhotos": {
     "title": "Amafoto y'akazi",
@@ -1114,5 +1130,49 @@
     "gigLabel": "Ubutumwa bw'ijwi (si ngombwa)",
     "gigHint": "Sobanura akazi mu ijwi, mu rurimi urwo ari rwo rwose, kugeza ku minota 2. Abakozi barabwumva iruhande rw'ibisobanuro byanditse.",
     "gigListen": "Umva umukiriya"
+  },
+  "header": {
+    "lightMode": "Urumuri",
+    "darkMode": "Umwijima"
+  },
+  "authPanel": {
+    "title": "Hindura ubumenyi bwawe amafaranga.",
+    "body": "Isoko Talents ihuza abakozi b'abahanga i Kigali n'abakeneye akazi kabo. Tanga akazi, uhuzwe, wishyurwe mu mutekano.",
+    "escrow": "Escrow",
+    "escrowLabel": "Wishyurwa akazi karangiye",
+    "verified": "Byemejwe",
+    "verifiedLabel": "Ubumenyi busuzumwa na bagenzi",
+    "language": "Ikinyarwanda",
+    "languageLabel": "n'Icyongereza"
+  },
+  "status": {
+    "completed": "Byarangiye",
+    "approved": "Byemejwe",
+    "confirmed": "Byemejwe",
+    "active": "Irakora",
+    "verified": "Byagenzuwe",
+    "released": "Byarekuwe",
+    "decided": "Byafashweho icyemezo",
+    "joined": "Yinjiye",
+    "endorsed": "Yashyigikiwe",
+    "resolved": "Byakemuwe",
+    "pending": "Bitegereje",
+    "initiated": "Byatangiye",
+    "pending_review": "Bitegereje isuzuma",
+    "held": "Bibitswe",
+    "awaiting": "Bitegereje",
+    "invited": "Yatumiwe",
+    "escalated": "Byazamuwe",
+    "rejected": "Byanzwe",
+    "cancelled": "Byahagaritswe",
+    "failed": "Byanze",
+    "suspended": "Yahagaritswe",
+    "declined": "Yanze",
+    "open": "Birafunguye",
+    "accepted": "Byemewe",
+    "matched": "Yahujwe",
+    "refunded": "Byasubijwe",
+    "dismissed": "Byanzwe",
+    "none": "Ntibyishyuwe"
   }
 }

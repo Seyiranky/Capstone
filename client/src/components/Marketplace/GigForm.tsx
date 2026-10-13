@@ -87,7 +87,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
           locationLng: location.lng,
         });
         dispatch(fetchGigs());
-        message.success('Gig updated.');
+        message.success(t('marketplace.gigForm.updated'));
       } else {
         const imageFile = fileList[0]?.originFileObj as File | undefined;
         await gigApi.createGig(
@@ -110,7 +110,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
         setFileList([]);
         recorder.discard();
         dispatch(fetchGigs());
-        message.success('Gig posted — an admin will review it shortly.');
+        message.success(t('marketplace.gigForm.posted'));
       }
       onPosted?.();
     } catch (err) {
@@ -223,7 +223,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
       )}
       {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
       <Button type="primary" htmlType="submit" block loading={submitting} disabled={recorder.state === 'recording'}>
-        {isEdit ? 'Save changes' : t('marketplace.gigForm.submit')}
+        {isEdit ? t('common.saveChanges') : t('marketplace.gigForm.submit')}
       </Button>
     </Form>
   );

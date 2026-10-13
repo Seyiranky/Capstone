@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 // Soft fill, strong text and a dot (see .isoko-status in theme/global.css).
 // antd's preset tag colours derive from the primary colour, which made
 // "processing" dark-on-dark; these are set explicitly for contrast in both themes.
@@ -14,10 +16,13 @@ const toneFor = (status: string): string => {
   return 'neutral';
 };
 
-const label = (status: string) => status.replace(/_/g, ' ');
-
-const StatusTag = ({ status }: { status: string }) => (
-  <span className={`isoko-status isoko-status--${toneFor(status)}`}>{label(status)}</span>
-);
+const StatusTag = ({ status }: { status: string }) => {
+  const { t } = useTranslation();
+  return (
+    <span className={`isoko-status isoko-status--${toneFor(status)}`}>
+      {t(`status.${status}`, { defaultValue: status.replace(/_/g, ' ') })}
+    </span>
+  );
+};
 
 export default StatusTag;

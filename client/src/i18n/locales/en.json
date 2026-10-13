@@ -156,7 +156,9 @@
       "removePhoto": "Remove photo",
       "submitError": "Failed to post gig. Please check your inputs.",
       "submit": "Post gig",
-      "submitting": "Posting..."
+      "submitting": "Posting...",
+      "updated": "Gig updated.",
+      "posted": "Gig posted. An admin will review it shortly."
     },
     "gigFeed": {
       "loading": "Loading...",
@@ -176,7 +178,7 @@
       "gigCount_other": "{{count}} gigs",
       "gigCountOnMap_one": "{{count}} gig on the map",
       "gigCountOnMap_other": "{{count}} gigs on the map",
-      "emptySaved": "No saved gigs yet — tap the heart on a gig to save it.",
+      "emptySaved": "No saved gigs yet. Tap the heart on a gig to save it.",
       "emptyFiltered": "No gigs match your filters."
     },
     "gigDetail": {
@@ -202,7 +204,7 @@
       "messageClient": "Message the client",
       "messageClientHint": "Questions about this gig? Message {{name}} directly.",
       "messagePlaceholder": "Message {{name}}",
-      "messageEmpty": "No messages yet — introduce yourself.",
+      "messageEmpty": "No messages yet. Introduce yourself.",
       "steps": {
         "applied": "Applied",
         "underReview": "Under review",
@@ -218,7 +220,8 @@
       "aboutClient": "About the client",
       "reviewsReceived": "Reviews received",
       "memberSince": "Member since",
-      "applyFailed": "Could not send your application."
+      "applyFailed": "Could not send your application.",
+      "applySent": "Application sent."
     },
     "postAGig": "Post a gig",
     "tabs": {
@@ -245,10 +248,10 @@
     "pending": "In escrow",
     "transactions": "Transactions",
     "howPaymentsWork": "How payments work",
-    "simulatedNotice": "Isoko Talents uses a simulated MTN Mobile Money integration for this demo — no real money moves.",
+    "simulatedNotice": "Payments in this demo use a simulated MTN Mobile Money connection. No real money moves.",
     "transactionHistory": "Transaction history",
     "loading": "Loading...",
-    "noTransactions": "No transactions yet — complete a match to see it here.",
+    "noTransactions": "No transactions yet. They appear here once a job is paid.",
     "colGig": "Gig",
     "colWorker": "Worker",
     "colClient": "Client",
@@ -280,10 +283,10 @@
     "saving": "Saving...",
     "saved": "Saved.",
     "security": "Security",
-    "securityDesc": "Change your password using the same link-based reset flow you'd use if you forgot it.",
+    "securityDesc": "Change your password here. Every other phone or computer signed in to your account is signed out.",
     "resetPasswordLink": "Reset your password",
     "yourData": "Your data",
-    "exportDesc": "Download a copy of everything Isoko Talents holds about your account — your profile, skill submissions, gigs, matches, payments, reviews, and messages — as a JSON file.",
+    "exportDesc": "Download a copy of everything Isoko Talents holds about your account: your profile, skill submissions, gigs, matches, payments, reviews, and messages: as a JSON file.",
     "exportButton": "Export my data",
     "exporting": "Preparing export...",
     "notifications": {
@@ -320,7 +323,16 @@
       "verifyFailed": "Could not send the link. Try again shortly.",
       "verifiedNotice": "Your email address is confirmed.",
       "saveFailed": "Could not save that. Try again."
-    }
+    },
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Type the new password again",
+    "passwordRule": "At least 8 characters.",
+    "passwordMismatch": "The two passwords are not the same.",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed. Other devices have been signed out.",
+    "passwordChangeFailed": "Could not change the password. Try again.",
+    "forgotCurrent": "Forgot your current password?"
   },
   "match": {
     "component": {
@@ -334,7 +346,7 @@
       "distance": "{{km}} km away",
       "noLocation": "No saved location",
       "trust": "{{score}} trust from {{reviews}} reviews",
-      "trustProvisional": "New — no reviews yet",
+      "trustProvisional": "New, no reviews yet",
       "busy": "{{activeMatches}} job in progress",
       "busy_other": "{{activeMatches}} jobs in progress",
       "skill": {
@@ -346,8 +358,8 @@
       "relatedSpecialisation": "Related specialisation",
       "categoryOnly": "Works in this trade, no specialisation listed",
       "level": "Assessed at level {{level}}",
-      "levelMeets": "Level {{level}} — meets the level asked for",
-      "levelBelow": "Level {{level}} — below the level {{required}} asked for",
+      "levelMeets": "Level {{level}}, meets the level asked for",
+      "levelBelow": "Level {{level}}, below the level {{required}} asked for",
       "provenance": {
         "self_declared": "Says they do this work",
         "document_sighted": "Certificate seen by a reviewer",
@@ -371,7 +383,7 @@
   },
   "trust": {
     "title": "Trust score",
-    "provisional": "New to Isoko — no reviews yet. This is not a low score, just an unrated one.",
+    "provisional": "New to Isoko, with no reviews yet. This is not a low score, just an unrated one.",
     "component": {
       "rating": "Reviews received",
       "completion": "Jobs finished once started",
@@ -433,7 +445,7 @@
     "decline": "Decline",
     "declineTitle": "Decline “{{title}}”?",
     "declineExplainer": "The gig goes back on the marketplace so the client can pick someone else.",
-    "declineReasonPlaceholder": "Reason (optional) — e.g. already booked that week",
+    "declineReasonPlaceholder": "Reason (optional), for example: already booked that week",
     "invitedBadge": "Matched for you",
     "alreadyReviewed": "You've reviewed this job."
   },
@@ -530,7 +542,7 @@
     "allConversations": "All conversations",
     "nothingYet": "Nothing yet.",
     "unknownCounterparty": "Unknown counterparty",
-    "noMatches": "No matches yet — post or get matched to a gig first.",
+    "noMatches": "No matches yet. Post a gig or apply to one first.",
     "rating": "Rating",
     "commentOptional": "Comment (optional)",
     "leaveReview": "Leave review",
@@ -558,7 +570,8 @@
       "worker": "Worker",
       "client": "Client",
       "admin": "Admin"
-    }
+    },
+    "saveChanges": "Save changes"
   },
   "review": {
     "awaitingYou": "Submissions waiting for your review",
@@ -568,7 +581,7 @@
     "approve": "Approve",
     "reject": "Reject",
     "confidenceLabel": "How sure are you?",
-    "confidenceHint": "If you are unsure, say so — a second reviewer will be brought in rather than leaving it to you alone.",
+    "confidenceHint": "If you are unsure, say so. A second reviewer will be brought in rather than leaving it to you alone.",
     "levelLabel": "Skill level you observed",
     "notesLabel": "Notes for the worker (optional)"
   },
@@ -578,15 +591,15 @@
     "specialisationHint": "Optional. Choosing one helps us match you to the right work.",
     "anySpecialisation": "Any / not sure",
     "requiredLevelLabel": "Skill level needed",
-    "requiredLevelHint": "Optional. Workers below this level can still apply — they are ranked lower, not hidden.",
+    "requiredLevelHint": "Optional. Workers below this level can still apply; they are ranked lower, not hidden.",
     "anyLevel": "Any level",
     "level": "Level {{level}}",
     "levelName": {
-      "1": "Level 1 — starting out",
-      "2": "Level 2 — some experience",
-      "3": "Level 3 — competent",
-      "4": "Level 4 — experienced",
-      "5": "Level 5 — expert"
+      "1": "Level 1: starting out",
+      "2": "Level 2: some experience",
+      "3": "Level 3: competent",
+      "4": "Level 4: experienced",
+      "5": "Level 5: expert"
     }
   },
   "experience": {
@@ -610,7 +623,7 @@
     },
     "tierHelp": {
       "self_declared": "The worker told us they do this. Nobody has checked it yet.",
-      "document_sighted": "A reviewer looked at a certificate the worker provided. That confirms the document was seen — it is not a check of whether the award itself is genuine.",
+      "document_sighted": "A reviewer looked at a certificate the worker provided. That confirms the document was seen. It is not a check of whether the award itself is genuine.",
       "peer_reviewed": "Independent reviewers examined evidence of the work and approved it. The reviewers are assigned automatically and cannot be chosen by the worker.",
       "work_earned": "Built from jobs completed and reviewed on Isoko.",
       "supervised": "A verified worker endorsed them after a paid job together. It is real experience, but the endorser is not independent, so it counts for less than a review."
@@ -624,7 +637,7 @@
     "issuedOnLabel": "Year issued (optional)",
     "submit": "Send for review",
     "declareTitle": "Add a skill you have",
-    "declareHint": "Tell clients what you do. You can add proof later — a skill with no proof still shows, marked as self-declared.",
+    "declareHint": "Tell clients what you do. You can add proof later. A skill with no proof still shows, marked as self-declared.",
     "declareSubmit": "Add skill",
     "declared": "Skill added.",
     "mySkills": "Your skills",
@@ -772,7 +785,10 @@
     "notImage": "Only photos can be attached.",
     "open": "Open",
     "failed": "Could not send. Try again.",
-    "sentVoice": "Sent a voice note"
+    "sentVoice": "Sent a voice note",
+    "empty": "No messages yet. Say hello.",
+    "placeholder": "Message {{name}}",
+    "send": "Send"
   },
   "jobPhotos": {
     "title": "Photos of the work",
@@ -1014,7 +1030,7 @@
     "levelTitle": "Your level",
     "nextLevel": "To reach {{level}}",
     "topLevel": "You have reached the top level.",
-    "levelsPublic": "Every criterion is public. Unlike opaque scores elsewhere, you can see exactly what each level takes.",
+    "levelsPublic": "Every requirement is shown, so you know exactly what the next level takes.",
     "c_paidJobs": "Paid jobs",
     "c_trust": "Trust score (with 3+ reviews)",
     "c_verifiedSkills": "Verified skills",
@@ -1114,5 +1130,49 @@
     "gigLabel": "Voice note (optional)",
     "gigHint": "Describe the job aloud, in any language, up to 2 minutes. Workers hear it beside your written description.",
     "gigListen": "Listen to the client"
+  },
+  "header": {
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode"
+  },
+  "authPanel": {
+    "title": "Turn your skills into income.",
+    "body": "Isoko Talents connects skilled workers in Kigali with people who need their work. Post a job, get matched, get paid safely.",
+    "escrow": "Escrow",
+    "escrowLabel": "Paid when the job is done",
+    "verified": "Verified",
+    "verifiedLabel": "Skills checked by peers",
+    "language": "Kinyarwanda",
+    "languageLabel": "and English"
+  },
+  "status": {
+    "completed": "Completed",
+    "approved": "Approved",
+    "confirmed": "Confirmed",
+    "active": "Active",
+    "verified": "Verified",
+    "released": "Released",
+    "decided": "Decided",
+    "joined": "Joined",
+    "endorsed": "Endorsed",
+    "resolved": "Resolved",
+    "pending": "Pending",
+    "initiated": "Started",
+    "pending_review": "Awaiting review",
+    "held": "Held in escrow",
+    "awaiting": "Awaiting",
+    "invited": "Invited",
+    "escalated": "Escalated",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled",
+    "failed": "Failed",
+    "suspended": "Suspended",
+    "declined": "Declined",
+    "open": "Open",
+    "accepted": "Accepted",
+    "matched": "Matched",
+    "refunded": "Refunded",
+    "dismissed": "Dismissed",
+    "none": "Not funded"
   }
 }

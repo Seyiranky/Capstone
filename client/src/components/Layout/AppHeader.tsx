@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { App, Badge, Button, Flex, Grid, Segmented, Space, Tooltip, Typography } from 'antd';
 import {
   BellOutlined,
-  BulbOutlined,
+  MoonOutlined,
+  SunOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   SearchOutlined,
@@ -71,7 +72,7 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
       notification.open({
         key,
         message: t('chat.newFrom', { name: m.sender.name }),
-        description: m.body || (m.audioUrl ? `🎤 ${t('chat.sentVoice')}` : `📷 ${t('chat.sentPhoto')}`),
+        description: m.body || (m.audioUrl ? t('chat.sentVoice') : t('chat.sentPhoto')),
         placement: 'bottomRight',
         duration: 5,
         onClick: () => {
@@ -139,11 +140,11 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
         />
         {/* Phones keep the header to essentials; theme stays reachable in Settings. */}
         {screens.sm && (
-          <Tooltip title={isDark ? 'Light mode' : 'Dark mode'}>
+          <Tooltip title={isDark ? t('header.lightMode') : t('header.darkMode')}>
             <Button
               type="text"
-              aria-label="Toggle theme"
-              icon={<BulbOutlined />}
+              aria-label={isDark ? t('header.lightMode') : t('header.darkMode')}
+              icon={isDark ? <SunOutlined /> : <MoonOutlined />}
               onClick={() => setMode(isDark ? 'light' : 'dark')}
             />
           </Tooltip>

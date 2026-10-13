@@ -281,6 +281,19 @@ Already sound and kept: bcrypt password hashes; role and suspension re-read from
 on every request; per-record ownership checks in every controller; allowlisted profile updates;
 timing-safe webhook secrets; parameterised queries throughout (Sequelize).
 
+### Accounts
+
+- **Change password** in Settings › Security needs the current password. Changing or resetting a password signs out every other device: sessions issued before `Users.passwordChangedAt` are refused by the API and the socket.
+
+### Product review (defence readiness)
+
+- Removed: the survey API (no screen, no data, no tests used it); the old `/verification`, `/mentorship` and `/admin/gigs/completed` redirects.
+- Copy: no em dashes or emoji in user-facing text; status labels, chat defaults, gig toasts and the sign-in panel are translated. The sign-in panel now states what Isoko does (escrow, peer-checked skills, Kinyarwanda) instead of "simulated payments".
+- Theme switch uses a sun/moon icon instead of a light bulb; the Google button is shown in English when the app is in Kinyarwanda (Google has no Kinyarwanda and fell back to French).
+- Gig "Edit" is hidden once a worker is matched, matching the server rule.
+- Decision: the admin console stays English-only. It is a staff tool; workers and clients see every screen in both languages.
+- Before the defence: re-seed the demo database. Test runs left a 2,000,000 RWF job in the dev data that dominates the dashboards' charts.
+
 ### Trust between clients and workers
 
 - **Confirmed contact before business**: posting a gig or applying needs a confirmed email or phone, so a throwaway account cannot transact.

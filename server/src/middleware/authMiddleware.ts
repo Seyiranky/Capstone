@@ -4,6 +4,14 @@ import { User } from '../models';
 import { jwtSecret } from '../config/env';
 import type { AuthUser } from '../types/domain';
 
+/**
+ * A session is refused once the password has changed after it was issued, so
+ * changing or resetting a password signs out every other device. Compared in
+ * whole seconds, as `iat` is: the session issued with the change survives it.
+ */
+export const sessionStillValid = (user: User, decoded: jwt.JwtPayload): boolean =>
+  !user.passwordChangedAt || (decoded.iat ?? 0) >= Math.floor(user.passwordChangedAt.getTime() / 1000);
+
 export const verifyToken = async (
   req: Request,
   res: Response,
@@ -29,7 +37,7 @@ export const verifyToken = async (
   // Checked on every request (not just at login) so a suspension takes effect
   // immediately for a worker/client who is already mid-session with a valid token.
   const user = await User.findByPk(decoded.id);
-  if (!user) {
+  if (!user || !sessionStillValid(user, decoded)) {
     res.status(401).json({ message: 'Invalid or expired token' });
     return;
   }
@@ -59,7 +67,7 @@ export const optionalAuth = async (req: Request, _res: Response, next: NextFunct
     try {
       const decoded = jwt.verify(header.split(' ')[1], jwtSecret(), { algorithms: ['HS256'] }) as jwt.JwtPayload;
       const user = await User.findByPk(decoded.id);
-      if (user && user.status !== 'suspended') {
+      if (user && user.status !== 'suspended' && sessionStillValid(user, decoded)) {
         req.user = { ...decoded, role: user.role, reviewerTier: user.reviewerTier } as AuthUser;
       }
     } catch {
