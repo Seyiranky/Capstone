@@ -12,6 +12,7 @@ import type { CompletionMethod, InvitationReason, MatchOrigin, MatchStatus } fro
 import type { ScoredPair } from '../types/scoring';
 import type { Gig } from './Gig';
 import type { Review } from './Review';
+import type { Dispute } from './Dispute';
 import type { Transaction } from './Transaction';
 import type { User } from './User';
 
@@ -47,12 +48,14 @@ export class Match extends Model<InferAttributes<Match>, InferCreationAttributes
   declare worker?: NonAttribute<User>;
   declare transaction?: NonAttribute<Transaction | null>;
   declare reviews?: NonAttribute<Review[]>;
+  declare disputes?: NonAttribute<Dispute[]>;
 
   static associate(models: Db) {
     Match.belongsTo(models.Gig, { foreignKey: 'gigId', as: 'gig' });
     Match.belongsTo(models.User, { foreignKey: 'workerId', as: 'worker' });
     Match.hasOne(models.Transaction, { foreignKey: 'matchId', as: 'transaction' });
     Match.hasMany(models.Review, { foreignKey: 'matchId', as: 'reviews' });
+    Match.hasMany(models.Dispute, { foreignKey: 'matchId', as: 'disputes' });
   }
 }
 
@@ -126,7 +129,7 @@ export const initMatch = (sequelize: Sequelize) => {
       completedVia: {
         type: DataTypes.STRING,
         allowNull: true,
-        validate: { isIn: [['code', 'client', 'auto']] },
+        validate: { isIn: [['code', 'client', 'auto', 'dispute']] },
       },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,

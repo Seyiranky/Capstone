@@ -117,7 +117,7 @@ const overusedReviewers = async (workerId: string) => {
  * A prior commercial relationship is exactly the channel through which
  * reciprocal approval would flow, so it disqualifies a reviewer.
  */
-const pastCollaborators = async (workerId: string): Promise<Set<string>> => {
+export const pastCollaborators = async (workerId: string): Promise<Set<string>> => {
   const asWorker = await Match.findAll({
     where: { workerId },
     include: [{ model: Gig, as: 'gig', attributes: ['clientId'] }],

@@ -210,6 +210,7 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
   if (status === 'cancelled' && !wasPending) {
     // Called off after acceptance: whatever the client put in escrow goes back.
     const refunded = await escrowService.refund(match.id);
+    await escrowService.settleLiveDispute(match.id, 'refund');
     if (refunded && gig) {
       await notify(req, {
         userId: gig.clientId,
@@ -275,6 +276,10 @@ export const completeWithCode = async (req: Request, res: Response): Promise<voi
       message: `The code is locked after ${MAX_CODE_ATTEMPTS} wrong tries. Ask the client to release payment in the app.`,
       attemptsLeft: 0,
     });
+    return;
+  }
+  if (result === 'disputed') {
+    res.status(409).json({ message: 'Payment is frozen while a dispute is open' });
     return;
   }
   if (result === 'notInProgress') {

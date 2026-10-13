@@ -44,7 +44,7 @@ export const getReceipt = async (req: Request, res: Response): Promise<void> => 
 
   res.json({
     number: tx.receiptNumber,
-    amount: Number(tx.amount),
+    amount: Number(tx.releasedAmount ?? tx.amount),
     currency: tx.currency,
     releasedAt: tx.releasedAt,
     paymentReference: tx.reference,

@@ -115,7 +115,8 @@ export const build = async (
 
   const entries: StatementEntry[] = transactions.map((t) => ({
     date: t.updatedAt,
-    amount: Number(t.amount),
+    // A split dispute released only part of the job's money.
+    amount: Number(t.releasedAmount ?? t.amount),
     currency: 'RWF',
     provider: t.provider,
     reference: t.reference,

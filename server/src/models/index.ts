@@ -1,5 +1,7 @@
 import { Sequelize, type Dialect, type Options } from 'sequelize';
 
+import { Dispute, initDispute } from './Dispute';
+import { DisputeVote, initDisputeVote } from './DisputeVote';
 import { ExperimentAllocation, initExperimentAllocation } from './ExperimentAllocation';
 import { Gig, initGig } from './Gig';
 import { GigApplication, initGigApplication } from './GigApplication';
@@ -72,6 +74,8 @@ export const sequelize = connectionString
   ? new Sequelize(connectionString, config)
   : new Sequelize(config.database as string, config.username as string, config.password, config);
 
+initDispute(sequelize);
+initDisputeVote(sequelize);
 initExperimentAllocation(sequelize);
 initGig(sequelize);
 initGigApplication(sequelize);
@@ -96,6 +100,8 @@ initUserSkill(sequelize);
 
 /** Every model, keyed by name. `associate` receives this. */
 export const models = {
+  Dispute,
+  DisputeVote,
   ExperimentAllocation,
   Gig,
   GigApplication,
@@ -131,6 +137,8 @@ for (const model of Object.values(models)) {
 }
 
 export {
+  Dispute,
+  DisputeVote,
   ExperimentAllocation,
   Gig,
   GigApplication,

@@ -102,7 +102,18 @@ export type TransactionStatus = 'initiated' | 'confirmed' | 'failed';
 export type EscrowStatus = 'none' | 'held' | 'released' | 'refunded';
 
 /** Match.completedVia — how a match came to be completed and its escrow released. */
-export type CompletionMethod = 'code' | 'client' | 'auto';
+export type CompletionMethod = 'code' | 'client' | 'auto' | 'dispute';
+
+/** Dispute.status — `escalated` waits on an admin; `settled` closed by the parties themselves. */
+export type DisputeStatus = 'open' | 'escalated' | 'decided' | 'settled';
+
+/** What happens to the held money. */
+export type DisputeOutcome = 'release' | 'refund' | 'split';
+
+export type DisputeReason = 'notDone' | 'poorQuality' | 'noShow' | 'notReleased' | 'other';
+
+/** Who closed a dispute. */
+export type DisputeDecider = 'mediators' | 'admin' | 'parties';
 
 /** NotificationDelivery.channel */
 export type DeliveryChannel = 'in_app' | 'sms' | 'email';
