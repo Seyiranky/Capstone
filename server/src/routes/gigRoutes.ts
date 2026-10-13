@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.post('/', verifyToken, authorize('client'), uploadGigImage.single('image'), gigController.createGig);
 router.get('/', gigController.listGigs);
+// Before '/:id', which would otherwise swallow it.
+router.get('/rates', verifyToken, gigController.rates);
 router.get('/:id', gigController.getGig);
 router.get('/:id/candidates', verifyToken, gigController.listCandidates);
 router.put('/:id', verifyToken, authorize('client'), gigController.updateGig);

@@ -5,6 +5,7 @@ import * as matchScoringService from '../services/matchScoringService';
 import type { RankedPair } from '../types/scoring';
 import { authed } from '../lib/authed';
 import { pathParam, stringParam } from '../lib/query';
+import * as rateService from '../services/rateService';
 
 const GIG_INCLUDES: Includeable[] = [
   { model: User, as: 'client' },
@@ -175,4 +176,19 @@ export const updateGig = async (req: Request, res: Response): Promise<void> => {
 
   await gig.update(updates);
   res.json(gig);
+};
+
+/** The usual price range for a skill's category, for pricing a gig or a quote. */
+export const rates = async (req: Request, res: Response): Promise<void> => {
+  const skillId = typeof req.query.skillId === 'string' ? req.query.skillId : '';
+  if (!skillId) {
+    res.status(400).json({ message: 'skillId is required' });
+    return;
+  }
+  const guide = await rateService.forSkill(skillId);
+  if (!guide) {
+    res.status(404).json({ message: 'Skill not found' });
+    return;
+  }
+  res.json(guide);
 };
