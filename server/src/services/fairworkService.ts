@@ -11,6 +11,7 @@ import {
   User,
 } from '../models';
 import * as rateService from './rateService';
+import * as workerVoice from './workerVoiceService';
 import type { SkillCategory } from '../types/domain';
 
 /**
@@ -142,8 +143,9 @@ export const compute = async (): Promise<FairworkScorecard> => {
   // Fair representation ─────────────────────────────────────────────────────
   // (1) Workers judge workers: peers enrolled as skill reviewers.
   const peers = await User.count({ where: { role: 'worker', reviewerTier: 'peer' } });
-  // (2) Workers vote on platform rules. Not built yet, so honestly zero.
-  const workerVotes = 0;
+  // (2) Workers vote on platform rules: Worker Voice polls decided in the last
+  // year that workers voted on and the platform publicly answered.
+  const workerVotes = await workerVoice.decidedThisYear();
 
   const principles: FairworkPrinciple[] = [
     {
@@ -178,7 +180,7 @@ export const compute = async (): Promise<FairworkScorecard> => {
       key: 'representation',
       checks: [
         check('peerReviewers', peers, 1, 'count', peers),
-        check('workerVoice', workerVotes, 1, 'count', 0),
+        check('workerVoice', workerVotes, 1, 'count', workerVotes),
       ],
     },
   ];

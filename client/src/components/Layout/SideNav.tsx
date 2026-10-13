@@ -24,6 +24,7 @@ import {
   TrophyOutlined,
   WifiOutlined,
   FlagOutlined,
+  CommentOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
 import { activeNavKey, visibleNavEntries } from './navConfig';
@@ -33,6 +34,8 @@ const ICONS: Record<string, ReactNode> = {
   '/marketplace': <AppstoreOutlined />,
   '/wallet': <WalletOutlined />,
   '/growth': <RiseOutlined />,
+  '/voice': <CommentOutlined />,
+  '/admin/voice': <CommentOutlined />,
   '/disputes': <AuditOutlined />,
   '/notifications': <BellOutlined />,
   '/settings': <SettingOutlined />,

@@ -32,6 +32,8 @@ import RplPack from './components/Growth/RplPack';
 import AdminFairwork from './components/Admin/AdminFairwork';
 import AdminSafety from './components/Admin/AdminSafety';
 import AdminReports from './components/Admin/AdminReports';
+import AdminVoice from './components/Admin/AdminVoice';
+import WorkerVoicePage from './components/WorkerVoice/WorkerVoicePage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -80,6 +82,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['worker']} />}>
             <Route path="/growth" element={<GrowthPage />} />
             <Route path="/growth/rpl" element={<RplPack />} />
+            <Route path="/voice" element={<WorkerVoicePage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<AdminPage />} />
@@ -95,6 +98,7 @@ function App() {
             <Route path="/admin/fairwork" element={<AdminFairwork />} />
             <Route path="/admin/safety" element={<AdminSafety />} />
             <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/voice" element={<AdminVoice />} />
             <Route path="/admin/audit" element={<AdminAuditPage />} />
           </Route>
 

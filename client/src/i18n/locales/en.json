@@ -65,7 +65,8 @@
     "gigDetails": "Gig details",
     "profile": "Profile",
     "disputes": "Disputes",
-    "growth": "Growth"
+    "growth": "Growth",
+    "voice": "Worker Voice"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -912,7 +913,8 @@
     "systemSub": "Whether notifications are reaching people.",
     "fairwork": "Fairwork scorecard",
     "safety": "Safety alerts",
-    "reports": "Reports"
+    "reports": "Reports",
+    "voice": "Worker Voice"
   },
   "actions": {
     "more": "More actions",
@@ -992,7 +994,7 @@
     "c_peerReviewers": "Workers judge workers",
     "c_peerReviewers_d": "Workers enrolled as peer reviewers of skill evidence.",
     "c_workerVoice": "Workers vote on platform rules",
-    "c_workerVoice_d": "Not built yet. Planned: polls on platform rules, open to workers with a paid job.",
+    "c_workerVoice_d": "Polls on platform rules in the last year that workers paid through Isoko voted on and the platform answered publicly.",
     "basis_other": "From {{count}} records"
   },
   "safetyNet": {
@@ -1174,5 +1176,45 @@
     "refunded": "Refunded",
     "dismissed": "Dismissed",
     "none": "Not funded"
+  },
+  "workerVoice": {
+    "title": "Worker Voice",
+    "subtitle": "Workers decide the rules that affect their pay. Vote on open questions and see what the platform did with every result.",
+    "notYet": "You can vote once you have been paid for a job through Isoko. Until then, you can follow every result here.",
+    "none": "No polls yet.",
+    "vote": "Vote",
+    "voted": "Vote counted. Thank you.",
+    "voteFailed": "Could not count your vote. Try again.",
+    "phase_voting": "Voting open",
+    "phase_awaiting_response": "Awaiting the platform's answer",
+    "phase_closed": "Decided",
+    "closes": "closes {{when}}",
+    "awaiting": "voting has ended",
+    "closedOn": "decided on {{date}}",
+    "votes_one": "{{count}} vote",
+    "votes_other": "{{count}} votes",
+    "outcome": "What the platform did",
+    "adminTitle": "Worker Voice",
+    "adminSub": "Put a platform rule to the workers. Only workers paid through Isoko vote, once each. Close a poll by saying what you will do; every voter is told.",
+    "newPoll": "New poll",
+    "question": "Question",
+    "questionHint": "For example: should cancellations after 24 hours pay the worker 20%?",
+    "details": "Background (optional)",
+    "options": "Options",
+    "option": "Option {{n}}",
+    "optionRule": "Up to 80 characters",
+    "addOption": "Add an option",
+    "days": "Voting runs for",
+    "daysUnit": "days",
+    "open": "Open the vote",
+    "openHint": "Every worker who can vote is notified.",
+    "opened": "Poll opened. Workers have been told.",
+    "openFailed": "That did not work. Check the poll and try again.",
+    "close": "Close with an answer",
+    "closeBody": "Write what the platform will do about the result. It is published beside the counts and sent to every voter.",
+    "outcomeHint": "For example: workers chose 5%, so the suggestion on the pay-in screen is now 5%.",
+    "closedMsg": "Poll closed and the answer published.",
+    "publicTitle": "Worker Voice",
+    "publicSub": "Questions put to workers who have been paid through Isoko, the counts, and what the platform did."
   }
 }

@@ -324,7 +324,7 @@ Recommended order: 10 (cheap, strongest for the defence), 11, 13, 14, 9, 15, 12.
 
 Built in this order, each committed with its tests:
 
-1. **Worker Voice** (item 15). Admins post a short poll on a platform rule; only workers with at
+1. ✓ **Worker Voice** (item 15; done 14 Oct: worker page `/voice`, admin under People & trust, results on `/fairwork`). Admins post a short poll on a platform rule; only workers with at
    least one paid job may vote, one vote each; counts are public on `/fairwork` while the poll is
    open; when it closes an admin must publish what was done about the result. Fairwork's
    "workers vote on platform rules" check counts polls decided this way.
