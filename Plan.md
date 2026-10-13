@@ -1,670 +1,184 @@
-# Isoko Talents — SMS notifications through Pindo
+# Isoko Talents — closing the gaps: borrowed foundations, distinctive features, responsive UI
 
-> Supersedes the email notification channel plan, which is built and committed
-> (`51feae8`..`8edb3d8`, 2 Oct 2026). That plan's text is in git history.
+> Supersedes the SMS notification plan, which is built and committed
+> (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: implemented** in commits `714bac0`..`ac3f5a2` (11 Oct 2026), for the pilot.
-> Phases 1–6 landed; deviations are listed at the end. A live send from Pindo's shared
-> `PindoTest` sender reached an MTN phone on 11 Oct, so the pilot sends from it, and the
-> registered "Isoko" sender ID (Phase 0, steps 0.1 and 0.4–0.6) is the launch step.
-> 325 server and 12 client tests green; locales in step.
->
-> Provider research behind the choice: `reports/SMS provider for Isoko Talents.md`.
+> **Status: proposed** (13 Oct 2026). Nothing in this plan is built yet.
 
 ## Context
 
-FR-13 promised notifications on three channels. In-app and email are live. SMS has been
-**built but switched off** since September:
+A survey of comparable platforms (13 Oct 2026) found eleven that overlap with Isoko:
 
-- `server/src/lib/channels/sms.ts` has a `log` driver (the default) and a `pindo` driver
-  behind `SMS_DRIVER`. The Pindo driver has never sent a real message.
-- `notify.ts` already calls `deliverSms()` for every category, and records a
-  `NotificationDelivery` row whatever happens.
-- `User.preferredChannel` can already hold `'sms'`, but the Settings radio for SMS is
-  **disabled** ("Not available yet.") unless the user is already on it.
+| Platform | Where | What it does |
+|---|---|---|
+| Kazispace | Rwanda | Matches formal and informal workers with employers; mentions skill assessments |
+| Kora (RDB job portal) | Rwanda | Government job matching |
+| KigaliJob | Rwanda | Job board and training listings |
+| Ayambe | Rwanda | Youth jobs by app and, reportedly, USSD |
+| Lynk (acquired by Eden Life, 2022) | Kenya | Manually vetted artisans; profiles grow with completed jobs |
+| Fundis | Kenya | Artisans issue quotes, invoices and receipts that support micro-credit |
+| SA Youth / Harambee | South Africa | Matches youth to work near home; zero-rated data; WhatsApp and call-centre support |
+| KayaHelp, Handymesh, CitiTasker | Nigeria | Verified artisans; payment held in escrow until the job is done |
+| Diwala | Kenya, Uganda | Institution-issued verified credentials |
+| Upwork, Fiverr | Global | Remote freelancing; escrow, milestones, proposals, disputes |
+| TaskRabbit | Global | Pre-screened local taskers; job photos; on-site work |
 
-What stops SMS from going live today:
+Isoko already has things none of them combine: peer-verified skill tasks with appeals and
+collusion detection, explainable ranking, a newcomer exploration slot, a revocable public
+Skill Passport, a signed income statement, and pilot instrumentation.
 
-1. **There is no way to enter a phone number.** `phone` is in `UPDATABLE_FIELDS` and in the
-   client types, but no screen edits it.
-2. **Numbers are never verified.** Email gets a confirmation link before anything is sent to
-   it. SMS sends to whatever `phone` holds, so a typo bills Isoko for messages to a stranger.
-3. **Numbers are not validated.** `normaliseMsisdn()` turns any string into `+<digits>`,
-   so `"hello"` becomes `+` and is sent to Pindo, which rejects it with `409`.
-4. **Text is not made safe for SMS.** Kinyarwanda needs no accents, so it fits GSM-7 at 160
-   characters a segment. A single curly apostrophe (`n’`) forces UCS-2 at 70 a segment and
-   can turn one billed segment into three. The driver passes text through unchanged.
-5. **"Sent" is the last thing we know.** Pindo reports delivery (`DELIVRD`, `UNDELIV`, …) to
-   a webhook, but there is no endpoint to receive it, so a pilot can't report whether
-   anyone was actually reached.
-6. **Every notification goes to SMS.** The policy table still sends `activity` notices
-   (including the "new application" fan-out to every admin) by SMS. That was harmless on
-   the `log` driver; on Pindo every one is billed.
-7. **The driver has no timeout.** `fetch` to Pindo can hang for as long as the socket allows.
+What it lacks are the **foundations users expect from any of them**. Payment is requested only
+after a job is marked complete, so nothing protects either side while the work happens.
+Workers cannot name a price. There is no dispute route. Completed jobs leave no evidence on
+the worker's profile. A rejected applicant learns nothing. Isoko is also the only platform in
+the table with no answer for a phone without data.
 
-Outcome wanted: a user enters a Rwandan mobile number, confirms it with a code, chooses
-SMS, and receives only the notices worth paying for, in text that stays inside one
-GSM-7 segment where possible. Every message's fate (sent, delivered, failed, skipped) is
-recorded. The whole flow still runs end to end with **no credentials** on the `log`
-driver, so the demo and CI are unaffected.
+Outcome wanted:
+1. Every borrowed foundation is present, so an examiner can't name a basic feature that's missing.
+2. Each one is implemented **in a way that feeds Isoko's verification and trust model**, so
+   it isn't a copy. For example, a completed job becomes passport evidence, and disputes are
+   judged by peers the collusion detector has screened.
+3. Every screen works at 360px, 768px and 1280px.
+
+## Positioning (for the defence)
+
+> Kazispace and Kora match people to jobs; Lynk and KayaHelp vet artisans by hand and hold
+> money in escrow. Isoko verifies skills that have no certificate in a way that resists
+> gaming, explains every ranking, gives newcomers a fair chance — and turns every paid job
+> into portable, verifiable evidence of competence and income.
+
+| Gap in the market | Who leaves it open | How Isoko closes it |
+|---|---|---|
+| Informal skills have no proof | Diwala needs an institution; Lynk vets by hand | Peer-reviewed skill tasks, appeals, collusion screening (built) **+ job completions as evidence (Phase 4)** |
+| Rankings are a black box | All of them | "Why this ranking" breakdown (built) |
+| Newcomers never get a first job | Upwork, Fiverr | Exploration slot (built) **+ apprentice seats (Phase 7)** |
+| Escrow disputes go to a distant support desk | Upwork, KayaHelp | **Peer mediators screened for collusion (Phase 3)** |
+| Income can't be shown to a lender | Most (Fundis partly) | Signed income statement (built) **+ receipts per release (Phase 2)** |
+| Race to the bottom on price | Upwork, Fiverr | **Fair-rate floor from completed local gigs (Phase 6)** |
+| Basic phones are shut out | All except Ayambe | **USSD menu including entering the completion code (Phase 9)** |
+
+## Phases
+
+Phases 0–6 are the core. Phases 7–9 are stretch, ordered by how much they add to the
+defence relative to effort. Each phase is committed on its own, with tests, and leaves
+the app working on the simulated payment adapter and the `log` SMS driver.
+
+### Phase 0 — Responsive and visual pass (in progress)
+
+Audited every route as worker, client, admin and visitor at 375px and 1280px with Playwright.
+Findings so far:
+
+- Gig detail, "Your application": the progress dots don't line up with the status tag on
+  desktop, and on phones the vertical steps are misaligned with dead space below. Replace
+  them with a progress bar that's left-aligned and the same at every width.
+- Gig detail, applicants table: the pinned action column covers worker names on phones and
+  cuts off "Why this ranking" on desktop; "New — no reviews yet" wraps one word per line.
+  Replace it with a responsive applicant list (one card per applicant, with match details
+  that expand).
+- Header: the unread badge overflows the right edge at 375px.
+- Remaining routes: work through the screenshots one by one; record each fix in the commit.
+
+### Phase 1 — Escrow with a completion code
+*Borrowed from:* Upwork escrow, KayaHelp/Handymesh held payments, Bolt/Glovo handover PINs.
+
+- When the worker accepts, the client funds the agreed amount. Through the existing
+  `paymentService.initiate` → callback path, the money becomes **held**.
+- `Transaction` gains `escrowStatus: 'none' | 'held' | 'released' | 'refunded'`, plus
+  `releasedAt` and `refundedAt`. The existing `initiated → confirmed | failed` table is
+  unchanged. Escrow is a second state machine on confirmed rows, with its own exhaustive
+  transition table.
+- A 4-digit **completion code** is generated when the match is accepted and stored as a hash
+  on `Match`. The client sees it in the app (and by SMS if they chose SMS). The worker enters
+  it on site, which marks the match complete and releases escrow in one transaction.
+- Lockout after 5 wrong attempts. The client can still release manually. **Auto-release
+  72 hours** after the worker marks the job done, unless a dispute is open. Upwork does
+  the same thing after 14 days; 72 hours suits small local jobs.
+- Migration, model, service, controller, routes, client "Job in progress" card, tests
+  covering the transitions, idempotent release, and lockout.
+
+### Phase 2 — Quotes and receipts
+*Borrowed from:* Upwork proposals, Thumbtack quotes, Fundis receipts.
+
+- An application can carry a **quote** (amount and a short note). The default is the gig
+  budget, so existing applications still work. Approving an application fixes the price
+  that Phase 1 escrows.
+- Each release issues a **receipt** with a number, both parties, the gig, and the amount,
+  signed the same way as the income statement and checkable at a public URL with a QR code.
+- The income statement lists receipt numbers, so a lender can check any line.
+
+### Phase 3 — Disputes settled by screened peers
+*Borrowed from:* Upwork disputes; jury-style resolution.
+
+- Either party can open a dispute while escrow is held, giving a reason and optional
+  evidence. This freezes auto-release.
+- **Three mediators** are drawn from high-trust users. Anyone who is linked to either party,
+  or flagged by `collusionDetectionService`, is excluded, reusing the reviewer-assignment
+  pool rules from skill tasks.
+- Each mediator votes to release, refund, or split 50/50, and the majority applies. An admin
+  can override, and every override is recorded. Mediators who side with the majority get a
+  small trust adjustment, which is capped.
+- If no majority forms within 5 days, an admin decides.
+
+### Phase 4 — Completed jobs become evidence
+*Borrowed from:* Lynk career profiles, TaskRabbit job photos.
+
+- When entering the completion code, the worker can attach up to 3 photos, using the same
+  upload path and `sha256` handling as skill-task evidence.
+- The profile gets a **Work history** strip of completed jobs, each with photos and the
+  client's rating.
+- The Skill Passport shows **"N paid jobs completed in this skill"** next to the peer
+  verification. Isoko stays the source of truth, and the passport remains revocable.
+
+### Phase 5 — Rejection reasons and next steps
+*Borrowed from:* SA Youth employer feedback.
+
+- Rejecting an application requires a reason: *skill level*, *distance*, *timing*,
+  *chose another applicant*, or *other*.
+- The worker sees the reason. For *skill level*, they also get a link to that skill's
+  verification task, which turns a rejection into a next step.
+- Admins see counts of reasons by skill, a signal of where training is needed.
+
+### Phase 6 — Fair-rate guidance
+*Borrowed from:* Upwork and Malt rate insights.
+
+- For each skill, compute the median and 25th percentile of released escrow amounts. Below
+  a minimum number of jobs, fall back to a seeded reference rate.
+- When a client posts a gig below the 25th percentile, they see a soft warning. Workers
+  writing a quote see the typical range.
+
+### Phase 7 — Apprentice seats (stretch)
+*Not offered by any platform surveyed.*
+
+- A verified worker can add one apprentice to a gig they've accepted.
+- When the job is released, the senior worker's endorsement counts as **one** peer review
+  toward the apprentice's skill task. It's capped at one per skill, and the senior must have
+  passed that skill.
+
+### Phase 8 — Crew gigs (stretch)
+*Borrowed from:* Upwork agencies.
+
+- Workers apply as a crew, with each member's share agreed up front. Escrow releases in parts.
+
+### Phase 9 — USSD (stretch)
+*Borrowed from:* Ayambe, M-Pesa menus, SA Youth zero-rating.
+
+- A USSD session endpoint in the shape of the Africa's Talking USSD API. Its `log` driver
+  works with no account, mirroring the SMS driver.
+- Menu: open gigs near me, my applications, wallet balance, **enter completion code**.
+- An in-app USSD simulator page for the demo.
 
 ## Decisions taken
 
 | Decision | Choice | Why |
 |---|---|---|
-| Pilot sender | **`PindoTest`**, Pindo's shared test sender, set by `SMS_SENDER_ID` | Verified live to MTN on 11 Oct 2026. Registering "Isoko" needs an RDB certificate and ~4 weeks; swapping is one env var once it exists |
-| Identifying the sender | **Every SMS starts `Isoko:`**, and Settings says texts arrive from `PindoTest` during the pilot | The sender name doesn't identify Isoko, and RURA's unsolicited-messages rules require that it is identifiable |
-| Provider | **Pindo** | Kigali company, $0.01/SMS (Twilio is ~$0.33), Irembo as a customer, and the driver already speaks its API. See the research report |
-| Phone verification | **Own 6-digit code sent through `sms.send()`**, not Pindo Verify | Works on the `log` driver, so it can be demonstrated and tested with no account. Mirrors the email flow. Pindo Verify costs the same $0.01, ties us to Pindo, and can't run offline |
-| Numbers accepted | **Rwandan mobile only**: `+250 7[2389]X XXX XXX` (MTN 078/079, Airtel 072/073) | Pindo returns `409` for unsupported countries or networks. Reject at input, not after billing |
-| Which notices go by SMS | **`critical` and `outcome` only.** `activity` becomes in-app only | Stops billed chatter. The README already names this as the next filter |
-| Text encoding | **Normalise to GSM-7 before sending**, and log segment count | Keeps Kinyarwanda and English at 160 characters a segment |
-| Delivery reports | **Webhook at `/api/webhooks/sms/pindo`**, guarded by a shared secret | Pindo posts `DELIVRD` / `UNDELIV` etc. per message; without it "sent" is all we know |
-| Opt-out | **The Settings radio**, not "reply STOP" | A2P SMS in Rwanda is one-way; nobody can reply |
-| Localised SMS text | **Out of scope**, as it was for email | The server has no i18n catalogue; all call sites write English. Follow-up |
-| Quiet hours | **Out of scope** | No legal requirement; would need a send queue. Follow-up |
-
----
-
-## Pindo, as verified against docs.pindo.ai (10 Oct 2026)
-
-| Item | Detail |
-|---|---|
-| Auth | `Authorization: Bearer <token>`. The token is in the dashboard under Security; refreshing it revokes the old one |
-| Send one | `POST https://api.pindo.io/v1/sms/` with `{ to, text, sender }`, all required. `to` in international form |
-| Success | `201` with `{ status: "sent", sms_id, item_price, remaining_balance, total_cost }` |
-| Errors | `401` bad token · `404` bad path · `409` unsupported country, unsupported network, or wrong number format |
-| Delivery report | Configured in the dashboard under **SMS → Configurations**. Pindo posts `{ sms_id, status, modified_at, retries_count }` |
-| Report statuses | `ACCEPTED`, `DELIVRD`, `UNDELIV`, `REJECTED`, `EXPIRED`, `UNKNOWN` |
-| Report retries | **None documented**: "if it's down when an event occurs, that notification is missed" |
-| Verify | `POST /v1/sms/verify` then `/v1/sms/verify/check`; $0.01 per PIN. Not used (see decisions) |
-| No Node SDK | Plain `fetch`, which the driver already uses |
-
-**Still to confirm by email with Pindo** (Phase 0): whether a new account can send from a
-shared/default sender before "Isoko" is approved, the Airtel price, how Unicode is billed,
-whether the DLR webhook can carry a custom header, and the minimum top-up and payment
-methods (MoMo?).
-
----
-
-## Phase 0 — Accounts and paperwork (no code; start first, it's the long pole)
-
-> **Pilot status (11 Oct 2026):** steps 0.2 and 0.3's first question are answered in
-> practice: the account works and `PindoTest` delivered to an MTN number. The pilot runs on
-> it. Steps 0.1 and 0.4–0.6 (the "Isoko" sender ID) are now the **launch** path, not a
-> prerequisite for the pilot. Still worth doing during the pilot: an Airtel test send, and
-> asking Pindo whether `PindoTest` may carry real user traffic.
-
-Phase 0 is everything that has to happen outside the codebase before a real SMS can carry
-the name "Isoko". None of it blocks Phases 1–6, which all run on the `log` driver, but the
-sender ID takes **four to five weeks** end to end, so it starts on day one.
-
-### What has to exist at the end
-
-| Item | Who issues it | Typical time | Cost |
-|---|---|---|---|
-| Pindo account, API token, credit | Pindo (self-service) | Same day | Credit only |
-| A first real SMS to a team phone | Pindo, using its test sender | Same day, if allowed | ~$0.01 |
-| RURA Sender ID Whitelisting Authorization for "Isoko" | RURA, at licensing.rura.rw | ~5 working days | Free |
-| MTN Rwanda and Airtel Rwanda registration of "Isoko" | The operators, filed through Pindo | ~3 weeks | Ask Pindo (step 0.4) |
-| Pindo's written answers to the open questions | Pindo support | 1–5 days | — |
-| Consent wording and processor record for Law 058/2021 | The team | 1 day | — |
-
-### 0.1 Decide who the legal applicant is (day 1)
-
-Both the RURA and the operator steps ask for an **RDB certificate of registration**: proof
-that the applicant is a registered organisation. A student team doesn't have one, so pick
-one of these first. Everything after depends on it.
-
-| Option | What you need | Pros | Cons |
-|---|---|---|---|
-| **A. University as sponsor** | A signed and stamped letter from ALU authorising the sender ID "Isoko" for the capstone pilot, plus ALU's RDB certificate | No new entity; credible to assessors | Depends on how fast ALU's admin office signs; ALU's name appears on the paperwork |
-| **B. Register your own business at RDB** | Online at RDB (business registration is free and usually same-day; confirm current terms at rdb.rw before relying on that) | You own the sender ID; reusable after the capstone | Creates a real business with tax-registration obligations; check those before choosing |
-| **C. Incubator or partner company** | Their signed and stamped letter plus their RDB certificate | Can be fast if you already have a relationship | The ID is legally theirs |
-
-**Recommendation:** ask ALU (option A) on day 1 and, in parallel, read RDB's current
-requirements for option B. Take whichever produces a signed letter and certificate first.
-Record the choice here.
-
-> Applicant chosen: _______________ (fill in)
-
-### 0.2 Open the Pindo account and prove it can send (day 1)
-
-1. Sign up at **pindo.io** with a team-owned email address, not a personal one: it holds
-   the API token and the account balance.
-2. Top up the minimum, enough for a few hundred messages (about $5 covers 500 at
-   $0.01). Note which payment methods are offered (card, MoMo, bank) and the minimum, and
-   write them in the answers table below.
-3. Copy the API token from **profile icon → Security**. Put it **only** in `server/.env`:
-   ```
-   PINDO_API_TOKEN=<token>
-   ```
-   Never in git, chat, screenshots or the client. If it leaks, press **Refresh** on the
-   same page, which revokes the old token immediately.
-4. **Try a test send to a team member's own phone.** Pindo's quickstart uses the sender
-   `PindoTest` in its example, which may be a shared test sender for new accounts:
-   ```bash
-   source server/.env
-   curl -sS -X POST https://api.pindo.io/v1/sms/ \
-     -H "Authorization: Bearer $PINDO_API_TOKEN" \
-     -H "Content-Type: application/json" \
-     -d '{"to":"+2507XXXXXXXX","text":"Isoko test 1","sender":"PindoTest"}'
-   ```
-   Record exactly what happens:
-   - **`201` and the phone receives it:** a live demo is possible before "Isoko" is
-     approved. Note which sender name showed on the phone.
-   - **`201` but nothing arrives within 10 minutes:** note it; this is what the delivery
-     report in Phase 3 exists to explain.
-   - **An error:** copy the status code and body into the answers table.
-   Repeat once with an **Airtel** number (072/073), since Airtel and MTN may behave
-   differently.
-5. Optionally, the same command with `"sender":"Isoko"` shows how Pindo rejects an
-   unapproved sender, which tells Phase 1 what error to expect.
-
-### 0.3 Email Pindo the open questions (day 1)
-
-Send from the team address, to the support contact on pindo.io:
-
-> **Subject:** Sender ID registration and API questions — Isoko Talents (student pilot, Rwanda)
->
-> Hello,
->
-> We are building Isoko Talents, a gig marketplace for informal workers in Kigali, as a
-> university capstone, and plan to use Pindo's SMS API for transactional notifications
-> (job outcomes, payment confirmations, phone number verification codes). No marketing
-> messages. Expected volume is about 2,000 SMS a month during the pilot.
->
-> Could you help with the following?
->
-> 1. Can our account send from a shared or test sender (e.g. "PindoTest") while our own
->    sender ID is being approved? If so, to which networks?
-> 2. We want to register the sender ID **"Isoko"** for Rwanda (MTN and Airtel). What
->    documents do you need from us, in what format, and do you have templates for the
->    operator letters? Do you also file the RURA whitelisting, or should we do it first?
->    What does registration cost and how long does it take?
-> 3. What is the per-SMS price to **Airtel Rwanda**, and is a Unicode (UCS-2) message
->    billed per 70-character segment?
-> 4. Can the delivery-report (DLR) webhook send a custom header (for a shared secret)?
->    If not, can the callback URL include a query string?
-> 5. What is the minimum top-up, and can we pay by MTN MoMo?
-> 6. Do you provide a data processing agreement or terms describing where message data
->    and phone numbers are stored?
->
-> Thank you,
-> [name], [role], Isoko Talents
-> [phone] · [team email]
-
-### 0.4 Prepare the documents (days 2–5)
-
-Gather these as PDFs in one folder (outside the repo; they carry signatures and stamps):
-
-1. **RDB certificate** of the applicant chosen in 0.1.
-2. **RURA request letter** on the applicant's letterhead, signed and stamped. It must
-   confirm lawful use of the sender ID. Suggested wording:
-
-   > To: Rwanda Utilities Regulatory Authority
-   > Subject: Request for Sender ID whitelisting — "Isoko"
-   >
-   > [Applicant] (RDB reg. no. [number]) requests whitelisting of the alphanumeric
-   > sender ID **"Isoko"** for application-to-person SMS in Rwanda.
-   >
-   > The sender ID will be used only for transactional notifications to registered users
-   > of the Isoko Talents platform who have opted in to SMS: job and application
-   > outcomes, payment confirmations, and one-time phone verification codes. It will not
-   > be used for marketing. Messages will be sent through Pindo Rwanda Ltd. Users can
-   > stop SMS at any time in the platform's settings.
-   >
-   > We confirm the sender ID will be used lawfully and in line with RURA's regulations
-   > on unsolicited messages and Law No. 058/2021 on personal data protection.
-   >
-   > [Name, title, signature, stamp, date]
-
-3. **Authorisation letter** if someone other than the signatory files at RURA (for
-   example a student filing on ALU's behalf): the applicant authorises [name, ID number]
-   to submit the application.
-4. **Operator letters for MTN Rwanda and Airtel Rwanda**, one each, on letterhead, signed
-   and stamped. Use **Pindo's templates** if they send them (question 2); otherwise adapt
-   the RURA letter, addressed to each operator, naming Pindo as the aggregator.
-5. **Sample messages** (operators sometimes ask), written in plain ASCII so they fit one
-   GSM-7 segment, for example:
-   - `Isoko: Your application for "Repair my laptop screen" was accepted. Open the app to see details.`
-   - `Isoko code: 123456. Expires in 10 minutes. Do not share it.`
-
-Keep "Isoko" exactly the same in every document. Fallbacks if it's refused: `IsokoTalent`
-(11 characters) or `IsokoRW`. Never generic words like INFO or ALERT, which are always rejected.
-
-### 0.5 File the RURA whitelisting (day ~5, then ~5 working days)
-
-1. Create an account on **licensing.rura.rw** in the applicant's name.
-2. Open the **"Sender ID Whitelisting Authorization"** service. It's free, and processing
-   is stated as "within 5 days".
-3. Upload the request letter, the RDB certificate and, if needed, the authorisation letter.
-4. Save the application reference here, and download the authorisation once it's issued.
-   Operators or Pindo may ask for it.
-
-> RURA reference: _______________ · Filed: ________ · Approved: ________
-
-Sources don't agree on whether operators need the RURA approval *before* they register
-the ID. If Pindo's answer to question 2 says so, wait for it; otherwise run 0.5 and 0.6
-in parallel to save a week.
-
-### 0.6 Register "Isoko" with the operators through Pindo (~3 weeks)
-
-1. Submit the sender ID in Pindo's dashboard (or however Pindo's reply says to), for
-   country **RW**, with the operator letters, the RDB certificate and the RURA
-   authorisation attached. A community guide describes an API route
-   (`POST https://api.pindo.io/sender_ids` with `{"sender_id":"Isoko","countries":["RW"]}`),
-   but it isn't in Pindo's official docs, so use whatever Pindo tells you.
-2. Check the status in the dashboard weekly, and email Pindo if nothing moves for 10
-   working days.
-3. Once approved, **repeat the test send from 0.2 with `"sender":"Isoko"`** to both an MTN
-   and an Airtel phone, and confirm the phone shows "Isoko" as the sender.
-4. Then set in `server/.env`:
-   ```
-   SMS_DRIVER=pindo
-   SMS_SENDER_ID=Isoko
-   ```
-
-> Submitted to Pindo: ________ · MTN approved: ________ · Airtel approved: ________
-
-### 0.7 Data protection housekeeping (day 2, 1 hour)
-
-For the pilot this is about **writing down** what happens to phone numbers, not filing with
-a regulator:
-
-1. Save Pindo's answer to question 6 (its DPA or terms) next to the RURA documents.
-2. Agree the consent wording used in Phase 5 (it names Pindo, says how to stop SMS, and
-   nothing is pre-selected).
-3. Note in the README's "Before going live" list that a real launch needs **NCSA
-   data-controller registration** (dpo.gov.rw), declaring Pindo as a processor and saying
-   where the database is hosted. Article 50 of Law 058/2021 expects personal data to be
-   stored in Rwanda unless NCSA authorises otherwise.
-
-### 0.8 Fix the docs that describe this wrongly (day 1, with the first Phase 1 commit)
-
-The README and the header comment in `sms.ts` both say a sender ID needs "RURA approval,
-roughly three weeks". Replace it with: RURA whitelisting (free, about 5 days) **plus**
-MTN and Airtel registration through the provider (about 3 weeks), both needing an RDB
-certificate.
-
-### Timeline
-
-| When | Step |
-|---|---|
-| Day 1 | 0.1 ask ALU for a sponsor letter · 0.2 account, top-up, test sends · 0.3 email Pindo |
-| Days 2–5 | 0.4 documents signed and stamped · 0.7 consent wording |
-| ~Day 5 | 0.5 file at RURA (and 0.6 at Pindo, if Pindo says parallel is fine) |
-| ~Day 10 | RURA authorisation issued → 0.6 at Pindo if not already filed |
-| ~Days 10–31 | Operator registration; Phases 1–6 continue on the `log` driver meanwhile |
-| ~Day 31 | 0.6 step 3: live send as "Isoko" to MTN and Airtel; switch `SMS_DRIVER=pindo` |
-
-If the assessment date is less than five weeks away, plan the demo around the `log`
-driver and, if 0.2 worked, a recorded `PindoTest` send. Don't plan it around "Isoko".
-
-### Answers from Pindo (fill in as they arrive)
-
-| Question | Answer | Date |
-|---|---|---|
-| Shared/test sender before approval? | | |
-| Documents and templates for "Isoko"; who files RURA; fee; time | | |
-| Airtel price; Unicode billing | | |
-| DLR webhook: custom header or query string? | | |
-| Minimum top-up; payment methods | | |
-| DPA / data location | | |
-| Test send result, MTN (0.2) | `PindoTest` → +250 79… delivered | 11 Oct 2026 |
-| Test send result, Airtel (0.2) | | |
-
-**Phase 0 is done when** the answers table is filled in, the token is in `server/.env`,
-the RURA and operator applications have references written above, and at least one real
-SMS has reached a team phone, from `PindoTest` now or from "Isoko" once approved.
-
----
-
-## Phase 1 — Make the driver safe to point at a real gateway
-
-All in `server/src/lib/channels/`. No behaviour change on the `log` driver.
-
-### 1a. `gsm7.ts` (new)
-
-```ts
-/** Replaces characters that would force UCS-2 with GSM-7 equivalents. */
-export const toGsm7 = (text: string): string
-/** True when every character is in the GSM-7 basic set or its extension table. */
-export const isGsm7 = (text: string): boolean
-/** Segments this text bills as: 160/153 for GSM-7, 70/67 for UCS-2. */
-export const segmentCount = (text: string): number
-```
-
-`toGsm7` maps `’ ‘ ‛` → `'`, `“ ” „` → `"`, `– —` → `-`, `…` → `...`, non-breaking space →
-space, and drops emoji and zero-width characters. It leaves anything else alone; if
-something non-GSM survives, `segmentCount` reports the UCS-2 cost rather than hiding it.
-Extension-table characters (`€ [ ] { } \ ~ ^ |`) count as two.
-
-### 1b. `sms.ts` changes
-
-- **Validate numbers.** Replace `normaliseMsisdn` with:
-  ```ts
-  /** Returns +2507XXXXXXXX, or null when the number is not a Rwandan mobile. */
-  export const toRwandanMsisdn = (phone: string | null | undefined): string | null
-  ```
-  It accepts `07XXXXXXXX`, `2507…`, `+2507…`, with spaces or dashes, and allows only the
-  MTN and Airtel prefixes 072, 073, 078 and 079. `send()` throws `InvalidNumberError` on
-  `null` before any network call. The old name stays exported as an alias until callers move.
-- **Normalise text** with `toGsm7()` inside `send()`, so no caller can forget it.
-- **Time out** with `AbortSignal.timeout(Number(process.env.SMS_TIMEOUT_MS) || 10_000)`.
-- **Read the real response.** Parse `sms_id`, `item_price` and `remaining_balance`
-  (verified field names), and return them in `SmsResult`:
-  ```ts
-  export interface SmsResult {
-    provider: string;
-    providerMessageId: string | null;
-    segments: number;          // from segmentCount(), on every driver
-    cost: number | null;       // item_price, USD; null on log
-    balance: number | null;    // remaining_balance; null on log
-  }
-  ```
-- **Classify Pindo errors.** `401` → `"Pindo token rejected"` (config problem). `409` →
-  `"Number or network not supported"` (permanent; the user should fix their number).
-  Anything else keeps the current message. The body is still trimmed to 200 characters.
-- **Warn on low balance.** If `balance` falls below `SMS_LOW_BALANCE_USD` (default 2),
-  `console.warn` once per process. Running out of credit is otherwise invisible until
-  every SMS fails.
-- **The `log` driver prints the segment count** next to the text, so the demo shows the
-  encoding work.
-
-**Tests** (`tests/unit/`):
-- `gsm7.test.ts`: curly quotes, emoji, extension characters, 160 vs 161, a real Kinyarwanda
-  template with `n’` going from 3 segments to 1.
-- `smsDriver.test.ts`: `toRwandanMsisdn` accepts the four prefixes in each form and rejects
-  landlines (`025…`), foreign numbers and junk. With `global.fetch` mocked, the Pindo
-  driver sends the right headers and body, parses a `201`, maps `401` and `409`, and
-  aborts on timeout.
-
----
-
-## Phase 2 — Phone number entry and verification
-
-Mirrors the email confirmation flow in `authController.ts` (TTL, resend cooldown, single
-use), with a code in place of a link because a code can be typed on the phone that received it.
-
-### 2a. Migration `20261010100000-add-phone-verification.js`
-
-On `Users`:
-
-| Column | Type | Purpose |
-|---|---|---|
-| `phoneVerifiedAt` | `DATE NULL` | Set when the code is confirmed |
-| `phoneVerificationCodeHash` | `STRING NULL` | SHA-256 of the 6-digit code plus the user id; the code is never stored |
-| `phoneVerificationExpiresAt` | `DATE NULL` | 10 minutes after sending; also used for the resend cooldown, as email does |
-| `phoneVerificationAttempts` | `INTEGER NOT NULL DEFAULT 0` | Locks the code after 5 wrong guesses |
-
-Backfill: any user who already has `preferredChannel = 'sms'` and a valid number gets
-`phoneVerifiedAt = now()`, so the seeded `eric` keeps producing SMS delivery rows. Check
-where `eric`'s phone is seeded during this phase; `TESTING.md` says it is set, but no
-seeder writes a `phone` literal.
-
-Update `models/User.ts` and the serialiser so the hash and attempts are **never** returned
-by `/users/me`.
-
-### 2b. Endpoints (`authRoutes.ts`, both behind `verifyToken`)
-
-- `POST /api/auth/send-phone-code` with `{ phone }`:
-  1. `toRwandanMsisdn(phone)`; `400` if `null`.
-  2. If the number differs from the stored one, save it and clear `phoneVerifiedAt`.
-  3. If already verified for this number: `200 { verified: true }`.
-  4. Cooldown of 60 s since the last send: `429 { retryAfter }`.
-  5. Generate the code with `crypto.randomInt(0, 1_000_000)`, padded to 6 digits. Store the
-     hash and expiry, reset attempts.
-  6. Send directly through `sms.send()`, **not** `notify()`: like the email link, this is
-     the message that decides whether the channel can be used at all. Text:
-     `Isoko code: 123456. Expires in 10 minutes. Do not share it.` (GSM-7, 1 segment).
-  7. On send failure: `502` with the reason. On `InvalidNumberError`: `400`.
-- `POST /api/auth/verify-phone` with `{ code }`:
-  - Expired, missing or locked: `400`. Wrong: increment attempts, `400` with attempts left.
-  - Right: set `phoneVerifiedAt`, clear hash, expiry and attempts.
-
-The code is never in a response. On the `log` driver it appears in the server log, which
-is how it is demonstrated without an account, the same way the email link is.
-
-### 2c. Profile update rule (`userController.ts`)
-
-`phone` comes **out** of `UPDATABLE_FIELDS`. It now changes only through
-`send-phone-code`, so a number can't be swapped after verification without being
-re-confirmed. `preferredChannel: 'sms'` is accepted only when `phoneVerifiedAt` is set
-(`400` otherwise), matching what the UI enforces.
-
-### 2d. `notify.ts`
-
-`deliverSms` gains a step between "no phone number" and sending:
-`if (!user.phoneVerifiedAt)` → `skipped`, `"phone not verified"`. Add `phoneVerifiedAt` to
-the `attributes` list in the `User.findByPk` call.
-
-**Tests** (`tests/integration/phoneVerification.test.ts`): send → code from the
-`log`-driver spy → verify; wrong code ×5 locks; expired code; cooldown `429`; changing the
-number clears verification; an invalid number gives `400` and sends nothing; `phone` in
-`PUT /users/me` is ignored; `preferredChannel: 'sms'` is refused while unverified; and
-`notifySms`, the SMS twin of `notifyEmail.test.ts`, covers sent / not opted in / no phone /
-not verified / driver failure.
-
----
-
-## Phase 3 — Delivery reports
-
-### 3a. Migration `20261010100100-add-delivery-report-fields.js`
-
-On `NotificationDeliveries`:
-
-| Column | Type | Purpose |
-|---|---|---|
-| `deliveredAt` | `DATE NULL` | When the carrier confirmed |
-| `providerStatus` | `STRING NULL` | Raw status: `DELIVRD`, `UNDELIV`, … |
-| `segments` | `INTEGER NULL` | From `SmsResult` |
-| `cost` | `DECIMAL(10,4) NULL` | `item_price`, USD |
-
-Plus an index on `(provider, providerMessageId)`, for webhook lookups.
-
-`DeliveryStatus` gains `'delivered'` in `types/domain.ts` and the model validator.
-`deliverSms` records `segments` and `cost` on `sent`.
-
-### 3b. Endpoint `POST /api/webhooks/sms/pindo`
-
-In `webhookRoutes.ts`, next to the payment callback, with a new `smsWebhookController.ts`:
-
-- **Auth:** `SMS_WEBHOOK_SECRET`, compared with the existing `secretMatches()` (move it to
-  `lib/secrets.ts` so both controllers share it). Read it from the `X-Webhook-Secret`
-  header if Pindo can set custom headers on the DLR webhook, otherwise from a `?secret=`
-  query parameter. Which one depends on Pindo's answer in Phase 0. If the secret is unset,
-  reject everything in production and accept in development, as the payment webhook does.
-- **Mapping:** `DELIVRD` → `delivered` with `deliveredAt = modified_at`; `UNDELIV`,
-  `REJECTED`, `EXPIRED` → `failed` with `error = "carrier: <status>"`; `ACCEPTED`,
-  `UNKNOWN` → no status change, but `providerStatus` is still updated.
-- **Unknown `sms_id`:** `200` and ignore. Pindo doesn't retry, so a non-2xx gains nothing.
-- **Idempotent by nature:** setting the same status twice is harmless. A late `ACCEPTED`
-  never overwrites `delivered` or `failed`.
-
-**Known limit, documented rather than solved:** Pindo doesn't retry a missed report, so a
-row can stay `sent` forever. The admin view (Phase 5) reports "sent, no report after 24 h"
-as its own figure instead of treating it as delivered.
-
-**Tests** (`tests/integration/smsWebhook.test.ts`): bad or missing secret `401`; each
-status maps correctly; an unknown id returns `200` and changes nothing; `ACCEPTED` after
-`DELIVRD` doesn't regress it.
-
----
-
-## Phase 4 — Send only what is worth paying for
-
-`policy.ts`:
-
-```ts
-const POLICY: Record<NotificationCategory, DeliveryChannel[]> = {
-  activity: ['in_app'],
-  outcome: ['in_app', 'sms', 'email'],
-  critical: ['in_app', 'sms', 'email'],
-};
-```
-
-Rewrite the header comment: `activity` no longer means "what every call site did before
-email". Update `notificationPolicy.test.ts`.
-
-Then **re-read the 18 `notify()` call sites** and confirm each category against one
-question: *would a worker without the app open want to pay attention to this now?* Eight
-are already annotated. The candidates most likely to move from `activity` to `outcome` are
-the ones that ask the worker to act (being invited to a gig, a skill task needing
-evidence). List every change in the commit message.
-
-**Tighten the SMS text** in `deliverSms`: `${title}: ${body}` is often over 160
-characters. Cut the body so the whole message fits in **one GSM-7 segment** (`segmentCount`
-from Phase 1), ending in `…` → `...`, and add a short link `isoko: <APP_URL>/notifications`
-only if it still fits. A test asserts that every annotated call site's message, filled in
-with a realistic long gig title, comes to 1 segment.
-
----
-
-## Phase 5 — Client
-
-### 5a. `NotificationPreferences.tsx`
-
-- **Enable the SMS radio.** Delete the "Not available yet." hint and the `disabled` rule.
-- **Choosing SMS without a verified number** opens a phone step in place, instead of saving:
-  1. Antd `Input` with `addonBefore="+250"`, `inputMode="tel"` and the placeholder
-     `78X XXX XXX`. Client-side check against the same four prefixes.
-  2. **Consent line under the field (Law 058/2021):** "Isoko will send notifications to
-     this number through Pindo, an SMS provider in Rwanda. You can switch SMS off here at
-     any time." Choosing SMS is the consent; nothing is pre-selected.
-  3. "Send code" calls `authApi.sendPhoneCode`. Show the cooldown countdown from
-     `retryAfter`.
-  4. Antd `Input.OTP` (length 6) calls `authApi.verifyPhone`. On success, save
-     `preferredChannel: 'sms'` and refresh the profile.
-- **Verified state:** a success `Alert` showing the masked number (`+250 78• ••• 567`) and
-  a "Change number" link back to step 1.
-- Must work at 375 px: input and button stack on `xs`, as the other mobile fixes do.
-
-### 5b. Plumbing
-
-- `authApi.ts`: `sendPhoneCode(phone)`, `verifyPhone(code)`.
-- `types/index.ts`: `phoneVerifiedAt?: string | null` on the profile.
-- `userApi.ts`: remove `phone` from `UpdateProfilePayload`, since the server now ignores it.
-- `en.json` + `rw.json`: about 15 keys under `settings.notifications.sms*`, written
-  properly in Kinyarwanda and not machine-filled. `scripts/check-i18n-parity.mjs` must pass.
-
-### 5c. Admin: SMS health card (small)
-
-`GET /api/admin/sms-health` returns, for the last 7 days, counts of SMS deliveries by
-status, "sent, no report after 24 h", total `cost`, average `segments`, and the last
-`balance` seen (kept in memory by the driver; `null` after a restart until the next send).
-Show it as one card on `AdminDashboard.tsx`. It's the evidence a pilot report needs: how
-many were reached and what it cost.
-
----
-
-## Phase 6 — Configuration, docs and demo
-
-- **`server/.env.example`:**
-  ```
-  SMS_DRIVER=log              # log | pindo
-  PINDO_API_TOKEN=
-  SMS_SENDER_ID=Isoko         # must be approved by RURA + MTN + Airtel before use
-  SMS_WEBHOOK_SECRET=
-  SMS_TIMEOUT_MS=10000
-  SMS_LOW_BALANCE_USD=2
-  ```
-- **README:** an SMS section shaped like the email one (drivers, what is needed to go
-  live, the sender-ID timeline, the webhook URL to paste into Pindo's dashboard). Remove
-  "Notification volume" from "Before going live", since Phase 4 resolves it.
-- **TESTING.md:** a walkthrough. Log in as a worker, Settings → Notifications → SMS, enter
-  `0788 123 456`, copy the code from the server log, confirm, then trigger an `outcome`
-  notice and find the `[sms:log]` line with its segment count.
-- **`docker-compose.yml`:** pass the new variables through to the server container.
-- **Demo for assessors** (from the research report), in order of what's available:
-  1. The `log` driver: the full flow, with no account needed. Always works.
-  2. `SMS_DRIVER=pindo` to a team member's phone, if Pindo allows a shared sender before
-     "Isoko" is approved. Record it in advance in case the network misbehaves on the day.
-  3. The delivery report arriving: expose the local server with a tunnel
-     (`cloudflared` / `ngrok`) and point Pindo's DLR webhook at it.
-
----
-
-## Commit sequence
-
-Each commit builds, lints and passes tests on its own, with no attribution trailers:
-
-1. `Plan the Pindo SMS integration` (this file)
-2. `Keep SMS text inside GSM-7` (`gsm7.ts` + tests)
-3. `Accept only Rwandan mobile numbers for SMS` (validation + tests)
-4. `Read Pindo's real response and stop waiting forever` (timeout, cost, balance, errors)
-5. `Let people confirm their phone number` (migration, endpoints, tests)
-6. `Only send SMS to confirmed numbers` (`notify.ts`, profile rule)
-7. `Record whether SMS actually arrived` (migration, webhook, tests)
-8. `Keep SMS for notices worth paying for` (policy + call-site review + one-segment text)
-9. `Offer SMS in Settings` (client, both locales)
-10. `Show SMS delivery and spend to admins`
-11. `Document the SMS channel and how to take it live`
-12. `Record the SMS plan as delivered` (refresh this file's status)
+| Escrow model | A separate escrow state on confirmed transactions | Keeps the provider-callback state machine untouched; a real MoMo collection still settles the same way |
+| Release trigger | Completion code, then manual release, then 72-hour auto-release | Works offline on site; the client can't hold money hostage forever |
+| Dispute judges | Screened peers, admins as fallback | Reuses the collusion and assignment work; doesn't depend on a support desk |
+| Stretch scope | Phases 7–9 only after 0–6 are green | Depth on the core beats breadth for the defence |
 
 ## Verification
 
-- `cd server && npm run lint && npm run typecheck && npm test && npm run build`
-- `cd client && npx eslint src && npx tsc --noEmit -p tsconfig.app.json && npm test && npm run build`
-- `node scripts/check-i18n-parity.mjs`
-- Manual, on the `log` driver: the TESTING.md walkthrough above, at desktop width and 375 px.
-- Manual, on `pindo` (once Phase 0 allows): one real message to a team phone, its
-  delivery row moving `sent` → `delivered` through the webhook, and the cost on the admin card.
-
-## Risks
-
-| Risk | Mitigation |
-|---|---|
-| Sender ID not approved before assessment | The `log` driver demo is complete on its own. Start Phase 0 now |
-| Pindo can't send before "Isoko" is approved | Ask in Phase 0. Fallback is the `log` demo plus a recorded send once approved |
-| Missed delivery reports (no retries) | Count "no report after 24 h" separately; never infer delivery |
-| Pindo is a small team (no SDK, docs moved in 2025) | The driver seam stays. An Africa's Talking driver is about 40 lines if ever needed (research report) |
-| Credit runs out silently | Low-balance warning plus the admin card's last balance |
-| Code-sending endpoint abused to bill us | 60 s cooldown, Rwandan numbers only, authenticated users only. Add a per-user daily cap of 5 if abuse appears |
-
-## Out of scope (follow-ups)
-
-- Kinyarwanda SMS text: needs a server-side message catalogue, shared with email.
-- Quiet hours (holding non-critical SMS from 20:00–08:00): needs a send queue.
-- USSD for feature-phone workers: a costed next step (about RWF 26,000/month for a shared
-  code), prototyped in a sandbox if at all.
-- An Africa's Talking fallback driver.
-- NCSA data-controller registration and cross-border transfer paperwork for a real launch.
-  The consent line in Phase 5 covers the pilot.
-
-## Deviations from the plan as written
-
-1. **No call site changed category.** Phase 4 suggested promoting notices that ask
-   a worker to act. The one candidate, "You were matched to a new gig", stays
-   `activity`, as the email plan left it: ranked matching sends several per gig,
-   so it would be the most expensive notice to text. Promoting it is one word in
-   `adminController.ts` if pilot feedback asks for it.
-2. **No link in the SMS.** `APP_URL` is a localhost address until deployment, and
-   a link would cost characters every message needs. The text says what happened;
-   the app holds the rest.
-3. **`deliveredAt` is when the report arrives**, not Pindo's `modified_at`, which
-   comes without a timezone. Reports follow delivery by seconds.
-4. **No `docker-compose.yml` change.** The server container mounts `./server`, so
-   `server/.env` reaches it the way the email settings already do.
-5. **The Settings screen names the sender from `VITE_SMS_SENDER_NAME`** (default
-   `PindoTest`). The client can't read the server's `SMS_SENDER_ID`, so the two are
-   kept in step by configuration, and both `.env.example` files say so.
-
-Additions the plan did not call for:
-
-- **Tests can't reach a real gateway.** `tests/helpers/env.ts` pins `SMS_DRIVER` and
-  `EMAIL_DRIVER` to `log` before dotenv runs. Without it, a developer `.env` set to
-  `pindo` would send billed texts on every test run.
-- **`npm run sms:test -- <phone>`** sends one message through the app's own SMS code,
-  to check an account before trusting notifications to it.
-- **The payment webhook's secret comparison moved to `lib/secrets.ts`**, shared with
-  the SMS webhook.
-
-Still open:
-
-- The Kinyarwanda strings for the SMS settings (`settings.notifications.sms*` in
-  `rw.json`) were written without a native speaker's review. Have one read them
-  before the pilot.
-- An Airtel test send (072/073) has not been made yet.
-- Pindo hasn't confirmed in writing that `PindoTest` may carry real user traffic.
-
+- Server: `npm run lint && npm run typecheck && npm test && npm run build` after each phase.
+- Client: `npx eslint src && npx tsc --noEmit -p tsconfig.app.json && npm test && npm run build`.
+- Playwright screenshots at 375px and 1280px for each changed screen.
+- `TESTING.md` gains a walkthrough for each phase, from a demo account.
