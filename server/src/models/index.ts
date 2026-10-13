@@ -15,6 +15,7 @@ import { Notification, initNotification } from './Notification';
 import { NotificationDelivery, initNotificationDelivery } from './NotificationDelivery';
 import { Payout, initPayout } from './Payout';
 import { Review, initReview } from './Review';
+import { SafetyNetEntry, initSafetyNetEntry } from './SafetyNetEntry';
 import { Skill, initSkill } from './Skill';
 import { SkillPassport, initSkillPassport } from './SkillPassport';
 import { SkillTask, initSkillTask } from './SkillTask';
@@ -92,6 +93,7 @@ initNotification(sequelize);
 initNotificationDelivery(sequelize);
 initPayout(sequelize);
 initReview(sequelize);
+initSafetyNetEntry(sequelize);
 initSkill(sequelize);
 initSkillPassport(sequelize);
 initSkillTask(sequelize);
@@ -121,6 +123,7 @@ export const models = {
   NotificationDelivery,
   Payout,
   Review,
+  SafetyNetEntry,
   Skill,
   SkillPassport,
   SkillTask,
@@ -161,6 +164,7 @@ export {
   NotificationDelivery,
   Payout,
   Review,
+  SafetyNetEntry,
   Skill,
   SkillPassport,
   SkillTask,

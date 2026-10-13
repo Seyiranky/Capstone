@@ -1,5 +1,5 @@
 import type { Transaction as DbTransaction } from 'sequelize';
-import { Match, MatchMember, Payout, type Transaction } from '../models';
+import { Match, MatchMember, Payout, SafetyNetEntry, User, type Transaction } from '../models';
 import { generateReceiptNumber } from './escrowRules';
 
 export interface PayoutShare {
@@ -41,7 +41,7 @@ export const createFor = async (tx: Transaction, t: DbTransaction): Promise<Payo
   const total = Number(tx.releasedAmount ?? tx.amount);
   const releasedAt = tx.releasedAt ?? new Date();
   const shares = splitShares(total, match.workerId, joined);
-  return Payout.bulkCreate(
+  const payouts = await Payout.bulkCreate(
     shares.map((share) => ({
       transactionId: tx.id,
       matchId: match.id,
@@ -54,4 +54,42 @@ export const createFor = async (tx: Transaction, t: DbTransaction): Promise<Payo
     })),
     { transaction: t },
   );
+  await recordSafetyNet(tx, payouts, total, t);
+  return payouts;
+};
+
+/**
+ * The safety-net side of a release, in the same database transaction.
+ *
+ * A client's contribution is shared between everyone paid, in proportion to
+ * their payout (and scaled down if a split dispute released only part of the
+ * job). Anyone who chose to save toward Ejo Heza has that share of their payout
+ * set aside.
+ */
+const recordSafetyNet = async (
+  tx: Transaction,
+  payouts: Payout[],
+  total: number,
+  t: DbTransaction,
+): Promise<void> => {
+  const entries: { userId: string; payoutId: string; kind: 'contribution' | 'ejoHeza'; amount: number; note: string | null }[] = [];
+  const contribution = Number(tx.safetyNetContribution ?? 0) * (total / Number(tx.amount));
+  if (contribution > 0 && total > 0) {
+    for (const p of payouts) {
+      const share = Math.floor((contribution * Number(p.amount)) / total);
+      if (share > 0) entries.push({ userId: p.userId, payoutId: p.id, kind: 'contribution', amount: share, note: null });
+    }
+  }
+  const savers = await User.findAll({
+    where: { id: payouts.map((p) => p.userId) },
+    attributes: ['id', 'savingsPercent'],
+    transaction: t,
+  });
+  const percentOf = new Map(savers.map((u) => [u.id, u.savingsPercent]));
+  for (const p of payouts) {
+    const pct = percentOf.get(p.userId) ?? 0;
+    const saved = Math.floor((Number(p.amount) * pct) / 100);
+    if (saved > 0) entries.push({ userId: p.userId, payoutId: p.id, kind: 'ejoHeza', amount: saved, note: `${pct}% of payout` });
+  }
+  if (entries.length) await SafetyNetEntry.bulkCreate(entries, { transaction: t });
 };

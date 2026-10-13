@@ -6,6 +6,7 @@ import * as paymentService from '../services/paymentService';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
 import { hasStatus } from '../lib/httpError';
+import { MAX_CONTRIBUTION } from '../services/safetyNetService';
 
 /** A match with its gig loaded, which the party check reads. */
 type MatchWithGig = Match & { gig?: Gig | null };
@@ -65,6 +66,21 @@ export const confirmTransaction = async (req: Request, res: Response): Promise<v
       .status(403)
       .json({ message: 'Only the matched worker or the posting client may confirm payment' });
     return;
+  }
+
+  // The client may add to the worker's safety net as they pay in (up to 20% of
+  // the price); it is collected with the escrow and shared out on release.
+  const contribution = Number(req.body?.safetyNet ?? 0);
+  if (contribution > 0) {
+    if (transaction.match?.gig?.clientId !== user.id) {
+      res.status(403).json({ message: 'Only the client can add to the safety net' });
+      return;
+    }
+    if (contribution > Number(transaction.amount) * MAX_CONTRIBUTION) {
+      res.status(400).json({ message: 'A contribution can be at most 20% of the price' });
+      return;
+    }
+    await transaction.update({ safetyNetContribution: Math.round(contribution) });
   }
 
   const confirmed = await paymentService.confirm(transaction.id);

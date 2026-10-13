@@ -41,6 +41,8 @@ export class Transaction extends Model<
   declare receiptNumber: string | null;
   /** Set only when less than the full amount went to the worker (a split decision). */
   declare releasedAmount: number | string | null;
+  /** The client's optional addition to the worker's safety net, collected with escrow. */
+  declare safetyNetContribution: number | string | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -105,6 +107,7 @@ export const initTransaction = (sequelize: Sequelize) => {
       refundedAt: { type: DataTypes.DATE, allowNull: true },
       receiptNumber: { type: DataTypes.STRING, allowNull: true, unique: true },
       releasedAmount: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
+      safetyNetContribution: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

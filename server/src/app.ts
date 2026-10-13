@@ -21,6 +21,7 @@ import receiptRoutes from './routes/receiptRoutes';
 import disputeRoutes from './routes/disputeRoutes';
 import teamRoutes from './routes/teamRoutes';
 import fairworkRoutes from './routes/fairworkRoutes';
+import safetyNetRoutes from './routes/safetyNetRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { notFound, errorHandler } from './middleware/errorMiddleware';
@@ -54,6 +55,7 @@ app.use('/api/receipts', receiptRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/fairwork', fairworkRoutes);
+app.use('/api/safety-net', safetyNetRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 
