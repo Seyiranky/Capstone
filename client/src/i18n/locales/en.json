@@ -146,12 +146,6 @@
     "open": "Open"
   },
   "marketplace": {
-    "trade": {
-      "digital_web": "Web & digital",
-      "electronics_repair": "Repairs",
-      "tailoring": "Tailoring",
-      "tutoring": "Tutoring"
-    },
     "newBadge": "New",
     "gigForm": {
       "titleLabel": "Title",

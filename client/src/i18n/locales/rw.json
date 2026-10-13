@@ -146,12 +146,6 @@
     "open": "Fungura"
   },
   "marketplace": {
-    "trade": {
-      "digital_web": "Ikoranabuhanga",
-      "electronics_repair": "Gusana",
-      "tailoring": "Ubudozi",
-      "tutoring": "Kwigisha"
-    },
     "newBadge": "Gishya",
     "gigForm": {
       "titleLabel": "Umutwe",

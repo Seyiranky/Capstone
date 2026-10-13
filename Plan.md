@@ -247,14 +247,14 @@ verification the defence rests on. Instead:
   *Market & pricing* (usual pay per trade, rejection reasons by skill); *Jobs*; *Skill
   reviews*. Gig approvals and skill reviews are laid open; nothing sits behind a pop-up.
 
-### Added on request — drawn gig covers instead of stock photos (done 14 Oct 2026)
+### Added on request — trade photos for gigs (done 14 Oct 2026)
 
-Gigs without a client photo used one stock photo per trade, so a tailoring grid showed the
-same picture on every card. Each trade now has a drawn cover in the black-and-white style:
-a soft tint, a line pattern of its own (stitching, circuit traces, a layout grid, ruled
-lines), its icon and name. The pattern's angle and scale come from the gig's id, so no two
-covers match. A photo the client uploads still comes first. In the defence: a stock photo
-implies the job looks like the picture; a drawn cover only says which trade it is.
+Gigs without a client photo once used a single stock photo per trade, so every tailoring
+card looked the same. A short-lived drawn-cover version was rejected as not looking like a
+marketplace. Each trade now has a pool of six to ten real photos of African workers doing
+that trade (Pexels, credited in `client/src/assets/gigs/CREDITS.md`); the gig's id picks
+one, so a gig keeps its photo and neighbouring cards rarely repeat. A photo the client
+uploads still comes first.
 
 ## Round 2 — proposed (research of 14 Oct 2026)
 

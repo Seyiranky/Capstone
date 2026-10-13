@@ -210,7 +210,7 @@ const GigDetail = () => {
               marginBottom: 20,
             }}
           >
-            <GigCover gig={gig} iconSize={36} style={{ height: 240 }} />
+            <GigCover gig={gig} style={{ height: 300 }} />
           </div>
 
           <Card title={t('common.about')}>
