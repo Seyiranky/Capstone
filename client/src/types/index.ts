@@ -383,9 +383,20 @@ export interface Message {
   id: string;
   senderId: string;
   recipientId: string;
+  /** Empty when the message is only a photo. */
   body: string;
+  imageUrl?: string | null;
   readAt: string | null;
   createdAt: string;
+  /** Present on messages pushed in real time, so the recipient knows who wrote. */
+  sender?: { id: string; name: string };
+}
+
+export interface ChatContact {
+  id: string;
+  name: string;
+  unreadCount?: number;
+  lastMessage?: { body: string; hasImage: boolean; fromMe: boolean; createdAt: string };
 }
 
 export interface AppNotification {

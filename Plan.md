@@ -192,6 +192,15 @@ Findings so far:
 - Menu: open gigs near me, my applications, wallet balance, **enter completion code**.
 - An in-app USSD simulator page for the demo.
 
+### Added on request — photos in messages, and making sure they arrive (done, 13 Oct 2026)
+
+- A message can carry one photo (images only, 10 MB), with or without text; it is hashed
+  like other evidence. Text messages still go as JSON, so nothing else changed.
+- The recipient is told wherever they are in the app: a notice opens the conversation.
+  The inbox shows unread counts and a last-message preview; opening a thread marks it read
+  and the sender sees "Seen" under their last message, live over the existing socket.
+- 6 new tests in `messagePhotos.test.ts`; checked with two browsers at once.
+
 ## Decisions taken
 
 | Decision | Choice | Why |

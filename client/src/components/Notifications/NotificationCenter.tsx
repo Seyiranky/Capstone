@@ -32,9 +32,9 @@ import { fromNow } from '../../lib/time';
 import PageContainer from '../Layout/PageContainer';
 import Avatar from '../common/Avatar';
 import ChatThread from '../common/ChatThread';
-import type { AppNotification, Message } from '../../types';
+import type { AppNotification, ChatContact, Message } from '../../types';
 
-type Contact = { id: string; name: string };
+type Contact = ChatContact;
 type NavState = { contact?: Contact };
 
 const NotificationCenter = () => {
@@ -69,13 +69,20 @@ const NotificationCenter = () => {
     Promise.all([taskContacts, messageApi.listContacts()]).then(([fromTasks, fromHistory]) => {
       const merged = new Map<string, Contact>();
       for (const c of fromTasks) merged.set(c.id, c);
-      for (const c of fromHistory) merged.set(c.id, { id: c.id, name: c.name });
+      for (const c of fromHistory) merged.set(c.id, c);
       const navContact = (location.state as NavState | null)?.contact;
       if (navContact) {
         merged.set(navContact.id, navContact);
         setSelectedContact(merged.get(navContact.id)!);
       }
-      setContacts([...merged.values()]);
+      // Conversations with something new first, then most recent.
+      setContacts(
+        [...merged.values()].sort(
+          (a, b) =>
+            (b.unreadCount ?? 0) - (a.unreadCount ?? 0) ||
+            (b.lastMessage?.createdAt ?? '').localeCompare(a.lastMessage?.createdAt ?? ''),
+        ),
+      );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
@@ -86,19 +93,11 @@ const NotificationCenter = () => {
 
   useEffect(() => {
     const socket = connectSocket();
+    // Any new message moves its conversation to the top with a fresh preview
+    // and unread count; the open thread clears its own count via onRead.
     const onNewMessage = (message: Message) => {
-      if (
-        message.senderId !== myIdRef.current &&
-        !contactsRef.current.some((c) => c.id === message.senderId)
-      ) {
-        messageApi.listContacts().then((users) => {
-          setContacts((current) => {
-            const merged = new Map(current.map((c) => [c.id, c]));
-            for (const user of users) merged.set(user.id, { id: user.id, name: user.name });
-            return [...merged.values()];
-          });
-        });
-      }
+      if (message.senderId === myIdRef.current && message.recipientId === myIdRef.current) return;
+      refreshContacts();
     };
     const onNewNotification = (n: AppNotification) => {
       setNotifications((cur) => (cur.some((x) => x.id === n.id) ? cur : [n, ...cur]));
@@ -110,6 +109,22 @@ const NotificationCenter = () => {
       socket.off('notification:new', onNewNotification);
     };
   }, []);
+
+  const refreshContacts = () =>
+    messageApi
+      .listContacts()
+      .then((fresh) => {
+        setContacts((current) => {
+          const byId = new Map(current.map((c) => [c.id, c]));
+          for (const c of fresh) byId.set(c.id, { ...byId.get(c.id), ...c });
+          return [...byId.values()].sort(
+            (a, b) =>
+              (b.unreadCount ?? 0) - (a.unreadCount ?? 0) ||
+              (b.lastMessage?.createdAt ?? '').localeCompare(a.lastMessage?.createdAt ?? ''),
+          );
+        });
+      })
+      .catch(() => undefined);
 
   const markRead = async (n: AppNotification) => {
     if (n.readAt) return;
@@ -174,8 +189,44 @@ const NotificationCenter = () => {
                         }}
                       >
                         <List.Item.Meta
-                          avatar={<Avatar name={contact.name} size={34} />}
-                          title={<span style={{ fontWeight: active ? 600 : 500 }}>{contact.name}</span>}
+                          avatar={
+                            <Badge count={active ? 0 : contact.unreadCount} size="small" offset={[-2, 2]}>
+                              <Avatar name={contact.name} size={34} />
+                            </Badge>
+                          }
+                          title={
+                            <Flex justify="space-between" gap={8}>
+                              <Typography.Text
+                                ellipsis
+                                style={{ fontWeight: active || contact.unreadCount ? 600 : 500 }}
+                              >
+                                {contact.name}
+                              </Typography.Text>
+                              {contact.lastMessage && (
+                                <Typography.Text type="secondary" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>
+                                  {fromNow(contact.lastMessage.createdAt)}
+                                </Typography.Text>
+                              )}
+                            </Flex>
+                          }
+                          description={
+                            contact.lastMessage && (
+                              <Typography.Text
+                                type="secondary"
+                                ellipsis
+                                style={{
+                                  fontSize: 12,
+                                  display: 'block',
+                                  color: contact.unreadCount && !active ? 'var(--ant-color-text)' : undefined,
+                                }}
+                              >
+                                {contact.lastMessage.fromMe ? `${t('chat.you')}: ` : ''}
+                                {contact.lastMessage.hasImage && !contact.lastMessage.body
+                                  ? `📷 ${t('chat.sentPhoto')}`
+                                  : contact.lastMessage.body}
+                              </Typography.Text>
+                            )
+                          }
                         />
                       </List.Item>
                     );
@@ -202,6 +253,11 @@ const NotificationCenter = () => {
                   recipientId={selectedContact.id}
                   recipientName={selectedContact.name}
                   showHeader
+                  onRead={() =>
+                    setContacts((cur) =>
+                      cur.map((c) => (c.id === selectedContact.id ? { ...c, unreadCount: 0 } : c)),
+                    )
+                  }
                 />
               ) : (
                 <Flex vertical align="center" justify="center" gap={8} style={{ minHeight: 380 }}>

@@ -679,5 +679,19 @@
     "againstMajority": "ntiyashyigikiye icyemezo",
     "held": "{{amount}} RWF bibitswe",
     "panelNote": "Batoranyijwe ku bushake mu banyamuryango {{count}} bujuje ibisabwa."
+  },
+  "chat": {
+    "attach": "Ongeraho ifoto",
+    "photo": "Ifoto",
+    "removePhoto": "Kuraho ifoto",
+    "seen": "Yabonwe",
+    "sent": "Yoherejwe",
+    "newFrom": "Ubutumwa bushya bwa {{name}}",
+    "sentPhoto": "Yohereje ifoto",
+    "you": "Wowe",
+    "tooBig": "Ifoto igomba kuba munsi ya MB 10.",
+    "notImage": "Hemewe amafoto gusa.",
+    "open": "Fungura",
+    "failed": "Ntibyoherejwe. Ongera ugerageze."
   }
 }

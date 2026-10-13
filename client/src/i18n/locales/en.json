@@ -679,5 +679,19 @@
     "againstMajority": "did not side with the outcome",
     "held": "{{amount}} RWF held",
     "panelNote": "Drawn at random from {{count}} eligible members."
+  },
+  "chat": {
+    "attach": "Attach a photo",
+    "photo": "Photo",
+    "removePhoto": "Remove photo",
+    "seen": "Seen",
+    "sent": "Sent",
+    "newFrom": "New message from {{name}}",
+    "sentPhoto": "Sent a photo",
+    "you": "You",
+    "tooBig": "Photos must be under 10 MB.",
+    "notImage": "Only photos can be attached.",
+    "open": "Open",
+    "failed": "Could not send. Try again."
   }
 }

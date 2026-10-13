@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { App, Badge, Button, Flex, Grid, Segmented, Space, Tooltip, Typography } from 'antd';
@@ -14,7 +14,7 @@ import { notificationApi } from '../../api/notificationApi';
 import { connectSocket } from '../../lib/socket';
 import { useThemeMode } from '../../theme/ThemeProvider';
 import { NAV_ENTRIES, activeNavKey } from './navConfig';
-import type { AppNotification } from '../../types';
+import type { AppNotification, Message } from '../../types';
 
 const pageTitle = (pathname: string, t: (k: string) => string): string => {
   const key = activeNavKey(pathname);
@@ -40,6 +40,9 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
   const { notification } = App.useApp();
   const screens = Grid.useBreakpoint();
   const [unread, setUnread] = useState(0);
+  const myId = useAppSelector((state) => state.auth.profile?.id);
+  const locationRef = useRef(location.pathname);
+  locationRef.current = location.pathname;
 
   useEffect(() => {
     notificationApi
@@ -60,11 +63,31 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
         duration: 4,
       });
     };
+    // A message from someone else, while the inbox is not the page in front
+    // of the user, gets a notice they can open the conversation from.
+    const onMessage = (m: Message) => {
+      if (!m.sender || m.senderId === myId || locationRef.current === '/notifications') return;
+      const key = `message-${m.id}`;
+      notification.open({
+        key,
+        message: t('chat.newFrom', { name: m.sender.name }),
+        description: m.body || `📷 ${t('chat.sentPhoto')}`,
+        placement: 'bottomRight',
+        duration: 5,
+        onClick: () => {
+          notification.destroy(key);
+          navigate('/notifications', { state: { contact: { id: m.sender!.id, name: m.sender!.name } } });
+        },
+        style: { cursor: 'pointer' },
+      });
+    };
     socket.on('notification:new', onNew);
+    socket.on('message:new', onMessage);
     return () => {
       socket.off('notification:new', onNew);
+      socket.off('message:new', onMessage);
     };
-  }, [role, notification]);
+  }, [role, notification, myId, navigate, t]);
 
   const lang = i18n.resolvedLanguage === 'rw' ? 'rw' : 'en';
 
