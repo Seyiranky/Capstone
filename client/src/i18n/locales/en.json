@@ -731,6 +731,20 @@
     "basis_paid": "From {{count}} paid jobs on Isoko.",
     "basis_posted": "From {{count}} posted budgets; too few jobs are paid yet to say more.",
     "belowClient": "This is below what most similar jobs pay. Good workers may pass it by.",
-    "belowWorker": "Your price is below the usual range. Make sure it covers your time and materials."
+    "belowWorker": "Your price is below the usual range. Make sure it covers your time and materials.",
+    "belowAdmin": "Below the usual range for this trade."
+  },
+  "gigApproval": {
+    "empty": "Nothing to review right now.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectReason": "Why? (optional, sent to the client)",
+    "confirmReject": "Reject gig",
+    "cancel": "Cancel",
+    "posted": "Posted {{when}}",
+    "more": "Show more",
+    "less": "Show less",
+    "open": "Open gig",
+    "waiting": "{{count}} waiting"
   }
 }

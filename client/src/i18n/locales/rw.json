@@ -731,6 +731,20 @@
     "basis_paid": "Bishingiye ku kazi {{count}} kishyuwe kuri Isoko.",
     "basis_posted": "Bishingiye ku ngengo {{count}} zatanzwe; akazi kishyuwe ntikaraba kenshi.",
     "belowClient": "Ibi biri munsi y’ibyo akazi nk’aka gakunze kwishyurwa. Abakozi beza bashobora kubyirengagiza.",
-    "belowWorker": "Igiciro cyawe kiri munsi y’ibisanzwe. Reba ko gihagije ku gihe n’ibikoresho byawe."
+    "belowWorker": "Igiciro cyawe kiri munsi y’ibisanzwe. Reba ko gihagije ku gihe n’ibikoresho byawe.",
+    "belowAdmin": "Biri munsi y'ibisanzwe muri uyu mwuga."
+  },
+  "gigApproval": {
+    "empty": "Nta kintu cyo gusuzuma ubu.",
+    "approve": "Emeza",
+    "reject": "Wanga",
+    "rejectReason": "Kubera iki? (si ngombwa, byoherezwa umukiliya)",
+    "confirmReject": "Wanga akazi",
+    "cancel": "Reka",
+    "posted": "Byatanzwe {{when}}",
+    "more": "Byinshi",
+    "less": "Bike",
+    "open": "Fungura akazi",
+    "waiting": "{{count}} bitegereje"
   }
 }

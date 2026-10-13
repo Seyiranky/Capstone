@@ -122,11 +122,13 @@ export const pilotMetrics = async (req: Request, res: Response): Promise<void> =
 };
 
 export const reviewGig = async (req: Request, res: Response): Promise<void> => {
-  const { decision } = req.body ?? {};
+  const { decision, note } = req.body ?? {};
   if (!['approved', 'rejected'].includes(decision)) {
     res.status(400).json({ message: "decision must be 'approved' or 'rejected'" });
     return;
   }
+  // An optional reason for a rejection, passed to the client so they can fix and repost.
+  const reason = typeof note === 'string' ? note.trim().slice(0, 280) : '';
 
   const gig = await Gig.findByPk(pathParam(req, 'id'));
   if (!gig) {
@@ -148,7 +150,7 @@ export const reviewGig = async (req: Request, res: Response): Promise<void> => {
     body:
       decision === 'approved'
         ? `Your gig "${gig.title}" was approved and is now live for workers to apply to.`
-        : `Your gig "${gig.title}" was rejected.`,
+        : `Your gig "${gig.title}" was rejected.${reason ? ` Reason: ${reason}` : ''}`,
     // A decision on work the client submitted and is waiting on.
     category: 'outcome',
   });

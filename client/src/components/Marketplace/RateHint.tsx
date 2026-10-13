@@ -19,7 +19,7 @@ const RateHint = ({
 }: {
   skillId?: string;
   amount?: number | null;
-  audience: 'client' | 'worker';
+  audience: 'client' | 'worker' | 'admin';
 }) => {
   const { t } = useTranslation();
   const [guide, setGuide] = useState<RateGuide | null>(null);
@@ -47,7 +47,11 @@ const RateHint = ({
       </Typography.Text>
       {below && (
         <Typography.Text type="warning" style={{ fontSize: 12, display: 'block', marginTop: 2 }}>
-          <WarningOutlined /> {audience === 'client' ? t('rates.belowClient') : t('rates.belowWorker')}
+          <WarningOutlined /> {audience === 'client'
+            ? t('rates.belowClient')
+            : audience === 'admin'
+              ? t('rates.belowAdmin')
+              : t('rates.belowWorker')}
         </Typography.Text>
       )}
     </div>

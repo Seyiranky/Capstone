@@ -21,8 +21,8 @@ export const adminApi = {
 
   listGigs: () => axiosClient.get<Gig[]>('/admin/gigs').then((res) => res.data),
 
-  reviewGig: (id: string, decision: 'approved' | 'rejected') =>
-    axiosClient.put<Gig>(`/admin/gigs/${id}/review`, { decision }).then((res) => res.data),
+  reviewGig: (id: string, decision: 'approved' | 'rejected', note?: string) =>
+    axiosClient.put<Gig>(`/admin/gigs/${id}/review`, { decision, note }).then((res) => res.data),
 
   moderateUser: (id: string, action: 'suspend' | 'activate') =>
     axiosClient.put<User>(`/admin/users/${id}/moderate`, { action }).then((res) => res.data),

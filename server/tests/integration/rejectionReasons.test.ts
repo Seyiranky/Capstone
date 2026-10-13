@@ -102,4 +102,19 @@ describe('rejection reasons', () => {
     expect(row.counts.skillLevel).toBeGreaterThanOrEqual(1);
     expect(row.counts.choseAnother).toBeGreaterThanOrEqual(1);
   });
+
+  test("an admin's reason for rejecting a gig reaches the client", async () => {
+    const gig = await openGig();
+    await gig.update({ status: 'pending_review' });
+    const res = await request(app)
+      .put(`/api/admin/gigs/${gig.id}/review`)
+      .set(as('admin'))
+      .send({ decision: 'rejected', note: 'Budget too low for 20 uniforms' });
+    expect(res.status).toBe(200);
+    const notice = await db.Notification.findOne({
+      where: { userId: users.client.id, title: 'Gig rejected' },
+      order: [['createdAt', 'DESC']],
+    });
+    expect(notice?.body).toContain('Budget too low for 20 uniforms');
+  });
 });

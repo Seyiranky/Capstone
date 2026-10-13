@@ -48,7 +48,7 @@ const Dashboard = () => {
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [myGigCount, setMyGigCount] = useState(0);
   const [myApplicationCount, setMyApplicationCount] = useState(0);
-  const [modal, setModal] = useState<'skill' | 'review' | 'gig' | null>(null);
+  const [modal, setModal] = useState<'skill' | 'review' | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   // Arriving from a "verify this skill" link on a rejected application opens the
@@ -317,35 +317,12 @@ const Dashboard = () => {
               </Card>
             </Col>
             <Col xs={24} lg={12}>
+              {/* Laid open: approve or reject right here, no pop-up in between. */}
               <Card
-                title={t('dashboard.gigApprovals')}
-                extra={
-                  <Button type="link" onClick={() => setModal('gig')}>
-                    {t('dashboard.reviewSubmissions')}
-                  </Button>
-                }
+                title={`${t('dashboard.gigApprovals')} (${pendingGigs.length})`}
                 style={{ height: '100%' }}
               >
-                {pendingGigs.length === 0 ? (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('dashboard.nothingToReview')} />
-                ) : (
-                  <List
-                    size="small"
-                    dataSource={pendingGigs.slice(0, 5)}
-                    renderItem={(gig) => (
-                      <List.Item>
-                        <List.Item.Meta
-                          title={gig.title}
-                          description={
-                            gig.client ? (
-                              <IdentityLink id={gig.client.id} name={gig.client.name} size={18} />
-                            ) : null
-                          }
-                        />
-                      </List.Item>
-                    )}
-                  />
-                )}
+                <GigApprovalQueue gigs={gigs} onReviewed={refreshGigs} limit={5} />
               </Card>
             </Col>
           </>
@@ -439,9 +416,6 @@ const Dashboard = () => {
       </Modal>
       <Modal open={modal === 'review'} title={t('dashboard.skillReviewModalTitle')} footer={null} width={640} onCancel={() => setModal(null)} destroyOnHidden>
         <AdminReviewQueue tasks={tasks} onReviewed={refreshTasks} />
-      </Modal>
-      <Modal open={modal === 'gig'} title={t('dashboard.gigApprovalModalTitle')} footer={null} width={640} onCancel={() => setModal(null)} destroyOnHidden>
-        <GigApprovalQueue gigs={gigs} onReviewed={refreshGigs} />
       </Modal>
     </PageContainer>
   );
