@@ -16,7 +16,7 @@ import type { RankedPair } from '../types/scoring';
 
 export const listUsers = async (_req: Request, res: Response): Promise<void> => {
   const users = await User.findAll({ order: [['createdAt', 'DESC']] });
-  res.json(users);
+  res.json(users.map((u) => u.privateJSON()));
 };
 
 export const listGigs = async (_req: Request, res: Response): Promise<void> => {
@@ -97,7 +97,7 @@ export const setReviewerTier = async (req: Request, res: Response): Promise<void
     });
   }
 
-  res.json(user);
+  res.json(user.privateJSON());
 };
 
 export const listReviewers = async (_req: Request, res: Response): Promise<void> => {
@@ -105,7 +105,7 @@ export const listReviewers = async (_req: Request, res: Response): Promise<void>
     where: { reviewerTier: { [Op.not]: null } },
     order: [['name', 'ASC']],
   });
-  res.json(reviewers);
+  res.json(reviewers.map((u) => u.privateJSON()));
 };
 
 export const pilotMetrics = async (req: Request, res: Response): Promise<void> => {
@@ -298,7 +298,7 @@ export const moderateUser = async (req: Request, res: Response): Promise<void> =
     category: 'critical',
   });
 
-  res.json(user);
+  res.json(user.privateJSON());
 };
 
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {

@@ -16,7 +16,9 @@ import { secretMatches } from '../lib/secrets';
  */
 export const paymentCallback = async (req: Request, res: Response): Promise<void> => {
   const expected = process.env.PAYMENT_WEBHOOK_SECRET;
-  if (expected && !secretMatches(req.get('X-Webhook-Secret'), expected)) {
+  // Without a secret only a development server accepts callbacks: in
+  // production an unauthenticated callback could mark any payment as paid.
+  if (expected ? !secretMatches(req.get('X-Webhook-Secret'), expected) : process.env.NODE_ENV === 'production') {
     res.status(401).json({ message: 'Invalid webhook signature' });
     return;
   }

@@ -34,12 +34,11 @@
       "emailLabel": "Email",
       "submit": "Send reset link",
       "submitting": "Sending...",
-      "noAccountError": "No account was found for that email.",
       "genericError": "Something went wrong. Please try again.",
-      "noEmailNotice": "This demo has no email sending set up, so here's your reset link directly instead of an inbox:",
-      "continueLink": "Continue to reset your password →",
       "remembered": "Remembered it?",
-      "loginLink": "Log in"
+      "loginLink": "Log in",
+      "sentTitle": "Check your email",
+      "sentBody": "If {{email}} has an account, we've sent it a link to choose a new password. The link works for one hour."
     },
     "resetPassword": {
       "title": "Choose a new password",

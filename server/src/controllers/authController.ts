@@ -14,8 +14,17 @@ const SALT_ROUNDS = 10;
 const REGISTERABLE_ROLES: Role[] = ['worker', 'client'];
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+/** Emails are matched case-insensitively: stored and looked up in lower case. */
+const normalEmail = (raw: unknown) => String(raw ?? '').trim().toLowerCase();
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+export const MIN_PASSWORD_LENGTH = 8;
+
+/** Reset links are stored hashed, so a database leak does not hand out working links. */
+const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
+
 const signToken = (user: User) =>
   jwt.sign({ id: user.id, role: user.role }, jwtSecret(), {
+    algorithm: 'HS256',
     expiresIn: jwtExpiresIn(),
   } as jwt.SignOptions);
 
@@ -51,10 +60,24 @@ const assignExperimentArm = async (
 };
 
 export const register = async (req: Request, res: Response): Promise<void> => {
-  const { name, email, password, role } = req.body ?? {};
+  const { password, role } = req.body ?? {};
+  const name = String(req.body?.name ?? '').trim();
+  const email = normalEmail(req.body?.email);
 
   if (!name || !email || !password || !role) {
     res.status(400).json({ message: 'name, email, password, and role are required' });
+    return;
+  }
+  if (name.length > 80) {
+    res.status(400).json({ message: 'Name must be at most 80 characters' });
+    return;
+  }
+  if (!EMAIL_PATTERN.test(email) || email.length > 254) {
+    res.status(400).json({ message: 'Enter a valid email address' });
+    return;
+  }
+  if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH || password.length > 128) {
+    res.status(400).json({ message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
     return;
   }
   if (!REGISTERABLE_ROLES.includes(role)) {
@@ -81,8 +104,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
-  const { email, password } = req.body ?? {};
-  if (!email || !password) {
+  const { password } = req.body ?? {};
+  const email = normalEmail(req.body?.email);
+  if (!email || typeof password !== 'string' || !password) {
     res.status(400).json({ message: 'email and password are required' });
     return;
   }
@@ -144,7 +168,7 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
     return;
   }
 
-  let user = await User.findOne({ where: { email: payload.email } });
+  let user = await User.findOne({ where: { email: normalEmail(payload.email) } });
   let status = 200;
 
   if (!user) {
@@ -160,7 +184,7 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
     const passwordHash = await bcrypt.hash(crypto.randomUUID(), SALT_ROUNDS);
     user = await User.create({
       name: payload.name as string,
-      email: payload.email as string,
+      email: normalEmail(payload.email),
       passwordHash,
       role,
       // Google asserted email_verified above, which is checked before we get
@@ -186,32 +210,42 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
   res.status(status).json({ token, userId: user.id, role: user.role });
 };
 
-// No email service is configured for this project (that would need SMTP or a
-// transactional-email API, similar to how Google sign-in needed a real OAuth
-// Client ID). Instead of emailing a reset link, we hand the token straight
-// back in the response so the client can show/link to it directly — the same
-// "simulate what a real integration would do" approach used for payments.
+// Emails a one-time link to reset the password. With EMAIL_DRIVER=log (the
+// default in development) the email, link included, is printed in the server
+// log instead of sent.
 export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
-  const { email } = req.body ?? {};
-  if (!email) {
+  const address = normalEmail(req.body?.email);
+  if (!address) {
     res.status(400).json({ message: 'email is required' });
     return;
   }
 
-  const user = await User.findOne({ where: { email } });
-  if (!user) {
-    res.json({ message: 'If that email is registered, a reset link has been generated.' });
+  // The same answer whether or not the address has an account, so this form
+  // cannot be used to find out who is registered. The link goes only to the
+  // inbox; it is never returned in the response, which would let anyone who
+  // knows an address take over the account.
+  const answer = { message: 'If that email is registered, we have sent a link to reset the password.' };
+  const user = await User.findOne({ where: { email: address } });
+  if (!user || user.status === 'suspended') {
+    res.json(answer);
     return;
   }
 
-  const resetToken = crypto.randomBytes(32).toString('hex');
-  const resetTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
-  await user.update({ resetToken, resetTokenExpiresAt });
+  const token = crypto.randomBytes(32).toString('hex');
+  await user.update({ resetToken: hashToken(token), resetTokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000) });
 
-  res.json({
-    message: 'If that email is registered, a reset link has been generated.',
-    resetToken,
-  });
+  const link = `${email.appUrl()}/reset-password?token=${token}`;
+  try {
+    await email.send({
+      to: user.email,
+      subject: 'Reset your Isoko Talents password',
+      text: `Someone asked to reset the password for this account.\n\n${link}\n\nThe link works for one hour, once. If it was not you, ignore this email and your password stays the same.`,
+      html: `<p>Someone asked to reset the password for this account.</p><p><a href="${link}">Choose a new password</a></p><p style="color:#71717a;font-size:13px">The link works for one hour, once. If it was not you, ignore this email and your password stays the same.</p>`,
+    });
+  } catch (err) {
+    console.error('Password reset email failed', err);
+  }
+  res.json(answer);
 };
 
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
@@ -220,8 +254,12 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     res.status(400).json({ message: 'token and password are required' });
     return;
   }
+  if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH || password.length > 128) {
+    res.status(400).json({ message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
+    return;
+  }
 
-  const user = await User.findOne({ where: { resetToken: token } });
+  const user = await User.findOne({ where: { resetToken: hashToken(String(token)) } });
   if (!user || !user.resetTokenExpiresAt || user.resetTokenExpiresAt < new Date()) {
     res.status(400).json({ message: 'This reset link is invalid or has expired' });
     return;

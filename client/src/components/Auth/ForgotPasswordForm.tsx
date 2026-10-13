@@ -8,18 +8,15 @@ const ForgotPasswordForm = () => {
   const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resetLink, setResetLink] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
   const onFinish = async ({ email }: { email: string }) => {
     setError(null);
     setSubmitting(true);
     try {
-      const result = await authApi.forgotPassword({ email });
-      if (result.resetToken) {
-        setResetLink(`/reset-password?token=${result.resetToken}`);
-      } else {
-        setError(t('auth.forgotPassword.noAccountError'));
-      }
+      // The answer is the same whether or not the address has an account.
+      await authApi.forgotPassword({ email });
+      setSentTo(email);
     } catch {
       setError(t('auth.forgotPassword.genericError'));
     } finally {
@@ -38,12 +35,12 @@ const ForgotPasswordForm = () => {
 
       {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
 
-      {resetLink ? (
+      {sentTo ? (
         <Alert
           type="success"
           showIcon
-          message={t('auth.forgotPassword.noEmailNotice')}
-          description={<Link to={resetLink}>{t('auth.forgotPassword.continueLink')}</Link>}
+          message={t('auth.forgotPassword.sentTitle')}
+          description={t('auth.forgotPassword.sentBody', { email: sentTo })}
           style={{ marginBottom: 16 }}
         />
       ) : (

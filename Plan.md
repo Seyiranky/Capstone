@@ -256,6 +256,29 @@ that trade (Pexels, credited in `client/src/assets/gigs/CREDITS.md`); the gig's 
 one, so a gig keeps its photo and neighbouring cards rarely repeat. A photo the client
 uploads still comes first.
 
+## Security review
+
+A review of authentication, access control, personal data and uploads before the defence.
+Each fix is covered by `server/tests/integration/security.test.ts`.
+
+| Found | Risk | Fix |
+|---|---|---|
+| `forgot-password` returned the reset token in its response | Anyone knowing an email could take over the account, admins included | The link is emailed (printed to the server log with `EMAIL_DRIVER=log`); tokens are stored hashed; same answer for known and unknown addresses |
+| Users nested in other records (a gig's client, an applicant) carried email, phone, trusted contact, savings, research arm | Contact details of every client exposed, even to visitors who were not signed in | Users serialize to a public field set by default; only the owner (`/me`, data export) and admins get the private view |
+| Uploaded files kept the uploader's file extension | A file named `.html` but declared as an image was served as a web page (stored XSS) | Extension comes from the checked type only |
+| Chat photos, voice notes and skill evidence were public to anyone with the link | Private conversations and documents readable without a login | Signed links that expire in 24–48h, issued only in responses the viewer may see |
+| No rate limits | Password guessing; SMS-code requests cost money | Failed logins 10 per 15 min per account; sign-ups, reset emails and SMS codes limited |
+| No security headers; CORS and sockets open to any site | Clickjacking, MIME sniffing, other sites calling the API from a user's browser | helmet headers, `x-powered-by` off, CORS and sockets limited to `APP_URL` (+ `CORS_ORIGINS`) |
+| 500 errors returned internal messages | SQL and internals leaked to callers | Logged on the server; the caller gets a plain message |
+| Gigs awaiting approval visible to anyone | Unmoderated content public before review | Only the posting client and admins see pending or rejected gigs |
+| Sign-up accepted any email or password; emails case-sensitive | Junk accounts; `Grace@` and `grace@` as two accounts | Email format, 8-character passwords, lower-cased emails |
+| Payment webhook accepted unsigned callbacks when no secret was set | In production, anyone could mark a payment paid | Refused in production without `PAYMENT_WEBHOOK_SECRET` |
+| JWT algorithm not pinned | Defence in depth | Signed and verified as HS256 only |
+
+Already sound and kept: bcrypt password hashes; role and suspension re-read from the database
+on every request; per-record ownership checks in every controller; allowlisted profile updates;
+timing-safe webhook secrets; parameterised queries throughout (Sequelize).
+
 ## Round 2 — proposed (research of 14 Oct 2026)
 
 A second survey looked past job marketplaces at what protects informal workers elsewhere.

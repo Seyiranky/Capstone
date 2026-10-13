@@ -43,7 +43,7 @@ describe('photos in messages', () => {
       .field('recipientId', users.worker.id)
       .attach('image', png, { filename: 'screen.png', contentType: 'image/png' });
     expect(res.status).toBe(201);
-    expect(res.body.imageUrl).toMatch(/^\/uploads\/messages\/.+\.png$/);
+    expect(res.body.imageUrl).toMatch(/^\/uploads\/messages\/[^?]+\.png\?exp=\d+&sig=/);
     expect(res.body.body).toBe('');
     expect(res.body.sender.name).toBe('Msg Client');
   });

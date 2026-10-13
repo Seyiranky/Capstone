@@ -27,7 +27,7 @@ export const authApi = {
 
   forgotPassword: (payload: { email: string }) =>
     axiosClient
-      .post<{ message: string; resetToken?: string }>('/auth/forgot-password', payload)
+      .post<{ message: string }>('/auth/forgot-password', payload)
       .then((res) => res.data),
 
   resetPassword: (payload: { token: string; password: string }) =>

@@ -43,6 +43,12 @@ const EVIDENCE_LIMITS: Record<string, EvidenceSpec> = {
 };
 
 const EXTENSION_BY_MIME: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+  'audio/aac': '.aac',
+  'audio/x-m4a': '.m4a',
   'application/pdf': '.pdf',
   'audio/webm': '.webm',
   'audio/mp4': '.m4a',
@@ -72,9 +78,10 @@ const diskStorage = (dir: string) =>
       cb(null, dir);
     },
     filename: (_req, file, cb) => {
-      // Browser-recorded blobs arrive without a usable filename, so the
-      // extension comes from the declared type instead.
-      const ext = path.extname(file.originalname) || EXTENSION_BY_MIME[file.mimetype] || '';
+      // The extension always comes from the checked type, never from the
+      // uploader's filename: a file named "x.html" but declared as an image
+      // would otherwise be stored as .html and served as a web page.
+      const ext = EXTENSION_BY_MIME[file.mimetype.split(';')[0].trim().toLowerCase()] ?? '.bin';
       cb(null, `${crypto.randomUUID()}${ext}`);
     },
   });

@@ -25,18 +25,27 @@ import safetyNetRoutes from './routes/safetyNetRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { notFound, errorHandler } from './middleware/errorMiddleware';
+import { corsOptions, securityHeaders } from './middleware/security';
+import { protectPrivateUploads } from './lib/signedUploads';
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Behind one proxy in deployment (Render/Railway/nginx), so req.ip is the
+// caller's address rather than the proxy's; rate limits key on it.
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+app.use(securityHeaders);
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '100kb' }));
 app.use(morgan('dev'));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // uploads/ sits beside src/, not inside it, so that the same path resolves
 // whether this file runs from src/ under tsx or from dist/ after a build.
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// Chat media and skill evidence are private: served only with a signed,
+// expiring link that the API hands to the people allowed to see them.
+app.use('/uploads', protectPrivateUploads, express.static(path.join(__dirname, '..', 'uploads'), { dotfiles: 'deny', index: false }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

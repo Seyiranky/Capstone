@@ -105,7 +105,7 @@ describe('submitting evidence', () => {
     const rows = await trackUploads(res.body.id);
     expect(rows[0].kind).toBe('voice');
     // A browser-recorded blob has no filename, so the extension comes from type.
-    expect(rows[0].url).toMatch(/\.webm$/);
+    expect(rows[0].url).toMatch(/\.webm\?exp=/);
   });
 
   test('a photo and a spoken note can accompany one another', async () => {
@@ -148,7 +148,7 @@ describe('submitting evidence', () => {
     expect(res.status).toBe(201);
     const rows = await trackUploads(res.body.id);
     expect(rows[0].kind).toBe('document');
-    expect(rows[0].url).toMatch(/\.pdf$/);
+    expect(rows[0].url).toMatch(/\.pdf\?exp=/);
   });
 
   test('an unsupported file type is refused', async () => {

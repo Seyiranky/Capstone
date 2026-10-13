@@ -19,7 +19,7 @@ const as = (who: string) => ({ Authorization: `Bearer ${tokens[who]}` });
 
 // The bytes are not decoded server-side; only the declared type and size matter.
 const clip = Buffer.from('1a45dfa3' + '00'.repeat(512), 'hex');
-const uploaded = (url: string) => path.join(__dirname, '..', '..', url);
+const uploaded = (url: string) => path.join(__dirname, '..', '..', url.split('?')[0]);
 
 beforeAll(async () => {
   const passwordHash = await bcrypt.hash(password, 10);
@@ -46,7 +46,7 @@ describe('voice notes in messages', () => {
       .field('audioDurationSec', '14.6')
       .attach('audio', clip, { filename: 'blob', contentType: 'audio/webm' });
     expect(res.status).toBe(201);
-    expect(res.body.audioUrl).toMatch(/^\/uploads\/messages\/.+\.webm$/);
+    expect(res.body.audioUrl).toMatch(/^\/uploads\/messages\/[^?]+\.webm\?exp=\d+&sig=/);
     expect(res.body.audioMimeType).toBe('audio/webm');
     expect(res.body.audioDurationSec).toBe(15);
     expect(res.body.body).toBe('');
@@ -108,7 +108,8 @@ describe('voice notes on gigs', () => {
     expect(res.body.voiceNoteUrl).toMatch(/^\/uploads\/gigs\/.+\.m4a$/);
     expect(res.body.voiceNoteDurationSec).toBe(42);
 
-    const read = await request(app).get(`/api/gigs/${res.body.id}`).set(as('worker'));
+    // Still awaiting approval, so only its client (or an admin) can open it yet.
+    const read = await request(app).get(`/api/gigs/${res.body.id}`).set(as('client'));
     expect(read.body.voiceNoteUrl).toBe(res.body.voiceNoteUrl);
   });
 });

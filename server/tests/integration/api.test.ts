@@ -406,11 +406,14 @@ describe('messaging', () => {
 describe('password reset', () => {
   let resetToken: string;
 
-  test('requesting a reset for a registered email returns a token', async () => {
-    const res = await request(app).post('/api/auth/forgot-password').send({ email: emails.worker });
+  test('requesting a reset emails a link and never returns the token', async () => {
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const res = await request(app).post('/api/auth/forgot-password').send({ email: emails.worker.toUpperCase() });
+    const mailed = logSpy.mock.calls.map((c) => String(c[0])).find((line) => line.includes('/reset-password?token='));
+    logSpy.mockRestore();
     expect(res.status).toBe(200);
-    expect(res.body.resetToken).toBeTruthy();
-    resetToken = res.body.resetToken;
+    expect(res.body.resetToken).toBeUndefined();
+    resetToken = must(mailed?.match(/token=([0-9a-f]{64})/)?.[1], 'mailed token');
   });
 
   test('requesting a reset for an unknown email does not leak a token', async () => {

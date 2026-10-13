@@ -34,12 +34,11 @@
       "emailLabel": "Imeyili",
       "submit": "Ohereza ihuza",
       "submitting": "Kohereza...",
-      "noAccountError": "Nta konti yabonetse kuri iyo imeyili.",
       "genericError": "Habaye ikibazo. Ongera ugerageze.",
-      "noEmailNotice": "Iyi demo ntabwo ifite uburyo bwo kohereza imeyili, bityo dore ihuza ryo guhindura ijambo ry'ibanga aho kuguha ubutumwa muri imeyili yawe:",
-      "continueLink": "Komeza uhindure ijambo ry'ibanga →",
       "remembered": "Wibutse?",
-      "loginLink": "Injira"
+      "loginLink": "Injira",
+      "sentTitle": "Reba muri imeyili yawe",
+      "sentBody": "Niba {{email}} ifite konti, twayoherereje ihuza ryo guhitamo ijambo ry'ibanga rishya. Rikora isaha imwe."
     },
     "resetPassword": {
       "title": "Hitamo ijambo ry'ibanga rishya",

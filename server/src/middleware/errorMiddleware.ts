@@ -34,7 +34,12 @@ export const errorHandler = (
   const status = hasStatus(err) ? err.status : 500;
   if (status >= 500) {
     console.error(err);
+    // An unexpected failure's message can carry SQL, file paths or library
+    // internals; it goes to the log, and the caller gets a plain apology.
+    res.status(status).json({ message: 'Something went wrong on our side. Please try again.' });
+    return;
   }
-  const message = err instanceof Error ? err.message : 'Internal server error';
-  res.status(status).json({ message: message || 'Internal server error' });
+  // 4xx errors are raised deliberately (HttpError) with a message meant for the user.
+  const message = err instanceof Error ? err.message : 'Request failed';
+  res.status(status).json({ message: message || 'Request failed' });
 };

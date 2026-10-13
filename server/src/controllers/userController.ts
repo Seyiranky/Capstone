@@ -25,7 +25,7 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
     res.status(404).json({ message: 'User not found' });
     return;
   }
-  res.json(user);
+  res.json(user.privateJSON());
 };
 
 const UPDATABLE_FIELDS = [
@@ -122,7 +122,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   }
 
   await user.update(updates);
-  res.json(user);
+  res.json(user.privateJSON());
 };
 
 export const getPublicProfile = async (req: Request, res: Response): Promise<void> => {
@@ -198,7 +198,7 @@ export const exportMyData = async (req: Request, res: Response): Promise<void> =
   res.setHeader('Content-Disposition', 'attachment; filename="isoko-talents-my-data.json"');
   res.json({
     exportedAt: new Date().toISOString(),
-    profile,
+    profile: profile?.privateJSON() ?? null,
     skillTasksAsWorker,
     skillTasksAsReviewer,
     gigsPosted,

@@ -20,7 +20,7 @@ export const verifyToken = async (
   try {
     // jwt.verify widens to string | JwtPayload; every token this API issues is
     // a payload, and a bare string would fail the id lookup below regardless.
-    decoded = jwt.verify(token, jwtSecret()) as jwt.JwtPayload;
+    decoded = jwt.verify(token, jwtSecret(), { algorithms: ['HS256'] }) as jwt.JwtPayload;
   } catch {
     res.status(401).json({ message: 'Invalid or expired token' });
     return;
@@ -45,5 +45,26 @@ export const verifyToken = async (
   // token, for the same reason the suspension check is: a change applies to a
   // session already in flight, and a token issued before enrolment still works.
   req.user = { ...decoded, role: user.role, reviewerTier: user.reviewerTier } as AuthUser;
+  next();
+};
+
+/**
+ * For public routes that show more to a signed-in caller: sets req.user when a
+ * valid token is sent and carries on without one otherwise. A bad or expired
+ * token is treated as no token, never as an error, since the route is public.
+ */
+export const optionalAuth = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+  const header = req.headers.authorization;
+  if (header?.startsWith('Bearer ')) {
+    try {
+      const decoded = jwt.verify(header.split(' ')[1], jwtSecret(), { algorithms: ['HS256'] }) as jwt.JwtPayload;
+      const user = await User.findByPk(decoded.id);
+      if (user && user.status !== 'suspended') {
+        req.user = { ...decoded, role: user.role, reviewerTier: user.reviewerTier } as AuthUser;
+      }
+    } catch {
+      // Public route: an unusable token just means an anonymous caller.
+    }
+  }
   next();
 };

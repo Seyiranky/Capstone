@@ -8,6 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
+import { signUpload } from '../lib/signedUploads';
 import type { SkillTaskKind, SkillTaskStatus } from '../types/domain';
 import type { Skill } from './Skill';
 import type { SkillTaskAppeal } from './SkillTaskAppeal';
@@ -80,9 +81,13 @@ export const initSkillTask = (sequelize: Sequelize) => {
         type: DataTypes.UUID,
         allowNull: true,
       },
+      // Uploaded evidence is private: read back as a signed, expiring link.
       evidenceUrl: {
         type: DataTypes.STRING,
         allowNull: false,
+        get() {
+          return signUpload(this.getDataValue('evidenceUrl')) as string;
+        },
       },
       notes: {
         type: DataTypes.TEXT,

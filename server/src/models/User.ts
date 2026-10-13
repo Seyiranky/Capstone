@@ -87,6 +87,77 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare notifications?: NonAttribute<Notification[]>;
   declare gigApplications?: NonAttribute<GigApplication[]>;
 
+  /**
+   * What other people may see of a user.
+   *
+   * A user is serialized inside many other records (the client on a gig, the
+   * worker on an application, the sender of a message), so the default JSON
+   * is this public set. Contact details, the trusted contact, savings,
+   * goals, the research arm and the user's own location stay out of it; the
+   * owner and admins read them through `privateJSON()`.
+   */
+  static readonly PUBLIC_FIELDS: ReadonlySet<string> = new Set([
+    'id',
+    'name',
+    'role',
+    'status',
+    'bio',
+    'trustScore',
+    'trustScoreBreakdown',
+    'trustScoreUpdatedAt',
+    'reviewCount',
+    'completedJobCount',
+    'abandonedJobCount',
+    'preferredLanguage',
+    'experienceSummary',
+    'yearsExperience',
+    'phoneVerifiedAt',
+    'emailVerifiedAt',
+    'availability',
+    'availableFrom',
+    'reviewerTier',
+    'createdAt',
+  ]);
+
+  /** Never serialized, even to the owner. */
+  static readonly SECRET_FIELDS: ReadonlySet<string> = new Set([
+    'passwordHash',
+    'resetToken',
+    'emailVerificationToken',
+    'phoneVerificationCodeHash',
+  ]);
+
+  /**
+   * Plain reads are filtered to the public set.
+   *
+   * Filtering here rather than in toJSON is what makes it hold for nested
+   * records: a gig's toJSON builds its included client with
+   * `client.get({ plain: true })` and never calls the client's own toJSON.
+   * Sequelize itself only reads plain values for serialization; the
+   * application reads attributes directly (`user.email`), which is unaffected.
+   */
+  // The overloads of Model#get are not expressible in an override signature.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  override get(key?: any, options?: any): any {
+    const value = super.get(key, options);
+    const opts = typeof key === 'object' ? key : options;
+    if (typeof key === 'string' || !opts?.plain) return value;
+    const attributes = (this.constructor as typeof User).getAttributes();
+    const out: Record<string, unknown> = {};
+    for (const [field, v] of Object.entries(value as Record<string, unknown>)) {
+      // Included associations (userSkills, etc.) are not attributes and pass through.
+      if (User.PUBLIC_FIELDS.has(field) || !(field in attributes)) out[field] = v;
+    }
+    return out;
+  }
+
+  /** Everything except credentials: for the user themselves and for admins. */
+  privateJSON(): Record<string, unknown> {
+    const full = structuredClone(super.get({ plain: true })) as Record<string, unknown>;
+    for (const key of User.SECRET_FIELDS) delete full[key];
+    return full;
+  }
+
   static associate(models: Db) {
     User.hasMany(models.UserSkill, { foreignKey: 'userId', as: 'userSkills' });
     User.hasMany(models.SkillTask, { foreignKey: 'workerId', as: 'submittedTasks' });

@@ -1,16 +1,16 @@
 import express from 'express';
 import * as gigController from '../controllers/gigController';
-import { verifyToken } from '../middleware/authMiddleware';
+import { optionalAuth, verifyToken } from '../middleware/authMiddleware';
 import { authorize } from '../middleware/roleMiddleware';
 import { uploadGigMedia } from '../middleware/upload';
 
 const router = express.Router();
 
 router.post('/', verifyToken, authorize('client'), uploadGigMedia, gigController.createGig);
-router.get('/', gigController.listGigs);
+router.get('/', optionalAuth, gigController.listGigs);
 // Before '/:id', which would otherwise swallow it.
 router.get('/rates', verifyToken, gigController.rates);
-router.get('/:id', gigController.getGig);
+router.get('/:id', optionalAuth, gigController.getGig);
 router.get('/:id/candidates', verifyToken, gigController.listCandidates);
 router.put('/:id', verifyToken, authorize('client'), gigController.updateGig);
 

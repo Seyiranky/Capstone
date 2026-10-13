@@ -8,6 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
+import { signUpload } from '../lib/signedUploads';
 import type { User } from './User';
 
 export class Message extends Model<InferAttributes<Message>, InferCreationAttributes<Message>> {
@@ -57,10 +58,23 @@ export const initMessage = (sequelize: Sequelize) => {
         allowNull: false,
         defaultValue: '',
       },
-      imageUrl: { type: DataTypes.STRING, allowNull: true },
+      // Private files: read back as signed, expiring links (lib/signedUploads).
+      imageUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        get() {
+          return signUpload(this.getDataValue('imageUrl'));
+        },
+      },
       imageMimeType: { type: DataTypes.STRING, allowNull: true },
       imageSha256: { type: DataTypes.STRING(64), allowNull: true },
-      audioUrl: { type: DataTypes.STRING, allowNull: true },
+      audioUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        get() {
+          return signUpload(this.getDataValue('audioUrl'));
+        },
+      },
       audioMimeType: { type: DataTypes.STRING, allowNull: true },
       audioDurationSec: { type: DataTypes.INTEGER, allowNull: true },
       readAt: {

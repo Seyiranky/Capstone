@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import { User } from './models';
 import { jwtSecret } from './config/env';
+import { allowedOrigins } from './middleware/security';
 
 /**
  * The per-socket state this server keeps.
@@ -27,7 +28,7 @@ export type IsokoServer = Server<
 // controllers can push events to a specific person with `io.to(userId)`.
 export const initSocket = (httpServer: HttpServer): IsokoServer => {
   const io: IsokoServer = new Server(httpServer, {
-    cors: { origin: '*' },
+    cors: { origin: allowedOrigins() },
   });
 
   io.use(async (socket, next) => {
@@ -38,7 +39,7 @@ export const initSocket = (httpServer: HttpServer): IsokoServer => {
 
     let decoded: jwt.JwtPayload;
     try {
-      decoded = jwt.verify(token, jwtSecret()) as jwt.JwtPayload;
+      decoded = jwt.verify(token, jwtSecret(), { algorithms: ['HS256'] }) as jwt.JwtPayload;
     } catch {
       return next(new Error('Invalid or expired token'));
     }

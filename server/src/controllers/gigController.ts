@@ -81,7 +81,14 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
   res.status(201).json(gig);
 };
 
+/** Gigs an admin has not approved, or has turned down, are seen only by their client and admins. */
+const UNPUBLISHED: Gig['status'][] = ['pending_review', 'rejected'];
+
+const canSee = (gig: Gig, caller?: { id: string; role: string }) =>
+  !UNPUBLISHED.includes(gig.status) || caller?.role === 'admin' || gig.clientId === caller?.id;
+
 export const listGigs = async (req: Request, res: Response): Promise<void> => {
+  const caller = req.user;
   const where: WhereOptions<Gig> & { status?: string; skillId?: string } = {};
   const status = stringParam(req, 'status');
   const skillId = stringParam(req, 'skillId');
@@ -89,12 +96,12 @@ export const listGigs = async (req: Request, res: Response): Promise<void> => {
   if (skillId) where.skillId = skillId;
 
   const gigs = await Gig.findAll({ where, include: GIG_INCLUDES, order: [['createdAt', 'DESC']] });
-  res.json(gigs);
+  res.json(gigs.filter((gig) => canSee(gig, caller)));
 };
 
 export const getGig = async (req: Request, res: Response): Promise<void> => {
   const gig = await Gig.findByPk(pathParam(req, 'id'), { include: GIG_INCLUDES });
-  if (!gig) {
+  if (!gig || !canSee(gig, req.user)) {
     res.status(404).json({ message: 'Gig not found' });
     return;
   }
