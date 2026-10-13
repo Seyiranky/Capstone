@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: in progress** (13 Oct 2026). Phases 0–3 are done; Phase 4 is next.
+> **Status: in progress** (13 Oct 2026). Phases 0–4 are done; Phase 5 is next.
 
 ## Context
 
@@ -144,7 +144,7 @@ Findings so far:
   disputes go straight to an admin, as designed. Showing a full panel in the demo needs seed
   users with good records and no ties to the demo clients.
 
-### Phase 4 — Completed jobs become evidence
+### Phase 4 — Completed jobs become evidence (done, 13 Oct 2026)
 *Borrowed from:* Lynk career profiles, TaskRabbit job photos.
 
 - When entering the completion code, the worker can attach up to 3 photos, using the same
@@ -153,6 +153,11 @@ Findings so far:
   client's rating.
 - The Skill Passport shows **"N paid jobs completed in this skill"** next to the peer
   verification. Isoko stays the source of truth, and the passport remains revocable.
+- As built: photos can be added while the job is in progress or after it (so mediators can
+  see them in a dispute), from the match card. Only jobs paid out through escrow appear in
+  the work history, each with its rating and receipt link. The per-skill paid-job count is
+  not part of the passport's signed summary, so passports issued earlier still verify.
+  6 new tests in `workHistory.test.ts`.
 
 ### Phase 5 — Rejection reasons and next steps
 *Borrowed from:* SA Youth employer feedback.

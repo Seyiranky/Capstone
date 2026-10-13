@@ -23,6 +23,7 @@ import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import MatchExplanation from '../common/MatchExplanation';
 import JobEscrowPanel from './JobEscrowPanel';
+import JobPhotos from './JobPhotos';
 import { disputeApi } from '../../api/disputeApi';
 import type { Dispute, Match, MatchStatus } from '../../types';
 
@@ -225,6 +226,11 @@ const MatchList = () => {
                 )}
 
                 {match.status === 'accepted' && (
+                  <div style={{ marginBottom: 10 }}>
+                    <JobPhotos match={match} canAdd={isWorker} onChanged={refresh} />
+                  </div>
+                )}
+                {match.status === 'accepted' && (
                   <JobEscrowPanel
                     match={match}
                     isWorker={isWorker}
@@ -235,6 +241,7 @@ const MatchList = () => {
 
                 {match.status === 'completed' && match.transaction && (
                   <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                    <JobPhotos match={match} canAdd={isWorker} onChanged={refresh} />
                     <Flex align="center" gap={8} wrap="wrap">
                       <StatusTag
                         status={

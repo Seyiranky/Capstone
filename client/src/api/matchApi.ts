@@ -12,6 +12,12 @@ export const matchApi = {
   completeWithCode: (id: string, code: string) =>
     axiosClient.post<Match>(`/matches/${id}/complete`, { code }).then((res) => res.data),
 
+  addPhotos: (id: string, files: File[]) => {
+    const form = new FormData();
+    for (const file of files) form.append('photos', file);
+    return axiosClient.post<Match>(`/matches/${id}/photos`, form).then((res) => res.data);
+  },
+
   markWorkDone: (id: string) =>
     axiosClient.post<Match>(`/matches/${id}/work-done`).then((res) => res.data),
 };

@@ -427,7 +427,9 @@
       "invalidSignature": "This link is not a valid passport.",
       "revoked": "This passport has been revoked by its holder.",
       "unknownHolder": "The holder of this passport no longer has an account."
-    }
+    },
+    "paidJobs": "{{count}} paid job in this skill",
+    "paidJobs_other": "{{count}} paid jobs in this skill"
   },
   "income": {
     "title": "Income statement",
@@ -693,5 +695,18 @@
     "notImage": "Only photos can be attached.",
     "open": "Open",
     "failed": "Could not send. Try again."
+  },
+  "jobPhotos": {
+    "title": "Photos of the work",
+    "add": "Add photos",
+    "hint": "Up to 3. They appear in your work history once the job is paid.",
+    "full": "3 of 3 photos added",
+    "failed": "Could not upload. Photos must be images under 10 MB."
+  },
+  "workHistory": {
+    "title": "Work history",
+    "empty": "No paid jobs yet.",
+    "paidVia": "Paid",
+    "receipt": "Receipt"
   }
 }

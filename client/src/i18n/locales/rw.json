@@ -427,7 +427,9 @@
       "invalidSignature": "Uyu murongo si pasiporo yemewe.",
       "revoked": "Iyi pasiporo yakuweho na nyirayo.",
       "unknownHolder": "Nyiri iyi pasiporo ntagifite konti."
-    }
+    },
+    "paidJobs": "Akazi {{count}} kishyuwe muri ubu bumenyi",
+    "paidJobs_other": "Akazi {{count}} kishyuwe muri ubu bumenyi"
   },
   "income": {
     "title": "Icyemezo cy’amafaranga winjije",
@@ -693,5 +695,18 @@
     "notImage": "Hemewe amafoto gusa.",
     "open": "Fungura",
     "failed": "Ntibyoherejwe. Ongera ugerageze."
+  },
+  "jobPhotos": {
+    "title": "Amafoto y'akazi",
+    "add": "Ongeraho amafoto",
+    "hint": "Agera kuri 3. Agaragara mu mateka y'akazi kawe akazi kamaze kwishyurwa.",
+    "full": "Amafoto 3 kuri 3 yongeweho",
+    "failed": "Ntibyashyizweho. Amafoto agomba kuba ari munsi ya MB 10."
+  },
+  "workHistory": {
+    "title": "Amateka y'akazi",
+    "empty": "Nta kazi karishyurwa.",
+    "paidVia": "Yishyuwe",
+    "receipt": "Inyemezabwishyu"
   }
 }

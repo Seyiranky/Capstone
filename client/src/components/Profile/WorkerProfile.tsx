@@ -27,6 +27,7 @@ import Avatar from '../common/Avatar';
 import IdentityLink from '../common/IdentityLink';
 import TrustReceipt from '../common/TrustReceipt';
 import type { PublicProfile, Review, UserSkill } from '../../types';
+import WorkHistory from './WorkHistory';
 
 const WorkerProfile = () => {
   const { t } = useTranslation();
@@ -171,6 +172,8 @@ const WorkerProfile = () => {
                 )}
               </Card>
             )}
+
+            {profile.role === 'worker' && <WorkHistory workerId={profile.id} />}
 
             <Card
               title={

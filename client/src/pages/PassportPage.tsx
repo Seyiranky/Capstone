@@ -139,6 +139,12 @@ const PassportPage = () => {
                     {/* Count, never identity: naming reviewers would expose them. */}
                     {t('passport.approvals', { count: s.independentApprovals })}
                   </Typography.Text>
+                  {/* Evidence from the market, next to the peers' judgement. */}
+                  {(s.paidJobs ?? 0) > 0 && (
+                    <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('passport.paidJobs', { count: s.paidJobs })}
+                    </Typography.Text>
+                  )}
                 </Space>
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   {new Date(s.verifiedAt).toLocaleDateString()}

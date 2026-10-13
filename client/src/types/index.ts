@@ -173,6 +173,7 @@ export interface Match {
   workDoneAt?: string | null;
   completedVia?: 'code' | 'client' | 'auto' | 'dispute' | null;
   agreedAmount?: number | string | null;
+  photos?: JobPhoto[];
   createdAt: string;
   updatedAt: string;
   gig?: Gig;
@@ -255,6 +256,8 @@ export interface PassportSkillClaim {
   verifiedAt: string;
   /** How many separate reviewers approved it; reviewers are never named. */
   independentApprovals: number;
+  /** Jobs in this skill the holder was paid for through escrow. */
+  paidJobs?: number;
 }
 
 export interface PassportClaims {
@@ -456,4 +459,22 @@ export interface Dispute {
   match?: Match;
   votes: DisputeVoteView[];
   myRole: 'party' | 'mediator' | 'admin';
+}
+
+export interface JobPhoto {
+  id?: string;
+  url: string;
+  sha256: string;
+}
+
+export interface WorkHistoryEntry {
+  matchId: string;
+  gig: string;
+  skill: string | null;
+  completedAt: string;
+  completedVia: 'code' | 'client' | 'auto' | 'dispute' | null;
+  rating: number | null;
+  comment: string | null;
+  photos: JobPhoto[];
+  receiptNumber: string | null;
 }
