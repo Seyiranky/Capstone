@@ -19,6 +19,7 @@ import AdminCompletedGigsPage from './pages/AdminCompletedGigsPage';
 import AdminAuditPage from './pages/AdminAuditPage';
 import PassportPage from './pages/PassportPage';
 import ReceiptPage from './pages/ReceiptPage';
+import DisputesPage from './pages/DisputesPage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -59,6 +60,7 @@ function App() {
           <Route path="/gigs/:id" element={<GigDetailPage />} />
           <Route path="/profile/:id" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/disputes" element={<DisputesPage />} />
 
           <Route element={<ProtectedRoute allowedRoles={['worker', 'client', 'admin']} />}>
             <Route path="/notifications" element={<NotificationsPage />} />

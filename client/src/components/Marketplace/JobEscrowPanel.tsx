@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { App, Button, Flex, Input, Typography } from 'antd';
-import { LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { LockOutlined, SafetyCertificateOutlined, WarningOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
+import OpenDisputeModal from '../Disputes/OpenDisputeModal';
 import { isAxiosError } from 'axios';
 import { matchApi } from '../../api/matchApi';
 import { transactionApi } from '../../api/transactionApi';
 import { AUTO_RELEASE_AFTER_MS, MAX_CODE_ATTEMPTS } from '../../lib/money';
-import type { Match } from '../../types';
+import type { Dispute, Match } from '../../types';
 
 interface JobEscrowPanelProps {
   match: Match;
   isWorker: boolean;
+  /** A dispute that is still open or with an admin, if there is one. */
+  liveDispute?: Dispute;
   onChanged: () => void;
 }
 
@@ -28,11 +32,12 @@ const box: React.CSSProperties = {
  * The worker sees the money is secured, finishes with the client's code, or
  * reports the job done to start the 72-hour automatic release.
  */
-const JobEscrowPanel = ({ match, isWorker, onChanged }: JobEscrowPanelProps) => {
+const JobEscrowPanel = ({ match, isWorker, liveDispute, onChanged }: JobEscrowPanelProps) => {
   const { t, i18n } = useTranslation();
   const { message, modal } = App.useApp();
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [disputing, setDisputing] = useState(false);
   const [locked, setLocked] = useState((match.completionCodeAttempts ?? 0) >= MAX_CODE_ATTEMPTS);
 
   const tx = match.transaction;
@@ -93,6 +98,43 @@ const JobEscrowPanel = ({ match, isWorker, onChanged }: JobEscrowPanelProps) => 
     </Flex>
   );
 
+  // A dispute freezes the money: nothing else on this card applies until it is decided.
+  if (liveDispute) {
+    return (
+      <Flex vertical gap={8} style={{ ...box, borderColor: 'var(--ant-color-warning-border, #fcd34d)' }}>
+        <Flex align="flex-start" gap={8}>
+          <WarningOutlined style={{ color: 'var(--ant-color-warning, #d97706)', marginTop: 3 }} />
+          <Typography.Text style={{ fontSize: 13 }}>{t('dispute.frozen')}</Typography.Text>
+        </Flex>
+        <Link to="/disputes" style={{ fontSize: 13 }}>
+          {t('dispute.viewDispute')}
+        </Link>
+      </Flex>
+    );
+  }
+
+  const disputeLink = held && (
+    <>
+      <Button
+        type="link"
+        size="small"
+        danger
+        style={{ paddingInline: 0, alignSelf: 'flex-start' }}
+        onClick={() => setDisputing(true)}
+      >
+        {t('dispute.open')}
+      </Button>
+      {disputing && (
+        <OpenDisputeModal
+          match={match}
+          isWorker={isWorker}
+          onClose={() => setDisputing(false)}
+          onOpened={onChanged}
+        />
+      )}
+    </>
+  );
+
   if (!isWorker) {
     if (!held) {
       return (
@@ -143,6 +185,7 @@ const JobEscrowPanel = ({ match, isWorker, onChanged }: JobEscrowPanelProps) => 
         <Button block loading={busy === 'release'} onClick={release}>
           {t('escrow.releaseButton')}
         </Button>
+        {disputeLink}
       </Flex>
     );
   }
@@ -196,6 +239,7 @@ const JobEscrowPanel = ({ match, isWorker, onChanged }: JobEscrowPanelProps) => 
           {t('escrow.reportDone')}
         </Button>
       )}
+      {disputeLink}
     </Flex>
   );
 };

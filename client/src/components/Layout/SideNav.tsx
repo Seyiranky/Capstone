@@ -9,6 +9,7 @@ import {
   SafetyCertificateOutlined,
   SettingOutlined,
   WalletOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
 import { activeNavKey, visibleNavEntries } from './navConfig';
@@ -17,6 +18,7 @@ const ICONS: Record<string, ReactNode> = {
   '/dashboard': <DashboardOutlined />,
   '/marketplace': <AppstoreOutlined />,
   '/wallet': <WalletOutlined />,
+  '/disputes': <AuditOutlined />,
   '/notifications': <BellOutlined />,
   '/admin': <SafetyCertificateOutlined />,
   '/settings': <SettingOutlined />,

@@ -171,7 +171,7 @@ export interface Match {
   completionCode?: string | null;
   completionCodeAttempts?: number;
   workDoneAt?: string | null;
-  completedVia?: 'code' | 'client' | 'auto' | null;
+  completedVia?: 'code' | 'client' | 'auto' | 'dispute' | null;
   agreedAmount?: number | string | null;
   createdAt: string;
   updatedAt: string;
@@ -404,9 +404,45 @@ export interface Receipt {
   releasedAt: string;
   paymentReference: string;
   provider: string;
-  completedVia: 'code' | 'client' | 'auto' | null;
+  completedVia: 'code' | 'client' | 'auto' | 'dispute' | null;
   gig: string | null;
   skill: string | null;
   worker: string | null;
   client: string | null;
+}
+
+export type DisputeStatus = 'open' | 'escalated' | 'decided' | 'settled';
+export type DisputeOutcome = 'release' | 'refund' | 'split';
+export type DisputeReason = 'notDone' | 'poorQuality' | 'noShow' | 'notReleased' | 'other';
+
+export interface DisputeVoteView {
+  id: string;
+  /** Null for the parties: mediators stay anonymous to them. */
+  mediator: { id: string; name: string } | null;
+  voted: boolean;
+  /** Hidden until the dispute closes, except a mediator's own. */
+  vote: DisputeOutcome | null;
+  rationale: string | null;
+  withMajority: boolean | null;
+}
+
+export interface Dispute {
+  id: string;
+  matchId: string;
+  openedById: string;
+  reason: DisputeReason;
+  details: string;
+  response: string | null;
+  status: DisputeStatus;
+  outcome: DisputeOutcome | null;
+  decidedBy: 'mediators' | 'admin' | 'parties' | null;
+  decidedAt: string | null;
+  adminNote: string | null;
+  deadlineAt: string;
+  panelPoolSize: number | null;
+  createdAt: string;
+  openedBy?: { id: string; name: string };
+  match?: Match;
+  votes: DisputeVoteView[];
+  myRole: 'party' | 'mediator' | 'admin';
 }

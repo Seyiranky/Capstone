@@ -23,7 +23,8 @@ import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import MatchExplanation from '../common/MatchExplanation';
 import JobEscrowPanel from './JobEscrowPanel';
-import type { Match, MatchStatus } from '../../types';
+import { disputeApi } from '../../api/disputeApi';
+import type { Dispute, Match, MatchStatus } from '../../types';
 
 const ReviewModal = ({
   match,
@@ -85,12 +86,31 @@ const MatchList = () => {
   const matches = useAppSelector((state) => state.matches.items);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [reviewMatch, setReviewMatch] = useState<Match | null>(null);
+  const [liveDisputes, setLiveDisputes] = useState<Map<string, Dispute>>(new Map());
+
+  const loadDisputes = () =>
+    disputeApi
+      .list()
+      .then((all) =>
+        setLiveDisputes(
+          new Map(
+            all
+              .filter((d) => d.myRole !== 'mediator' && (d.status === 'open' || d.status === 'escalated'))
+              .map((d) => [d.matchId, d]),
+          ),
+        ),
+      )
+      .catch(() => undefined);
 
   useEffect(() => {
     dispatch(fetchMatches());
+    loadDisputes();
   }, [dispatch]);
 
-  const refresh = () => dispatch(fetchMatches());
+  const refresh = () => {
+    dispatch(fetchMatches());
+    loadDisputes();
+  };
 
   const transition = async (matchId: string, status: MatchStatus, declineReason?: string) => {
     setBusyId(matchId);
@@ -205,7 +225,12 @@ const MatchList = () => {
                 )}
 
                 {match.status === 'accepted' && (
-                  <JobEscrowPanel match={match} isWorker={isWorker} onChanged={refresh} />
+                  <JobEscrowPanel
+                    match={match}
+                    isWorker={isWorker}
+                    liveDispute={liveDisputes.get(match.id)}
+                    onChanged={refresh}
+                  />
                 )}
 
                 {match.status === 'completed' && match.transaction && (

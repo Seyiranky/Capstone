@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: in progress** (13 Oct 2026). Phases 0–2 are done; Phase 3 is next.
+> **Status: in progress** (13 Oct 2026). Phases 0–3 are done; Phase 4 is next.
 
 ## Context
 
@@ -121,7 +121,7 @@ Findings so far:
   check. Payouts released before this existed were numbered by the migration. The receipt
   shows names and the job, never contact details. 8 new tests in `quotesAndReceipts.test.ts`.
 
-### Phase 3 — Disputes settled by screened peers
+### Phase 3 — Disputes settled by screened peers (done, 13 Oct 2026)
 *Borrowed from:* Upwork disputes; jury-style resolution.
 
 - Either party can open a dispute while escrow is held, giving a reason and optional
@@ -133,6 +133,16 @@ Findings so far:
   can override, and every override is recorded. Mediators who side with the majority get a
   small trust adjustment, which is capped.
 - If no majority forms within 5 days, an admin decides.
+- As built, with two deviations. (1) No trust-score adjustment for mediators: each vote
+  records `withMajority` instead, so the trust score keeps meaning reviews, completion and
+  verified skills only. (2) Evidence is written statements from both sides; photos come with
+  Phase 4's completion evidence. The other party can respond once, and votes stay hidden
+  (mediators anonymous to the parties) until the dispute closes. The client paying out, or
+  the job being called off, settles a live dispute. 15 new tests in `disputes.test.ts`.
+- Finding: in the 15-account demo data only one member (Claudine) is eligible to mediate a
+  Robert/Jean Bosco dispute; everyone else well rated has worked with one of them. So demo
+  disputes go straight to an admin, as designed. Showing a full panel in the demo needs seed
+  users with good records and no ties to the demo clients.
 
 ### Phase 4 — Completed jobs become evidence
 *Borrowed from:* Lynk career profiles, TaskRabbit job photos.
