@@ -120,6 +120,16 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
     return;
   }
 
+  // A gig is done once. A stray invitation must not be accepted on a gig that
+  // someone else has already taken, or the client would pay for it twice.
+  if (
+    status === 'accepted' &&
+    (await Match.count({ where: { gigId: match.gigId, id: { [Op.ne]: match.id }, status: ['accepted', 'completed'] } }))
+  ) {
+    res.status(409).json({ message: 'This gig has already been taken by another worker' });
+    return;
+  }
+
   // Completing releases the client's money, so only the client may do it
   // directly. The worker completes with the client's code, or reports the job
   // done and lets the 72-hour release run.

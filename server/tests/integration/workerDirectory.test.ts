@@ -105,4 +105,10 @@ describe('inviting a worker to a gig', () => {
     expect(res.status).toBe(200);
     expect(await db.Transaction.findOne({ where: { matchId: match.id } })).not.toBeNull();
   });
+
+  test('a second invitation cannot be accepted once the gig is taken', async () => {
+    const stray = await db.Match.create({ gigId, workerId: users.declared.id, status: 'pending', origin: 'direct' });
+    const res = await request(app).put(`/api/matches/${stray.id}/status`).set(as('declared')).send({ status: 'accepted' });
+    expect(res.status).toBe(409);
+  });
 });

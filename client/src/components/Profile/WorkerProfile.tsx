@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
@@ -15,31 +15,36 @@ import {
   Space,
   Tag,
   Typography,
-} from 'antd';
-import { MessageOutlined } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
-import { userApi } from '../../api/userApi';
-import { reviewApi } from '../../api/reviewApi';
-import { useAppSelector } from '../../store/hooks';
-import { canMessage } from '../../utils/messaging';
-import PageContainer from '../Layout/PageContainer';
-import Avatar from '../common/Avatar';
-import IdentityLink from '../common/IdentityLink';
-import TrustReceipt from '../common/TrustReceipt';
-import type { PublicProfile, Review, UserSkill } from '../../types';
-import WorkHistory from './WorkHistory';
-import LevelBadge from '../Growth/LevelBadge';
-import VerificationBadges from '../Trust/VerificationBadges';
-import ReportUserButton from '../Trust/ReportUserButton';
+} from "antd";
+import { MessageOutlined, SendOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
+import { userApi } from "../../api/userApi";
+import { reviewApi } from "../../api/reviewApi";
+import { useAppSelector } from "../../store/hooks";
+import { canMessage } from "../../utils/messaging";
+import PageContainer from "../Layout/PageContainer";
+import Avatar from "../common/Avatar";
+import IdentityLink from "../common/IdentityLink";
+import TrustReceipt from "../common/TrustReceipt";
+import type { PublicProfile, Review, UserSkill } from "../../types";
+import WorkHistory from "./WorkHistory";
+import LevelBadge from "../Growth/LevelBadge";
+import ProvenanceTag from "../common/ProvenanceTag";
+import OfferGigModal from "../Workers/OfferGigModal";
+import VerificationBadges from "../Trust/VerificationBadges";
+import ReportUserButton from "../Trust/ReportUserButton";
 
 const WorkerProfile = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { role: viewerRole, profile: viewerProfile } = useAppSelector((state) => state.auth);
+  const { role: viewerRole, profile: viewerProfile } = useAppSelector(
+    (state) => state.auth,
+  );
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [skills, setSkills] = useState<UserSkill[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [offering, setOffering] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +52,11 @@ const WorkerProfile = () => {
     if (!id) return;
     setLoading(true);
     setNotFound(false);
-    Promise.all([userApi.getPublicProfile(id), userApi.getUserSkills(id), reviewApi.listReviews(id)])
+    Promise.all([
+      userApi.getPublicProfile(id),
+      userApi.getUserSkills(id),
+      reviewApi.listReviews(id),
+    ])
       .then(([profileData, skillsData, reviewsData]) => {
         setProfile(profileData);
         setSkills(skillsData);
@@ -59,33 +68,48 @@ const WorkerProfile = () => {
 
   if (loading) return <Skeleton active avatar paragraph={{ rows: 6 }} />;
   if (notFound || !profile)
-    return <Result status="404" title={t('common.profileNotFound')} />;
+    return <Result status="404" title={t("common.profileNotFound")} />;
 
   const showMessageButton =
-    viewerProfile && viewerProfile.id !== profile.id && canMessage(viewerRole, profile.role);
+    viewerProfile &&
+    viewerProfile.id !== profile.id &&
+    canMessage(viewerRole, profile.role);
 
   const avgRating =
-    reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+    reviews.length > 0
+      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+      : 0;
 
   return (
     <PageContainer
       title={profile.name}
       extra={
         showMessageButton && (
-          <Button
-            type="primary"
-            icon={<MessageOutlined />}
-            onClick={() =>
-              navigate('/notifications', {
-                state: { contact: { id: profile.id, name: profile.name } },
-              })
-            }
-          >
-            {t('profile.messageButton', { name: profile.name.split(' ')[0] })}
-          </Button>
+          <Space wrap>
+            {viewerRole === "client" && profile.role === "worker" && (
+              <Button icon={<SendOutlined />} onClick={() => setOffering(true)}>
+                {t("workers.offer")}
+              </Button>
+            )}
+            <Button
+              type="primary"
+              icon={<MessageOutlined />}
+              onClick={() =>
+                navigate("/notifications", {
+                  state: { contact: { id: profile.id, name: profile.name } },
+                })
+              }
+            >
+              {t("profile.messageButton", { name: profile.name.split(" ")[0] })}
+            </Button>
+          </Space>
         )
       }
     >
+      <OfferGigModal
+        worker={offering ? profile : null}
+        onClose={() => setOffering(false)}
+      />
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
           <Card>
@@ -95,25 +119,38 @@ const WorkerProfile = () => {
                 {profile.name}
               </Typography.Title>
               <Flex gap={6} wrap="wrap" justify="center">
-                <Tag style={{ margin: 0 }}>{t(`common.role.${profile.role}`)}</Tag>
-                {profile.role === 'worker' && <LevelBadge level={profile.level} />}
-                {profile.role === 'worker' && profile.availability && (
+                <Tag style={{ margin: 0 }}>
+                  {t(`common.role.${profile.role}`)}
+                </Tag>
+                {profile.role === "worker" && (
+                  <LevelBadge level={profile.level} />
+                )}
+                {profile.role === "worker" && profile.availability && (
                   <span
                     className={`isoko-status isoko-status--${
-                      profile.availability === 'available' ? 'success' : profile.availability === 'busy' ? 'warning' : 'neutral'
+                      profile.availability === "available"
+                        ? "success"
+                        : profile.availability === "busy"
+                          ? "warning"
+                          : "neutral"
                     }`}
                   >
                     {t(`growth.av_${profile.availability}`)}
-                    {profile.availability === 'away' && profile.availableFrom
+                    {profile.availability === "away" && profile.availableFrom
                       ? ` · ${new Date(profile.availableFrom).toLocaleDateString()}`
-                      : ''}
+                      : ""}
                   </span>
                 )}
               </Flex>
-              <VerificationBadges phone={profile.phoneVerified} email={profile.emailVerified} />
-              {viewerProfile && viewerProfile.id !== profile.id && viewerRole !== 'admin' && (
-                <ReportUserButton userId={profile.id} name={profile.name} />
-              )}
+              <VerificationBadges
+                phone={profile.phoneVerified}
+                email={profile.emailVerified}
+              />
+              {viewerProfile &&
+                viewerProfile.id !== profile.id &&
+                viewerRole !== "admin" && (
+                  <ReportUserButton userId={profile.id} name={profile.name} />
+                )}
               <Progress
                 type="dashboard"
                 size={120}
@@ -126,13 +163,20 @@ const WorkerProfile = () => {
                   profile.trustScoreBreakdown?.isProvisional ? (
                     // The long explanation lives in the breakdown below; inside
                     // the dial it would overflow the ring.
-                    <span style={{ fontSize: 24, color: 'var(--isoko-muted)' }}>—</span>
+                    <span style={{ fontSize: 24, color: "var(--isoko-muted)" }}>
+                      —
+                    </span>
                   ) : (
                     <span>
                       <span style={{ fontSize: 22, fontWeight: 700 }}>
                         {profile.trustScore.toFixed(1)}
                       </span>
-                      <span style={{ fontSize: 12, color: 'var(--isoko-muted)' }}> / 5</span>
+                      <span
+                        style={{ fontSize: 12, color: "var(--isoko-muted)" }}
+                      >
+                        {" "}
+                        / 5
+                      </span>
                     </span>
                   )
                 }
@@ -140,73 +184,96 @@ const WorkerProfile = () => {
               />
               <Typography.Text type="secondary">
                 {profile.trustScoreBreakdown?.isProvisional
-                  ? t('match.reason.trustProvisional')
-                  : t('trust.title')}
+                  ? t("match.reason.trustProvisional")
+                  : t("trust.title")}
               </Typography.Text>
             </Flex>
           </Card>
 
           {profile.trustScoreBreakdown && (
-            <Card title={t('trust.viewBreakdown')} style={{ marginTop: 16 }}>
+            <Card title={t("trust.viewBreakdown")} style={{ marginTop: 16 }}>
               <TrustReceipt breakdown={profile.trustScoreBreakdown} />
             </Card>
           )}
         </Col>
 
         <Col xs={24} md={16}>
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
             {profile.bio && (
-              <Card title={t('profile.about')}>
-                <Typography.Paragraph style={{ margin: 0 }}>{profile.bio}</Typography.Paragraph>
+              <Card title={t("profile.about")}>
+                <Typography.Paragraph style={{ margin: 0 }}>
+                  {profile.bio}
+                </Typography.Paragraph>
               </Card>
             )}
 
-            {profile.role === 'worker' && (profile.experienceSummary || profile.yearsExperience) && (
-              <Card title={t('experience.title')}>
-                {profile.yearsExperience != null && (
-                  <Tag style={{ marginBottom: profile.experienceSummary ? 10 : 0 }}>
-                    {t('experience.yearsSuffix', { count: profile.yearsExperience })}
-                  </Tag>
-                )}
-                {profile.experienceSummary && (
-                  <Typography.Paragraph style={{ margin: 0 }}>
-                    {profile.experienceSummary}
-                  </Typography.Paragraph>
-                )}
-              </Card>
-            )}
+            {profile.role === "worker" &&
+              (profile.experienceSummary || profile.yearsExperience) && (
+                <Card title={t("profile.experience")}>
+                  {profile.yearsExperience != null && (
+                    <Tag
+                      style={{
+                        marginBottom: profile.experienceSummary ? 10 : 0,
+                      }}
+                    >
+                      {t("experience.yearsSuffix", {
+                        count: profile.yearsExperience,
+                      })}
+                    </Tag>
+                  )}
+                  {profile.experienceSummary && (
+                    <Typography.Paragraph style={{ margin: 0 }}>
+                      {profile.experienceSummary}
+                    </Typography.Paragraph>
+                  )}
+                </Card>
+              )}
 
-            {profile.role === 'worker' && (
-              <Card title={t('profile.verifiedSkills')}>
+            {profile.role === "worker" && (
+              <Card title={t("profile.verifiedSkills")}>
                 {skills.length === 0 ? (
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description={t('profile.noVerifiedSkills')}
+                    description={t("profile.noVerifiedSkills")}
                   />
                 ) : (
-                  <Space size={[8, 8]} wrap>
+                  <Flex vertical gap={10}>
                     {skills.map((us) => (
-                      <Tag key={us.id} style={{ padding: '5px 12px', fontSize: 13, borderRadius: 4 }}>
-                        {us.skill?.name}
-                      </Tag>
+                      <Flex
+                        key={us.id}
+                        justify="space-between"
+                        align="center"
+                        gap="4px 12px"
+                        wrap="wrap"
+                      >
+                        <Typography.Text>{us.skill?.name}</Typography.Text>
+                        {us.provenance && (
+                          <ProvenanceTag provenance={us.provenance} />
+                        )}
+                      </Flex>
                     ))}
-                  </Space>
+                  </Flex>
                 )}
               </Card>
             )}
 
-            {profile.role === 'worker' && <WorkHistory workerId={profile.id} />}
+            {profile.role === "worker" && <WorkHistory workerId={profile.id} />}
 
             <Card
               title={
                 <Flex align="center" gap={8}>
-                  <span>{t('profile.reviews', { count: reviews.length })}</span>
-                  {reviews.length > 0 && <Rate disabled allowHalf value={avgRating} />}
+                  <span>{t("profile.reviews", { count: reviews.length })}</span>
+                  {reviews.length > 0 && (
+                    <Rate disabled allowHalf value={avgRating} />
+                  )}
                 </Flex>
               }
             >
               {reviews.length === 0 ? (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('profile.noReviews')} />
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={t("profile.noReviews")}
+                />
               ) : (
                 <List
                   dataSource={reviews}
@@ -214,21 +281,32 @@ const WorkerProfile = () => {
                     <List.Item>
                       {/* One identity per review: author and date on top, then the
                           rating and comment. */}
-                      <div style={{ width: '100%' }}>
+                      <div style={{ width: "100%" }}>
                         <Flex justify="space-between" align="center" gap={12}>
                           <div style={{ minWidth: 0 }}>
                             {review.author ? (
-                              <IdentityLink id={review.author.id} name={review.author.name} size={28} />
+                              <IdentityLink
+                                id={review.author.id}
+                                name={review.author.name}
+                                size={28}
+                              />
                             ) : null}
                           </div>
-                          <Typography.Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
+                          <Typography.Text
+                            type="secondary"
+                            style={{ fontSize: 12, flexShrink: 0 }}
+                          >
                             {new Date(review.createdAt).toLocaleDateString()}
                           </Typography.Text>
                         </Flex>
                         <div style={{ paddingInlineStart: 36, marginTop: 4 }}>
-                          <Rate disabled value={review.rating} style={{ fontSize: 13 }} />
+                          <Rate
+                            disabled
+                            value={review.rating}
+                            style={{ fontSize: 13 }}
+                          />
                           {review.comment && (
-                            <Typography.Paragraph style={{ margin: '6px 0 0' }}>
+                            <Typography.Paragraph style={{ margin: "6px 0 0" }}>
                               {review.comment}
                             </Typography.Paragraph>
                           )}

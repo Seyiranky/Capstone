@@ -161,7 +161,14 @@ export const getUserSkills = async (req: Request, res: Response): Promise<void> 
     include: [{ model: Skill, as: 'skill' }],
     order: [['createdAt', 'ASC']],
   });
-  res.json(userSkills);
+  // The research control arm is not told how skills were proven (RQ3), here
+  // as on ranked lists and in the worker directory.
+  const viewer = await User.findByPk(authed(req).id, { attributes: ['experimentArm'] });
+  res.json(
+    viewer?.experimentArm === 'plain'
+      ? userSkills.map((us) => ({ ...us.toJSON(), provenance: null, provenanceDetail: null }))
+      : userSkills,
+  );
 };
 
 export const exportMyData = async (req: Request, res: Response): Promise<void> => {
