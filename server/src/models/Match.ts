@@ -14,6 +14,8 @@ import type { Gig } from './Gig';
 import type { Review } from './Review';
 import type { Dispute } from './Dispute';
 import type { JobPhoto } from './JobPhoto';
+import type { MatchMember } from './MatchMember';
+import type { Payout } from './Payout';
 import type { Transaction } from './Transaction';
 import type { User } from './User';
 
@@ -51,6 +53,8 @@ export class Match extends Model<InferAttributes<Match>, InferCreationAttributes
   declare reviews?: NonAttribute<Review[]>;
   declare disputes?: NonAttribute<Dispute[]>;
   declare photos?: NonAttribute<JobPhoto[]>;
+  declare members?: NonAttribute<MatchMember[]>;
+  declare payouts?: NonAttribute<Payout[]>;
 
   static associate(models: Db) {
     Match.belongsTo(models.Gig, { foreignKey: 'gigId', as: 'gig' });
@@ -59,6 +63,8 @@ export class Match extends Model<InferAttributes<Match>, InferCreationAttributes
     Match.hasMany(models.Review, { foreignKey: 'matchId', as: 'reviews' });
     Match.hasMany(models.Dispute, { foreignKey: 'matchId', as: 'disputes' });
     Match.hasMany(models.JobPhoto, { foreignKey: 'matchId', as: 'photos' });
+    Match.hasMany(models.MatchMember, { foreignKey: 'matchId', as: 'members' });
+    Match.hasMany(models.Payout, { foreignKey: 'matchId', as: 'payouts' });
   }
 }
 

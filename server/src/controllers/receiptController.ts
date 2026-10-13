@@ -1,9 +1,11 @@
 import type { Request, Response } from 'express';
-import { Gig, Match, Skill, Transaction, User } from '../models';
+import { Gig, Match, Payout, Skill, Transaction, User } from '../models';
 import { pathParam } from '../lib/query';
 
-type ReceiptRow = Transaction & {
-  match?: (Match & { gig?: (Gig & { client?: User | null; skill?: Skill | null }) | null; worker?: User | null }) | null;
+type ReceiptRow = Payout & {
+  transaction?: Transaction | null;
+  user?: User | null;
+  match?: (Match & { gig?: (Gig & { client?: User | null; skill?: Skill | null }) | null }) | null;
 };
 
 /**
@@ -12,13 +14,16 @@ type ReceiptRow = Transaction & {
  * Public on purpose: a lender or a SACCO given a printed receipt or an income
  * statement line checks it here, against Isoko's own record, without an
  * account. It shows names and the job, never contact details, and the number
- * is random so receipts cannot be enumerated.
+ * is random so receipts cannot be enumerated. On a crew job each person has
+ * their own receipt for their own share.
  */
 export const getReceipt = async (req: Request, res: Response): Promise<void> => {
   const number = pathParam(req, 'number').toUpperCase();
-  const tx = (await Transaction.findOne({
+  const payout = (await Payout.findOne({
     where: { receiptNumber: number },
     include: [
+      { model: Transaction, as: 'transaction' },
+      { model: User, as: 'user', attributes: ['name'] },
       {
         model: Match,
         as: 'match',
@@ -31,28 +36,28 @@ export const getReceipt = async (req: Request, res: Response): Promise<void> => 
               { model: Skill, as: 'skill', attributes: ['name'] },
             ],
           },
-          { model: User, as: 'worker', attributes: ['name'] },
         ],
       },
     ],
   })) as ReceiptRow | null;
 
-  if (!tx || tx.escrowStatus !== 'released') {
+  if (!payout || payout.transaction?.escrowStatus !== 'released') {
     res.status(404).json({ message: 'No receipt with that number' });
     return;
   }
 
   res.json({
-    number: tx.receiptNumber,
-    amount: Number(tx.releasedAmount ?? tx.amount),
-    currency: tx.currency,
-    releasedAt: tx.releasedAt,
-    paymentReference: tx.reference,
-    provider: tx.provider,
-    completedVia: tx.match?.completedVia ?? null,
-    gig: tx.match?.gig?.title ?? null,
-    skill: tx.match?.gig?.skill?.name ?? null,
-    worker: tx.match?.worker?.name ?? null,
-    client: tx.match?.gig?.client?.name ?? null,
+    number: payout.receiptNumber,
+    amount: Number(payout.amount),
+    currency: payout.currency,
+    releasedAt: payout.releasedAt,
+    role: payout.role,
+    paymentReference: payout.transaction.reference,
+    provider: payout.transaction.provider,
+    completedVia: payout.match?.completedVia ?? null,
+    gig: payout.match?.gig?.title ?? null,
+    skill: payout.match?.gig?.skill?.name ?? null,
+    worker: payout.user?.name ?? null,
+    client: payout.match?.gig?.client?.name ?? null,
   });
 };

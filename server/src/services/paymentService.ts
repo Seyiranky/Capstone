@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { Match, Transaction, sequelize } from '../models';
 import { escrowStateOnFunding, escrowTimestampField, generateReceiptNumber } from './escrowRules';
+import * as payoutService from './payoutService';
 import simulatedAdapter from './payments/simulatedAdapter';
 import type { PaymentAdapter, PaymentCallback } from './payments/adapter';
 import type { TransactionStatus } from '../types/domain';
@@ -154,6 +155,9 @@ export const applyCallback = async ({
       },
       { transaction: t },
     );
+    // Money collected after the job was done goes straight out, so it is split
+    // into payouts here exactly as a release would.
+    if (escrow.escrowStatus === 'released') await payoutService.createFor(transaction, t);
 
     return { ok: true, duplicate: false, transaction };
   });

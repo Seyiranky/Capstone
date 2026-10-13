@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import type { Request } from 'express';
 import { Dispute, Gig, Match, Transaction, sequelize } from '../models';
 import * as paymentService from './paymentService';
+import * as payoutService from './payoutService';
 import * as trustScoreService from './trustScoreService';
 import * as competenceService from './competenceService';
 import notify from '../lib/notify';
@@ -99,6 +100,7 @@ const settleEscrow = async (
       },
       { transaction: t },
     );
+    if (to === 'released') await payoutService.createFor(tx, t);
     return tx;
   });
 

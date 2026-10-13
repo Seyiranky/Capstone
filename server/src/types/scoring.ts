@@ -140,6 +140,8 @@ export interface ProvenanceDetail {
   sightedCertificates: number;
   completedJobs: number;
   reviewedJobs: number;
+  /** Paid jobs where a verified lead endorsed the holder as their apprentice. */
+  supervisedJobs?: number;
   jobsForWorkEarned: number;
   computedAt: string;
   trigger: string | null;

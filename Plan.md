@@ -188,18 +188,31 @@ Findings so far:
   ran again on 2 Oct and inserted copies). The seeder now inserts only missing categories.
   The four unused 2 Oct copies are still in the dev database, awaiting a decision to delete.
 
-### Phase 7 — Apprentice seats (stretch)
+### Phase 7 — Apprentice seats (in progress, 14 Oct 2026)
 *Not offered by any platform surveyed.*
 
-- A verified worker can add one apprentice to a gig they've accepted.
-- When the job is released, the senior worker's endorsement counts as **one** peer review
-  toward the apprentice's skill task. It's capped at one per skill, and the senior must have
-  passed that skill.
+**Changed from the first draft.** The draft counted a senior's endorsement as one peer
+review. But a senior who has worked a job with the apprentice is exactly the tie that
+disqualifies reviewers, and the collusion audit flags it. Counting it would weaken the
+verification the defence rests on. Instead:
 
-### Phase 8 — Crew gigs (stretch)
+- A worker who is verified in the gig's skill category can add one apprentice to a job they
+  have accepted, and may give them a share of the pay, up to 30%. The apprentice accepts or
+  declines.
+- When the job is paid, the senior can endorse the apprentice. An endorsement is its own
+  evidence tier, **supervised**, between self-declared and certificate-sighted: real (a paid
+  job, alongside a verified worker) but not independent. It never counts as a peer review.
+- Apprentices get their own payout, receipt and work-history entry.
+
+### Phase 8 — Crew gigs (in progress, 14 Oct 2026)
 *Borrowed from:* Upwork agencies.
 
-- Workers apply as a crew, with each member's share agreed up front. Escrow releases in parts.
+- A worker applies with named crew members and agreed shares (the lead keeps at least 10%).
+  The client sees the team before approving. On acceptance each member is invited and joins
+  or declines; a decliner's share stays with the lead.
+- **Payouts.** Release now creates one payout per person (lead, crew, apprentice), each with
+  its own receipt. Income statements, wallets, work history and paid-job counts read payouts,
+  so each person sees only their share. Existing payouts are backfilled one-per-job.
 
 ### Phase 9 — USSD (stretch)
 *Borrowed from:* Ayambe, M-Pesa menus, SA Youth zero-rating.

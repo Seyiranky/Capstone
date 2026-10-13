@@ -8,7 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
-import type { GigApplicationStatus, RejectionReason } from '../types/domain';
+import type { CrewEntry, GigApplicationStatus, RejectionReason } from '../types/domain';
 import type { ScoredPair } from '../types/scoring';
 import type { Gig } from './Gig';
 import type { User } from './User';
@@ -34,6 +34,8 @@ export class GigApplication extends Model<
   declare quoteNote: string | null;
   declare rejectionReason: RejectionReason | null;
   declare rejectionNote: string | null;
+  /** Crew named by the applying worker, with agreed shares. Null for a solo application. */
+  declare crew: CrewEntry[] | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -90,6 +92,7 @@ export const initGigApplication = (sequelize: Sequelize) => {
         validate: { isIn: [['skillLevel', 'distance', 'timing', 'choseAnother', 'other']] },
       },
       rejectionNote: { type: DataTypes.STRING(280), allowNull: true },
+      crew: { type: DataTypes.JSONB, allowNull: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

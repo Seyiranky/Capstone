@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Op, type WhereOptions } from 'sequelize';
 import jwt from 'jsonwebtoken';
-import { User, Transaction, Match, Gig, Skill } from '../models';
+import { User, Transaction, Match, Gig, Skill, Payout } from '../models';
 import { passportSigningSecret } from '../config/env';
 
 const monthKey = (date: Date) => date.toISOString().slice(0, 7);
@@ -74,8 +74,9 @@ interface StatementClaims extends jwt.JwtPayload {
  *
  * The problem this addresses is that informal income is cash and undocumented,
  * so mobile-money micro-finance has no history to underwrite against. Only
- * released transactions count: an initiated payment is not income, and money
- * still held in escrow is not yet the worker's.
+ * released payouts count: an initiated payment is not income, money still held
+ * in escrow is not yet the worker's, and on a crew job each person's share is
+ * theirs alone.
  */
 export const build = async (
   userId: string,
@@ -84,45 +85,45 @@ export const build = async (
   const user = await User.findByPk(userId);
   if (!user) return null;
 
-  const where: WhereOptions & {
-    status: string;
-    escrowStatus: string;
-    updatedAt?: Record<symbol, unknown>;
-  } = {
-    status: 'confirmed',
-    escrowStatus: 'released',
-  };
+  const where: WhereOptions & { userId: string; releasedAt?: Record<symbol, unknown> } = { userId };
   if (from || to) {
     const range: Record<symbol, unknown> = {};
     if (from) range[Op.gte] = from;
     if (to) range[Op.lte] = to;
-    where.updatedAt = range;
+    where.releasedAt = range;
   }
 
-  const transactions = await Transaction.findAll({
+  // Payouts, not transactions: on a crew job each person's statement shows their
+  // own share. The transaction must still be settled and released, so a payment
+  // later reversed or reopened drops out.
+  const payouts = await Payout.findAll({
     where,
     include: [
+      {
+        model: Transaction,
+        as: 'transaction',
+        required: true,
+        where: { status: 'confirmed', escrowStatus: 'released' },
+      },
       {
         model: Match,
         as: 'match',
         required: true,
-        where: { workerId: userId },
         include: [{ model: Gig, as: 'gig', include: [{ model: Skill, as: 'skill' }] }],
       },
     ],
-    order: [['updatedAt', 'ASC']],
+    order: [['releasedAt', 'ASC']],
   });
 
-  const entries: StatementEntry[] = transactions.map((t) => ({
-    date: t.updatedAt,
-    // A split dispute released only part of the job's money.
-    amount: Number(t.releasedAmount ?? t.amount),
-    currency: 'RWF',
-    provider: t.provider,
-    reference: t.reference,
-    receipt: t.receiptNumber,
-    gig: t.match?.gig?.title ?? null,
-    category: t.match?.gig?.skill?.category ?? null,
+  const entries: StatementEntry[] = payouts.map((p) => ({
+    date: p.releasedAt,
+    amount: Number(p.amount),
+    currency: p.currency,
+    provider: p.transaction?.provider ?? 'simulated-momo',
+    reference: p.transaction?.reference ?? '',
+    receipt: p.receiptNumber,
+    gig: p.match?.gig?.title ?? null,
+    category: p.match?.gig?.skill?.category ?? null,
   }));
 
   const total = entries.reduce((sum, e) => sum + e.amount, 0);

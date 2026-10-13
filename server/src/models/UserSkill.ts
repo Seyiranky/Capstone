@@ -73,7 +73,7 @@ export const initUserSkill = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'self_declared',
-        validate: { isIn: [['self_declared', 'document_sighted', 'peer_reviewed', 'work_earned']] },
+        validate: { isIn: [['self_declared', 'supervised', 'document_sighted', 'peer_reviewed', 'work_earned']] },
       },
       provenanceDetail: {
         type: DataTypes.JSONB,

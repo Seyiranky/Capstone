@@ -42,7 +42,7 @@ const completedJob = async ({ amount, title }: { amount: number; title: string }
     acceptedAt: new Date(),
     respondedAt: new Date(),
   });
-  await db.Transaction.create({
+  const tx = await db.Transaction.create({
     matchId: match.id,
     amount,
     status: 'confirmed',
@@ -51,6 +51,16 @@ const completedJob = async ({ amount, title }: { amount: number; title: string }
     releasedAt: new Date(),
     provider: 'simulated-momo',
     reference: `MOMO-SIM-${Math.random().toString(36).slice(2)}`,
+  });
+  // Income is read from payouts: one per person paid, here just the worker.
+  await db.Payout.create({
+    transactionId: tx.id,
+    matchId: match.id,
+    userId: users.worker.id,
+    role: 'lead',
+    amount,
+    receiptNumber: `ISK-TEST-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+    releasedAt: new Date(),
   });
   return match;
 };

@@ -76,6 +76,14 @@ const ABANDONMENTS = [
   { worker: 'patrick', client: 'samuel', title: 'Rebuild an old shopfront site', amount: 45000, daysAgo: 21 },
 ];
 
+// Same shape as generateReceiptNumber in src/services/escrowRules.ts; seeders
+// are plain JS and cannot import the TypeScript source.
+const RECEIPT_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const receiptNumberFor = () => {
+  const chars = [...require('crypto').randomBytes(8)].map((b) => RECEIPT_ALPHABET[b % 32]).join('');
+  return `ISK-${chars.slice(0, 4)}-${chars.slice(4)}`;
+};
+
 module.exports = {
   async up(queryInterface) {
     const [skills] = await queryInterface.sequelize.query('SELECT id, category FROM "Skills";');
@@ -89,6 +97,7 @@ module.exports = {
     const gigs = [];
     const matches = [];
     const transactions = [];
+    const payouts = [];
     const reviews = [];
 
     const addJob = ({ workerKey, clientKey, category, title, amount, daysAgo, status, rating, origin, declineReason }) => {
@@ -133,8 +142,24 @@ module.exports = {
 
       if (status === 'completed') {
         const providerReference = `MOMO-SIM-${randomUUID()}`;
-        transactions.push({
+        const transactionId = randomUUID();
+        const receiptNumber = receiptNumberFor();
+        payouts.push({
           id: randomUUID(),
+          transactionId,
+          matchId,
+          userId: workerId,
+          role: 'lead',
+          amount,
+          currency: 'RWF',
+          receiptNumber,
+          releasedAt: finishedAt,
+          createdAt: finishedAt,
+          updatedAt: finishedAt,
+        });
+        transactions.push({
+          id: transactionId,
+          receiptNumber,
           matchId,
           amount,
           currency: 'RWF',
@@ -211,6 +236,7 @@ module.exports = {
     await queryInterface.bulkInsert('Gigs', gigs);
     await queryInterface.bulkInsert('Matches', matches);
     if (transactions.length) await queryInterface.bulkInsert('Transactions', transactions);
+    if (payouts.length) await queryInterface.bulkInsert('Payouts', payouts);
     if (reviews.length) await queryInterface.bulkInsert('Reviews', reviews);
   },
 

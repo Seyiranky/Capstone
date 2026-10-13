@@ -79,7 +79,23 @@ export type VerificationStatus = 'unverified' | 'pending' | 'verified';
  * credibility. `document_sighted` means a rotated reviewer *saw* the document;
  * it does not mean the award behind it is genuine, and no copy should imply so.
  */
-export type Provenance = 'self_declared' | 'document_sighted' | 'peer_reviewed' | 'work_earned';
+/**
+ * How a skill claim was established. `supervised` sits just above self-declared:
+ * a verified worker endorsed the holder after a paid job together. Real, but not
+ * independent, so it is never treated as a peer review.
+ */
+export type Provenance = 'self_declared' | 'supervised' | 'document_sighted' | 'peer_reviewed' | 'work_earned';
+
+/** MatchMember.role — people on a job besides its lead worker. */
+export type MemberRole = 'crew' | 'apprentice';
+export type MemberStatus = 'invited' | 'joined' | 'declined';
+export type PayoutRole = 'lead' | MemberRole;
+
+/** A crew member named on an application, with their agreed share of the pay. */
+export interface CrewEntry {
+  userId: string;
+  sharePercent: number;
+}
 
 /** SkillTask.status */
 export type SkillTaskStatus = 'pending' | 'approved' | 'rejected';

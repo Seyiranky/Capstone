@@ -1,4 +1,4 @@
-import { UserSkill, SkillTask, Match, Gig, Review } from '../models';
+import { UserSkill, SkillTask, Match, MatchMember, Gig, Review, Skill } from '../models';
 import type { Provenance } from '../types/domain';
 import type { CompetenceResult, ProvenanceDetail } from '../types/scoring';
 
@@ -18,6 +18,9 @@ import type { CompetenceResult, ProvenanceDetail } from '../types/scoring';
  */
 const TIERS: Record<Provenance, number> = {
   self_declared: 0.15,
+  // Endorsed by a verified worker after a paid job together: more than a claim,
+  // well short of an independent check, because the endorser is not independent.
+  supervised: 0.3,
   document_sighted: 0.5,
   peer_reviewed: 0.8,
   work_earned: 1,
@@ -25,6 +28,7 @@ const TIERS: Record<Provenance, number> = {
 
 const TIER_ORDER = [
   'self_declared',
+  'supervised',
   'document_sighted',
   'peer_reviewed',
   'work_earned',
@@ -51,7 +55,8 @@ export const recalculate = async (
   const userSkill = await UserSkill.findOne({ where: { userId, skillId } });
   if (!userSkill) return null;
 
-  const [approvedDemonstrations, sightedCertificates, completedJobs] = await Promise.all([
+  const skill = await Skill.findByPk(skillId, { attributes: ['category'] });
+  const [approvedDemonstrations, sightedCertificates, completedJobs, supervisedJobs] = await Promise.all([
     SkillTask.count({
       where: { workerId: userId, skillId, status: 'approved', kind: 'demonstration' },
     }),
@@ -62,6 +67,28 @@ export const recalculate = async (
       where: { workerId: userId, status: 'completed' },
       include: [{ model: Gig, as: 'gig', where: { skillId }, required: true }],
     }),
+    // Paid jobs in this trade where the lead endorsed them as an apprentice.
+    skill
+      ? MatchMember.count({
+          where: { userId, role: 'apprentice', endorsement: 'endorsed' },
+          include: [
+            {
+              model: Match,
+              as: 'match',
+              required: true,
+              where: { status: 'completed' },
+              include: [
+                {
+                  model: Gig,
+                  as: 'gig',
+                  required: true,
+                  include: [{ model: Skill, as: 'skill', required: true, where: { category: skill.category } }],
+                },
+              ],
+            },
+          ],
+        })
+      : 0,
   ]);
 
   // Only jobs the client actually reviewed count toward work_earned: an
@@ -88,6 +115,8 @@ export const recalculate = async (
     provenance = 'peer_reviewed';
   } else if (sightedCertificates > 0) {
     provenance = 'document_sighted';
+  } else if (supervisedJobs > 0) {
+    provenance = 'supervised';
   }
 
   // Never step down from a tier already recorded. Evidence can go stale, but a
@@ -101,6 +130,7 @@ export const recalculate = async (
     sightedCertificates,
     completedJobs,
     reviewedJobs,
+    supervisedJobs,
     jobsForWorkEarned: JOBS_FOR_WORK_EARNED,
     computedAt: new Date().toISOString(),
     trigger,

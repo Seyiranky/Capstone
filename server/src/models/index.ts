@@ -8,10 +8,12 @@ import { GigApplication, initGigApplication } from './GigApplication';
 import { IdempotencyKey, initIdempotencyKey } from './IdempotencyKey';
 import { JobPhoto, initJobPhoto } from './JobPhoto';
 import { Match, initMatch } from './Match';
+import { MatchMember, initMatchMember } from './MatchMember';
 import { MatchWeightProfile, initMatchWeightProfile } from './MatchWeightProfile';
 import { Message, initMessage } from './Message';
 import { Notification, initNotification } from './Notification';
 import { NotificationDelivery, initNotificationDelivery } from './NotificationDelivery';
+import { Payout, initPayout } from './Payout';
 import { Review, initReview } from './Review';
 import { Skill, initSkill } from './Skill';
 import { SkillPassport, initSkillPassport } from './SkillPassport';
@@ -83,10 +85,12 @@ initGigApplication(sequelize);
 initIdempotencyKey(sequelize);
 initJobPhoto(sequelize);
 initMatch(sequelize);
+initMatchMember(sequelize);
 initMatchWeightProfile(sequelize);
 initMessage(sequelize);
 initNotification(sequelize);
 initNotificationDelivery(sequelize);
+initPayout(sequelize);
 initReview(sequelize);
 initSkill(sequelize);
 initSkillPassport(sequelize);
@@ -110,10 +114,12 @@ export const models = {
   IdempotencyKey,
   JobPhoto,
   Match,
+  MatchMember,
   MatchWeightProfile,
   Message,
   Notification,
   NotificationDelivery,
+  Payout,
   Review,
   Skill,
   SkillPassport,
@@ -148,10 +154,12 @@ export {
   IdempotencyKey,
   JobPhoto,
   Match,
+  MatchMember,
   MatchWeightProfile,
   Message,
   Notification,
   NotificationDelivery,
+  Payout,
   Review,
   Skill,
   SkillPassport,
