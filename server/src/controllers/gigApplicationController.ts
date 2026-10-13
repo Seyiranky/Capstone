@@ -7,6 +7,7 @@ import { authed } from '../lib/authed';
 import { pathParam, stringParam } from '../lib/query';
 import { QUOTE_MAX, QUOTE_MIN, QUOTE_NOTE_MAX } from '../services/escrowRules';
 import { REJECTION_REASONS, type RejectionReason } from '../types/domain';
+import * as teamService from '../services/teamService';
 
 /** What the worker is told, with the next step where there is one. */
 const REASON_TEXT: Record<RejectionReason, string> = {
@@ -27,7 +28,7 @@ type LoadedApplication = GigApplication & { gig?: Gig | null };
 
 export const applyToGig = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
-  const { gigId, occurredAt, queuedOffline, quoteAmount, quoteNote } = req.body ?? {};
+  const { gigId, occurredAt, queuedOffline, quoteAmount, quoteNote, crew: rawCrew } = req.body ?? {};
   if (!gigId) {
     res.status(400).json({ message: 'gigId is required' });
     return;
@@ -46,6 +47,7 @@ export const applyToGig = async (req: Request, res: Response): Promise<void> => 
     quote = Math.round(quote);
   }
   const note = typeof quoteNote === 'string' ? quoteNote.trim().slice(0, QUOTE_NOTE_MAX) || null : null;
+  const crew = await teamService.validateCrew(caller.id, rawCrew);
 
   const gig = await Gig.findByPk(gigId);
   if (!gig) {
@@ -101,6 +103,7 @@ export const applyToGig = async (req: Request, res: Response): Promise<void> => 
     weightProfileId: scored.weightProfile.id,
     quoteAmount: quote,
     quoteNote: note,
+    crew,
   });
 
   const admins = await User.findAll({ where: { role: 'admin' } });
@@ -141,7 +144,21 @@ export const listApplications = async (req: Request, res: Response): Promise<voi
       ? applications.filter((application) => application.gig?.clientId === caller.id)
       : applications;
 
-  res.json(visible);
+  // Crew is stored as ids and shares; the reviewer needs to see who they are.
+  const crewIds = [...new Set(visible.flatMap((a) => (a.crew ?? []).map((c) => c.userId)))];
+  const people = crewIds.length
+    ? await User.findAll({ where: { id: crewIds }, attributes: ['id', 'name', 'trustScore', 'reviewCount'] })
+    : [];
+  const byId = new Map(people.map((p) => [p.id, p]));
+  res.json(
+    visible.map((a) => ({
+      ...a.toJSON(),
+      crew: a.crew?.map((c) => {
+        const person = byId.get(c.userId);
+        return { ...c, name: person?.name ?? null, trustScore: person?.trustScore ?? null, reviewCount: person?.reviewCount ?? 0 };
+      }) ?? null,
+    })),
+  );
 };
 
 export const reviewApplication = async (req: Request, res: Response): Promise<void> => {

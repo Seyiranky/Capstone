@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import {
   User,
@@ -173,4 +174,31 @@ export const exportMyData = async (req: Request, res: Response): Promise<void> =
 /** A worker's paid jobs, with ratings and photos of the work, for their profile. */
 export const getWorkHistory = async (req: Request, res: Response): Promise<void> => {
   res.json(await workHistoryService.forWorker(pathParam(req, 'id')));
+};
+
+/**
+ * Finds workers by name, for naming a crew or choosing an apprentice.
+ *
+ * Returns only what picking someone needs: name, trust and review count. Never
+ * contact details, and never suspended accounts.
+ */
+export const searchWorkers = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const q = String(req.query.q ?? '').trim();
+  if (q.length < 2) {
+    res.json([]);
+    return;
+  }
+  const workers = await User.findAll({
+    where: {
+      role: 'worker',
+      status: 'active',
+      id: { [Op.ne]: caller.id },
+      name: { [Op.iLike]: `%${q.replace(/[%_]/g, '')}%` },
+    },
+    attributes: ['id', 'name', 'trustScore', 'reviewCount'],
+    order: [['name', 'ASC']],
+    limit: 10,
+  });
+  res.json(workers);
 };

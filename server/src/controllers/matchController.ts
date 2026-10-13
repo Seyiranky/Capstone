@@ -3,7 +3,8 @@ import type { Request, Response } from 'express';
 import type { Includeable } from 'sequelize';
 import fs from 'fs';
 import crypto from 'crypto';
-import { Match, Gig, User, Transaction, Review, GigApplication, JobPhoto } from '../models';
+import { Match, MatchMember, Gig, User, Transaction, Review, GigApplication, JobPhoto } from '../models';
+import * as teamService from '../services/teamService';
 import { MAX_JOB_PHOTOS } from '../middleware/upload';
 import { MAX_CODE_ATTEMPTS, amountToCollect } from '../services/escrowRules';
 import * as trustScoreService from '../services/trustScoreService';
@@ -19,13 +20,25 @@ const MATCH_INCLUDES: Includeable[] = [
   { model: Transaction, as: 'transaction' },
   { model: Review, as: 'reviews' },
   { model: JobPhoto, as: 'photos', attributes: ['id', 'url', 'sha256', 'createdAt'] },
+  {
+    model: MatchMember,
+    as: 'members',
+    include: [{ model: User, as: 'user', attributes: ['id', 'name', 'trustScore', 'reviewCount'] }],
+  },
 ];
 
 export const listMatches = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
   let matches: Match[];
   if (caller.role === 'worker') {
-    matches = await Match.findAll({ where: { workerId: caller.id }, include: MATCH_INCLUDES });
+    // Jobs they lead, and jobs they are on as crew or apprentice.
+    const memberOf = (
+      await MatchMember.findAll({ where: { userId: caller.id }, attributes: ['matchId'] })
+    ).map((m) => m.matchId);
+    matches = await Match.findAll({
+      where: { [Op.or]: [{ workerId: caller.id }, { id: memberOf }] },
+      include: MATCH_INCLUDES,
+    });
   } else if (caller.role === 'admin') {
     matches = await Match.findAll({ include: MATCH_INCLUDES });
   } else {
@@ -161,6 +174,8 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
     await gig.update({ status: 'matched' });
     // The client funds the job now, and the money waits in escrow.
     await escrowService.fund(match, amountToCollect(match.agreedAmount, gig.budget));
+    // Anyone named on the lead's crew is now asked to join.
+    await teamService.inviteCrew(req, Object.assign(match, { gig }));
 
     // The gig is now taken: withdraw the other invitations and applications.
     // These carry no respondedAt, so they are excluded from acceptance-rate

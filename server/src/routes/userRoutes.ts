@@ -8,6 +8,8 @@ const router = express.Router();
 router.get('/me', verifyToken, userController.getProfile);
 router.put('/me', verifyToken, userController.updateProfile);
 router.get('/me/export', verifyToken, userController.exportMyData);
+// Before '/:id', which would otherwise take 'search' as an id.
+router.get('/search', verifyToken, userController.searchWorkers);
 // Distinct from the export above: that is a data dump for the holder, this is
 // a signed attestation of earnings intended for a lender.
 router.get('/me/income-statement', verifyToken, passportController.incomeStatement);
