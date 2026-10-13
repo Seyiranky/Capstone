@@ -98,6 +98,11 @@ const ReceiptPage = () => {
           {receipt.role && receipt.role !== 'lead' ? ` (${t(`team.roleLabel_${receipt.role}`)})` : ''}
         </Row>
         <Row label={t('receipt.client')}>{receipt.client ?? '—'}</Row>
+        {receipt.cover && (
+          <Row label={t('receipt.cover')}>
+            {receipt.cover.policyNumber} · {receipt.cover.premium.toLocaleString()} RWF
+          </Row>
+        )}
         {receipt.completedVia && (
           <Row label={t('receipt.method')}>{t(`escrow.completedVia_${receipt.completedVia}`)}</Row>
         )}

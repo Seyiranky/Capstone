@@ -328,7 +328,7 @@ Built in this order, each committed with its tests:
    least one paid job may vote, one vote each; counts are public on `/fairwork` while the poll is
    open; when it closes an admin must publish what was done about the result. Fairwork's
    "workers vote on platform rules" check counts polls decided this way.
-2. **Job Cover** (item 12). For on-site trades the client can add accident cover when funding
+2. ✓ **Job Cover** (item 12; done 14 Oct: offered at pay-in, card on the job, policy on the receipt, admin under Money › Job Cover). For on-site trades the client can add accident cover when funding
    escrow: 2% of the price (minimum 300 RWF), covering medical costs up to 300,000 RWF for the
    job's day. Simulated insurer; policy number on the receipt. The covered worker files a claim
    from the job card within 7 days; an admin approves or declines it with a reason.

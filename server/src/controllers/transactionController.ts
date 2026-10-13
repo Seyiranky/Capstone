@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express';
-import { Match, Gig, Transaction, User } from '../models';
+import { Match, Gig, Skill, Transaction, User } from '../models';
 import notify from '../lib/notify';
 import { paymentNotice } from '../lib/paymentNotice';
+import * as coverService from '../services/coverService';
 import * as paymentService from '../services/paymentService';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
@@ -61,7 +62,7 @@ type TransactionWithMatch = Transaction & { match?: MatchWithGig | null };
 export const confirmTransaction = async (req: Request, res: Response): Promise<void> => {
   const user = authed(req);
   const transaction = (await Transaction.findByPk(pathParam(req, 'id'), {
-    include: [{ model: Match, as: 'match', include: [{ model: Gig, as: 'gig' }] }],
+    include: [{ model: Match, as: 'match', include: [{ model: Gig, as: 'gig', include: [{ model: Skill, as: 'skill' }] }] }],
   })) as TransactionWithMatch | null;
   if (!transaction) {
     res.status(404).json({ message: 'Transaction not found' });
@@ -87,6 +88,11 @@ export const confirmTransaction = async (req: Request, res: Response): Promise<v
       return;
     }
     await transaction.update({ safetyNetContribution: Math.round(contribution) });
+  }
+
+  // Job Cover for on-site work, bought with the payment (lib/jobCover).
+  if (req.body?.cover === true) {
+    await coverService.buy(transaction, transaction.match as Parameters<typeof coverService.buy>[1], user.id);
   }
 
   const confirmed = await paymentService.confirm(transaction.id);

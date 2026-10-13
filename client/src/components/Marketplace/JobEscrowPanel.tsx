@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { App, Button, Flex, Input, Segmented, Typography } from 'antd';
+import { App, Button, Checkbox, Flex, Input, Segmented, Typography } from 'antd';
 import { LockOutlined, SafetyCertificateOutlined, WarningOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import OpenDisputeModal from '../Disputes/OpenDisputeModal';
 import { isAxiosError } from 'axios';
 import { matchApi } from '../../api/matchApi';
 import { transactionApi } from '../../api/transactionApi';
+import { coverApi, type CoverStatus } from '../../api/coverApi';
 import { AUTO_RELEASE_AFTER_MS, MAX_CODE_ATTEMPTS } from '../../lib/money';
 import type { Dispute, Match } from '../../types';
 
@@ -40,6 +41,13 @@ const JobEscrowPanel = ({ match, isWorker, liveDispute, onChanged }: JobEscrowPa
   const [disputing, setDisputing] = useState(false);
   // Suggested 3% to the worker's safety net, as Alia suggests a small amount per job.
   const [netPercent, setNetPercent] = useState(3);
+  // Job Cover for on-site work, offered to the client as they pay in.
+  const [cover, setCover] = useState<CoverStatus | null>(null);
+  const [addCover, setAddCover] = useState(true);
+  useEffect(() => {
+    if (isWorker) return;
+    coverApi.status(match.id).then(setCover).catch(() => setCover(null));
+  }, [isWorker, match.id]);
   const [locked, setLocked] = useState((match.completionCodeAttempts ?? 0) >= MAX_CODE_ATTEMPTS);
 
   const tx = match.transaction;
@@ -64,11 +72,13 @@ const JobEscrowPanel = ({ match, isWorker, liveDispute, onChanged }: JobEscrowPa
 
   const price = Number(tx?.amount ?? match.agreedAmount ?? match.gig?.budget ?? 0);
   const contribution = Math.round((price * netPercent) / 100);
+  const coverOffered = Boolean(cover?.eligible && !cover.covered);
+  const premium = coverOffered && addCover ? (cover?.premium ?? 0) : 0;
   // A job accepted before escrow existed has no payment request yet; open one first.
   const fund = () =>
     run('fund', async () => {
       const request = tx ?? (await transactionApi.initiateTransaction(match.id));
-      return transactionApi.confirmTransaction(request.id, contribution);
+      return transactionApi.confirmTransaction(request.id, contribution, premium > 0);
     });
 
   const release = () =>
@@ -168,8 +178,18 @@ const JobEscrowPanel = ({ match, isWorker, liveDispute, onChanged }: JobEscrowPa
           <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 10 }}>
             {contribution > 0 ? t('safetyNet.addHelp', { amount: contribution.toLocaleString() }) : t('safetyNet.noneHelp')}
           </Typography.Text>
+          {coverOffered && cover && (
+            <div style={{ marginBottom: 10 }}>
+              <Checkbox checked={addCover} onChange={(e) => setAddCover(e.target.checked)}>
+                {t('cover.addLabel', { premium: cover.premium.toLocaleString() })}
+              </Checkbox>
+              <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 2, paddingInlineStart: 24 }}>
+                {t('cover.addHelp', { name: match.worker?.name ?? '', limit: cover.limit.toLocaleString() })}
+              </Typography.Text>
+            </div>
+          )}
           <Button type="primary" block loading={busy === 'fund'} onClick={fund}>
-            {t('safetyNet.payTotal', { amount: (price + contribution).toLocaleString() })}
+            {t('safetyNet.payTotal', { amount: (price + contribution + premium).toLocaleString() })}
           </Button>
         </div>
       );

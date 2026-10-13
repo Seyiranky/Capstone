@@ -719,7 +719,8 @@
     "scanHint": "Scan to check this receipt against Isoko's records.",
     "notFound": "No receipt with that number",
     "notFoundHelp": "Check the number on the printed receipt. Receipts exist only for money released to a worker.",
-    "view": "View receipt"
+    "view": "View receipt",
+    "cover": "Job Cover"
   },
   "dispute": {
     "open": "Open a dispute",
@@ -914,7 +915,8 @@
     "fairwork": "Fairwork scorecard",
     "safety": "Safety alerts",
     "reports": "Reports",
-    "voice": "Worker Voice"
+    "voice": "Worker Voice",
+    "cover": "Job Cover"
   },
   "actions": {
     "more": "More actions",
@@ -1216,5 +1218,33 @@
     "closedMsg": "Poll closed and the answer published.",
     "publicTitle": "Worker Voice",
     "publicSub": "Questions put to workers who have been paid through Isoko, the counts, and what the platform did."
+  },
+  "cover": {
+    "covered": "Covered by Job Cover",
+    "policyLine": "Policy {{policy}} · medical costs up to {{limit}} RWF from an accident on this job",
+    "fileClaim": "File a claim",
+    "claimTitle": "Claim on Job Cover",
+    "claimIntro": "Tell us what happened and what the treatment costs. Cover pays medical costs up to {{limit}} RWF, for claims made during the job or up to {{days}} days after it is paid.",
+    "whatHappened": "What happened",
+    "whatHappenedHint": "For example: I cut my hand on the cutting table and needed three stitches at the health centre.",
+    "cost": "Cost of treatment",
+    "sendClaim": "Send claim",
+    "claimSent": "Claim sent. An admin will review it and you will be told the decision.",
+    "claimFailed": "Could not send the claim. Try again.",
+    "claimLine": "Claim for {{amount}} RWF",
+    "paidLine": "insurer pays {{amount}} RWF",
+    "addLabel": "Add Job Cover: {{premium}} RWF",
+    "addHelp": "Covers {{name}}'s medical costs, up to {{limit}} RWF, if they are hurt doing this job.",
+    "adminTitle": "Job Cover",
+    "adminSub": "Accident claims from workers on covered jobs. Approve to have the insurer pay, or decline with the reason; the worker is told either way. The insurer is simulated in this pilot.",
+    "noClaims": "No claims.",
+    "approve": "Approve",
+    "approveBody": "The insurer pays {{amount}} RWF towards the worker's treatment.",
+    "noteHint": "Note for the worker (optional)",
+    "decline": "Decline",
+    "declineBody": "The worker sees your reason.",
+    "declineHint": "Why it is declined",
+    "approvedMsg": "Claim approved.",
+    "declinedMsg": "Claim declined."
   }
 }

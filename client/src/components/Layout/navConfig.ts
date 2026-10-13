@@ -37,6 +37,7 @@ export const NAV_ENTRIES: NavEntry[] = [
   { key: '/marketplace', labelKey: 'sidebar.marketplace', roles: ['admin'], group: 'adminNav.operations' },
 
   { key: '/admin/payments', labelKey: 'adminNav.payments', roles: ['admin'], group: 'adminNav.money' },
+  { key: '/admin/cover', labelKey: 'adminNav.cover', roles: ['admin'], group: 'adminNav.money' },
 
   { key: '/admin/users', labelKey: 'adminNav.users', roles: ['admin'], group: 'adminNav.people' },
   { key: '/admin/reviewers', labelKey: 'adminNav.reviewers', roles: ['admin'], group: 'adminNav.people' },

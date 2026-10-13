@@ -719,7 +719,8 @@
     "scanHint": "Sikana ugenzure iyi nyemezabwishyu mu nyandiko za Isoko.",
     "notFound": "Nta nyemezabwishyu ifite iyo nimero",
     "notFoundHelp": "Reba nimero iri ku nyemezabwishyu yacapwe. Inyemezabwishyu zibaho gusa ku mafaranga yahawe umukozi.",
-    "view": "Reba inyemezabwishyu"
+    "view": "Reba inyemezabwishyu",
+    "cover": "Job Cover"
   },
   "dispute": {
     "open": "Tanga ikirego",
@@ -914,7 +915,8 @@
     "fairwork": "Ikarita ya Fairwork",
     "safety": "Impuruza z’umutekano",
     "reports": "Ibirego",
-    "voice": "Ijwi ry'Abakozi"
+    "voice": "Ijwi ry'Abakozi",
+    "cover": "Job Cover"
   },
   "actions": {
     "more": "Ibindi",
@@ -1216,5 +1218,33 @@
     "closedMsg": "Amatora yafunzwe kandi igisubizo cyatangajwe.",
     "publicTitle": "Ijwi ry'Abakozi",
     "publicSub": "Ibibazo byashyikirijwe abakozi bishyuwe binyuze kuri Isoko, amajwi, n'icyo urubuga rwakoze."
+  },
+  "cover": {
+    "covered": "Arinzwe na Job Cover",
+    "policyLine": "Polisi {{policy}} · amafaranga yo kwivuza kugeza kuri {{limit}} RWF iyo habayeho impanuka kuri aka kazi",
+    "fileClaim": "Saba indishyi",
+    "claimTitle": "Gusaba indishyi ya Job Cover",
+    "claimIntro": "Tubwire ibyabaye n'ikiguzi cyo kwivuza. Job Cover yishyura amafaranga yo kwivuza kugeza kuri {{limit}} RWF, ku busabe bukozwe mu gihe cy'akazi cyangwa mu minsi {{days}} nyuma yo kwishyurwa.",
+    "whatHappened": "Ibyabaye",
+    "whatHappenedHint": "Urugero: nikomerekeje ku kiganza ku meza yo gukatiraho, banyondora inshinge eshatu ku kigo nderabuzima.",
+    "cost": "Ikiguzi cyo kwivuza",
+    "sendClaim": "Ohereza ubusabe",
+    "claimSent": "Ubusabe bwoherejwe. Umuyobozi azabusuzuma kandi uzamenyeshwa icyemezo.",
+    "claimFailed": "Ubusabe ntibwoherejwe. Ongera ugerageze.",
+    "claimLine": "Ubusabe bwa {{amount}} RWF",
+    "paidLine": "umwishingizi yishyura {{amount}} RWF",
+    "addLabel": "Ongeraho Job Cover: {{premium}} RWF",
+    "addHelp": "Irinda {{name}} ku mafaranga yo kwivuza, kugeza kuri {{limit}} RWF, aramutse akomerekeye kuri aka kazi.",
+    "adminTitle": "Job Cover",
+    "adminSub": "Ubusabe bw'indishyi bw'abakozi ku kazi karinzwe. Emeza kugira ngo umwishingizi yishyure, cyangwa wange utanga impamvu; umukozi abimenyeshwa uko byagenda kose. Umwishingizi ni uw'igerageza muri iki cyiciro.",
+    "noClaims": "Nta busabe.",
+    "approve": "Emeza",
+    "approveBody": "Umwishingizi yishyura {{amount}} RWF yo kuvuza umukozi.",
+    "noteHint": "Icyitonderwa ku mukozi (si ngombwa)",
+    "decline": "Anga",
+    "declineBody": "Umukozi abona impamvu yawe.",
+    "declineHint": "Impamvu byanzwe",
+    "approvedMsg": "Ubusabe bwemejwe.",
+    "declinedMsg": "Ubusabe bwanzwe."
   }
 }

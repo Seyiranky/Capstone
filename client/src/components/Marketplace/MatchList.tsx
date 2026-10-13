@@ -26,6 +26,7 @@ import JobEscrowPanel from './JobEscrowPanel';
 import JobPhotos from './JobPhotos';
 import TeamSection from '../Team/TeamSection';
 import SafeVisitBar from '../Safety/SafeVisitBar';
+import JobCoverCard from '../Cover/JobCoverCard';
 import { disputeApi } from '../../api/disputeApi';
 import type { Dispute, Match, MatchStatus } from '../../types';
 
@@ -242,6 +243,7 @@ const MatchList = () => {
                     {t('team.memberOnly', { role: t(`team.roleLabel_${myMembership.role}`).toLowerCase() })}
                   </Typography.Text>
                 )}
+                {(match.status === 'accepted' || match.status === 'completed') && <JobCoverCard matchId={match.id} />}
                 {match.status === 'accepted' && isWorker && isLead && <SafeVisitBar matchId={match.id} />}
                 {match.status === 'accepted' && isLead && (
                   <JobEscrowPanel

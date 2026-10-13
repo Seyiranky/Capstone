@@ -33,6 +33,7 @@ import AdminFairwork from './components/Admin/AdminFairwork';
 import AdminSafety from './components/Admin/AdminSafety';
 import AdminReports from './components/Admin/AdminReports';
 import AdminVoice from './components/Admin/AdminVoice';
+import AdminCover from './components/Admin/AdminCover';
 import WorkerVoicePage from './components/WorkerVoice/WorkerVoicePage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
@@ -99,6 +100,7 @@ function App() {
             <Route path="/admin/safety" element={<AdminSafety />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/voice" element={<AdminVoice />} />
+            <Route path="/admin/cover" element={<AdminCover />} />
             <Route path="/admin/audit" element={<AdminAuditPage />} />
           </Route>
 

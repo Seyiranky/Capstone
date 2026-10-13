@@ -59,5 +59,8 @@ export const getReceipt = async (req: Request, res: Response): Promise<void> => 
     skill: payout.match?.gig?.skill?.name ?? null,
     worker: payout.user?.name ?? null,
     client: payout.match?.gig?.client?.name ?? null,
+    cover: payout.transaction.coverPolicyNumber
+      ? { policyNumber: payout.transaction.coverPolicyNumber, premium: Number(payout.transaction.coverPremium) }
+      : null,
   });
 };

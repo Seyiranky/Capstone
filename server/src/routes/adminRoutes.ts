@@ -1,5 +1,6 @@
 import express from 'express';
 import * as adminController from '../controllers/adminController';
+import * as coverController from '../controllers/coverController';
 import * as reportController from '../controllers/reportController';
 import { verifyToken } from '../middleware/authMiddleware';
 import { authorize } from '../middleware/roleMiddleware';
@@ -17,6 +18,8 @@ router.get('/payments', verifyToken, authorize('admin'), adminController.payment
 router.get('/rates', verifyToken, authorize('admin'), adminController.rates);
 router.get('/safety-alerts', verifyToken, authorize('admin'), adminController.safetyAlerts);
 router.put('/safety-alerts/:id/resolve', verifyToken, authorize('admin'), adminController.resolveSafetyAlert);
+router.get('/cover-claims', verifyToken, authorize('admin'), coverController.listClaims);
+router.put('/cover-claims/:id', verifyToken, authorize('admin'), coverController.decide);
 router.get('/reports', verifyToken, authorize('admin'), reportController.listReports);
 router.put('/reports/:id', verifyToken, authorize('admin'), reportController.resolveReport);
 router.put('/users/:id/reviewer-tier', verifyToken, authorize('admin'), adminController.setReviewerTier);

@@ -454,6 +454,8 @@ export interface Receipt {
   skill: string | null;
   worker: string | null;
   client: string | null;
+  /** Job Cover bought with this job's payment, if any. */
+  cover?: { policyNumber: string; premium: number } | null;
 }
 
 export type DisputeStatus = 'open' | 'escalated' | 'decided' | 'settled';

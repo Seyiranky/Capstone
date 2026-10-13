@@ -1,5 +1,6 @@
 import { Sequelize, type Dialect, type Options } from 'sequelize';
 
+import { CoverClaim, initCoverClaim } from './CoverClaim';
 import { Dispute, initDispute } from './Dispute';
 import { DisputeVote, initDisputeVote } from './DisputeVote';
 import { ExperimentAllocation, initExperimentAllocation } from './ExperimentAllocation';
@@ -81,6 +82,7 @@ export const sequelize = connectionString
   ? new Sequelize(connectionString, config)
   : new Sequelize(config.database as string, config.username as string, config.password, config);
 
+initCoverClaim(sequelize);
 initDispute(sequelize);
 initDisputeVote(sequelize);
 initExperimentAllocation(sequelize);
@@ -114,6 +116,7 @@ initUserSkill(sequelize);
 
 /** Every model, keyed by name. `associate` receives this. */
 export const models = {
+  CoverClaim,
   Dispute,
   DisputeVote,
   ExperimentAllocation,
@@ -158,6 +161,7 @@ for (const model of Object.values(models)) {
 }
 
 export {
+  CoverClaim,
   Dispute,
   DisputeVote,
   ExperimentAllocation,

@@ -43,6 +43,9 @@ export class Transaction extends Model<
   declare releasedAmount: number | string | null;
   /** The client's optional addition to the worker's safety net, collected with escrow. */
   declare safetyNetContribution: number | string | null;
+  /** Job Cover bought with this payment, if any (lib/jobCover). */
+  declare coverPremium: CreationOptional<number | string | null>;
+  declare coverPolicyNumber: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -108,6 +111,8 @@ export const initTransaction = (sequelize: Sequelize) => {
       receiptNumber: { type: DataTypes.STRING, allowNull: true, unique: true },
       releasedAmount: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       safetyNetContribution: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
+      coverPremium: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
+      coverPolicyNumber: { type: DataTypes.STRING, allowNull: true, unique: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },
