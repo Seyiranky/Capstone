@@ -5,6 +5,7 @@ import { adminApi } from '../../api/adminApi';
 import PageContainer from '../Layout/PageContainer';
 import AdminNav from './AdminNav';
 import SmsHealthCard from './SmsHealthCard';
+import RejectionBreakdownCard from './RejectionBreakdownCard';
 import { BarChart, ColumnChart, PieChart } from '../common/charts';
 import type { Gig, User } from '../../types';
 
@@ -107,6 +108,7 @@ const AdminDashboard = () => {
               </Card>
             </Col>
           </Row>
+          <RejectionBreakdownCard />
           <SmsHealthCard />
         </>
       )}

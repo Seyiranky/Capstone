@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Card, Empty, Table } from 'antd';
+import { Card, Empty, Flex, Grid, List, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { gigApplicationApi } from '../../api/gigApplicationApi';
 import StatusTag from '../common/StatusTag';
+import RejectionNotice from './RejectionNotice';
 import { fromNow } from '../../lib/time';
 import type { GigApplication } from '../../types';
 
@@ -12,6 +13,7 @@ const MyApplications = () => {
   const { t } = useTranslation();
   const [apps, setApps] = useState<GigApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const screens = Grid.useBreakpoint();
 
   useEffect(() => {
     gigApplicationApi
@@ -24,8 +26,13 @@ const MyApplications = () => {
     {
       title: t('marketplace.myApplications.gig'),
       key: 'gig',
-      render: (_, a) =>
-        a.gig ? <Link to={`/gigs/${a.gigId}`}>{a.gig.title}</Link> : a.gigId,
+      // The reason sits under the title, where it has the row's width on a phone.
+      render: (_, a) => (
+        <>
+          {a.gig ? <Link to={`/gigs/${a.gigId}`}>{a.gig.title}</Link> : a.gigId}
+          <RejectionNotice application={a} />
+        </>
+      ),
     },
     {
       title: t('marketplace.myApplications.category'),
@@ -63,6 +70,38 @@ const MyApplications = () => {
     return (
       <Card>
         <Empty description={t('common.noApplications')} />
+      </Card>
+    );
+  }
+
+  // Phones get a list: the table sizes itself to its widest cell and pushes the
+  // status off screen.
+  if (!screens.sm) {
+    return (
+      <Card styles={{ body: { paddingBlock: 4 } }}>
+        <List
+          loading={loading}
+          dataSource={apps}
+          renderItem={(a) => (
+            <List.Item style={{ paddingInline: 0 }}>
+              <Flex justify="space-between" align="flex-start" gap={12} style={{ width: '100%' }}>
+                <div style={{ minWidth: 0 }}>
+                  {a.gig ? <Link to={`/gigs/${a.gigId}`}>{a.gig.title}</Link> : a.gigId}
+                  <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                    {a.quoteAmount != null
+                      ? `${Number(a.quoteAmount).toLocaleString()} RWF`
+                      : a.gig
+                        ? `${Number(a.gig.budget).toLocaleString()} RWF`
+                        : ''}{' '}
+                    · {fromNow(a.createdAt)}
+                  </Typography.Text>
+                  <RejectionNotice application={a} />
+                </div>
+                <StatusTag status={a.status} />
+              </Flex>
+            </List.Item>
+          )}
+        />
       </Card>
     );
   }

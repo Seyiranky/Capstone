@@ -708,5 +708,22 @@
     "empty": "No paid jobs yet.",
     "paidVia": "Paid",
     "receipt": "Receipt"
+  },
+  "rejection": {
+    "title": "Why are you turning this down?",
+    "help": "The worker sees this, so they know what to work on.",
+    "skillLevel": "Needs a higher skill level",
+    "distance": "Too far from the job",
+    "timing": "Timing does not work",
+    "choseAnother": "Chose another applicant",
+    "other": "Another reason",
+    "notePlaceholder": "Anything specific? (optional, shown to the worker)",
+    "confirm": "Reject",
+    "reasonLabel": "Reason",
+    "nextStep": "Verify this skill",
+    "breakdownTitle": "Why applications are turned down",
+    "breakdownHelp": "By skill. Many \"skill level\" rejections in one skill point to where training or verification is needed.",
+    "none": "No rejections recorded yet.",
+    "skill": "Skill"
   }
 }

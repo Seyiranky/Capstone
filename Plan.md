@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: in progress** (13 Oct 2026). Phases 0–4 are done; Phase 5 is next.
+> **Status: in progress** (13 Oct 2026). Phases 0–5 are done; Phase 6 is next.
 
 ## Context
 
@@ -159,7 +159,7 @@ Findings so far:
   not part of the passport's signed summary, so passports issued earlier still verify.
   6 new tests in `workHistory.test.ts`.
 
-### Phase 5 — Rejection reasons and next steps
+### Phase 5 — Rejection reasons and next steps (done, 13 Oct 2026)
 *Borrowed from:* SA Youth employer feedback.
 
 - Rejecting an application requires a reason: *skill level*, *distance*, *timing*,
@@ -167,6 +167,10 @@ Findings so far:
 - The worker sees the reason. For *skill level*, they also get a link to that skill's
   verification task, which turns a rejection into a next step.
 - Admins see counts of reasons by skill, a signal of where training is needed.
+- As built: the "verify this skill" link opens the Dashboard's add-skill form directly.
+  Applications closed because the gig was filled get `choseAnother` automatically. An
+  optional note (280 characters) goes to the worker with the reason. My applications is a
+  list on phones. 4 new tests in `rejectionReasons.test.ts`.
 
 ### Phase 6 — Fair-rate guidance
 *Borrowed from:* Upwork and Malt rate insights.

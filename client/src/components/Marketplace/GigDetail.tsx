@@ -25,6 +25,7 @@ import { EditOutlined, HomeOutlined } from '@ant-design/icons';
 import GigForm from './GigForm';
 import ApplicantList from './ApplicantList';
 import ApplicationProgress from './ApplicationProgress';
+import RejectionNotice from './RejectionNotice';
 import { useAppSelector } from '../../store/hooks';
 import { gigApi } from '../../api/gigApi';
 import { gigApplicationApi } from '../../api/gigApplicationApi';
@@ -34,7 +35,7 @@ import StatusTag from '../common/StatusTag';
 import ChatThread from '../common/ChatThread';
 import { gigImageSrc } from '../../utils/gigImage';
 import { locationName } from '../../utils/locationName';
-import type { Gig, GigApplication } from '../../types';
+import type { Gig, GigApplication, RejectionReason } from '../../types';
 
 const MetaRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <Flex justify="space-between" align="center" gap={12} style={{ padding: '9px 0' }}>
@@ -129,10 +130,11 @@ const GigDetail = () => {
   const handleApplicationDecision = async (
     applicationId: string,
     decision: 'approved' | 'rejected',
+    rejection?: { reason: RejectionReason; note?: string },
   ) => {
     setBusyId(applicationId);
     try {
-      await gigApplicationApi.reviewApplication(applicationId, decision);
+      await gigApplicationApi.reviewApplication(applicationId, decision, rejection);
       message.success(decision === 'approved' ? 'Applicant approved.' : 'Applicant rejected.');
       refresh();
     } finally {
@@ -245,6 +247,7 @@ const GigDetail = () => {
                 </Typography.Text>
               </Flex>
               <ApplicationProgress status={myApplication.status} />
+              <RejectionNotice application={myApplication} />
               {myApplication.quoteAmount != null && (
                 <Typography.Text type="secondary" style={{ display: 'block', marginTop: 14, fontSize: 13 }}>
                   {t('quote.yourQuote')}:{' '}

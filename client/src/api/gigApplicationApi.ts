@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { GigApplication, Match } from '../types';
+import type { GigApplication, Match, RejectionReason } from '../types';
 
 export const gigApplicationApi = {
   applyToGig: (gigId: string, quote: { quoteAmount?: number | null; quoteNote?: string } = {}) =>
@@ -10,8 +10,15 @@ export const gigApplicationApi = {
   listApplications: (params?: { gigId?: string }) =>
     axiosClient.get<GigApplication[]>('/gig-applications', { params }).then((res) => res.data),
 
-  reviewApplication: (id: string, decision: 'approved' | 'rejected') =>
+  reviewApplication: (
+    id: string,
+    decision: 'approved' | 'rejected',
+    rejection?: { reason: RejectionReason; note?: string },
+  ) =>
     axiosClient
-      .put<{ application: GigApplication; match?: Match }>(`/gig-applications/${id}/review`, { decision })
+      .put<{ application: GigApplication; match?: Match }>(`/gig-applications/${id}/review`, {
+        decision,
+        ...rejection,
+      })
       .then((res) => res.data),
 };

@@ -1,6 +1,6 @@
 import { countsAsMoved, movedAt } from '../../lib/money';
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -49,6 +49,16 @@ const Dashboard = () => {
   const [myGigCount, setMyGigCount] = useState(0);
   const [myApplicationCount, setMyApplicationCount] = useState(0);
   const [modal, setModal] = useState<'skill' | 'review' | 'gig' | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Arriving from a "verify this skill" link on a rejected application opens the
+  // add-skill flow straight away; the state is cleared so a refresh does not reopen it.
+  useEffect(() => {
+    if ((location.state as { openAddSkill?: boolean } | null)?.openAddSkill) {
+      setModal('skill');
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   useEffect(() => {
     dispatch(fetchMatches());

@@ -147,9 +147,19 @@ export interface GigApplication {
   /** DECIMAL columns arrive as strings. */
   quoteAmount?: number | string | null;
   quoteNote?: string | null;
+  rejectionReason?: RejectionReason | null;
+  rejectionNote?: string | null;
   createdAt: string;
   gig?: Gig;
   worker?: User;
+}
+
+export type RejectionReason = 'skillLevel' | 'distance' | 'timing' | 'choseAnother' | 'other';
+
+export interface RejectionBreakdown {
+  skill: string;
+  counts: Partial<Record<RejectionReason, number>>;
+  total: number;
 }
 
 export type MatchStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';

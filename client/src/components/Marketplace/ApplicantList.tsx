@@ -1,18 +1,24 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Flex, Typography } from 'antd';
+import { Button, Flex, Input, Modal, Radio, Space, Typography } from 'antd';
 import { DownOutlined, UpOutlined } from '@ant-design/icons';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import MatchExplanation from '../common/MatchExplanation';
-import type { GigApplication } from '../../types';
+import type { GigApplication, RejectionReason } from '../../types';
+
+const REASONS: RejectionReason[] = ['skillLevel', 'distance', 'timing', 'choseAnother', 'other'];
 
 interface ApplicantListProps {
   applicants: GigApplication[];
   budget: number;
   canDecide: boolean;
   busyId: string | null;
-  onDecide: (applicationId: string, decision: 'approved' | 'rejected') => void;
+  onDecide: (
+    applicationId: string,
+    decision: 'approved' | 'rejected',
+    rejection?: { reason: RejectionReason; note?: string },
+  ) => void;
 }
 
 /**
@@ -25,6 +31,9 @@ interface ApplicantListProps {
 const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: ApplicantListProps) => {
   const { t } = useTranslation();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<GigApplication | null>(null);
+  const [reason, setReason] = useState<RejectionReason | null>(null);
+  const [note, setNote] = useState('');
 
   return (
     <div>
@@ -132,7 +141,11 @@ const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: Appl
                       size="small"
                       danger
                       loading={busyId === a.id}
-                      onClick={() => onDecide(a.id, 'rejected')}
+                      onClick={() => {
+                        setReason(null);
+                        setNote('');
+                        setRejecting(a);
+                      }}
                     >
                       {t('marketplace.gigDetail.reject')}
                     </Button>
@@ -143,6 +156,40 @@ const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: Appl
           </div>
         );
       })}
+      <Modal
+        open={Boolean(rejecting)}
+        title={t('rejection.title')}
+        okText={t('rejection.confirm')}
+        okButtonProps={{ danger: true, disabled: !reason }}
+        onCancel={() => setRejecting(null)}
+        onOk={() => {
+          if (rejecting && reason) {
+            onDecide(rejecting.id, 'rejected', { reason, note: note.trim() || undefined });
+            setRejecting(null);
+          }
+        }}
+        destroyOnHidden
+      >
+        <Typography.Paragraph type="secondary" style={{ fontSize: 13 }}>
+          {t('rejection.help')}
+        </Typography.Paragraph>
+        <Radio.Group value={reason} onChange={(e) => setReason(e.target.value)} style={{ marginBottom: 14 }}>
+          <Space direction="vertical" size={6}>
+            {REASONS.map((r) => (
+              <Radio key={r} value={r}>
+                {t(`rejection.${r}`)}
+              </Radio>
+            ))}
+          </Space>
+        </Radio.Group>
+        <Input.TextArea
+          rows={2}
+          maxLength={280}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder={t('rejection.notePlaceholder')}
+        />
+      </Modal>
     </div>
   );
 };

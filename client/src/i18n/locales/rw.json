@@ -708,5 +708,22 @@
     "empty": "Nta kazi karishyurwa.",
     "paidVia": "Yishyuwe",
     "receipt": "Inyemezabwishyu"
+  },
+  "rejection": {
+    "title": "Kubera iki wanze ubu busabe?",
+    "help": "Umukozi arabibona, kugira ngo amenye icyo yanoza.",
+    "skillLevel": "Bikeneye ubumenyi buri hejuru",
+    "distance": "Ari kure y’akazi",
+    "timing": "Igihe ntikibereye",
+    "choseAnother": "Hatoranyijwe undi",
+    "other": "Indi mpamvu",
+    "notePlaceholder": "Hari icyo wongeraho? (si ngombwa, umukozi arakibona)",
+    "confirm": "Wanga",
+    "reasonLabel": "Impamvu",
+    "nextStep": "Emeza ubu bumenyi",
+    "breakdownTitle": "Impamvu ubusabe bwangwa",
+    "breakdownHelp": "Hakurikijwe ubumenyi. Kwangwa kenshi kubera ubumenyi bike mu bumenyi bumwe byerekana aho amahugurwa akenewe.",
+    "none": "Nta busabe bwanzwe buranditswe.",
+    "skill": "Ubumenyi"
   }
 }

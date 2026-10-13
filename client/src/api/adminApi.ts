@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { CollusionReport, Gig, SmsHealth, User } from '../types';
+import type { CollusionReport, Gig, RejectionBreakdown, SmsHealth, User } from '../types';
 
 export const adminApi = {
   listUsers: () => axiosClient.get<User[]>('/admin/users').then((res) => res.data),
@@ -15,6 +15,9 @@ export const adminApi = {
     axiosClient
       .put<User>(`/admin/users/${id}/reviewer-tier`, { reviewerTier })
       .then((res) => res.data),
+
+  rejectionReasons: () =>
+    axiosClient.get<RejectionBreakdown[]>('/admin/rejection-reasons').then((res) => res.data),
 
   listGigs: () => axiosClient.get<Gig[]>('/admin/gigs').then((res) => res.data),
 
