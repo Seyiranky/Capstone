@@ -199,7 +199,7 @@ const GigDetail = () => {
       </Flex>
 
       <Row gutter={[24, 24]}>
-        <Col xs={24} lg={15}>
+        <Col xs={24} xl={15}>
           {cover && (
             <div
               style={{
@@ -340,7 +340,7 @@ const GigDetail = () => {
         </Col>
 
         {/* Sidebar */}
-        <Col xs={24} lg={9}>
+        <Col xs={24} xl={9}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <Card>
               <Typography.Text type="secondary" style={{ fontSize: 13 }}>

@@ -24,7 +24,7 @@ const StatTile = ({
         <Typography.Text type="secondary" style={{ fontSize: 12.5, display: 'block' }}>
           {label}
         </Typography.Text>
-        <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.25, whiteSpace: 'nowrap', marginTop: 2 }}>
+        <div style={{ fontSize: 21, fontWeight: 700, lineHeight: 1.25, whiteSpace: 'nowrap', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {value}
           {suffix && (
             <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--isoko-muted)', marginInlineStart: 4 }}>

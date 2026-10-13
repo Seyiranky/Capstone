@@ -307,14 +307,14 @@ const Dashboard = () => {
 
       <Row gutter={[16, 16]}>
         {tiles.map((tile) => (
-          <Col xs={12} lg={6} key={tile.key}>
+          <Col xs={12} xl={6} key={tile.key}>
             {tile.node}
           </Col>
         ))}
       </Row>
 
       <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
-        <Col xs={24} lg={16}>
+        <Col xs={24} xl={16}>
           <Flex vertical gap={20}>
             {isEarner && <AttentionList matches={matches} role={role} userId={profile.id} />}
             {role === 'worker' && <GigsForYou categories={categories} exclude={matches.map((m) => m.gigId)} />}
@@ -366,7 +366,7 @@ const Dashboard = () => {
           </Flex>
         </Col>
 
-        <Col xs={24} lg={8}>
+        <Col xs={24} xl={8}>
           <Flex vertical gap={20}>
             {isEarner && <OnboardingChecklist items={checklist} />}
 

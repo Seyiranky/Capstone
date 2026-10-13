@@ -16,7 +16,12 @@ const AppLayout = () => {
   const screens = Grid.useBreakpoint();
   const { isDark } = useThemeMode();
   const isMobile = !screens.lg;
-  const [collapsed, setCollapsed] = useState(false);
+  // On laptop widths the full sider costs the content ~160px it needs, so it
+  // starts collapsed to icons below xl; the toggle still expands it.
+  const [collapsed, setCollapsed] = useState(() => window.innerWidth < 1200);
+  useEffect(() => {
+    if (screens.xl !== undefined) setCollapsed(!screens.xl);
+  }, [screens.xl]);
   // Phones get the nav as an overlay drawer; the inline sider would eat the screen.
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -76,13 +81,15 @@ const AppLayout = () => {
             borderRadius: 6,
           }}
         >
+          {/* Collapsed, only the round emblem at the left of the logo shows. */}
           <img
             src={logo}
             alt="Isoko Talents"
             style={{
-              height: narrow ? 26 : 32,
-              width: 'auto',
-              objectFit: 'contain',
+              height: narrow ? 34 : 32,
+              width: narrow ? 34 : 'auto',
+              objectFit: narrow ? 'cover' : 'contain',
+              objectPosition: 'left center',
               display: 'block',
             }}
           />

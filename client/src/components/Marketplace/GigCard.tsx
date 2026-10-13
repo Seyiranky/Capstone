@@ -84,13 +84,14 @@ const GigCard = ({ gig, footNote }: GigCardProps) => {
         {gig.skill?.name}
       </Typography.Text>
 
-      <Typography.Text
+      {/* Two lines for the title: one cut most titles mid-word on a laptop. */}
+      <Typography.Paragraph
         strong
-        ellipsis={{ tooltip: gig.title }}
-        style={{ display: 'block', fontSize: 14, lineHeight: 1.35, marginTop: 4 }}
+        ellipsis={{ rows: 2, tooltip: gig.title }}
+        style={{ fontSize: 14.5, lineHeight: 1.35, margin: '4px 0 0', minHeight: 39 }}
       >
         {gig.title}
-      </Typography.Text>
+      </Typography.Paragraph>
 
       <Typography.Paragraph
         type="secondary"
@@ -103,20 +104,21 @@ const GigCard = ({ gig, footNote }: GigCardProps) => {
       <Flex
         justify="space-between"
         align="baseline"
+        gap={10}
         style={{
           marginTop: 10,
           borderTop: '1px solid var(--ant-color-border-secondary,#e4e4e7)',
           paddingTop: 10,
         }}
       >
-        <Typography.Text strong style={{ fontSize: 15 }}>
+        <Typography.Text strong style={{ fontSize: 15, whiteSpace: 'nowrap', flexShrink: 0 }}>
           {Number(gig.budget).toLocaleString()}
           <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
             {' '}
             RWF
           </Typography.Text>
         </Typography.Text>
-        <Typography.Text type="secondary" style={{ fontSize: 12 }} ellipsis>
+        <Typography.Text type="secondary" style={{ fontSize: 12, minWidth: 0 }} ellipsis>
           {footNote ?? loc}
         </Typography.Text>
       </Flex>
