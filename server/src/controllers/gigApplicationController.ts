@@ -6,6 +6,16 @@ import notify from '../lib/notify';
 import { authed } from '../lib/authed';
 import { pathParam, stringParam } from '../lib/query';
 import { QUOTE_MAX, QUOTE_MIN, QUOTE_NOTE_MAX } from '../services/escrowRules';
+import { REJECTION_REASONS, type RejectionReason } from '../types/domain';
+
+/** What the worker is told, with the next step where there is one. */
+const REASON_TEXT: Record<RejectionReason, string> = {
+  skillLevel: 'the job needs a higher skill level. Verifying this skill on Isoko will help next time.',
+  distance: 'the job is too far from you.',
+  timing: 'the timing did not work.',
+  choseAnother: 'another applicant was chosen.',
+  other: 'the reviewer gave another reason.',
+};
 
 const APPLICATION_INCLUDES: Includeable[] = [
   { model: Gig, as: 'gig' },
@@ -135,9 +145,14 @@ export const listApplications = async (req: Request, res: Response): Promise<voi
 };
 
 export const reviewApplication = async (req: Request, res: Response): Promise<void> => {
-  const { decision } = req.body ?? {};
+  const { decision, reason, note } = req.body ?? {};
   if (!['approved', 'rejected'].includes(decision)) {
     res.status(400).json({ message: "decision must be 'approved' or 'rejected'" });
+    return;
+  }
+  // A rejection must say why: the worker is owed a reason they can act on.
+  if (decision === 'rejected' && !REJECTION_REASONS.includes(reason)) {
+    res.status(400).json({ message: `reason must be one of ${REJECTION_REASONS.join(', ')}` });
     return;
   }
 
@@ -154,11 +169,12 @@ export const reviewApplication = async (req: Request, res: Response): Promise<vo
   }
 
   if (decision === 'rejected') {
-    await application.update({ status: 'rejected' });
+    const rejectionNote = typeof note === 'string' ? note.trim().slice(0, 280) || null : null;
+    await application.update({ status: 'rejected', rejectionReason: reason, rejectionNote });
     await notify(req, {
       userId: application.workerId,
       title: 'Application not selected',
-      body: `Your application for "${application.gig?.title}" was not selected.`,
+      body: `Your application for "${application.gig?.title}" was not selected: ${REASON_TEXT[reason as RejectionReason]}`,
       // The answer to something the worker applied for and is waiting on.
       category: 'outcome',
     });

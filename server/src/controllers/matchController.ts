@@ -182,7 +182,7 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
         });
       }),
       ...siblingApplications.map(async (other) => {
-        await other.update({ status: 'rejected' });
+        await other.update({ status: 'rejected', rejectionReason: 'choseAnother' });
         await notify(req, {
           userId: other.workerId,
           title: 'Application not selected',

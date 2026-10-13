@@ -45,6 +45,13 @@ export type GigStatus =
 /** GigApplication.status */
 export type GigApplicationStatus = 'pending' | 'approved' | 'rejected';
 
+/**
+ * GigApplication.rejectionReason. `choseAnother` is also what every sibling
+ * application gets when the gig is filled, since that is exactly what happened.
+ */
+export type RejectionReason = 'skillLevel' | 'distance' | 'timing' | 'choseAnother' | 'other';
+export const REJECTION_REASONS: RejectionReason[] = ['skillLevel', 'distance', 'timing', 'choseAnother', 'other'];
+
 /** Match.status */
 export type MatchStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';
 

@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
-import { User, Gig, Skill, Match, Transaction, UserSkill, NotificationDelivery, sequelize } from '../models';
+import { User, Gig, GigApplication, Skill, Match, Transaction, UserSkill, NotificationDelivery, sequelize } from '../models';
 import * as sms from '../lib/channels/sms';
 import notify from '../lib/notify';
 import * as pilotMetricsService from '../services/pilotMetricsService';
@@ -367,4 +367,33 @@ export const smsHealth = async (_req: Request, res: Response): Promise<void> => 
     averageSegments: totals?.segments ? Number(Number(totals.segments).toFixed(2)) : null,
     balance: balance ? { amount: balance.amount, at: balance.at } : null,
   });
+};
+
+/**
+ * Why applications are turned down, by skill.
+ *
+ * "Skill level" counts concentrated in one skill point at where training or
+ * verification is needed; "distance" counts at where workers are missing.
+ * Applications closed because someone else was chosen are reported apart, as
+ * they say nothing about the applicant.
+ */
+export const rejectionReasons = async (_req: Request, res: Response): Promise<void> => {
+  const rows = (await GigApplication.findAll({
+    where: { status: 'rejected', rejectionReason: { [Op.ne]: null } },
+    attributes: ['rejectionReason'],
+    include: [{ model: Gig, as: 'gig', attributes: ['skillId'], include: [{ model: Skill, as: 'skill', attributes: ['name'] }] }],
+  })) as (GigApplication & { gig?: Gig & { skill?: Skill | null } })[];
+
+  const bySkill = new Map<string, Record<string, number>>();
+  for (const row of rows) {
+    const skill = row.gig?.skill?.name ?? 'Other';
+    const counts = bySkill.get(skill) ?? {};
+    counts[row.rejectionReason as string] = (counts[row.rejectionReason as string] ?? 0) + 1;
+    bySkill.set(skill, counts);
+  }
+  res.json(
+    [...bySkill.entries()]
+      .map(([skill, counts]) => ({ skill, counts, total: Object.values(counts).reduce((a, b) => a + b, 0) }))
+      .sort((a, b) => (b.counts.skillLevel ?? 0) - (a.counts.skillLevel ?? 0) || b.total - a.total),
+  );
 };

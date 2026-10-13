@@ -8,7 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
-import type { GigApplicationStatus } from '../types/domain';
+import type { GigApplicationStatus, RejectionReason } from '../types/domain';
 import type { ScoredPair } from '../types/scoring';
 import type { Gig } from './Gig';
 import type { User } from './User';
@@ -32,6 +32,8 @@ export class GigApplication extends Model<
   /** The worker's price, if they named one. DECIMAL arrives as a string. */
   declare quoteAmount: number | string | null;
   declare quoteNote: string | null;
+  declare rejectionReason: RejectionReason | null;
+  declare rejectionNote: string | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -82,6 +84,12 @@ export const initGigApplication = (sequelize: Sequelize) => {
       wasQueuedOffline: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
       quoteAmount: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       quoteNote: { type: DataTypes.STRING(280), allowNull: true },
+      rejectionReason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: { isIn: [['skillLevel', 'distance', 'timing', 'choseAnother', 'other']] },
+      },
+      rejectionNote: { type: DataTypes.STRING(280), allowNull: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },
