@@ -57,6 +57,12 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare emailVerificationToken: string | null;
   declare emailVerificationExpiresAt: Date | null;
   declare experimentArm: ExperimentArm | null;
+  /** Whether the worker is taking work. `away` keeps them off ranked shortlists. */
+  declare availability: CreationOptional<'available' | 'busy' | 'away'>;
+  /** When an away worker is back; after this date they count as available. */
+  declare availableFrom: Date | null;
+  /** Monthly earnings the worker is aiming for, in RWF. */
+  declare monthlyGoal: number | null;
   /** Share of every payout set aside toward Ejo Heza, 0–20%. */
   declare savingsPercent: CreationOptional<number>;
   declare reviewerTier: ReviewerTier | null;
@@ -265,6 +271,14 @@ export const initUser = (sequelize: Sequelize) => {
         allowNull: true,
         validate: { isIn: [['provenance', 'plain']] },
       },
+      availability: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'available',
+        validate: { isIn: [['available', 'busy', 'away']] },
+      },
+      availableFrom: { type: DataTypes.DATE, allowNull: true },
+      monthlyGoal: { type: DataTypes.INTEGER, allowNull: true, validate: { min: 0 } },
       savingsPercent: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, validate: { min: 0, max: 20 } },
       reviewerTier: {
         type: DataTypes.STRING,

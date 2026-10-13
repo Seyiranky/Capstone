@@ -1,6 +1,7 @@
 import express from 'express';
 import * as userController from '../controllers/userController';
 import { verifyToken } from '../middleware/authMiddleware';
+import { authorize } from '../middleware/roleMiddleware';
 import * as passportController from '../controllers/passportController';
 
 const router = express.Router();
@@ -8,6 +9,7 @@ const router = express.Router();
 router.get('/me', verifyToken, userController.getProfile);
 router.put('/me', verifyToken, userController.updateProfile);
 router.get('/me/export', verifyToken, userController.exportMyData);
+router.get('/me/growth', verifyToken, authorize('worker'), userController.getGrowth);
 // Before '/:id', which would otherwise take 'search' as an id.
 router.get('/search', verifyToken, userController.searchWorkers);
 // Distinct from the export above: that is a data dump for the holder, this is

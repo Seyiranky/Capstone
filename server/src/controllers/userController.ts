@@ -14,6 +14,8 @@ import {
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
 import * as workHistoryService from '../services/workHistoryService';
+import * as levelService from '../services/levelService';
+import * as growthService from '../services/growthService';
 
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
@@ -39,7 +41,12 @@ const UPDATABLE_FIELDS = [
   // clears its confirmation. Writable here, a confirmed number could be swapped
   // for an unconfirmed one and keep receiving SMS.
   'preferredChannel',
+  'availability',
+  'availableFrom',
+  'monthlyGoal',
 ] as const;
+
+const AVAILABILITY = ['available', 'busy', 'away'] as const;
 
 const PREFERRED_CHANNELS = ['none', 'email', 'sms'] as const;
 
@@ -76,6 +83,21 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     return;
   }
 
+  if (body.availability !== undefined && !AVAILABILITY.includes(body.availability as (typeof AVAILABILITY)[number])) {
+    res.status(400).json({ message: `availability must be one of ${AVAILABILITY.join(', ')}` });
+    return;
+  }
+  if (body.availableFrom != null && Number.isNaN(Date.parse(String(body.availableFrom)))) {
+    res.status(400).json({ message: 'availableFrom must be a date' });
+    return;
+  }
+  if (body.monthlyGoal != null && (!Number.isInteger(body.monthlyGoal) || (body.monthlyGoal as number) < 0)) {
+    res.status(400).json({ message: 'monthlyGoal must be a whole number of RWF' });
+    return;
+  }
+  // Coming back from away clears the return date.
+  if (body.availability && body.availability !== 'away') body.availableFrom = null;
+
   const updates: Record<string, unknown> = {};
   for (const field of UPDATABLE_FIELDS) {
     if (body[field] !== undefined) {
@@ -108,6 +130,9 @@ export const getPublicProfile = async (req: Request, res: Response): Promise<voi
     reviewCount: user.reviewCount,
     completedJobCount: user.completedJobCount,
     createdAt: user.createdAt,
+    availability: user.availability,
+    availableFrom: user.availableFrom,
+    level: user.role === 'worker' ? (await levelService.forWorker(user)).level : null,
   });
 };
 
@@ -201,4 +226,9 @@ export const searchWorkers = async (req: Request, res: Response): Promise<void> 
     limit: 10,
   });
   res.json(workers);
+};
+
+/** Everything the worker's Growth page shows, in one call. */
+export const getGrowth = async (req: Request, res: Response): Promise<void> => {
+  res.json(await growthService.forWorker(authed(req).id));
 };

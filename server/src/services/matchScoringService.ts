@@ -453,7 +453,12 @@ export const rankCandidates = async ({
   profileName,
   limit,
 }: RankCandidatesInput): Promise<RankedPair[]> => {
-  const workers = await User.findAll({ where: { role: 'worker', status: 'active' } });
+  // A worker who said they are away until a date in the future is left off the
+  // shortlist entirely: inviting them would only produce a decline.
+  const now = new Date();
+  const workers = (await User.findAll({ where: { role: 'worker', status: 'active' } })).filter(
+    (w) => !(w.availability === 'away' && (!w.availableFrom || w.availableFrom > now)),
+  );
   const scored = await scoreWorkers({ gig, workers, profileName });
 
   const ranked = scored

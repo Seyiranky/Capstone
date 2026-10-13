@@ -265,6 +265,20 @@ already has (escrow, payouts, receipts, trust, notifications).
 
 Recommended order: 10 (cheap, strongest for the defence), 11, 13, 14, 9, 15, 12.
 
+## Round 3 — the worker's side (research of 14 Oct 2026, in progress)
+
+What worker-facing platforms give their workers, and how Isoko does it differently.
+
+| # | Feature | Borrowed from | What makes it Isoko's |
+|---|---|---|---|
+| 16 | **Availability**: available, busy, or away until a date | Upwork availability badge, Fiverr out-of-office | Away workers are skipped by the ranked shortlist, not just labelled |
+| 17 | **Levels**: New, Rising, Trusted, Master | Fiverr seller levels, Upwork Top Rated, TaskRabbit Elite | Every criterion and the worker's progress are shown; JSS and Fiverr levels are opaque |
+| 18 | **Skill ladder and RPL pack**: the evidence ladder per trade, and a printable summary for a Rwanda TVET Board Recognition of Prior Learning assessment | Rwanda's RPL programme (Swisscontact mechanics, REWU miners) | Platform evidence becomes a route to a national qualification |
+| 19 | **Earnings goal** with progress | Uber driver Earnings Hub | Counts released money only |
+| 20 | **Where the work is**: open gigs and typical pay by area, for the worker's trades | Uber demand heatmap | From real gigs and payouts, not estimates |
+
+All on a new **Growth** page for workers; availability also on the Dashboard and profile.
+
 ## Decisions taken
 
 | Decision | Choice | Why |
