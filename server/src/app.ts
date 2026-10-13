@@ -17,6 +17,7 @@ import messageRoutes from './routes/messageRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import surveyRoutes from './routes/surveyRoutes';
 import passportRoutes from './routes/passportRoutes';
+import receiptRoutes from './routes/receiptRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { notFound, errorHandler } from './middleware/errorMiddleware';
@@ -46,6 +47,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/passports', passportRoutes);
+app.use('/api/receipts', receiptRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 

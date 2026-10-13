@@ -2,7 +2,7 @@ import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import type { Includeable } from 'sequelize';
 import { Match, Gig, User, Transaction, Review, GigApplication } from '../models';
-import { MAX_CODE_ATTEMPTS } from '../services/escrowRules';
+import { MAX_CODE_ATTEMPTS, amountToCollect } from '../services/escrowRules';
 import * as trustScoreService from '../services/trustScoreService';
 import * as escrowService from '../services/escrowService';
 import notify from '../lib/notify';
@@ -156,7 +156,7 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
   if (status === 'accepted' && gig) {
     await gig.update({ status: 'matched' });
     // The client funds the job now, and the money waits in escrow.
-    await escrowService.fund(match, Number(gig.budget));
+    await escrowService.fund(match, amountToCollect(match.agreedAmount, gig.budget));
 
     // The gig is now taken: withdraw the other invitations and applications.
     // These carry no respondedAt, so they are excluded from acceptance-rate

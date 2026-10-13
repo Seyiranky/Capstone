@@ -29,6 +29,9 @@ export class GigApplication extends Model<
    *  was queued offline and replayed later. */
   declare occurredAt: Date | null;
   declare wasQueuedOffline: CreationOptional<boolean>;
+  /** The worker's price, if they named one. DECIMAL arrives as a string. */
+  declare quoteAmount: number | string | null;
+  declare quoteNote: string | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -77,6 +80,8 @@ export const initGigApplication = (sequelize: Sequelize) => {
       },
       occurredAt: { type: DataTypes.DATE, allowNull: true },
       wasQueuedOffline: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+      quoteAmount: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
+      quoteNote: { type: DataTypes.STRING(280), allowNull: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

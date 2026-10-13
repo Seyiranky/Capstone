@@ -5,6 +5,7 @@ import * as matchScoringService from '../services/matchScoringService';
 import notify from '../lib/notify';
 import { authed } from '../lib/authed';
 import { pathParam, stringParam } from '../lib/query';
+import { QUOTE_MAX, QUOTE_MIN, QUOTE_NOTE_MAX } from '../services/escrowRules';
 
 const APPLICATION_INCLUDES: Includeable[] = [
   { model: Gig, as: 'gig' },
@@ -16,11 +17,25 @@ type LoadedApplication = GigApplication & { gig?: Gig | null };
 
 export const applyToGig = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
-  const { gigId, occurredAt, queuedOffline } = req.body ?? {};
+  const { gigId, occurredAt, queuedOffline, quoteAmount, quoteNote } = req.body ?? {};
   if (!gigId) {
     res.status(400).json({ message: 'gigId is required' });
     return;
   }
+
+  // A quote is optional; without one the worker is taking the posted budget.
+  let quote: number | null = null;
+  if (quoteAmount !== undefined && quoteAmount !== null && quoteAmount !== '') {
+    quote = Number(quoteAmount);
+    if (!Number.isFinite(quote) || quote < QUOTE_MIN || quote > QUOTE_MAX) {
+      res.status(400).json({
+        message: `A quote must be between ${QUOTE_MIN} and ${QUOTE_MAX.toLocaleString()} RWF`,
+      });
+      return;
+    }
+    quote = Math.round(quote);
+  }
+  const note = typeof quoteNote === 'string' ? quoteNote.trim().slice(0, QUOTE_NOTE_MAX) || null : null;
 
   const gig = await Gig.findByPk(gigId);
   if (!gig) {
@@ -74,6 +89,8 @@ export const applyToGig = async (req: Request, res: Response): Promise<void> => 
     rankScore: scored.score,
     scoreBreakdown: scored,
     weightProfileId: scored.weightProfile.id,
+    quoteAmount: quote,
+    quoteNote: note,
   });
 
   const admins = await User.findAll({ where: { role: 'admin' } });
@@ -82,7 +99,9 @@ export const applyToGig = async (req: Request, res: Response): Promise<void> => 
       notify(req, {
         userId: admin.id,
         title: 'New gig application',
-        body: `${worker.name} applied to "${gig.title}".`,
+        body: quote
+          ? `${worker.name} applied to "${gig.title}", quoting ${quote.toLocaleString()} RWF.`
+          : `${worker.name} applied to "${gig.title}".`,
       }),
     ),
   );
@@ -157,6 +176,8 @@ export const reviewApplication = async (req: Request, res: Response): Promise<vo
     workerId: application.workerId,
     status: 'pending',
     origin: 'manual',
+    // Approving a quote is agreeing to its price.
+    agreedAmount: application.quoteAmount ?? null,
   });
   await application.gig?.update({ status: 'matched' });
 

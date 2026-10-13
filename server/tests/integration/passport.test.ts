@@ -251,7 +251,7 @@ describe('income statement', () => {
 
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/text\/csv/);
-    expect(res.text.split('\n')[0]).toBe('date,gig,category,amount,currency,provider,reference');
+    expect(res.text.split('\n')[0]).toBe('date,gig,category,amount,currency,provider,reference,receipt');
     expect(res.text.split('\n')).toHaveLength(3);
   });
 });

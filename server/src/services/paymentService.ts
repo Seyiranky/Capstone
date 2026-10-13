@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Match, Transaction, sequelize } from '../models';
-import { escrowStateOnFunding, escrowTimestampField } from './escrowRules';
+import { escrowStateOnFunding, escrowTimestampField, generateReceiptNumber } from './escrowRules';
 import simulatedAdapter from './payments/simulatedAdapter';
 import type { PaymentAdapter, PaymentCallback } from './payments/adapter';
 import type { TransactionStatus } from '../types/domain';
@@ -131,14 +131,16 @@ export const applyCallback = async ({
     // Collected money enters escrow in whatever state the job calls for, in the
     // same database transaction as the settlement, so no reader ever sees a
     // confirmed payment that is neither held nor released.
-    const escrow: Partial<Pick<Transaction, 'escrowStatus' | 'heldAt' | 'releasedAt' | 'refundedAt'>> =
-      {};
+    const escrow: Partial<
+      Pick<Transaction, 'escrowStatus' | 'heldAt' | 'releasedAt' | 'refundedAt' | 'receiptNumber'>
+    > = {};
     if (target === 'confirmed') {
       const match = await Match.findByPk(transaction.matchId, { transaction: t });
       const state = escrowStateOnFunding(match?.status ?? 'accepted');
       const field = escrowTimestampField(state);
       escrow.escrowStatus = state;
       if (field) escrow[field] = new Date();
+      if (state === 'released') escrow.receiptNumber = generateReceiptNumber();
     }
 
     await transaction.update(

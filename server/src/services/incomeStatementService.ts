@@ -12,6 +12,8 @@ export interface StatementEntry {
   currency: string;
   provider: string;
   reference: string;
+  /** Checkable by anyone at /r/<number>, so a lender can verify a line on its own. */
+  receipt: string | null;
   gig: string | null;
   category: string | null;
 }
@@ -117,6 +119,7 @@ export const build = async (
     currency: 'RWF',
     provider: t.provider,
     reference: t.reference,
+    receipt: t.receiptNumber,
     gig: t.match?.gig?.title ?? null,
     category: t.match?.gig?.skill?.category ?? null,
   }));
@@ -203,7 +206,7 @@ export const verify = async (signature: string): Promise<StatementVerification> 
 };
 
 export const toCsv = (statement: IncomeStatement): string => {
-  const header = ['date', 'gig', 'category', 'amount', 'currency', 'provider', 'reference'];
+  const header = ['date', 'gig', 'category', 'amount', 'currency', 'provider', 'reference', 'receipt'];
   const escape = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const rows = statement.entries.map((e) =>
     [
@@ -214,6 +217,7 @@ export const toCsv = (statement: IncomeStatement): string => {
       e.currency,
       e.provider,
       e.reference,
+      e.receipt,
     ]
       .map(escape)
       .join(','),

@@ -37,6 +37,8 @@ export class Transaction extends Model<
   declare heldAt: Date | null;
   declare releasedAt: Date | null;
   declare refundedAt: Date | null;
+  /** Issued when the money is released; public, so random rather than sequential. */
+  declare receiptNumber: string | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -99,6 +101,7 @@ export const initTransaction = (sequelize: Sequelize) => {
       heldAt: { type: DataTypes.DATE, allowNull: true },
       releasedAt: { type: DataTypes.DATE, allowNull: true },
       refundedAt: { type: DataTypes.DATE, allowNull: true },
+      receiptNumber: { type: DataTypes.STRING, allowNull: true, unique: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

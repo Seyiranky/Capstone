@@ -9,6 +9,8 @@ import notify from '../lib/notify';
 import {
   AUTO_RELEASE_AFTER_MS,
   MAX_CODE_ATTEMPTS,
+  amountToCollect,
+  generateReceiptNumber,
   canEscrowTransition,
   escrowTimestampField,
 } from './escrowRules';
@@ -58,7 +60,14 @@ const settleEscrow = async (
     // escrowStateOnFunding sends it straight where the job now points.
     if (!tx || tx.status !== 'confirmed' || !canEscrowTransition(tx.escrowStatus, to)) return null;
     const field = escrowTimestampField(to);
-    await tx.update({ escrowStatus: to, ...(field ? { [field]: new Date() } : {}) }, { transaction: t });
+    await tx.update(
+      {
+        escrowStatus: to,
+        ...(field ? { [field]: new Date() } : {}),
+        ...(to === 'released' ? { receiptNumber: generateReceiptNumber() } : {}),
+      },
+      { transaction: t },
+    );
     return tx;
   });
 
@@ -87,7 +96,7 @@ export const completeMatch = async (
   if (gig) {
     // A match accepted before escrow existed has no transaction yet; it is
     // paid the old way, requested on completion.
-    await fund(match, Number(gig.budget));
+    await fund(match, amountToCollect(match.agreedAmount, gig.budget));
     await gig.update({ status: 'completed' });
   }
 

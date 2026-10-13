@@ -38,6 +38,8 @@ export class Match extends Model<InferAttributes<Match>, InferCreationAttributes
   declare completionCodeAttempts: CreationOptional<number>;
   declare workDoneAt: Date | null;
   declare completedVia: CompletionMethod | null;
+  /** The accepted quote, which escrow collects. Null means the gig's budget. */
+  declare agreedAmount: number | string | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -118,6 +120,7 @@ export const initMatch = (sequelize: Sequelize) => {
         validate: { isIn: [['ranked', 'exploration']] },
       },
       completionCode: { type: DataTypes.STRING(4), allowNull: true },
+      agreedAmount: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
       completionCodeAttempts: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       workDoneAt: { type: DataTypes.DATE, allowNull: true },
       completedVia: {
