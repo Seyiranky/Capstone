@@ -26,6 +26,7 @@ import GigForm from './GigForm';
 import ApplicantList from './ApplicantList';
 import ApplicationProgress from './ApplicationProgress';
 import RejectionNotice from './RejectionNotice';
+import RateHint from './RateHint';
 import { useAppSelector } from '../../store/hooks';
 import { gigApi } from '../../api/gigApi';
 import { gigApplicationApi } from '../../api/gigApplicationApi';
@@ -376,6 +377,7 @@ const GigDetail = () => {
           parser={(v) => Number((v ?? '').replace(/,/g, ''))}
           addonAfter="RWF"
         />
+        <RateHint skillId={gig.skillId} amount={quoteAmount} audience="worker" />
         <Typography.Paragraph type="secondary" style={{ fontSize: 13, margin: '6px 0 16px' }}>
           {t('quote.priceHelp', { budget: Number(gig.budget).toLocaleString() })}
         </Typography.Paragraph>

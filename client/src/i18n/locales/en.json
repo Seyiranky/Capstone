@@ -725,5 +725,12 @@
     "breakdownHelp": "By skill. Many \"skill level\" rejections in one skill point to where training or verification is needed.",
     "none": "No rejections recorded yet.",
     "skill": "Skill"
+  },
+  "rates": {
+    "usual": "Jobs like this usually pay {{low}}–{{high}} RWF (typical {{median}}).",
+    "basis_paid": "From {{count}} paid jobs on Isoko.",
+    "basis_posted": "From {{count}} posted budgets; too few jobs are paid yet to say more.",
+    "belowClient": "This is below what most similar jobs pay. Good workers may pass it by.",
+    "belowWorker": "Your price is below the usual range. Make sure it covers your time and materials."
   }
 }

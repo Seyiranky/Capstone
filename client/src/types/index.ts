@@ -488,3 +488,13 @@ export interface WorkHistoryEntry {
   photos: JobPhoto[];
   receiptNumber: string | null;
 }
+
+export interface RateGuide {
+  category: SkillCategory | null;
+  /** Where the numbers come from: released payouts, or posted budgets when too few were paid. */
+  basis: 'paid' | 'posted' | 'none';
+  sampleSize: number;
+  p25: number | null;
+  median: number | null;
+  p75: number | null;
+}

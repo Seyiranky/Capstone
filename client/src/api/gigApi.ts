@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { Gig, GigStatus } from '../types';
+import type { Gig, GigStatus, RateGuide } from '../types';
 
 export interface CreateGigPayload {
   title: string;
@@ -13,6 +13,9 @@ export interface CreateGigPayload {
 }
 
 export const gigApi = {
+  rates: (skillId: string) =>
+    axiosClient.get<RateGuide>('/gigs/rates', { params: { skillId } }).then((res) => res.data),
+
   createGig: (payload: CreateGigPayload, imageFile?: File) => {
     const formData = new FormData();
     formData.append('title', payload.title);

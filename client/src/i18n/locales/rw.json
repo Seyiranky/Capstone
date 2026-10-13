@@ -725,5 +725,12 @@
     "breakdownHelp": "Hakurikijwe ubumenyi. Kwangwa kenshi kubera ubumenyi bike mu bumenyi bumwe byerekana aho amahugurwa akenewe.",
     "none": "Nta busabe bwanzwe buranditswe.",
     "skill": "Ubumenyi"
+  },
+  "rates": {
+    "usual": "Akazi nk’aka gakunze kwishyurwa {{low}}–{{high}} RWF (akenshi {{median}}).",
+    "basis_paid": "Bishingiye ku kazi {{count}} kishyuwe kuri Isoko.",
+    "basis_posted": "Bishingiye ku ngengo {{count}} zatanzwe; akazi kishyuwe ntikaraba kenshi.",
+    "belowClient": "Ibi biri munsi y’ibyo akazi nk’aka gakunze kwishyurwa. Abakozi beza bashobora kubyirengagiza.",
+    "belowWorker": "Igiciro cyawe kiri munsi y’ibisanzwe. Reba ko gihagije ku gihe n’ibikoresho byawe."
   }
 }

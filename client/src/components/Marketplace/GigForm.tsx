@@ -10,6 +10,7 @@ import { fetchGigs } from '../../store/slices/gigSlice';
 import { KIGALI_LOCATIONS } from '../../constants/locations';
 import { locationName as lookupLocationName } from '../../utils/locationName';
 import type { Gig, Skill } from '../../types';
+import RateHint from './RateHint';
 
 interface GigFormProps {
   gig?: Gig;
@@ -39,6 +40,8 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [form] = Form.useForm();
+  const budget = Form.useWatch('budget', form) as number | undefined;
 
   useEffect(() => {
     skillApi.listSkillTree().then(setSkills);
@@ -110,7 +113,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
   };
 
   return (
-    <Form layout="vertical" requiredMark={false} onFinish={onFinish} initialValues={initialValues}>
+    <Form form={form} layout="vertical" requiredMark={false} onFinish={onFinish} initialValues={initialValues}>
       <Form.Item name="title" label={t('marketplace.gigForm.titleLabel')} rules={[{ required: true }]}>
         <Input />
       </Form.Item>
@@ -125,6 +128,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
         name="budget"
         label={t('marketplace.gigForm.budgetLabel')}
         rules={[{ required: true }]}
+        extra={<RateHint skillId={gig?.skillId ?? categoryId} amount={budget} audience="client" />}
       >
         <InputNumber<number>
           min={0}
