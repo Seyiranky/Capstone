@@ -320,6 +320,23 @@ already has (escrow, payouts, receipts, trust, notifications).
 
 Recommended order: 10 (cheap, strongest for the defence), 11, 13, 14, 9, 15, 12.
 
+## Round 4 — signature features for the defence (in progress)
+
+Built in this order, each committed with its tests:
+
+1. **Worker Voice** (item 15). Admins post a short poll on a platform rule; only workers with at
+   least one paid job may vote, one vote each; counts are public on `/fairwork` while the poll is
+   open; when it closes an admin must publish what was done about the result. Fairwork's
+   "workers vote on platform rules" check counts polls decided this way.
+2. **Job Cover** (item 12). For on-site trades the client can add accident cover when funding
+   escrow: 2% of the price (minimum 300 RWF), covering medical costs up to 300,000 RWF for the
+   job's day. Simulated insurer; policy number on the receipt. The covered worker files a claim
+   from the job card within 7 days; an admin approves or declines it with a reason.
+3. **USSD** (Phase 9). `POST /api/ussd` in Africa's Talking's format (sessionId, phoneNumber,
+   text, replying `CON`/`END`). A worker's confirmed phone number is their login. Menus: open jobs
+   in my trades, my active job (enter the completion code), earnings this month, language. An
+   on-screen phone simulator under System lets the panel see it working.
+
 ## Round 3 — the worker's side (research of 14 Oct 2026, done 14 Oct)
 
 What worker-facing platforms give their workers, and how Isoko does it differently.
