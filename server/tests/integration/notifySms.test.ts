@@ -94,7 +94,7 @@ describe('SMS delivery', () => {
   });
 
   test('someone who did not choose SMS is skipped, not failed', async () => {
-    const user = await makeUser(emails.optedOut, { phone: '+250788123456', phoneVerifiedAt: new Date() });
+    const user = await makeUser(emails.optedOut, { phone: '+250788123457', phoneVerifiedAt: new Date() });
     const row = await smsRowFor(user.id);
     expect(row.status).toBe('skipped');
     expect(row.error).toBe('not opted in');

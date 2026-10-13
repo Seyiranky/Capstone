@@ -9,7 +9,6 @@ import {
   Input,
   Row,
   Segmented,
-  Select,
   Skeleton,
   Switch,
   Tooltip,
@@ -23,8 +22,6 @@ import { distanceKm } from '../../utils/distance';
 import GigCard from './GigCard';
 import MarketplaceMap from './MarketplaceMap';
 
-type SortKey = 'newest' | 'budget_desc' | 'budget_asc' | 'nearest';
-
 const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -34,8 +31,6 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
   const [nearMe, setNearMe] = useState(false);
   const [view, setView] = useState<'list' | 'map'>('list');
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<string>('all');
-  const [sort, setSort] = useState<SortKey>('newest');
 
   useEffect(() => {
     dispatch(fetchGigs());
@@ -54,33 +49,25 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
       : gigs.filter((g) => g.status === 'open');
   }, [gigs, role, profile, savedOnly, savedIds]);
 
-  const categories = useMemo(() => {
-    const set = new Map<string, string>();
-    for (const g of base) if (g.skill?.name) set.set(g.skill.name, g.skill.name);
-    return [...set.keys()].sort();
-  }, [base]);
-
-  const effectiveSort: SortKey = nearMe && hasWorkerLocation ? 'nearest' : sort;
+  // Newest first; "Near me" orders by distance instead.
+  const nearest = nearMe && hasWorkerLocation;
 
   const finalGigs = useMemo(() => {
     const q = search.trim().toLowerCase();
     const dist = (lat: number, lng: number) =>
       hasWorkerLocation ? distanceKm(workerLat!, workerLng!, lat, lng) : Number.POSITIVE_INFINITY;
-    const list = base.filter((g) => {
-      if (category !== 'all' && g.skill?.name !== category) return false;
-      if (q && !`${g.title} ${g.description}`.toLowerCase().includes(q)) return false;
-      return true;
-    });
-    return [...list].sort((a, b) => {
-      if (effectiveSort === 'budget_desc') return Number(b.budget) - Number(a.budget);
-      if (effectiveSort === 'budget_asc') return Number(a.budget) - Number(b.budget);
-      if (effectiveSort === 'nearest')
-        return dist(a.locationLat, a.locationLng) - dist(b.locationLat, b.locationLng);
-      return (b.createdAt ?? '').localeCompare(a.createdAt ?? '');
-    });
-  }, [base, search, category, effectiveSort, hasWorkerLocation, workerLat, workerLng]);
+    // Search covers the trade too, so "tailoring" finds tailoring gigs.
+    const list = base.filter(
+      (g) => !q || `${g.title} ${g.description} ${g.skill?.name ?? ''}`.toLowerCase().includes(q),
+    );
+    return [...list].sort((a, b) =>
+      nearest
+        ? dist(a.locationLat, a.locationLng) - dist(b.locationLat, b.locationLng)
+        : (b.createdAt ?? '').localeCompare(a.createdAt ?? ''),
+    );
+  }, [base, search, nearest, hasWorkerLocation, workerLat, workerLng]);
 
-  // Phones: search takes its own row and the two selects split the next one.
+  // Phones: search takes its own row.
   const narrow = !Grid.useBreakpoint().sm;
 
   return (
@@ -92,27 +79,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
           placeholder={t('common.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ width: narrow ? '100%' : 240 }}
-        />
-        <Select
-          value={category}
-          onChange={setCategory}
-          style={{ width: narrow ? 'calc(50% - 6px)' : 200 }}
-          options={[
-            { value: 'all', label: t('marketplace.gigFeed.allCategories') },
-            ...categories.map((c) => ({ value: c, label: c })),
-          ]}
-        />
-        <Select
-          value={sort}
-          onChange={setSort}
-          style={{ width: narrow ? 'calc(50% - 6px)' : 180 }}
-          options={[
-            { value: 'newest', label: t('marketplace.gigFeed.sortNewest') },
-            { value: 'budget_desc', label: t('marketplace.gigFeed.sortBudgetDesc') },
-            { value: 'budget_asc', label: t('marketplace.gigFeed.sortBudgetAsc') },
-            ...(hasWorkerLocation ? [{ value: 'nearest', label: t('marketplace.gigFeed.sortNearest') }] : []),
-          ]}
+          style={{ width: narrow ? '100%' : 320 }}
         />
         {role === 'worker' && (
           <Tooltip title={!hasWorkerLocation ? t('marketplace.gigFeed.setLocationHint') : undefined}>
@@ -156,7 +123,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
             description={
               savedOnly
                 ? t('marketplace.gigFeed.emptySaved')
-                : search || category !== 'all'
+                : search
                   ? t('marketplace.gigFeed.emptyFiltered')
                   : t('marketplace.gigFeed.empty')
             }
@@ -180,7 +147,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
                 <GigCard
                   gig={gig}
                   footNote={
-                    effectiveSort === 'nearest'
+                    nearest
                       ? t('marketplace.gigFeed.distanceAway', {
                           distance: distanceKm(
                             workerLat!,

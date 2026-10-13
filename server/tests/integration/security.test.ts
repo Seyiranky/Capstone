@@ -181,6 +181,16 @@ describe('sign-up and sign-in', () => {
   });
 });
 
+describe('phone numbers', () => {
+  test('a number confirmed on one account cannot be confirmed on another', async () => {
+    const number = `+2507${String(stamp).slice(-8)}`;
+    await users.client.update({ phone: number, phoneVerifiedAt: new Date() });
+    const res = await request(app).post('/api/auth/send-phone-code').set(as('worker')).send({ phone: number });
+    expect(res.status).toBe(409);
+    await users.client.update({ phone: null, phoneVerifiedAt: null });
+  });
+});
+
 describe('changing the password', () => {
   test('needs the current password, and signs out every other session', async () => {
     const other = tokens.other;

@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Col,
+  Drawer,
   Empty,
   Flex,
   Input,
@@ -90,6 +91,8 @@ const MatchList = () => {
   const matches = useAppSelector((state) => state.matches.items);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [reviewMatch, setReviewMatch] = useState<Match | null>(null);
+  // Crew, photos, Job Cover and safe visit live in a side panel, not on the card.
+  const [toolsFor, setToolsFor] = useState<Match | null>(null);
   const [liveDisputes, setLiveDisputes] = useState<Map<string, Dispute>>(new Map());
 
   const loadDisputes = () =>
@@ -231,20 +234,11 @@ const MatchList = () => {
                   </Space>
                 )}
 
-                <TeamSection match={match} onChanged={refresh} />
-
-                {match.status === 'accepted' && (
-                  <div style={{ marginBottom: 10 }}>
-                    <JobPhotos match={match} canAdd={isWorker && isLead} onChanged={refresh} />
-                  </div>
-                )}
                 {match.status === 'accepted' && !isLead && myMembership && (
                   <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                     {t('team.memberOnly', { role: t(`team.roleLabel_${myMembership.role}`).toLowerCase() })}
                   </Typography.Text>
                 )}
-                {(match.status === 'accepted' || match.status === 'completed') && <JobCoverCard matchId={match.id} />}
-                {match.status === 'accepted' && isWorker && isLead && <SafeVisitBar matchId={match.id} />}
                 {match.status === 'accepted' && isLead && (
                   <JobEscrowPanel
                     match={match}
@@ -256,7 +250,6 @@ const MatchList = () => {
 
                 {match.status === 'completed' && match.transaction && (
                   <Space direction="vertical" size={8} style={{ width: '100%' }}>
-                    <JobPhotos match={match} canAdd={isWorker && isLead} onChanged={refresh} />
                     <Flex align="center" gap={8} wrap="wrap">
                       <StatusTag
                         status={
@@ -300,11 +293,36 @@ const MatchList = () => {
                       ))}
                   </Space>
                 )}
+                {(match.status === 'accepted' || match.status === 'completed') && (
+                  <Button type="link" size="small" onClick={() => setToolsFor(match)} style={{ padding: 0, marginTop: 10 }}>
+                    {t('matches.moreForJob')}
+                  </Button>
+                )}
               </Card>
             </Col>
           );
         })}
       </Row>
+      <Drawer
+        open={Boolean(toolsFor)}
+        onClose={() => setToolsFor(null)}
+        title={toolsFor?.gig?.title}
+        width={420}
+        destroyOnHidden
+      >
+        {toolsFor && (() => {
+          const m = matches.find((x) => x.id === toolsFor.id) ?? toolsFor;
+          const lead = !isWorker || m.workerId === profile.id;
+          return (
+            <Flex vertical gap={20}>
+              {m.status === 'accepted' && isWorker && lead && <SafeVisitBar matchId={m.id} />}
+              <JobCoverCard matchId={m.id} />
+              <TeamSection match={m} onChanged={refresh} />
+              <JobPhotos match={m} canAdd={isWorker && lead} onChanged={refresh} />
+            </Flex>
+          );
+        })()}
+      </Drawer>
       {reviewMatch && (
         <ReviewModal
           match={reviewMatch}

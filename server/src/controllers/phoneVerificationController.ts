@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import crypto from 'crypto';
 import type { Request, Response } from 'express';
 import { User } from '../models/User';
@@ -35,6 +36,15 @@ const sameHash = (a: string, b: string) =>
  * The code is never in the response. On the `log` driver it is printed by the
  * server, which is how the flow is demonstrated without a gateway account.
  */
+/**
+ * A confirmed number belongs to one account. Notices and safety texts go to
+ * it, so two accounts sharing one would let either be reached as the other.
+ */
+const confirmedElsewhere = (msisdn: string, userId: string) =>
+  User.findOne({ where: { phone: msisdn, phoneVerifiedAt: { [Op.ne]: null }, id: { [Op.ne]: userId } }, attributes: ['id'] });
+
+const TAKEN = 'This number is already confirmed on another Isoko account.';
+
 export const sendPhoneCode = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
   const msisdn = sms.toRwandanMsisdn((req.body ?? {}).phone);
@@ -42,6 +52,11 @@ export const sendPhoneCode = async (req: Request, res: Response): Promise<void> 
     res.status(400).json({
       message: 'Enter a Rwandan mobile number: MTN (078, 079) or Airtel (072, 073).',
     });
+    return;
+  }
+
+  if (await confirmedElsewhere(msisdn, caller.id)) {
+    res.status(409).json({ message: TAKEN });
     return;
   }
 
@@ -146,6 +161,12 @@ export const verifyPhone = async (req: Request, res: Response): Promise<void> =>
       attemptsLeft,
       expired: attemptsLeft === 0,
     });
+    return;
+  }
+
+  // Checked again here: another account may have confirmed it since the code was sent.
+  if (user.phone && (await confirmedElsewhere(user.phone, user.id))) {
+    res.status(409).json({ message: TAKEN });
     return;
   }
 

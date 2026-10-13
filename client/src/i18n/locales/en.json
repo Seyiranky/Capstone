@@ -67,7 +67,6 @@
     "disputes": "Disputes",
     "growth": "Growth",
     "voice": "Worker Voice",
-    "ussd": "Basic phone",
     "workers": "Find workers"
   },
   "dashboard": {
@@ -452,7 +451,8 @@
     "declineExplainer": "The gig goes back on the marketplace so the client can pick someone else.",
     "declineReasonPlaceholder": "Reason (optional), for example: already booked that week",
     "invitedBadge": "Matched for you",
-    "alreadyReviewed": "You've reviewed this job."
+    "alreadyReviewed": "You've reviewed this job.",
+    "moreForJob": "More for this job"
   },
   "profile": {
     "about": "About",
@@ -1250,22 +1250,6 @@
     "declineHint": "Why it is declined",
     "approvedMsg": "Claim approved.",
     "declinedMsg": "Claim declined."
-  },
-  "ussd": {
-    "title": "Basic phone",
-    "subtitle": "No smartphone or no data? Find jobs, finish a job with the client's code and check your earnings by dialling a short code from any phone.",
-    "idle": "Dial {{code}} to start.",
-    "loading": "Please wait...",
-    "dial": "Dial {{code}}",
-    "reply": "Your choice",
-    "send": "Send",
-    "cancel": "Cancel",
-    "ok": "OK",
-    "failed": "Something went wrong. Dial again.",
-    "howTitle": "How it works",
-    "how1": "From any phone, dial {{code}} on a number you have confirmed in Settings. No internet or app is needed, and it costs nothing to the worker.",
-    "how2": "Choose by number: 1 lists open jobs in your trades and lets you apply, 2 shows the job you are doing and takes the client's 4-digit code to get paid, 3 shows your earnings, 4 switches between Kinyarwanda and English. 0 goes back.",
-    "how3": "This screen runs the same menus as your own account, so you can try it here. In the pilot the short code is served through a USSD gateway such as Africa's Talking."
   },
   "workers": {
     "title": "Find workers",

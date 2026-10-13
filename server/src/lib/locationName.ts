@@ -1,7 +1,7 @@
 /**
  * Kigali areas, as the web app offers them when a gig is posted (kept in step
  * with client/src/constants/locations.ts). Used where the server has to name a
- * place in text, such as a USSD screen.
+ * place, such as the worker directory.
  */
 const AREAS: [string, number, number][] = [
   ['Nyarugenge', -1.9441, 30.0619],

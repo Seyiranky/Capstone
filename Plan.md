@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status:** Phases 0–8 and Round 2 items 10–11 are built and committed (14 Oct 2026). Still to build: 13 (safe visit), 14 (voice notes), 9 (USSD), 15 (worker voice), 12 (job cover). Walkthrough for a tester: `TESTING.md`, section 7.
+> **Status:** Phases 0–8, Rounds 2–4 and the security review are built and committed (14 Oct 2026). USSD (Phase 9) was dropped. Walkthrough for a tester: `TESTING.md`, section 7.
 
 ## Context
 
@@ -55,7 +55,7 @@ Outcome wanted:
 | Escrow disputes go to a distant support desk | Upwork, KayaHelp | **Peer mediators screened for collusion (Phase 3)** |
 | Income can't be shown to a lender | Most (Fundis partly) | Signed income statement (built) **+ receipts per release (Phase 2)** |
 | Race to the bottom on price | Upwork, Fiverr | **Fair-rate floor from completed local gigs (Phase 6)** |
-| Basic phones are shut out | All except Ayambe | **USSD menu including entering the completion code (Phase 9)** |
+| Basic phones are shut out | All except Ayambe | Not addressed: USSD was built and then dropped (Phase 9) |
 
 ## Phases
 
@@ -217,7 +217,7 @@ verification the defence rests on. Instead:
   *invited* by the ranking (rather than applying) cannot name a crew, since crew is declared
   on the application; they can still take an apprentice. 13 new tests in `teams.test.ts`.
 
-### Phase 9 — USSD (stretch)
+### Phase 9 — USSD (dropped)
 *Borrowed from:* Ayambe, M-Pesa menus, SA Youth zero-rating.
 
 - A USSD session endpoint in the shape of the Africa's Talking USSD API. Its `log` driver
@@ -316,7 +316,7 @@ already has (escrow, payouts, receipts, trust, notifications).
 | 13 ✓ | **Safe visit** (done 14 Oct; Settings → Safety, the job card, admin Safety alerts): for on-site jobs, the worker checks in and out, a trusted contact is told by SMS, and an SOS button alerts them and an admin | Ride-hailing safety features | Built for domestic and home-repair work, where most workers are women |
 | 14 ✓ | **Voice notes** (done 14 Oct): record a voice note in chat and on a gig post, for people who find typing hard; up to 2 minutes and 3MB, listened back before sending; cards show which gigs have one | WhatsApp voice-note organising; Lesedi | Uses the existing upload path; the length is measured while recording, because browser WebM files carry none |
 | 15 | **Worker voice**: admins post short polls on platform rules; only workers with a paid job vote; results are public | Platform cooperatives (Up&Go) | Fairwork's "fair representation" principle, measured on the scorecard |
-| 9 | **USSD** (carried over): menus for basic phones | Ayambe, Text4Jobs Ghana | Includes entering the completion code |
+| 9 | **USSD** (dropped): menus for basic phones | Ayambe, Text4Jobs Ghana | Includes entering the completion code |
 
 Recommended order: 10 (cheap, strongest for the defence), 11, 13, 14, 9, 15, 12.
 
@@ -332,12 +332,7 @@ Built in this order, each committed with its tests:
    escrow: 2% of the price (minimum 300 RWF), covering medical costs up to 300,000 RWF for the
    job's day. Simulated insurer; policy number on the receipt. The covered worker files a claim
    from the job card within 7 days; an admin approves or declines it with a reason.
-3. ✓ **USSD** (Phase 9; done 14 Oct: `POST /api/ussd/gateway` for the gateway, `Basic phone` page for workers as a simulator). `POST /api/ussd` in Africa's Talking's format (sessionId, phoneNumber,
-   text, replying `CON`/`END`). A worker's confirmed phone number is their login. Menus: open jobs
-   in my trades, my active job (enter the completion code), earnings this month, language. An
-   on-screen phone simulator (worker sidebar › Basic phone) lets the panel see it working.
-   To dial it from a real handset: an Africa's Talking account and service code, the API on a
-   public URL, its callback set to `/api/ussd/gateway?secret=…` with `USSD_WEBHOOK_SECRET`.
+3. **USSD** (Phase 9): built on 14 Oct, then removed at the owner's request the same day. Not part of the product.
 
 ## Find workers (done 14 Oct 2026)
 
