@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status:** Phases 0–8, Rounds 2–4 and the security review are built and committed (14 Oct 2026). USSD (Phase 9) was dropped. Walkthrough for a tester: `TESTING.md`, section 7.
+> **Status:** Phases 0–8, Rounds 2–4 and the security review are built and committed (14 Oct 2026). USSD (Phase 9) and Worker Voice (item 15) were built and then dropped. Walkthrough for a tester: `TESTING.md`, section 7.
 
 ## Context
 
@@ -315,7 +315,7 @@ already has (escrow, payouts, receipts, trust, notifications).
 | 12 | **Job cover**: optional accident cover per on-site job, paid as a small add-on when the client funds escrow (simulated insurer) | Turaco embedded micro-insurance | Priced per job and shown on the receipt |
 | 13 ✓ | **Safe visit** (done 14 Oct; Settings → Safety, the job card, admin Safety alerts): for on-site jobs, the worker checks in and out, a trusted contact is told by SMS, and an SOS button alerts them and an admin | Ride-hailing safety features | Built for domestic and home-repair work, where most workers are women |
 | 14 ✓ | **Voice notes** (done 14 Oct): record a voice note in chat and on a gig post, for people who find typing hard; up to 2 minutes and 3MB, listened back before sending; cards show which gigs have one | WhatsApp voice-note organising; Lesedi | Uses the existing upload path; the length is measured while recording, because browser WebM files carry none |
-| 15 | **Worker voice**: admins post short polls on platform rules; only workers with a paid job vote; results are public | Platform cooperatives (Up&Go) | Fairwork's "fair representation" principle, measured on the scorecard |
+| 15 | **Worker voice** (dropped): admins post short polls on platform rules; only workers with a paid job vote; results are public | Platform cooperatives (Up&Go) | Fairwork's "fair representation" principle, measured on the scorecard |
 | 9 | **USSD** (dropped): menus for basic phones | Ayambe, Text4Jobs Ghana | Includes entering the completion code |
 
 Recommended order: 10 (cheap, strongest for the defence), 11, 13, 14, 9, 15, 12.
@@ -324,10 +324,7 @@ Recommended order: 10 (cheap, strongest for the defence), 11, 13, 14, 9, 15, 12.
 
 Built in this order, each committed with its tests:
 
-1. ✓ **Worker Voice** (item 15; done 14 Oct: worker page `/voice`, admin under People & trust, results on `/fairwork`). Admins post a short poll on a platform rule; only workers with at
-   least one paid job may vote, one vote each; counts are public on `/fairwork` while the poll is
-   open; when it closes an admin must publish what was done about the result. Fairwork's
-   "workers vote on platform rules" check counts polls decided this way.
+1. **Worker Voice** (item 15): built on 14 Oct, then removed at the owner's request the same day; its tables are dropped (`20261014200000-drop-worker-voice`). Fairwork's "workers vote on platform rules" check is reported as not met again.
 2. ✓ **Job Cover** (item 12; done 14 Oct: offered at pay-in, card on the job, policy on the receipt, admin under Money › Job Cover). For on-site trades the client can add accident cover when funding
    escrow: 2% of the price (minimum 300 RWF), covering medical costs up to 300,000 RWF for the
    job's day. Simulated insurer; policy number on the receipt. The covered worker files a claim

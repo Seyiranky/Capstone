@@ -32,17 +32,20 @@ const MarketplacePage = () => {
       label: role === 'client' ? t('marketplace.tabs.yourGigs') : t('marketplace.tabs.openGigs'),
       value: 'gigs',
     },
-    {
-      label: (
-        <span>
-          {t('marketplace.tabs.saved')}
-          {savedIds.length ? <Badge count={savedIds.length} size="small" offset={[6, -2]} /> : null}
-        </span>
-      ),
-      value: 'saved',
-    },
+    // Saving and applying are for workers finding work; a client sees their own gigs.
     ...(role === 'worker'
-      ? [{ label: t('marketplace.tabs.myApplications'), value: 'applications' }]
+      ? [
+          {
+            label: (
+              <span>
+                {t('marketplace.tabs.saved')}
+                {savedIds.length ? <Badge count={savedIds.length} size="small" offset={[6, -2]} /> : null}
+              </span>
+            ),
+            value: 'saved',
+          },
+          { label: t('marketplace.tabs.myApplications'), value: 'applications' },
+        ]
       : []),
     { label: t('marketplace.tabs.yourMatches'), value: 'matches' },
   ];

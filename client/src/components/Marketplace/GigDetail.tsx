@@ -328,7 +328,8 @@ const GigDetail = () => {
             </Card>
           )}
 
-          {(role === 'admin' || isOwner) && (
+          {/* An empty applicants box only makes sense while the gig is still looking for someone. */}
+          {(role === 'admin' || isOwner) && (applications.length > 0 || ['pending_review', 'open'].includes(gig.status)) && (
             <Card
               style={{ marginTop: 20 }}
               title={t('marketplace.gigDetail.applicants', { count: applications.length })}

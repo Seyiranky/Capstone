@@ -24,7 +24,6 @@ import {
   TrophyOutlined,
   WifiOutlined,
   FlagOutlined,
-  CommentOutlined,
   MedicineBoxOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
@@ -35,9 +34,7 @@ const ICONS: Record<string, ReactNode> = {
   '/marketplace': <AppstoreOutlined />,
   '/wallet': <WalletOutlined />,
   '/growth': <RiseOutlined />,
-  '/voice': <CommentOutlined />,
   '/workers': <TeamOutlined />,
-  '/admin/voice': <CommentOutlined />,
   '/admin/cover': <MedicineBoxOutlined />,
   '/disputes': <AuditOutlined />,
   '/notifications': <BellOutlined />,

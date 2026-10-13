@@ -25,7 +25,6 @@ export const NAV_ENTRIES: NavEntry[] = [
   { key: '/workers', labelKey: 'sidebar.workers', roles: ['client'] },
   { key: '/wallet', labelKey: 'sidebar.wallet', roles: ['worker', 'client'] },
   { key: '/growth', labelKey: 'sidebar.growth', roles: ['worker'] },
-  { key: '/voice', labelKey: 'sidebar.voice', roles: ['worker'] },
   { key: '/disputes', labelKey: 'sidebar.disputes', roles: ['worker', 'client'] },
   { key: '/notifications', labelKey: 'sidebar.notifications', roles: ['worker', 'client'] },
   { key: '/settings', labelKey: 'sidebar.settings', roles: ['worker', 'client'] },
@@ -42,7 +41,6 @@ export const NAV_ENTRIES: NavEntry[] = [
 
   { key: '/admin/users', labelKey: 'adminNav.users', roles: ['admin'], group: 'adminNav.people' },
   { key: '/admin/reviewers', labelKey: 'adminNav.reviewers', roles: ['admin'], group: 'adminNav.people' },
-  { key: '/admin/voice', labelKey: 'adminNav.voice', roles: ['admin'], group: 'adminNav.people' },
   { key: '/admin/reports', labelKey: 'adminNav.reports', roles: ['admin'], group: 'adminNav.people' },
   { key: '/admin/audit', labelKey: 'adminNav.audit', roles: ['admin'], group: 'adminNav.people' },
 

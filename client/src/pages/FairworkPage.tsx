@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { Flex, Typography } from 'antd';
 import { Link } from 'react-router-dom';
 import FairworkView from '../components/Fairwork/FairworkView';
-import VoiceResults from '../components/WorkerVoice/VoiceResults';
 import LanguageToggle from '../components/common/LanguageToggle';
 import logo from '../assets/logo.png';
 
@@ -24,7 +23,6 @@ const FairworkPage = () => {
         {t('fairwork.subtitle')}
       </Typography.Paragraph>
       <FairworkView />
-      <VoiceResults />
     </div>
   );
 };

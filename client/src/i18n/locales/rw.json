@@ -66,7 +66,6 @@
     "profile": "Umwirondoro",
     "disputes": "Ibirego",
     "growth": "Iterambere",
-    "voice": "Ijwi ry'Abakozi",
     "workers": "Shaka abakozi"
   },
   "dashboard": {
@@ -239,7 +238,9 @@
       "budget": "Ingengo y’imari",
       "status": "Imimerere",
       "applied": "Byasabwe"
-    }
+    },
+    "save": "Bika akazi",
+    "unsave": "Kura mu byabitswe"
   },
   "wallet": {
     "title": "Ipochi",
@@ -919,7 +920,6 @@
     "fairwork": "Ikarita ya Fairwork",
     "safety": "Impuruza z’umutekano",
     "reports": "Ibirego",
-    "voice": "Ijwi ry'Abakozi",
     "cover": "Job Cover"
   },
   "actions": {
@@ -1000,7 +1000,7 @@
     "c_peerReviewers": "Abakozi basuzuma abakozi",
     "c_peerReviewers_d": "Abakozi banditswe nk’abasuzuma ibimenyetso by’ubumenyi.",
     "c_workerVoice": "Abakozi batora ku mategeko ya porogaramu",
-    "c_workerVoice_d": "Amatora ku mategeko y'urubuga mu mwaka ushize, yatowemo n'abakozi bishyuwe binyuze kuri Isoko kandi urubuga rugasubiza ku mugaragaro.",
+    "c_workerVoice_d": "Ntibirashyirwaho: abakozi nta buryo bafite bwo gutora ku mategeko y'urubuga.",
     "basis_other": "Hashingiwe ku nyandiko {{count}}"
   },
   "safetyNet": {
@@ -1182,46 +1182,6 @@
     "refunded": "Byasubijwe",
     "dismissed": "Byanzwe",
     "none": "Ntibyishyuwe"
-  },
-  "workerVoice": {
-    "title": "Ijwi ry'Abakozi",
-    "subtitle": "Abakozi ni bo bafata ibyemezo ku mategeko agira ingaruka ku mishahara yabo. Tora ku bibazo bifunguye kandi urebe icyo urubuga rwakoze kuri buri gisubizo.",
-    "notYet": "Uzashobora gutora umaze kwishyurwa akazi binyuze kuri Isoko. Kugeza icyo gihe, ushobora gukurikirana ibisubizo byose hano.",
-    "none": "Nta matora araba.",
-    "vote": "Tora",
-    "voted": "Ijwi ryawe ryabaruwe. Murakoze.",
-    "voteFailed": "Ijwi ryawe ntiryabaruwe. Ongera ugerageze.",
-    "phase_voting": "Amatora arafunguye",
-    "phase_awaiting_response": "Bitegereje igisubizo cy'urubuga",
-    "phase_closed": "Byafashweho icyemezo",
-    "closes": "birangira {{when}}",
-    "awaiting": "amatora yarangiye",
-    "closedOn": "byemejwe ku wa {{date}}",
-    "votes_one": "ijwi {{count}}",
-    "votes_other": "amajwi {{count}}",
-    "outcome": "Icyo urubuga rwakoze",
-    "adminTitle": "Ijwi ry'Abakozi",
-    "adminSub": "Shyikiriza abakozi itegeko ry'urubuga. Abakozi bishyuwe binyuze kuri Isoko gusa ni bo batora, rimwe. Funga amatora uvuga icyo uzakora; buri watoye arabimenyeshwa.",
-    "newPoll": "Amatora mashya",
-    "question": "Ikibazo",
-    "questionHint": "Urugero: guhagarika akazi nyuma y'amasaha 24 byahemba umukozi 20%?",
-    "details": "Ibisobanuro (si ngombwa)",
-    "options": "Amahitamo",
-    "option": "Ihitamo {{n}}",
-    "optionRule": "Kugeza ku nyuguti 80",
-    "addOption": "Ongeraho ihitamo",
-    "days": "Amatora amara",
-    "daysUnit": "iminsi",
-    "open": "Fungura amatora",
-    "openHint": "Buri mukozi ushobora gutora arabimenyeshwa.",
-    "opened": "Amatora yafunguwe. Abakozi babimenyeshejwe.",
-    "openFailed": "Ntibyakunze. Reba amatora wongere ugerageze.",
-    "close": "Funga utanga igisubizo",
-    "closeBody": "Andika icyo urubuga ruzakora ku gisubizo. Gitangazwa iruhande rw'amajwi kandi cyoherezwa buri watoye.",
-    "outcomeHint": "Urugero: abakozi bahisemo 5%, none icyifuzo ku rupapuro rwo kwishyura ni 5%.",
-    "closedMsg": "Amatora yafunzwe kandi igisubizo cyatangajwe.",
-    "publicTitle": "Ijwi ry'Abakozi",
-    "publicSub": "Ibibazo byashyikirijwe abakozi bishyuwe binyuze kuri Isoko, amajwi, n'icyo urubuga rwakoze."
   },
   "cover": {
     "covered": "Arinzwe na Job Cover",

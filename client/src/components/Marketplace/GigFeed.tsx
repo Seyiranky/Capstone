@@ -146,6 +146,7 @@ const GigFeed = ({ savedOnly = false }: { savedOnly?: boolean }) => {
               <Col xs={24} sm={12} lg={8} xl={6} key={gig.id}>
                 <GigCard
                   gig={gig}
+                  own={role === 'client' && gig.clientId === profile?.id}
                   footNote={
                     nearest
                       ? t('marketplace.gigFeed.distanceAway', {

@@ -15,8 +15,6 @@ import { Message, initMessage } from './Message';
 import { Notification, initNotification } from './Notification';
 import { NotificationDelivery, initNotificationDelivery } from './NotificationDelivery';
 import { Payout, initPayout } from './Payout';
-import { Poll, initPoll } from './Poll';
-import { PollVote, initPollVote } from './PollVote';
 import { Report, initReport } from './Report';
 import { Review, initReview } from './Review';
 import { SafetyEvent, initSafetyEvent } from './SafetyEvent';
@@ -97,8 +95,6 @@ initMessage(sequelize);
 initNotification(sequelize);
 initNotificationDelivery(sequelize);
 initPayout(sequelize);
-initPoll(sequelize);
-initPollVote(sequelize);
 initReport(sequelize);
 initReview(sequelize);
 initSafetyEvent(sequelize);
@@ -131,8 +127,6 @@ export const models = {
   Notification,
   NotificationDelivery,
   Payout,
-  Poll,
-  PollVote,
   Report,
   Review,
   SafetyEvent,
@@ -176,8 +170,6 @@ export {
   Notification,
   NotificationDelivery,
   Payout,
-  Poll,
-  PollVote,
   Report,
   Review,
   SafetyEvent,
