@@ -3,7 +3,7 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status:** Phases 0–8 are built and committed (14 Oct 2026); Phase 9 (USSD) is not started. Walkthrough for a tester: `TESTING.md`, section 7.
+> **Status:** Phases 0–8 and Round 2 items 10–11 are built and committed (14 Oct 2026). Still to build: 13 (safe visit), 14 (voice notes), 9 (USSD), 15 (worker voice), 12 (job cover). Walkthrough for a tester: `TESTING.md`, section 7.
 
 ## Context
 
@@ -256,7 +256,7 @@ already has (escrow, payouts, receipts, trust, notifications).
 | # | Feature | Borrowed from | What makes it Isoko's |
 |---|---|---|---|
 | 10 ✓ | **Fairwork scorecard** (done 14 Oct; public at `/fairwork`, admin under Insights): a public page scoring Isoko against the five Fairwork principles, computed from live data | Fairwork (Oxford Internet Institute), which rates platforms in 38 countries | Self-audited, live and checkable rather than a yearly external report |
-| 11 | **Safety net**: clients add a small contribution per job (suggested 3%) to the worker's benefits pot, for sick days or emergencies; workers can also auto-save a share of every payout toward Ejo Heza | Alia portable benefits; Rwanda's Ejo Heza savings scheme | Rides on escrow and payouts, so it happens on every paid job with no extra step |
+| 11 ✓ | **Safety net** (done 14 Oct; pay-in step and Wallet): clients add a small contribution per job (suggested 3%) to the worker's benefits pot, for sick days or emergencies; workers can also auto-save a share of every payout toward Ejo Heza | Alia portable benefits; Rwanda's Ejo Heza savings scheme | Rides on escrow and payouts, so it happens on every paid job with no extra step |
 | 12 | **Job cover**: optional accident cover per on-site job, paid as a small add-on when the client funds escrow (simulated insurer) | Turaco embedded micro-insurance | Priced per job and shown on the receipt |
 | 13 | **Safe visit**: for on-site jobs, the worker checks in and out, a trusted contact is told by SMS, and an SOS button alerts them and an admin | Ride-hailing safety features | Built for domestic and home-repair work, where most workers are women |
 | 14 | **Voice notes**: record a voice note in chat and on a gig post, for people who find typing hard | WhatsApp voice-note organising; Lesedi | Uses the existing upload and evidence-hashing path |

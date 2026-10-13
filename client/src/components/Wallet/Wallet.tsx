@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Card, Col, Flex, Grid, List, Row, Statistic, Table, Typography } from 'antd';
+import { Card, Col, Flex, Grid, List, Row, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useAppSelector } from '../../store/hooks';
 import { transactionApi } from '../../api/transactionApi';
@@ -9,6 +9,9 @@ import PageContainer from '../Layout/PageContainer';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import { countsAsMoved, isHeld } from '../../lib/money';
+import SafetyNetCard from './SafetyNetCard';
+import StatTile from '../common/StatTile';
+import { LockOutlined, SwapOutlined, WalletOutlined } from '@ant-design/icons';
 import type { Transaction } from '../../types';
 
 /** A collected payment is described by where it is now, not just that it was collected. */
@@ -95,26 +98,23 @@ const Wallet = () => {
       subtitle={isClient ? t('wallet.subtitleClient') : t('wallet.subtitleWorker')}
     >
       <Row gutter={[16, 16]}>
-        <Col xs={12} sm={8}>
-          <Card size="small" style={{ height: '100%' }}>
-            <Statistic
-              title={isClient ? t('wallet.totalPaid') : t('wallet.totalEarned')}
-              value={confirmedTotal}
-              suffix="RWF"
-            />
-          </Card>
+        <Col xs={12} md={8}>
+          <StatTile
+            icon={<WalletOutlined />}
+            label={isClient ? t('wallet.totalPaid') : t('wallet.totalEarned')}
+            value={confirmedTotal.toLocaleString()}
+            suffix="RWF"
+          />
         </Col>
-        <Col xs={12} sm={8}>
-          <Card size="small" style={{ height: '100%' }}>
-            <Statistic title={t('wallet.pending')} value={heldTotal} suffix="RWF" />
-          </Card>
+        <Col xs={12} md={8}>
+          <StatTile icon={<LockOutlined />} label={t('wallet.pending')} value={heldTotal.toLocaleString()} suffix="RWF" />
         </Col>
-        <Col xs={24} sm={8}>
-          <Card size="small" style={{ height: '100%' }}>
-            <Statistic title={t('wallet.transactions')} value={transactions.length} />
-          </Card>
+        <Col xs={24} md={8}>
+          <StatTile icon={<SwapOutlined />} label={t('wallet.transactions')} value={transactions.length} />
         </Col>
       </Row>
+
+      {!isClient && <SafetyNetCard />}
 
       <Card title={t('wallet.howPaymentsWork')} style={{ marginTop: 16 }}>
         {/* A how-to, not progress: antd Steps would highlight step 1 and grey the rest. */}

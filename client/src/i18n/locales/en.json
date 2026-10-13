@@ -935,5 +935,30 @@
     "c_workerVoice": "Workers vote on platform rules",
     "c_workerVoice_d": "Not built yet. Planned: polls on platform rules, open to workers with a paid job.",
     "basis_other": "From {{count}} records"
+  },
+  "safetyNet": {
+    "title": "Safety net",
+    "subtitle": "Money your clients have added for sick days and emergencies. It is yours to draw on.",
+    "balance": "Available",
+    "contributed": "Added by clients",
+    "withdrawn": "Drawn",
+    "ejoHeza": "Saved toward Ejo Heza",
+    "ejoHezaHelp": "Set aside this share of every payout toward Ejo Heza, Rwanda’s long-term savings scheme.",
+    "withdraw": "Withdraw",
+    "withdrawTitle": "Withdraw from your safety net",
+    "amount": "Amount (RWF)",
+    "why": "What is it for? (optional)",
+    "whyPlaceholder": "For example: clinic visit, rent while sick",
+    "recent": "Recent movements",
+    "empty": "Nothing yet. When a client adds to your safety net, it shows here.",
+    "kind_contribution": "Added by a client",
+    "kind_withdrawal": "Withdrawn",
+    "kind_ejoHeza": "Set aside for Ejo Heza",
+    "addTitle": "Add to {{name}}’s safety net",
+    "none": "None",
+    "addHelp": "{{amount}} RWF goes to the worker’s safety net when the job is paid out.",
+    "noneHelp": "You can add a small amount for the worker’s sick days and emergencies.",
+    "payTotal": "Pay {{amount}} RWF with MoMo",
+    "simulated": "Ejo Heza transfers are simulated in this demo."
   }
 }

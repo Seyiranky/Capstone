@@ -7,6 +7,7 @@ import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
 import { hasStatus } from '../lib/httpError';
 import { MAX_CONTRIBUTION } from '../services/safetyNetService';
+import { amountToCollect } from '../services/escrowRules';
 
 /** A match with its gig loaded, which the party check reads. */
 type MatchWithGig = Match & { gig?: Gig | null };
@@ -30,10 +31,12 @@ export const initiateTransaction = async (req: Request, res: Response): Promise<
       .json({ message: 'Only the matched worker or the posting client may initiate payment' });
     return;
   }
-  if (match.status !== 'completed') {
+  // An accepted job is funded into escrow; a completed one (accepted before
+  // escrow existed) is paid directly. Either can still lack a request.
+  if (match.status !== 'completed' && match.status !== 'accepted') {
     res
       .status(409)
-      .json({ message: 'A transaction can only be initiated for a completed match' });
+      .json({ message: 'A transaction can only be initiated for an accepted or completed match' });
     return;
   }
 
@@ -45,7 +48,10 @@ export const initiateTransaction = async (req: Request, res: Response): Promise<
     return;
   }
 
-  const transaction = await paymentService.initiate(match, match.gig?.budget as number);
+  const transaction = await paymentService.initiate(
+    match,
+    amountToCollect(match.agreedAmount, match.gig?.budget as number),
+  );
   res.status(201).json(transaction);
 };
 

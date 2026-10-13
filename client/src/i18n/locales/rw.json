@@ -935,5 +935,30 @@
     "c_workerVoice": "Abakozi batora ku mategeko ya porogaramu",
     "c_workerVoice_d": "Ntibirakorwa. Biteganyijwe: amatora ku mategeko, afunguye ku bakozi bishyuwe.",
     "basis_other": "Hashingiwe ku nyandiko {{count}}"
+  },
+  "safetyNet": {
+    "title": "Ubwizigame bw’ingoboka",
+    "subtitle": "Amafaranga abakiliya bawe bongeyeho y’iminsi y’uburwayi n’ibyihutirwa. Ni ayawe kuyakoresha.",
+    "balance": "Ahari",
+    "contributed": "Ayongewe n’abakiliya",
+    "withdrawn": "Ayakuweho",
+    "ejoHeza": "Azigamiwe Ejo Heza",
+    "ejoHezaHelp": "Shyira ku ruhande iki gice cya buri bwishyu cyo kuzigamira Ejo Heza, gahunda y’u Rwanda yo kuzigama igihe kirekire.",
+    "withdraw": "Bikuza",
+    "withdrawTitle": "Bikuza ku bwizigame bwawe",
+    "amount": "Amafaranga (RWF)",
+    "why": "Ni ay’iki? (si ngombwa)",
+    "whyPlaceholder": "Urugero: kujya kwa muganga, ubukode igihe urwaye",
+    "recent": "Ibyakozwe vuba",
+    "empty": "Nta kintu kiraba. Umukiliya niyongera ku bwizigame bwawe, bizagaragara hano.",
+    "kind_contribution": "Byongewe n’umukiliya",
+    "kind_withdrawal": "Byakuweho",
+    "kind_ejoHeza": "Byazigamiwe Ejo Heza",
+    "addTitle": "Ongera ku bwizigame bwa {{name}}",
+    "none": "Nta na kimwe",
+    "addHelp": "{{amount}} RWF bijya ku bwizigame bw’umukozi akazi karangiye kwishyurwa.",
+    "noneHelp": "Ushobora kongeraho make y’iminsi y’uburwayi n’ibyihutirwa by’umukozi.",
+    "payTotal": "Ishyura {{amount}} RWF na MoMo",
+    "simulated": "Kohereza muri Ejo Heza ni ibyo kugerageza muri iyi demo."
   }
 }

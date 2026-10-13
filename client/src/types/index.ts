@@ -619,3 +619,12 @@ export interface FairworkScorecard {
   computedAt: string;
   principles: { key: 'pay' | 'conditions' | 'contracts' | 'management' | 'representation'; checks: FairworkCheck[] }[];
 }
+
+export interface SafetyNet {
+  balance: number;
+  contributed: number;
+  withdrawn: number;
+  ejoHeza: number;
+  savingsPercent: number;
+  entries: { id: string; kind: 'contribution' | 'withdrawal' | 'ejoHeza'; amount: number | string; note: string | null; createdAt: string }[];
+}

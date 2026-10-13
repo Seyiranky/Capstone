@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { App, Button, Flex, Input, Typography } from 'antd';
+import { App, Button, Flex, Input, Segmented, Typography } from 'antd';
 import { LockOutlined, SafetyCertificateOutlined, WarningOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import OpenDisputeModal from '../Disputes/OpenDisputeModal';
@@ -38,6 +38,8 @@ const JobEscrowPanel = ({ match, isWorker, liveDispute, onChanged }: JobEscrowPa
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [disputing, setDisputing] = useState(false);
+  // Suggested 3% to the worker's safety net, as Alia suggests a small amount per job.
+  const [netPercent, setNetPercent] = useState(3);
   const [locked, setLocked] = useState((match.completionCodeAttempts ?? 0) >= MAX_CODE_ATTEMPTS);
 
   const tx = match.transaction;
@@ -60,7 +62,14 @@ const JobEscrowPanel = ({ match, isWorker, liveDispute, onChanged }: JobEscrowPa
     }
   };
 
-  const fund = () => tx && run('fund', () => transactionApi.confirmTransaction(tx.id));
+  const price = Number(tx?.amount ?? match.agreedAmount ?? match.gig?.budget ?? 0);
+  const contribution = Math.round((price * netPercent) / 100);
+  // A job accepted before escrow existed has no payment request yet; open one first.
+  const fund = () =>
+    run('fund', async () => {
+      const request = tx ?? (await transactionApi.initiateTransaction(match.id));
+      return transactionApi.confirmTransaction(request.id, contribution);
+    });
 
   const release = () =>
     modal.confirm({
@@ -145,8 +154,22 @@ const JobEscrowPanel = ({ match, isWorker, liveDispute, onChanged }: JobEscrowPa
           <Typography.Paragraph type="secondary" style={{ fontSize: 13, margin: '4px 0 10px' }}>
             {t('escrow.fundBody', { amount })}
           </Typography.Paragraph>
-          <Button type="primary" block loading={busy === 'fund'} onClick={fund} disabled={!tx}>
-            {t('escrow.fundButton')}
+          <Typography.Text style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>
+            {t('safetyNet.addTitle', { name: match.worker?.name ?? '' })}
+          </Typography.Text>
+          <Segmented
+            block
+            size="small"
+            value={netPercent}
+            onChange={(v) => setNetPercent(Number(v))}
+            options={[0, 3, 5].map((p) => ({ value: p, label: p === 0 ? t('safetyNet.none') : `${p}%` }))}
+            style={{ marginBottom: 6 }}
+          />
+          <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 10 }}>
+            {contribution > 0 ? t('safetyNet.addHelp', { amount: contribution.toLocaleString() }) : t('safetyNet.noneHelp')}
+          </Typography.Text>
+          <Button type="primary" block loading={busy === 'fund'} onClick={fund}>
+            {t('safetyNet.payTotal', { amount: (price + contribution).toLocaleString() })}
           </Button>
         </div>
       );
