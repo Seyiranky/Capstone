@@ -23,6 +23,7 @@ export const NAV_ENTRIES: NavEntry[] = [
   { key: '/dashboard', labelKey: 'sidebar.dashboard' },
   { key: '/marketplace', labelKey: 'sidebar.marketplace', roles: ['worker', 'client'] },
   { key: '/wallet', labelKey: 'sidebar.wallet', roles: ['worker', 'client'] },
+  { key: '/growth', labelKey: 'sidebar.growth', roles: ['worker'] },
   { key: '/disputes', labelKey: 'sidebar.disputes', roles: ['worker', 'client'] },
   { key: '/notifications', labelKey: 'sidebar.notifications', roles: ['worker', 'client'] },
   { key: '/settings', labelKey: 'sidebar.settings', roles: ['worker', 'client'] },

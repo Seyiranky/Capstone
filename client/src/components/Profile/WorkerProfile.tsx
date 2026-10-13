@@ -28,6 +28,7 @@ import IdentityLink from '../common/IdentityLink';
 import TrustReceipt from '../common/TrustReceipt';
 import type { PublicProfile, Review, UserSkill } from '../../types';
 import WorkHistory from './WorkHistory';
+import LevelBadge from '../Growth/LevelBadge';
 
 const WorkerProfile = () => {
   const { t } = useTranslation();
@@ -91,7 +92,22 @@ const WorkerProfile = () => {
               <Typography.Title level={4} style={{ margin: 0 }}>
                 {profile.name}
               </Typography.Title>
-              <Tag>{t(`common.role.${profile.role}`)}</Tag>
+              <Flex gap={6} wrap="wrap" justify="center">
+                <Tag style={{ margin: 0 }}>{t(`common.role.${profile.role}`)}</Tag>
+                {profile.role === 'worker' && <LevelBadge level={profile.level} />}
+                {profile.role === 'worker' && profile.availability && (
+                  <span
+                    className={`isoko-status isoko-status--${
+                      profile.availability === 'available' ? 'success' : profile.availability === 'busy' ? 'warning' : 'neutral'
+                    }`}
+                  >
+                    {t(`growth.av_${profile.availability}`)}
+                    {profile.availability === 'away' && profile.availableFrom
+                      ? ` · ${new Date(profile.availableFrom).toLocaleDateString()}`
+                      : ''}
+                  </span>
+                )}
+              </Flex>
               <Progress
                 type="dashboard"
                 size={120}

@@ -265,7 +265,7 @@ already has (escrow, payouts, receipts, trust, notifications).
 
 Recommended order: 10 (cheap, strongest for the defence), 11, 13, 14, 9, 15, 12.
 
-## Round 3 — the worker's side (research of 14 Oct 2026, in progress)
+## Round 3 — the worker's side (research of 14 Oct 2026, done 14 Oct)
 
 What worker-facing platforms give their workers, and how Isoko does it differently.
 
@@ -278,6 +278,15 @@ What worker-facing platforms give their workers, and how Isoko does it different
 | 20 | **Where the work is**: open gigs and typical pay by area, for the worker's trades | Uber demand heatmap | From real gigs and payouts, not estimates |
 
 All on a new **Growth** page for workers; availability also on the Dashboard and profile.
+
+As built: levels are computed in `levelService` and shown on the public profile with
+availability; the RPL pack is a printable page at `/growth/rpl` listing skills with their
+evidence tier and every paid job with its checkable receipt number. 6 new tests in
+`growth.test.ts`.
+
+**Known issue:** in 2 of 7 full server test runs on 14 Oct, one test failed (a different one
+each time: a dispute split, an escrow code check). Neither fails when its file runs alone
+(six repeats), and no other process touches the test database. Root cause not yet found.
 
 ## Decisions taken
 

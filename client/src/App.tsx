@@ -27,6 +27,8 @@ import PassportPage from './pages/PassportPage';
 import ReceiptPage from './pages/ReceiptPage';
 import DisputesPage from './pages/DisputesPage';
 import FairworkPage from './pages/FairworkPage';
+import GrowthPage from './components/Growth/GrowthPage';
+import RplPack from './components/Growth/RplPack';
 import AdminFairwork from './components/Admin/AdminFairwork';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
@@ -76,6 +78,10 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['worker', 'client']} />}>
             <Route path="/wallet" element={<WalletPage />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={['worker']} />}>
+            <Route path="/growth" element={<GrowthPage />} />
+            <Route path="/growth/rpl" element={<RplPack />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<AdminPage />} />

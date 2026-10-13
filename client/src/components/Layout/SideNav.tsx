@@ -19,6 +19,7 @@ import {
   TeamOutlined,
   ToolOutlined,
   WalletOutlined,
+  RiseOutlined,
   TrophyOutlined,
   WifiOutlined,
 } from '@ant-design/icons';
@@ -29,6 +30,7 @@ const ICONS: Record<string, ReactNode> = {
   '/dashboard': <DashboardOutlined />,
   '/marketplace': <AppstoreOutlined />,
   '/wallet': <WalletOutlined />,
+  '/growth': <RiseOutlined />,
   '/disputes': <AuditOutlined />,
   '/notifications': <BellOutlined />,
   '/settings': <SettingOutlined />,

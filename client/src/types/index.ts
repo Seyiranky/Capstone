@@ -241,6 +241,9 @@ export interface PublicProfile {
   reviewCount?: number;
   completedJobCount?: number;
   createdAt: string;
+  availability?: 'available' | 'busy' | 'away';
+  availableFrom?: string | null;
+  level?: LevelKey | null;
 }
 
 export type ReviewerTier = 'admin' | 'peer';
@@ -627,4 +630,31 @@ export interface SafetyNet {
   ejoHeza: number;
   savingsPercent: number;
   entries: { id: string; kind: 'contribution' | 'withdrawal' | 'ejoHeza'; amount: number | string; note: string | null; createdAt: string }[];
+}
+
+export type LevelKey = 'new' | 'rising' | 'trusted' | 'master';
+
+export interface WorkerLevel {
+  level: LevelKey;
+  next: Exclude<LevelKey, 'new'> | null;
+  steps: { key: Exclude<LevelKey, 'new'>; reached: boolean; criteria: { key: string; value: number; target: number; met: boolean }[] }[];
+}
+
+export interface Growth {
+  level: WorkerLevel;
+  availability: 'available' | 'busy' | 'away';
+  availableFrom: string | null;
+  goal: { monthlyGoal: number | null; earnedThisMonth: number };
+  ladder: {
+    skillId: string;
+    skill: string | null;
+    category: SkillCategory | null;
+    provenance: Provenance;
+    verificationStatus: string;
+    proficiencyLevel: number;
+  }[];
+  demand: {
+    gigs: { id: string; title: string; budget: number; lat: number; lng: number; skill: string | null; category: SkillCategory | null }[];
+    rates: RateGuide[];
+  };
 }

@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { PreferredChannel, PublicProfile, User, UserSkill, WorkerHit, WorkHistoryEntry } from '../types';
+import type { Growth, PreferredChannel, PublicProfile, User, UserSkill, WorkerHit, WorkHistoryEntry } from '../types';
 
 export interface UpdateProfilePayload {
   name?: string;
@@ -12,6 +12,9 @@ export interface UpdateProfilePayload {
   preferredLanguage?: 'en' | 'rw';
   /** Choosing 'sms' needs a confirmed number; the number itself is set by authApi.sendPhoneCode. */
   preferredChannel?: PreferredChannel;
+  availability?: 'available' | 'busy' | 'away';
+  availableFrom?: string | null;
+  monthlyGoal?: number | null;
 }
 
 export const userApi = {
@@ -29,6 +32,8 @@ export const userApi = {
 
   searchWorkers: (q: string) =>
     axiosClient.get<WorkerHit[]>('/users/search', { params: { q } }).then((res) => res.data),
+
+  growth: () => axiosClient.get<Growth>('/users/me/growth').then((res) => res.data),
 
   exportMyData: () => axiosClient.get<Record<string, unknown>>('/users/me/export').then((res) => res.data),
 };
