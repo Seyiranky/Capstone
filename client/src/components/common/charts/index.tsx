@@ -3,6 +3,8 @@ import { useThemeMode } from '../../../theme/ThemeProvider';
 import { CHART_COLORS } from '../../../theme/tokens';
 
 const useChartTheme = () => (useThemeMode().isDark ? 'classicDark' : 'classic');
+/** The single series colour: navy on white, light grey on black. */
+const useSeriesColor = () => (useThemeMode().isDark ? '#d4d4d8' : CHART_COLORS[0]);
 
 interface Point {
   x: string;
@@ -18,7 +20,7 @@ export const LineChart = ({ data, height = 240 }: { data: Point[]; height?: numb
     autoFit
     theme={useChartTheme()}
     shapeField="smooth"
-    style={{ stroke: CHART_COLORS[0], lineWidth: 2 }}
+    style={{ stroke: useSeriesColor(), lineWidth: 2 }}
   />
 );
 
@@ -55,7 +57,10 @@ export const ColumnChart = ({
   height?: number;
   /** One colour for every bar, for a series over time rather than categories. */
   single?: boolean;
-}) => (
+}) => {
+  const theme = useChartTheme();
+  const series = useSeriesColor();
+  return (
   <Column
     data={data}
     xField="label"
@@ -63,13 +68,14 @@ export const ColumnChart = ({
     colorField={single ? undefined : 'label'}
     height={height}
     autoFit
-    theme={useChartTheme()}
+    theme={theme}
     scale={single ? undefined : { color: { range: CHART_COLORS } }}
-    style={single ? { fill: CHART_COLORS[0], radiusTopLeft: 4, radiusTopRight: 4, maxWidth: 36 } : undefined}
+    style={single ? { fill: series, radiusTopLeft: 4, radiusTopRight: 4, maxWidth: 36 } : undefined}
     axis={single ? { y: { labelFormatter: (v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`) } } : undefined}
     legend={false}
   />
-);
+  );
+};
 
 /** Horizontal bars, for categories whose names are too long to sit under a column. */
 export const BarChart = ({ data, height }: { data: Bar[]; height?: number }) => (

@@ -114,7 +114,7 @@
     },
     "matchesByStatus": "Matches by status",
     "hero": {
-      "greeting": "Muraho, {{name}}",
+      "greeting": "Hello, {{name}}",
       "findWork": "Find work",
       "postGig": "Post a gig",
       "reviewGigs": "Review gigs ({{count}})",

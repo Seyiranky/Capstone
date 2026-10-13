@@ -11,10 +11,10 @@ export const BRAND = {
   navySoft: '#EEF2F7',
   ink: '#101828',
   inkHover: '#000000',
-  siderDark: '#0E1116',
+  siderDark: '#0b0b0d',
   contentLight: '#FFFFFF',
-  contentDark: '#0E1116',
-  surfaceDark: '#151A21',
+  contentDark: '#0f0f10',
+  surfaceDark: '#161618',
   borderLight: '#E4E7EC',
   hairline: 'rgba(16,24,40,0.08)',
 } as const;
@@ -89,22 +89,24 @@ export const lightTheme: ThemeConfig = {
   },
 };
 
+// Dark: near-black and neutral, as the app first shipped. White is the accent,
+// so primary buttons are white with dark text.
 export const darkTheme: ThemeConfig = {
   token: {
     ...shared,
-    colorPrimary: '#7FA6D6',
-    colorInfo: '#7FA6D6',
-    colorLink: '#9DBBE0',
-    colorLinkHover: '#C3D6EE',
+    colorPrimary: '#fafafa',
+    colorInfo: '#fafafa',
+    colorLink: '#fafafa',
+    colorLinkHover: '#d4d4d8',
+    colorTextLightSolid: '#0f0f10',
     colorBgLayout: BRAND.contentDark,
-    // Explicit, because the shared tokens must not carry a light-theme text colour.
-    colorText: '#E7EBF2',
-    colorTextSecondary: '#A9B1BF',
-    colorTextTertiary: '#8A93A3',
     colorBgContainer: BRAND.surfaceDark,
-    colorBgElevated: '#1B212A',
-    colorBorder: '#2A313C',
-    colorBorderSecondary: '#232933',
+    colorBgElevated: '#1c1c1f',
+    colorBorder: '#2a2a2e',
+    colorBorderSecondary: '#232326',
+    colorText: '#f4f4f5',
+    colorTextSecondary: '#a1a1aa',
+    colorTextTertiary: '#8b8b93',
   },
   components: {
     Layout: {
@@ -117,16 +119,22 @@ export const darkTheme: ThemeConfig = {
     Menu: {
       darkItemBg: BRAND.siderDark,
       darkSubMenuItemBg: BRAND.siderDark,
-      darkItemSelectedBg: 'rgba(127,166,214,0.16)',
+      darkItemSelectedBg: 'rgba(255,255,255,0.1)',
       darkItemSelectedColor: '#ffffff',
-      groupTitleColor: '#7A8494',
-      groupTitleFontSize: 11,
+      // Explicit: the dark menu otherwise derives its text from colorTextLightSolid,
+      // which is dark here so that white primary buttons stay readable.
+      darkItemColor: 'rgba(255,255,255,0.72)',
+      darkItemHoverColor: '#ffffff',
+      darkGroupTitleColor: '#71717a',
       darkItemHoverBg: 'rgba(255,255,255,0.06)',
+      groupTitleColor: '#71717a',
+      groupTitleFontSize: 11,
       itemHeight: 40,
       itemBorderRadius: 4,
     },
     Card: cardCfg,
     Statistic: { contentFontSize: 24, titleFontSize: 13 },
+    Segmented: { itemSelectedBg: '#2a2a2e', itemSelectedColor: '#fafafa', trackBg: '#1c1c1f' },
     Button: { primaryShadow: 'none', defaultShadow: 'none' },
   },
 };

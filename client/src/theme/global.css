@@ -11,13 +11,13 @@
   --isoko-bubble-own: #1e3a5f;
 }
 :root[data-theme='dark'] {
-  --isoko-navy: #7fa6d6;
-  --isoko-navy-soft: rgba(127, 166, 214, 0.12);
-  --isoko-ink: #e6eaf0;
-  --isoko-muted: #98a2b3;
-  --isoko-surface: #151a21;
-  --isoko-border: #2a313c;
-  --isoko-bubble-own: #2c4f7c;
+  --isoko-navy: #e4e4e7;
+  --isoko-navy-soft: rgba(255, 255, 255, 0.08);
+  --isoko-ink: #f4f4f5;
+  --isoko-muted: #a1a1aa;
+  --isoko-surface: #161618;
+  --isoko-border: #2a2a2e;
+  --isoko-bubble-own: #3f3f46;
 }
 
 body {
@@ -61,7 +61,7 @@ a:hover {
 :root[data-theme='dark'] .isoko-status--success { background: rgba(52, 168, 104, 0.16); color: #7fd6a4; border-color: transparent; }
 :root[data-theme='dark'] .isoko-status--warning { background: rgba(217, 160, 50, 0.16); color: #f0c46b; border-color: transparent; }
 :root[data-theme='dark'] .isoko-status--error { background: rgba(224, 92, 70, 0.16); color: #f19a89; border-color: transparent; }
-:root[data-theme='dark'] .isoko-status--info { background: rgba(127, 166, 214, 0.16); color: #a9c4e6; border-color: transparent; }
+:root[data-theme='dark'] .isoko-status--info { background: rgba(255, 255, 255, 0.08); color: #e4e4e7; border-color: transparent; }
 :root[data-theme='dark'] .isoko-status--neutral { background: rgba(255, 255, 255, 0.07); color: #c3c9d4; border-color: transparent; }
 
 /* Stat tiles: a quiet icon badge in the brand navy. */
