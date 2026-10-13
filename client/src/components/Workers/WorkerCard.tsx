@@ -53,10 +53,8 @@ const WorkerCard = ({ worker, onOffer }: { worker: DirectoryWorker; onOffer?: (w
 
       <Flex vertical gap={6} style={{ marginTop: 12 }}>
         {worker.skills.map((s) => (
-          <Flex key={s.name} justify="space-between" align="center" gap={8}>
-            <Typography.Text style={{ fontSize: 13 }} ellipsis>
-              {s.name}
-            </Typography.Text>
+          <Flex key={s.name} justify="space-between" align="center" gap="4px 8px" wrap="wrap">
+            <Typography.Text style={{ fontSize: 13 }}>{s.name}</Typography.Text>
             {s.provenance && <ProvenanceTag provenance={s.provenance} />}
           </Flex>
         ))}
