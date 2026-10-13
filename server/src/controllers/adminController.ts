@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import { User, Gig, GigApplication, Skill, Match, Transaction, UserSkill, NotificationDelivery, Payout, Dispute, sequelize } from '../models';
 import * as rateService from '../services/rateService';
+import * as safeVisitService from '../services/safeVisitService';
 import * as sms from '../lib/channels/sms';
 import notify from '../lib/notify';
 import * as pilotMetricsService from '../services/pilotMetricsService';
@@ -473,4 +474,12 @@ export const rates = async (_req: Request, res: Response): Promise<void> => {
       categories.map(async (c) => ({ name: c.name, ...(await rateService.forCategory(c.category)) })),
     ),
   );
+};
+
+export const safetyAlerts = async (_req: Request, res: Response): Promise<void> => {
+  res.json(await safeVisitService.alerts());
+};
+
+export const resolveSafetyAlert = async (req: Request, res: Response): Promise<void> => {
+  res.json(await safeVisitService.resolve(pathParam(req, 'id'), authed(req).id));
 };

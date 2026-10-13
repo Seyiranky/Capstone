@@ -57,6 +57,9 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare emailVerificationToken: string | null;
   declare emailVerificationExpiresAt: Date | null;
   declare experimentArm: ExperimentArm | null;
+  /** Someone the worker trusts, told by SMS when they arrive at and leave a job, and on an SOS. */
+  declare trustedContactName: string | null;
+  declare trustedContactPhone: string | null;
   /** Whether the worker is taking work. `away` keeps them off ranked shortlists. */
   declare availability: CreationOptional<'available' | 'busy' | 'away'>;
   /** When an away worker is back; after this date they count as available. */
@@ -271,6 +274,8 @@ export const initUser = (sequelize: Sequelize) => {
         allowNull: true,
         validate: { isIn: [['provenance', 'plain']] },
       },
+      trustedContactName: { type: DataTypes.STRING, allowNull: true },
+      trustedContactPhone: { type: DataTypes.STRING, allowNull: true },
       availability: {
         type: DataTypes.STRING,
         allowNull: false,

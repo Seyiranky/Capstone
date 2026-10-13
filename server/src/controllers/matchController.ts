@@ -5,6 +5,7 @@ import fs from 'fs';
 import crypto from 'crypto';
 import { Match, MatchMember, Gig, User, Transaction, Review, GigApplication, JobPhoto } from '../models';
 import * as teamService from '../services/teamService';
+import * as safeVisitService from '../services/safeVisitService';
 import { MAX_JOB_PHOTOS } from '../middleware/upload';
 import { MAX_CODE_ATTEMPTS, amountToCollect } from '../services/escrowRules';
 import * as trustScoreService from '../services/trustScoreService';
@@ -376,4 +377,20 @@ export const addJobPhotos = async (req: Request, res: Response): Promise<void> =
     })),
   );
   res.status(201).json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
+};
+
+const visitHandler =
+  (action: typeof safeVisitService.checkIn) =>
+  async (req: Request, res: Response): Promise<void> => {
+    const caller = authed(req);
+    res.status(201).json(await action(req, pathParam(req, 'id'), caller.id, { lat: req.body?.lat, lng: req.body?.lng }));
+  };
+
+/** Safe visit: arrive, leave, or ask for help on an on-site job. */
+export const checkIn = visitHandler(safeVisitService.checkIn);
+export const checkOut = visitHandler(safeVisitService.checkOut);
+export const sos = visitHandler(safeVisitService.sos);
+
+export const visitStatus = async (req: Request, res: Response): Promise<void> => {
+  res.json(await safeVisitService.statusFor(pathParam(req, 'id')));
 };

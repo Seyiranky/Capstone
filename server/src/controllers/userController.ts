@@ -16,6 +16,7 @@ import { pathParam } from '../lib/query';
 import * as workHistoryService from '../services/workHistoryService';
 import * as levelService from '../services/levelService';
 import * as growthService from '../services/growthService';
+import * as sms from '../lib/channels/sms';
 
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
@@ -44,6 +45,8 @@ const UPDATABLE_FIELDS = [
   'availability',
   'availableFrom',
   'monthlyGoal',
+  'trustedContactName',
+  'trustedContactPhone',
 ] as const;
 
 const AVAILABILITY = ['available', 'busy', 'away'] as const;
@@ -95,6 +98,19 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     res.status(400).json({ message: 'monthlyGoal must be a whole number of RWF' });
     return;
   }
+  // A trusted contact is texted on check-in and SOS, so the number must be one
+  // an SMS can reach; stored in its normal form.
+  if (body.trustedContactPhone != null && body.trustedContactPhone !== '') {
+    const msisdn = sms.toRwandanMsisdn(String(body.trustedContactPhone));
+    if (!msisdn) {
+      res.status(400).json({ message: 'The trusted contact must be a Rwandan mobile number' });
+      return;
+    }
+    body.trustedContactPhone = msisdn;
+  } else if (body.trustedContactPhone === '') {
+    body.trustedContactPhone = null;
+  }
+
   // Coming back from away clears the return date.
   if (body.availability && body.availability !== 'away') body.availableFrom = null;
 

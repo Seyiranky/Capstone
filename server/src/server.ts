@@ -4,6 +4,7 @@ import { initSocket } from './socket';
 import { assertRequiredEnv } from './config/env';
 import * as escrowService from './services/escrowService';
 import * as disputeService from './services/disputeService';
+import * as safeVisitService from './services/safeVisitService';
 
 // Fails here rather than at the first request that needs a secret. Without
 // this the server boots happily with no JWT_SECRET and only falls over when
@@ -29,6 +30,9 @@ setInterval(() => {
   });
   disputeService.escalateOverdue({ app }).catch((error: unknown) => {
     console.error('Dispute escalation sweep failed', error);
+  });
+  safeVisitService.flagOverdue({ app }).catch((error: unknown) => {
+    console.error('Safe visit sweep failed', error);
   });
 }, SWEEP_EVERY_MS).unref();
 
