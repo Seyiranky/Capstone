@@ -92,6 +92,18 @@ export type EvidenceKind = 'photo' | 'video' | 'voice' | 'link' | 'document';
 /** Transaction.status */
 export type TransactionStatus = 'initiated' | 'confirmed' | 'failed';
 
+/**
+ * Transaction.escrowStatus — what has happened to money once it is collected.
+ *
+ * Kept apart from TransactionStatus, which is the provider's settlement and is
+ * driven by callbacks. `none` covers a payment not yet collected (or that
+ * failed); `held` is collected but not yet the worker's.
+ */
+export type EscrowStatus = 'none' | 'held' | 'released' | 'refunded';
+
+/** Match.completedVia — how a match came to be completed and its escrow released. */
+export type CompletionMethod = 'code' | 'client' | 'auto';
+
 /** NotificationDelivery.channel */
 export type DeliveryChannel = 'in_app' | 'sms' | 'email';
 

@@ -2,9 +2,9 @@ import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import type { Includeable } from 'sequelize';
 import { Match, Gig, User, Transaction, Review, GigApplication } from '../models';
-import * as paymentService from '../services/paymentService';
+import { MAX_CODE_ATTEMPTS } from '../services/escrowRules';
 import * as trustScoreService from '../services/trustScoreService';
-import * as competenceService from '../services/competenceService';
+import * as escrowService from '../services/escrowService';
 import notify from '../lib/notify';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
@@ -31,6 +31,21 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         ...MATCH_INCLUDES.slice(1),
       ],
     });
+    // The client is the one party who should see the completion code: they
+    // hand it to the worker on site. It is read separately because the
+    // default scope keeps it out of every other query.
+    const inProgress = matches.filter((m) => m.status === 'accepted').map((m) => m.id);
+    if (inProgress.length) {
+      const codes = await Match.scope('withCompletionCode').findAll({
+        where: { id: inProgress },
+        attributes: ['id', 'completionCode'],
+      });
+      const byId = new Map(codes.map((c) => [c.id, c.completionCode]));
+      res.json(
+        matches.map((m) => ({ ...m.toJSON(), completionCode: byId.get(m.id) ?? null })),
+      );
+      return;
+    }
   }
   res.json(matches);
 };
@@ -87,6 +102,25 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
     return;
   }
 
+  // Completing releases the client's money, so only the client may do it
+  // directly. The worker completes with the client's code, or reports the job
+  // done and lets the 72-hour release run.
+  if (status === 'completed' && !isClient) {
+    res.status(403).json({
+      message: 'Only the client may complete this match directly; enter their completion code instead',
+    });
+    return;
+  }
+
+  if (status === 'completed') {
+    // completeMatch owns the status change: it completes only a match that is
+    // still accepted, which is what makes a race with the code or the sweep
+    // release the money once.
+    await escrowService.completeMatch(req, Object.assign(match, { gig }), 'client');
+    res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
+    return;
+  }
+
   const wasPending = match.status === 'pending';
   const now = new Date();
   // When the worker acted, if the client recorded it. Only trusted for actions
@@ -113,12 +147,16 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
           wasQueuedOffline: Boolean(occurred),
         }
       : {}),
-    ...(status === 'accepted' ? { acceptedAt: now } : {}),
+    ...(status === 'accepted'
+      ? { acceptedAt: now, completionCode: escrowService.generateCompletionCode() }
+      : {}),
     ...(status === 'cancelled' && declineReason ? { declineReason } : {}),
   });
 
   if (status === 'accepted' && gig) {
     await gig.update({ status: 'matched' });
+    // The client funds the job now, and the money waits in escrow.
+    await escrowService.fund(match, Number(gig.budget));
 
     // The gig is now taken: withdraw the other invitations and applications.
     // These carry no respondedAt, so they are excluded from acceptance-rate
@@ -157,10 +195,6 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
     });
   }
 
-  if (status === 'completed' && gig) {
-    await paymentService.initiate(match, gig.budget);
-    await gig.update({ status: 'completed' });
-  }
   if (status === 'cancelled' && gig?.status === 'matched') {
     // Siblings are still pending, so the gig goes back on the market intact.
     await gig.update({ status: 'open' });
@@ -173,20 +207,100 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
     });
   }
 
-  // Completion and abandonment both feed the trust score's completion rate, so
-  // it has to be recomputed here and not only when a review arrives.
-  if (status === 'completed' || status === 'cancelled') {
-    await trustScoreService.recalculate(match.workerId, { trigger: `match:${status}` });
-    if (gig) {
-      await trustScoreService.recalculate(gig.clientId, { trigger: `match:${status}` });
+  if (status === 'cancelled' && !wasPending) {
+    // Called off after acceptance: whatever the client put in escrow goes back.
+    const refunded = await escrowService.refund(match.id);
+    if (refunded && gig) {
+      await notify(req, {
+        userId: gig.clientId,
+        title: 'Payment refunded',
+        body: `${Number(refunded.amount).toLocaleString()} ${refunded.currency} held for "${gig.title}" was returned to you.`,
+        category: 'critical',
+      });
     }
   }
-  if (status === 'completed') {
-    // Completed, reviewed work is itself a credential once there is enough of
-    // it, so finishing a job can raise provenance for that skill.
-    await competenceService.recalculateAllFor(match.workerId, { trigger: 'match:completed' });
+
+  // Abandonment feeds the trust score's completion rate, so it has to be
+  // recomputed here and not only when a review arrives.
+  if (status === 'cancelled') {
+    await trustScoreService.recalculate(match.workerId, { trigger: 'match:cancelled' });
+    if (gig) {
+      await trustScoreService.recalculate(gig.clientId, { trigger: 'match:cancelled' });
+    }
   }
 
   const updated = await Match.findByPk(match.id, { include: MATCH_INCLUDES });
   res.json(updated);
+};
+
+/** A match the caller is party to, with its gig, or a response already sent. */
+const loadForWorker = async (req: Request, res: Response) => {
+  const caller = authed(req);
+  const match = (await Match.findByPk(pathParam(req, 'id'), {
+    include: [{ model: Gig, as: 'gig' }],
+  })) as (Match & { gig?: Gig | null }) | null;
+  if (!match) {
+    res.status(404).json({ message: 'Match not found' });
+    return null;
+  }
+  if (match.workerId !== caller.id) {
+    res.status(403).json({ message: 'Only the matched worker may do this' });
+    return null;
+  }
+  if (match.status !== 'accepted') {
+    res.status(409).json({ message: `This job is ${match.status}, not in progress` });
+    return null;
+  }
+  return match;
+};
+
+/**
+ * The worker enters the code the client gave them on site. A correct code
+ * completes the job and releases escrow in one step.
+ */
+export const completeWithCode = async (req: Request, res: Response): Promise<void> => {
+  const match = await loadForWorker(req, res);
+  if (!match) return;
+  const { result, attemptsLeft } = await escrowService.checkCompletionCode(
+    req,
+    match.id,
+    String(req.body?.code ?? ''),
+  );
+  if (result === 'wrong') {
+    res.status(400).json({ message: 'That code is not right', attemptsLeft });
+    return;
+  }
+  if (result === 'locked') {
+    res.status(423).json({
+      message: `The code is locked after ${MAX_CODE_ATTEMPTS} wrong tries. Ask the client to release payment in the app.`,
+      attemptsLeft: 0,
+    });
+    return;
+  }
+  if (result === 'notInProgress') {
+    res.status(409).json({ message: 'This job is no longer in progress' });
+    return;
+  }
+  res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
+};
+
+/**
+ * The worker reports the job finished without the code, for when the client
+ * was not there to hand it over. Starts the 72-hour clock to automatic release.
+ */
+export const markWorkDone = async (req: Request, res: Response): Promise<void> => {
+  const match = await loadForWorker(req, res);
+  if (!match) return;
+  if (!match.workDoneAt) {
+    await match.update({ workDoneAt: new Date() });
+    if (match.gig) {
+      await notify(req, {
+        userId: match.gig.clientId,
+        title: 'Job reported done',
+        body: `The worker says "${match.gig.title}" is finished. Release payment, or it releases on its own in 72 hours.`,
+        category: 'outcome',
+      });
+    }
+  }
+  res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
 };

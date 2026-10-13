@@ -8,7 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
-import type { InvitationReason, MatchOrigin, MatchStatus } from '../types/domain';
+import type { CompletionMethod, InvitationReason, MatchOrigin, MatchStatus } from '../types/domain';
 import type { ScoredPair } from '../types/scoring';
 import type { Gig } from './Gig';
 import type { Review } from './Review';
@@ -31,6 +31,13 @@ export class Match extends Model<InferAttributes<Match>, InferCreationAttributes
   declare scoreBreakdown: ScoredPair | null;
   declare weightProfileId: string | null;
   declare invitationReason: InvitationReason | null;
+  /** Handed over by the client on site; entering it completes the job and
+   *  releases escrow. Excluded by the default scope so it never reaches the
+   *  worker it is meant to be collected from. */
+  declare completionCode: string | null;
+  declare completionCodeAttempts: CreationOptional<number>;
+  declare workDoneAt: Date | null;
+  declare completedVia: CompletionMethod | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -110,12 +117,25 @@ export const initMatch = (sequelize: Sequelize) => {
         allowNull: true,
         validate: { isIn: [['ranked', 'exploration']] },
       },
+      completionCode: { type: DataTypes.STRING(4), allowNull: true },
+      completionCodeAttempts: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+      workDoneAt: { type: DataTypes.DATE, allowNull: true },
+      completedVia: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: { isIn: [['code', 'client', 'auto']] },
+      },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },
     {
       sequelize,
       modelName: 'Match',
+      // The code is a handover secret between client and worker. Leaving it out
+      // by default means no include anywhere (gig listings, transactions,
+      // admin views) can leak it; the one place that needs it asks explicitly.
+      defaultScope: { attributes: { exclude: ['completionCode'] } },
+      scopes: { withCompletionCode: { attributes: { include: ['completionCode'] } } },
     },
   );
   return Match;

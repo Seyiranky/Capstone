@@ -1,10 +1,10 @@
 import crypto from 'crypto';
-import { Transaction, sequelize } from '../models';
+import { Match, Transaction, sequelize } from '../models';
+import { escrowStateOnFunding, escrowTimestampField } from './escrowRules';
 import simulatedAdapter from './payments/simulatedAdapter';
 import type { PaymentAdapter, PaymentCallback } from './payments/adapter';
 import type { TransactionStatus } from '../types/domain';
 import { HttpError } from '../lib/httpError';
-import type { Match } from '../models/Match';
 
 /**
  * Provider-agnostic payment handling.
@@ -128,6 +128,19 @@ export const applyCallback = async ({
       return { ok: true, duplicate: true, conflicting: true, transaction };
     }
 
+    // Collected money enters escrow in whatever state the job calls for, in the
+    // same database transaction as the settlement, so no reader ever sees a
+    // confirmed payment that is neither held nor released.
+    const escrow: Partial<Pick<Transaction, 'escrowStatus' | 'heldAt' | 'releasedAt' | 'refundedAt'>> =
+      {};
+    if (target === 'confirmed') {
+      const match = await Match.findByPk(transaction.matchId, { transaction: t });
+      const state = escrowStateOnFunding(match?.status ?? 'accepted');
+      const field = escrowTimestampField(state);
+      escrow.escrowStatus = state;
+      if (field) escrow[field] = new Date();
+    }
+
     await transaction.update(
       {
         status: target,
@@ -135,6 +148,7 @@ export const applyCallback = async ({
         failureReason: target === 'failed' ? (failureReason ?? 'provider reported failure') : null,
         callbackReceivedAt: new Date(),
         providerRawResponse: raw ?? transaction.providerRawResponse,
+        ...escrow,
       },
       { transaction: t },
     );

@@ -46,6 +46,9 @@ const completedJob = async ({ amount, title }: { amount: number; title: string }
     matchId: match.id,
     amount,
     status: 'confirmed',
+    // A completed job's payment has left escrow; only released money is income.
+    escrowStatus: 'released',
+    releasedAt: new Date(),
     provider: 'simulated-momo',
     reference: `MOMO-SIM-${Math.random().toString(36).slice(2)}`,
   });

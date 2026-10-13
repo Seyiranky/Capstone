@@ -72,7 +72,8 @@ interface StatementClaims extends jwt.JwtPayload {
  *
  * The problem this addresses is that informal income is cash and undocumented,
  * so mobile-money micro-finance has no history to underwrite against. Only
- * confirmed transactions count: an initiated payment is not income.
+ * released transactions count: an initiated payment is not income, and money
+ * still held in escrow is not yet the worker's.
  */
 export const build = async (
   userId: string,
@@ -81,8 +82,13 @@ export const build = async (
   const user = await User.findByPk(userId);
   if (!user) return null;
 
-  const where: WhereOptions & { status: string; updatedAt?: Record<symbol, unknown> } = {
+  const where: WhereOptions & {
+    status: string;
+    escrowStatus: string;
+    updatedAt?: Record<symbol, unknown>;
+  } = {
     status: 'confirmed',
+    escrowStatus: 'released',
   };
   if (from || to) {
     const range: Record<symbol, unknown> = {};

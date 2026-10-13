@@ -127,7 +127,8 @@ describe('a repeated callback settles a payment once', () => {
     // Scoped to this gig: the same worker legitimately has notifications from
     // the other fixtures in this file.
     const notifications = await db.Notification.findAll({
-      where: { userId: match.workerId, title: 'Payment confirmed' },
+      // The match is already completed, so collected money goes straight to the worker.
+      where: { userId: match.workerId, title: 'Payment released' },
     });
     const forThisGig = notifications.filter((n) => n.body.includes(gig.title));
     expect(forThisGig).toHaveLength(1);

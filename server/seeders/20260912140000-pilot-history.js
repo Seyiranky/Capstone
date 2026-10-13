@@ -139,6 +139,9 @@ module.exports = {
           amount,
           currency: 'RWF',
           status: 'confirmed',
+          // Paid on completion: in escrow terms, already released.
+          escrowStatus: 'released',
+          releasedAt: finishedAt,
           provider: 'simulated-momo',
           reference: providerReference,
           providerReference,

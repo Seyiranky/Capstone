@@ -6,5 +6,7 @@ const router = express.Router();
 
 router.get('/', verifyToken, matchController.listMatches);
 router.put('/:id/status', verifyToken, matchController.updateMatchStatus);
+router.post('/:id/complete', verifyToken, matchController.completeWithCode);
+router.post('/:id/work-done', verifyToken, matchController.markWorkDone);
 
 export default router;

@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { Match, Gig, User } from '../models';
 import * as paymentService from '../services/paymentService';
 import notify from '../lib/notify';
+import { paymentNotice } from '../lib/paymentNotice';
 import { pathParam } from '../lib/query';
 import { secretMatches } from '../lib/secrets';
 
@@ -59,16 +60,7 @@ export const paymentCallback = async (req: Request, res: Response): Promise<void
     include: [{ model: Gig, as: 'gig', include: [{ model: User, as: 'client' }] }],
   })) as (Match & { gig?: Gig | null }) | null;
   if (match) {
-    const confirmed = result.transaction.status === 'confirmed';
-    await notify(req, {
-      userId: match.workerId,
-      title: confirmed ? 'Payment confirmed' : 'Payment failed',
-      body: confirmed
-        ? `Payment for "${match.gig?.title}" was confirmed (${result.transaction.amount} ${result.transaction.currency}).`
-        : `Payment for "${match.gig?.title}" did not go through. ${result.transaction.failureReason ?? ''}`.trim(),
-      // Money. The one notice a worker should never have to open the app to find.
-      category: 'critical',
-    });
+    await notify(req, paymentNotice(result.transaction, match));
   }
 
   res.status(200).json({

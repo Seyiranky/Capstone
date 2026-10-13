@@ -8,7 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
-import type { TransactionStatus } from '../types/domain';
+import type { EscrowStatus, TransactionStatus } from '../types/domain';
 import type { Match } from './Match';
 
 export class Transaction extends Model<
@@ -33,6 +33,10 @@ export class Transaction extends Model<
   /** The platform's own handle on the payment, kept distinct from the
    *  provider's so a provider change never rewrites our history. */
   declare reference: string;
+  declare escrowStatus: CreationOptional<EscrowStatus>;
+  declare heldAt: Date | null;
+  declare releasedAt: Date | null;
+  declare refundedAt: Date | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -86,6 +90,15 @@ export const initTransaction = (sequelize: Sequelize) => {
         allowNull: false,
         unique: true,
       },
+      escrowStatus: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'none',
+        validate: { isIn: [['none', 'held', 'released', 'refunded']] },
+      },
+      heldAt: { type: DataTypes.DATE, allowNull: true },
+      releasedAt: { type: DataTypes.DATE, allowNull: true },
+      refundedAt: { type: DataTypes.DATE, allowNull: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

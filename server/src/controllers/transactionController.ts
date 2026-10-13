@@ -1,5 +1,7 @@
 import type { Request, Response } from 'express';
-import { Match, Gig, Transaction, User, Notification } from '../models';
+import { Match, Gig, Transaction, User } from '../models';
+import notify from '../lib/notify';
+import { paymentNotice } from '../lib/paymentNotice';
 import * as paymentService from '../services/paymentService';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
@@ -67,11 +69,9 @@ export const confirmTransaction = async (req: Request, res: Response): Promise<v
 
   const confirmed = await paymentService.confirm(transaction.id);
 
-  await Notification.create({
-    userId: transaction.match?.workerId as string,
-    title: 'Payment confirmed',
-    body: `Payment for "${transaction.match?.gig?.title}" was confirmed (${confirmed.amount} RWF).`,
-  });
+  if (transaction.match) {
+    await notify(req, paymentNotice(confirmed, transaction.match));
+  }
 
   res.json(confirmed);
 };
