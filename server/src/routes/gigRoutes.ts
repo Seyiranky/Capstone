@@ -2,11 +2,11 @@ import express from 'express';
 import * as gigController from '../controllers/gigController';
 import { verifyToken } from '../middleware/authMiddleware';
 import { authorize } from '../middleware/roleMiddleware';
-import { uploadGigImage } from '../middleware/upload';
+import { uploadGigMedia } from '../middleware/upload';
 
 const router = express.Router();
 
-router.post('/', verifyToken, authorize('client'), uploadGigImage.single('image'), gigController.createGig);
+router.post('/', verifyToken, authorize('client'), uploadGigMedia, gigController.createGig);
 router.get('/', gigController.listGigs);
 // Before '/:id', which would otherwise swallow it.
 router.get('/rates', verifyToken, gigController.rates);

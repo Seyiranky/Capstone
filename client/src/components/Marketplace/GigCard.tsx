@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, Flex, Tooltip, Typography } from 'antd';
-import { HeartFilled, HeartOutlined } from '@ant-design/icons';
+import { AudioOutlined, HeartFilled, HeartOutlined } from '@ant-design/icons';
+import { formatClock } from '../../utils/formatClock';
 import { useSavedGigs } from '../../hooks/useSavedGigs';
 import GigCover from '../common/GigCover';
 import { locationName } from '../../utils/locationName';
@@ -33,6 +34,11 @@ const GigCard = ({ gig, footNote }: GigCardProps) => {
           style={{ aspectRatio: '16 / 9', borderBottom: '1px solid var(--ant-color-border-secondary, #e4e4e7)' }}
         >
           {isNew && <span className="isoko-cover__chip">{t('marketplace.newBadge')}</span>}
+          {gig.voiceNoteUrl && (
+            <span className="isoko-cover__chip isoko-cover__chip--end" title={t('voice.gigListen')}>
+              <AudioOutlined /> {formatClock(gig.voiceNoteDurationSec ?? 0)}
+            </span>
+          )}
           <Tooltip title={saved ? 'Remove from saved' : 'Save gig'}>
             <button
               type="button"

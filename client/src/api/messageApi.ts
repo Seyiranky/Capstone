@@ -2,15 +2,29 @@ import axiosClient from './axiosClient';
 import type { ChatContact, Message } from '../types';
 
 export const messageApi = {
-  /** Text goes as JSON; a photo switches the request to multipart. */
-  sendMessage: ({ recipientId, body, image }: { recipientId: string; body: string; image?: File | null }) => {
-    if (!image) {
+  /** Text goes as JSON; a photo or voice note switches the request to multipart. */
+  sendMessage: ({
+    recipientId,
+    body,
+    image,
+    voice,
+  }: {
+    recipientId: string;
+    body: string;
+    image?: File | null;
+    voice?: { file: File; durationSec: number } | null;
+  }) => {
+    if (!image && !voice) {
       return axiosClient.post<Message>('/messages', { recipientId, body }).then((res) => res.data);
     }
     const form = new FormData();
     form.append('recipientId', recipientId);
     form.append('body', body);
-    form.append('image', image);
+    if (image) form.append('image', image);
+    if (voice) {
+      form.append('audio', voice.file);
+      form.append('audioDurationSec', String(voice.durationSec));
+    }
     return axiosClient.post<Message>('/messages', form).then((res) => res.data);
   },
 

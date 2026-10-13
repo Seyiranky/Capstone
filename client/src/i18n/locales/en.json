@@ -739,7 +739,8 @@
     "tooBig": "Photos must be under 10 MB.",
     "notImage": "Only photos can be attached.",
     "open": "Open",
-    "failed": "Could not send. Try again."
+    "failed": "Could not send. Try again.",
+    "sentVoice": "Sent a voice note"
   },
   "jobPhotos": {
     "title": "Photos of the work",
@@ -1066,5 +1067,19 @@
     "map": "map",
     "markHandled": "Mark handled",
     "resolved": "Marked as handled."
+  },
+  "voice": {
+    "record": "Record a voice note",
+    "recording": "Recording…",
+    "done": "Done",
+    "discard": "Discard",
+    "play": "Play voice note",
+    "pause": "Pause",
+    "position": "Playback position",
+    "denied": "Allow microphone access to record a voice note.",
+    "unsupported": "This browser cannot record audio.",
+    "gigLabel": "Voice note (optional)",
+    "gigHint": "Describe the job aloud, in any language, up to 2 minutes. Workers hear it beside your written description.",
+    "gigListen": "Listen to the client"
   }
 }

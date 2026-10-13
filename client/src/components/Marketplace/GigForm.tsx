@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, App, Button, Form, Input, InputNumber, Select, Upload } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { AudioOutlined, UploadOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
+import { clipFile, useVoiceRecorder } from '../../hooks/useVoiceRecorder';
+import VoiceNoteDraft from '../Voice/VoiceNoteDraft';
 import { skillApi } from '../../api/skillApi';
 import { gigApi } from '../../api/gigApi';
 import { useAppDispatch } from '../../store/hooks';
@@ -38,6 +40,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
   const [skills, setSkills] = useState<SkillTree[]>([]);
   const [categoryId, setCategoryId] = useState<string | undefined>();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const recorder = useVoiceRecorder();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
@@ -99,8 +102,12 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
             locationLng: location.lng,
           },
           imageFile,
+          recorder.state === 'recorded' && recorder.clip
+            ? { file: clipFile(recorder.clip), durationSec: recorder.clip.durationSec }
+            : undefined,
         );
         setFileList([]);
+        recorder.discard();
         dispatch(fetchGigs());
         message.success('Gig posted — an admin will review it shortly.');
       }
@@ -198,8 +205,23 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
           </Upload>
         </Form.Item>
       )}
+      {!isEdit && (
+        <Form.Item
+          label={t('voice.gigLabel')}
+          extra={recorder.error ? t(recorder.error === 'denied' ? 'voice.denied' : 'voice.unsupported') : t('voice.gigHint')}
+          validateStatus={recorder.error ? 'error' : undefined}
+        >
+          {recorder.state === 'idle' ? (
+            <Button icon={<AudioOutlined />} onClick={recorder.start}>
+              {t('voice.record')}
+            </Button>
+          ) : (
+            <VoiceNoteDraft recorder={recorder} />
+          )}
+        </Form.Item>
+      )}
       {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
-      <Button type="primary" htmlType="submit" block loading={submitting}>
+      <Button type="primary" htmlType="submit" block loading={submitting} disabled={recorder.state === 'recording'}>
         {isEdit ? 'Save changes' : t('marketplace.gigForm.submit')}
       </Button>
     </Form>

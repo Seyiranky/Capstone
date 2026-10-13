@@ -1,3 +1,4 @@
+import fs from 'fs';
 import type { Request, Response } from 'express';
 import type { Includeable, WhereOptions } from 'sequelize';
 import { Gig, User, Skill } from '../models';
@@ -6,6 +7,7 @@ import type { RankedPair } from '../types/scoring';
 import { authed } from '../lib/authed';
 import { pathParam, stringParam } from '../lib/query';
 import * as rateService from '../services/rateService';
+import { bareMime, checkVoiceNote, fieldFile } from '../middleware/upload';
 
 const GIG_INCLUDES: Includeable[] = [
   { model: User, as: 'client' },
@@ -18,6 +20,9 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
   const { title, description, budget, skillId, requiredLevel, locationLat, locationLng } =
     req.body ?? {};
+  const image = fieldFile(req, 'image');
+  const voice = fieldFile(req, 'voice');
+  const discard = () => [image, voice].forEach((f) => f && fs.rmSync(f.path, { force: true }));
   if (
     !title ||
     !description ||
@@ -26,6 +31,7 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
     locationLat === undefined ||
     locationLng === undefined
   ) {
+    discard();
     res.status(400).json({
       message: 'title, description, budget, skillId, locationLat, and locationLng are required',
     });
@@ -34,6 +40,7 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
 
   const skill = await Skill.findByPk(skillId);
   if (!skill) {
+    discard();
     res.status(404).json({ message: 'Skill not found' });
     return;
   }
@@ -43,7 +50,15 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
       ? null
       : Number(requiredLevel);
   if (level !== null && (!Number.isInteger(level) || level < 1 || level > 5)) {
+    discard();
     res.status(400).json({ message: 'requiredLevel must be an integer from 1 to 5' });
+    return;
+  }
+
+  const voiceCheck = voice ? checkVoiceNote(voice, req.body?.voiceDurationSec) : null;
+  if (voiceCheck && 'error' in voiceCheck) {
+    discard();
+    res.status(400).json({ message: voiceCheck.error });
     return;
   }
 
@@ -57,7 +72,10 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
     locationLat: Number(locationLat),
     locationLng: Number(locationLng),
     status: 'pending_review',
-    imageUrl: req.file ? `/uploads/gigs/${req.file.filename}` : null,
+    imageUrl: image ? `/uploads/gigs/${image.filename}` : null,
+    voiceNoteUrl: voice ? `/uploads/gigs/${voice.filename}` : null,
+    voiceNoteMimeType: voice ? bareMime(voice.mimetype) : null,
+    voiceNoteDurationSec: voiceCheck && 'durationSec' in voiceCheck ? voiceCheck.durationSec : null,
   });
 
   res.status(201).json(gig);

@@ -6,6 +6,7 @@ import { Message, User } from '../models';
 import { authed } from '../lib/authed';
 import { ioFrom } from '../lib/io';
 import { stringParam } from '../lib/query';
+import { bareMime, checkVoiceNote, fieldFile } from '../middleware/upload';
 import type { Role } from '../types/domain';
 
 const ALLOWED_PAIRS: [Role, Role][] = [
@@ -19,21 +20,28 @@ const canMessage = (roleA: Role, roleB: Role) =>
   ALLOWED_PAIRS.some(([a, b]) => (roleA === a && roleB === b) || (roleA === b && roleB === a));
 
 /**
- * Sends a message: text, a photo, or both.
+ * Sends a message: text, a photo, a voice note, or a mix.
  *
- * Accepts JSON for text and multipart (field `image`) for a photo, so the
- * existing text-only callers are unchanged.
+ * Accepts JSON for text and multipart (fields `image` and `audio`, with
+ * `audioDurationSec`) for media, so the existing text-only callers are unchanged.
  */
 export const sendMessage = async (req: Request, res: Response): Promise<void> => {
   const user = authed(req);
-  const file = req.file;
-  const discard = () => file && fs.rm(file.path, { force: true }, () => undefined);
+  const file = fieldFile(req, 'image');
+  const audio = fieldFile(req, 'audio');
+  const discard = () => [file, audio].forEach((f) => f && fs.rmSync(f.path, { force: true }));
   const recipientId = req.body?.recipientId;
   const body = String(req.body?.body ?? '').trim().slice(0, BODY_MAX);
 
-  if (!recipientId || (!body && !file)) {
+  if (!recipientId || (!body && !file && !audio)) {
     discard();
-    res.status(400).json({ message: 'recipientId and a message or a photo are required' });
+    res.status(400).json({ message: 'recipientId and a message, a photo or a voice note are required' });
+    return;
+  }
+  const voice = audio ? checkVoiceNote(audio, req.body?.audioDurationSec) : null;
+  if (voice && 'error' in voice) {
+    discard();
+    res.status(400).json({ message: voice.error });
     return;
   }
   if (recipientId === user.id) {
@@ -62,6 +70,9 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
     imageUrl: file ? `/uploads/messages/${file.filename}` : null,
     imageMimeType: file?.mimetype ?? null,
     imageSha256: file ? crypto.createHash('sha256').update(fs.readFileSync(file.path)).digest('hex') : null,
+    audioUrl: audio ? `/uploads/messages/${audio.filename}` : null,
+    audioMimeType: audio ? bareMime(audio.mimetype) : null,
+    audioDurationSec: voice && 'durationSec' in voice ? voice.durationSec : null,
     readAt: null,
   });
 
@@ -153,6 +164,7 @@ export const listContacts = async (req: Request, res: Response): Promise<void> =
       lastMessage: {
         body: message.body,
         hasImage: Boolean(message.imageUrl),
+        hasAudio: Boolean(message.audioUrl),
         fromMe: message.senderId === user.id,
         createdAt: message.createdAt,
       },

@@ -132,6 +132,9 @@ export interface Gig {
   /** Optional bar set by the client. Soft: below it ranks lower, never hidden. */
   requiredLevel?: number | null;
   imageUrl?: string | null;
+  /** The client describing the job aloud. */
+  voiceNoteUrl?: string | null;
+  voiceNoteDurationSec?: number | null;
   createdAt: string;
   client?: User;
   skill?: Skill;
@@ -409,6 +412,9 @@ export interface Message {
   /** Empty when the message is only a photo. */
   body: string;
   imageUrl?: string | null;
+  /** A voice note; its length is as the sender's device measured it. */
+  audioUrl?: string | null;
+  audioDurationSec?: number | null;
   readAt: string | null;
   createdAt: string;
   /** Present on messages pushed in real time, so the recipient knows who wrote. */
@@ -419,7 +425,7 @@ export interface ChatContact {
   id: string;
   name: string;
   unreadCount?: number;
-  lastMessage?: { body: string; hasImage: boolean; fromMe: boolean; createdAt: string };
+  lastMessage?: { body: string; hasImage: boolean; hasAudio?: boolean; fromMe: boolean; createdAt: string };
 }
 
 export interface AppNotification {

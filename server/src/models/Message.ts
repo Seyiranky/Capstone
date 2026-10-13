@@ -19,6 +19,10 @@ export class Message extends Model<InferAttributes<Message>, InferCreationAttrib
   declare imageUrl: string | null;
   declare imageMimeType: string | null;
   declare imageSha256: string | null;
+  /** A voice note, sent instead of (or with) text. Duration is as the sender's device recorded it. */
+  declare audioUrl: CreationOptional<string | null>;
+  declare audioMimeType: CreationOptional<string | null>;
+  declare audioDurationSec: CreationOptional<number | null>;
   declare readAt: Date | null;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
@@ -56,6 +60,9 @@ export const initMessage = (sequelize: Sequelize) => {
       imageUrl: { type: DataTypes.STRING, allowNull: true },
       imageMimeType: { type: DataTypes.STRING, allowNull: true },
       imageSha256: { type: DataTypes.STRING(64), allowNull: true },
+      audioUrl: { type: DataTypes.STRING, allowNull: true },
+      audioMimeType: { type: DataTypes.STRING, allowNull: true },
+      audioDurationSec: { type: DataTypes.INTEGER, allowNull: true },
       readAt: {
         type: DataTypes.DATE,
         allowNull: true,

@@ -739,7 +739,8 @@
     "tooBig": "Ifoto igomba kuba munsi ya MB 10.",
     "notImage": "Hemewe amafoto gusa.",
     "open": "Fungura",
-    "failed": "Ntibyoherejwe. Ongera ugerageze."
+    "failed": "Ntibyoherejwe. Ongera ugerageze.",
+    "sentVoice": "Yohereje ubutumwa bw'ijwi"
   },
   "jobPhotos": {
     "title": "Amafoto y'akazi",
@@ -1066,5 +1067,19 @@
     "map": "ikarita",
     "markHandled": "Byakemuwe",
     "resolved": "Byanditswe ko byakemuwe."
+  },
+  "voice": {
+    "record": "Fata ijwi",
+    "recording": "Birimo gufatwa…",
+    "done": "Rangiza",
+    "discard": "Siba",
+    "play": "Umva ijwi",
+    "pause": "Hagarika",
+    "position": "Aho bigeze",
+    "denied": "Emerera mikoro kugira ngo ufate ijwi.",
+    "unsupported": "Iyi mushakisha ntishobora gufata amajwi.",
+    "gigLabel": "Ubutumwa bw'ijwi (si ngombwa)",
+    "gigHint": "Sobanura akazi mu ijwi, mu rurimi urwo ari rwo rwose, kugeza ku minota 2. Abakozi barabwumva iruhande rw'ibisobanuro byanditse.",
+    "gigListen": "Umva umukiriya"
   }
 }

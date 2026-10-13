@@ -247,6 +247,15 @@ verification the defence rests on. Instead:
   *Market & pricing* (usual pay per trade, rejection reasons by skill); *Jobs*; *Skill
   reviews*. Gig approvals and skill reviews are laid open; nothing sits behind a pop-up.
 
+### Added on request — drawn gig covers instead of stock photos (done 14 Oct 2026)
+
+Gigs without a client photo used one stock photo per trade, so a tailoring grid showed the
+same picture on every card. Each trade now has a drawn cover in the black-and-white style:
+a soft tint, a line pattern of its own (stitching, circuit traces, a layout grid, ruled
+lines), its icon and name. The pattern's angle and scale come from the gig's id, so no two
+covers match. A photo the client uploads still comes first. In the defence: a stock photo
+implies the job looks like the picture; a drawn cover only says which trade it is.
+
 ## Round 2 — proposed (research of 14 Oct 2026)
 
 A second survey looked past job marketplaces at what protects informal workers elsewhere.
@@ -258,8 +267,8 @@ already has (escrow, payouts, receipts, trust, notifications).
 | 10 ✓ | **Fairwork scorecard** (done 14 Oct; public at `/fairwork`, admin under Insights): a public page scoring Isoko against the five Fairwork principles, computed from live data | Fairwork (Oxford Internet Institute), which rates platforms in 38 countries | Self-audited, live and checkable rather than a yearly external report |
 | 11 ✓ | **Safety net** (done 14 Oct; pay-in step and Wallet): clients add a small contribution per job (suggested 3%) to the worker's benefits pot, for sick days or emergencies; workers can also auto-save a share of every payout toward Ejo Heza | Alia portable benefits; Rwanda's Ejo Heza savings scheme | Rides on escrow and payouts, so it happens on every paid job with no extra step |
 | 12 | **Job cover**: optional accident cover per on-site job, paid as a small add-on when the client funds escrow (simulated insurer) | Turaco embedded micro-insurance | Priced per job and shown on the receipt |
-| 13 | **Safe visit**: for on-site jobs, the worker checks in and out, a trusted contact is told by SMS, and an SOS button alerts them and an admin | Ride-hailing safety features | Built for domestic and home-repair work, where most workers are women |
-| 14 | **Voice notes**: record a voice note in chat and on a gig post, for people who find typing hard | WhatsApp voice-note organising; Lesedi | Uses the existing upload and evidence-hashing path |
+| 13 ✓ | **Safe visit** (done 14 Oct; Settings → Safety, the job card, admin Safety alerts): for on-site jobs, the worker checks in and out, a trusted contact is told by SMS, and an SOS button alerts them and an admin | Ride-hailing safety features | Built for domestic and home-repair work, where most workers are women |
+| 14 ✓ | **Voice notes** (done 14 Oct): record a voice note in chat and on a gig post, for people who find typing hard; up to 2 minutes and 3MB, listened back before sending; cards show which gigs have one | WhatsApp voice-note organising; Lesedi | Uses the existing upload path; the length is measured while recording, because browser WebM files carry none |
 | 15 | **Worker voice**: admins post short polls on platform rules; only workers with a paid job vote; results are public | Platform cooperatives (Up&Go) | Fairwork's "fair representation" principle, measured on the scorecard |
 | 9 | **USSD** (carried over): menus for basic phones | Ayambe, Text4Jobs Ghana | Includes entering the completion code |
 

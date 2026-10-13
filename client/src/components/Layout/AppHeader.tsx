@@ -71,7 +71,7 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
       notification.open({
         key,
         message: t('chat.newFrom', { name: m.sender.name }),
-        description: m.body || `📷 ${t('chat.sentPhoto')}`,
+        description: m.body || (m.audioUrl ? `🎤 ${t('chat.sentVoice')}` : `📷 ${t('chat.sentPhoto')}`),
         placement: 'bottomRight',
         duration: 5,
         onClick: () => {

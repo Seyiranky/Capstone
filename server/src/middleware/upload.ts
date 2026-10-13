@@ -104,18 +104,77 @@ const evidenceFilter: multer.Options['fileFilter'] = (
   cb(null, true);
 };
 
-export const uploadGigImage = multer({
-  storage: diskStorage(GIG_IMAGE_DIR),
-  fileFilter: gigImageFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
+// Voice notes ───────────────────────────────────────────────────────────────
+// Browsers record WebM/Opus (Chrome, Firefox) or MP4/AAC (Safari). Two minutes
+// of Opus at the default bitrate is well under 2MB; 3MB leaves room for AAC.
+export const VOICE_MAX_SECONDS = 120;
+export const VOICE_MAX_BYTES = 3 * 1024 * 1024;
+const VOICE_MIME_TYPES = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/aac', 'audio/x-m4a', 'audio/wav'];
 
-/** One photo per message, images only. */
-export const uploadMessageImage = multer({
+/** The bare type: some browsers declare `audio/webm;codecs=opus`. */
+export const bareMime = (mime: string) => mime.split(';')[0].trim().toLowerCase();
+
+/** A photo under `image`, a voice note under the given audio field. */
+const photoOrVoiceFilter =
+  (audioField: string): multer.Options['fileFilter'] =>
+  (_req: Request, file: Express.Multer.File, cb) => {
+    if (file.fieldname === audioField) {
+      if (!VOICE_MIME_TYPES.includes(bareMime(file.mimetype))) {
+        return cb(rejectUpload('Voice notes must be WebM, Ogg, MP4/M4A, MP3 or WAV audio'));
+      }
+      return cb(null, true);
+    }
+    if (file.fieldname === 'image') {
+      if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        return cb(rejectUpload('Only JPEG, PNG, WEBP, or GIF images are allowed'));
+      }
+      return cb(null, true);
+    }
+    cb(rejectUpload(`Unexpected file field "${file.fieldname}"`));
+  };
+
+/** A gig's photo (`image`) and its voice note (`voice`), both optional. */
+export const uploadGigMedia = multer({
+  storage: diskStorage(GIG_IMAGE_DIR),
+  fileFilter: photoOrVoiceFilter('voice'),
+  limits: { fileSize: 5 * 1024 * 1024, files: 2 },
+}).fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'voice', maxCount: 1 },
+]);
+
+/** One photo (`image`) and/or one voice note (`audio`) per message. */
+export const uploadMessageMedia = multer({
   storage: diskStorage(MESSAGE_IMAGE_DIR),
-  fileFilter: gigImageFilter,
-  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
-});
+  fileFilter: photoOrVoiceFilter('audio'),
+  limits: { fileSize: 10 * 1024 * 1024, files: 2 },
+}).fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'audio', maxCount: 1 },
+]);
+
+/** The single file uploaded under a field by a `.fields()` handler, if any. */
+export const fieldFile = (req: Request, field: string): Express.Multer.File | undefined => {
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
+  return files?.[field]?.[0];
+};
+
+/**
+ * Checks a voice note after upload: the byte cap multer cannot apply per field,
+ * and the duration the device reports. Returns an error message, or null.
+ * The duration is the sender's word for it; the byte cap is the real bound.
+ */
+export const checkVoiceNote = (
+  file: Express.Multer.File,
+  rawDuration: unknown,
+): { error: string } | { durationSec: number | null } => {
+  if (file.size > VOICE_MAX_BYTES) return { error: 'Voice notes can be at most 3MB' };
+  if (rawDuration === undefined || rawDuration === null || rawDuration === '') return { durationSec: null };
+  const seconds = Math.round(Number(rawDuration));
+  if (!Number.isFinite(seconds) || seconds < 1) return { error: 'durationSec must be a positive number' };
+  if (seconds > VOICE_MAX_SECONDS + 2) return { error: `Voice notes can be at most ${VOICE_MAX_SECONDS} seconds` };
+  return { durationSec: Math.min(seconds, VOICE_MAX_SECONDS) };
+};
 
 /** Photos of finished work: images only, a few per job, sized for mobile uploads. */
 export const MAX_JOB_PHOTOS = 3;

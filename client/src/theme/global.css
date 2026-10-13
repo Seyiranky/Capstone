@@ -110,3 +110,9 @@ a:hover {
 :root[data-theme='dark'] .isoko-cover__chip { background: #fafafa; color: #0f0f10; }
 .isoko-cover__label { position: absolute; transform: translateY(50%); padding: 2px 8px; border-radius: 6px; background: var(--cover-bg); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--cover-ink); white-space: nowrap; }
 .isoko-cover--digital_web .isoko-cover__pattern { opacity: 0.1; }
+
+/* Recording indicator for voice notes. */
+.isoko-rec-dot { width: 9px; height: 9px; border-radius: 999px; background: #dc2626; flex-shrink: 0; animation: isoko-rec 1.2s ease-in-out infinite; }
+@keyframes isoko-rec { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .isoko-rec-dot { animation: none; } }
+.isoko-cover__chip--end { top: auto; left: auto; right: 10px; bottom: 10px; font-variant-numeric: tabular-nums; }

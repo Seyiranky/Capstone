@@ -25,6 +25,10 @@ export class Gig extends Model<InferAttributes<Gig>, InferCreationAttributes<Gig
   declare locationLng: number;
   declare status: CreationOptional<GigStatus>;
   declare imageUrl: string | null;
+  /** The client describing the job aloud, beside the written description. */
+  declare voiceNoteUrl: CreationOptional<string | null>;
+  declare voiceNoteMimeType: CreationOptional<string | null>;
+  declare voiceNoteDurationSec: CreationOptional<number | null>;
   declare openedAt: Date | null;
   declare requiredLevel: number | null;
   declare createdAt: CreationOptional<Date>;
@@ -91,6 +95,9 @@ export const initGig = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      voiceNoteUrl: { type: DataTypes.STRING, allowNull: true },
+      voiceNoteMimeType: { type: DataTypes.STRING, allowNull: true },
+      voiceNoteDurationSec: { type: DataTypes.INTEGER, allowNull: true },
       openedAt: {
         type: DataTypes.DATE,
         allowNull: true,

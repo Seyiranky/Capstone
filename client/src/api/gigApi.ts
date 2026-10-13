@@ -16,7 +16,7 @@ export const gigApi = {
   rates: (skillId: string) =>
     axiosClient.get<RateGuide>('/gigs/rates', { params: { skillId } }).then((res) => res.data),
 
-  createGig: (payload: CreateGigPayload, imageFile?: File) => {
+  createGig: (payload: CreateGigPayload, imageFile?: File, voice?: { file: File; durationSec: number }) => {
     const formData = new FormData();
     formData.append('title', payload.title);
     formData.append('description', payload.description);
@@ -29,6 +29,10 @@ export const gigApi = {
     formData.append('locationLng', String(payload.locationLng));
     if (imageFile) {
       formData.append('image', imageFile);
+    }
+    if (voice) {
+      formData.append('voice', voice.file);
+      formData.append('voiceDurationSec', String(voice.durationSec));
     }
     return axiosClient.post<Gig>('/gigs', formData).then((res) => res.data);
   },

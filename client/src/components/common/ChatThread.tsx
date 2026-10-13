@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { App, Button, Empty, Flex, Image, Input, Tooltip, Typography } from 'antd';
-import { CloseOutlined, PictureOutlined, SendOutlined } from '@ant-design/icons';
+import { AudioOutlined, CloseOutlined, PictureOutlined, SendOutlined } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
 import { messageApi } from '../../api/messageApi';
 import { connectSocket } from '../../lib/socket';
 import { resolveAssetUrl } from '../../utils/assetUrl';
 import Avatar from './Avatar';
+import { clipFile, useVoiceRecorder } from '../../hooks/useVoiceRecorder';
+import VoiceNoteDraft from '../Voice/VoiceNoteDraft';
+import VoiceNotePlayer from '../Voice/VoiceNotePlayer';
 import type { Message } from '../../types';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -25,7 +28,7 @@ const time = (iso: string) =>
   new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 /**
- * A conversation with one person: text and photos, live in both directions.
+ * A conversation with one person: text, photos and voice notes, live in both directions.
  *
  * Opening the thread marks the other person's messages read and tells them,
  * so their side shows "Seen" under the last message they sent.
@@ -46,6 +49,7 @@ const ChatThread = ({
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const recorder = useVoiceRecorder();
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const onReadRef = useRef(onRead);
@@ -124,14 +128,26 @@ const ChatThread = ({
     if (fileRef.current) fileRef.current.value = '';
   };
 
+  useEffect(() => {
+    if (recorder.error) toast.error(t(recorder.error === 'denied' ? 'voice.denied' : 'voice.unsupported'));
+  }, [recorder.error, t, toast]);
+
+  const clip = recorder.state === 'recorded' ? recorder.clip : null;
+
   const handleSend = async () => {
     const body = draft.trim();
-    if (!body && !image) return;
+    if (!body && !image && !clip) return;
     setSending(true);
     try {
-      const sent = await messageApi.sendMessage({ recipientId, body, image });
+      const sent = await messageApi.sendMessage({
+        recipientId,
+        body,
+        image,
+        voice: clip ? { file: clipFile(clip), durationSec: clip.durationSec } : null,
+      });
       setDraft('');
       clearImage();
+      recorder.discard();
       setMessages((current) =>
         current.some((m) => m.id === sent.id) ? current : [...current, sent],
       );
@@ -176,6 +192,7 @@ const ChatThread = ({
         {messages.map((message) => {
           const own = message.senderId === myId;
           const src = resolveAssetUrl(message.imageUrl);
+          const voice = resolveAssetUrl(message.audioUrl);
           return (
             <div
               key={message.id}
@@ -205,6 +222,11 @@ const ChatThread = ({
                         objectFit: 'cover',
                       }}
                     />
+                  </div>
+                )}
+                {voice && (
+                  <div style={{ padding: message.body || src ? '2px 0 6px' : '2px 0' }}>
+                    <VoiceNotePlayer src={voice} durationSec={message.audioDurationSec} tone={own ? 'inverse' : 'default'} />
                   </div>
                 )}
                 {message.body && <div style={{ textAlign: 'left' }}>{message.body}</div>}
@@ -247,6 +269,12 @@ const ChatThread = ({
         </Flex>
       )}
 
+      {recorder.state !== 'idle' && (
+        <div style={{ marginTop: 10 }}>
+          <VoiceNoteDraft recorder={recorder} />
+        </div>
+      )}
+
       <Flex gap={8} style={{ marginTop: 12 }}>
         <input
           ref={fileRef}
@@ -262,6 +290,14 @@ const ChatThread = ({
             onClick={() => fileRef.current?.click()}
           />
         </Tooltip>
+        <Tooltip title={t('voice.record')}>
+          <Button
+            icon={<AudioOutlined />}
+            aria-label={t('voice.record')}
+            disabled={recorder.state !== 'idle'}
+            onClick={recorder.start}
+          />
+        </Tooltip>
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -274,7 +310,7 @@ const ChatThread = ({
           icon={<SendOutlined />}
           aria-label="Send"
           loading={sending}
-          disabled={!draft.trim() && !image}
+          disabled={(!draft.trim() && !image && !clip) || recorder.state === 'recording'}
           onClick={handleSend}
         />
       </Flex>

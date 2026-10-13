@@ -22,6 +22,7 @@ import {
   Typography,
 } from 'antd';
 import {
+  AudioOutlined,
   CheckOutlined,
   ClockCircleOutlined,
   CloseOutlined,
@@ -46,6 +47,8 @@ import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import ChatThread from '../common/ChatThread';
 import GigCover from '../common/GigCover';
+import VoiceNotePlayer from '../Voice/VoiceNotePlayer';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 import { locationName } from '../../utils/locationName';
 import type { Gig, GigApplication, RejectionReason } from '../../types';
 
@@ -214,6 +217,25 @@ const GigDetail = () => {
             <Typography.Paragraph style={{ margin: 0, fontSize: 14.5, lineHeight: 1.7 }}>
               {gig.description}
             </Typography.Paragraph>
+            {gig.voiceNoteUrl && (
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  border: '1px solid var(--isoko-border)',
+                }}
+              >
+                <Typography.Text type="secondary" style={{ display: 'block', fontSize: 12, marginBottom: 6 }}>
+                  <AudioOutlined /> {t('voice.gigListen')}
+                </Typography.Text>
+                <VoiceNotePlayer
+                  src={resolveAssetUrl(gig.voiceNoteUrl) ?? ''}
+                  durationSec={gig.voiceNoteDurationSec}
+                  width="100%"
+                />
+              </div>
+            )}
           </Card>
 
           {isOwner && (gig.status === 'pending_review' || gig.status === 'rejected') && (
