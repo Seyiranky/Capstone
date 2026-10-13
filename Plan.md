@@ -3,7 +3,8 @@
 > Supersedes the SMS notification plan, which is built and committed
 > (`714bac0`..`404ca70`, 11 Oct 2026). That plan's text is in git history.
 >
-> **Status: in progress** (13 Oct 2026). Phases 0–5 are done; Phase 6 is next.
+> **Status: core delivered** (13 Oct 2026). Phases 0–6 are built and committed; 7–9 (stretch)
+> are not started. Walkthrough for a tester: `TESTING.md`, section 7.
 
 ## Context
 
@@ -172,13 +173,20 @@ Findings so far:
   optional note (280 characters) goes to the worker with the reason. My applications is a
   list on phones. 4 new tests in `rejectionReasons.test.ts`.
 
-### Phase 6 — Fair-rate guidance
+### Phase 6 — Fair-rate guidance (done, 13 Oct 2026)
 *Borrowed from:* Upwork and Malt rate insights.
 
 - For each skill, compute the median and 25th percentile of released escrow amounts. Below
   a minimum number of jobs, fall back to a seeded reference rate.
 - When a client posts a gig below the 25th percentile, they see a soft warning. Workers
   writing a quote see the typical range.
+- As built: pooled by skill category (specialisations share their parent's). Paid amounts
+  need at least 3 jobs; split-dispute payouts are left out. Below that the guidance uses
+  posted budgets and says so; below 3 of those it shows nothing. No invented reference rates.
+  4 new tests (`rateService.test.ts`, `rates.test.ts`).
+- Found on the way: the dev database has every skill category twice (the categories seeder
+  ran again on 2 Oct and inserted copies). The seeder now inserts only missing categories.
+  The four unused 2 Oct copies are still in the dev database, awaiting a decision to delete.
 
 ### Phase 7 — Apprentice seats (stretch)
 *Not offered by any platform surveyed.*

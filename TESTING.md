@@ -135,7 +135,8 @@ Log in as **`grace@isoko.demo`**.
    - a self-declared level 5 does **not** clear `requiredLevel: 4`.
 4. Invite the shortlist. Confirm the last slot carries
    `invitationReason: 'exploration'` and goes to a newcomer like `david`.
-5. After the worker accepts and the job completes → pay → review.
+5. When the worker accepts → **Pay with MoMo** puts the agreed price in escrow → hand the
+   worker the 4-digit completion code shown on the match card → review. (See section 7.)
 
 ### 3. Peer reviewer — **currently API-only, see the gap below**
 
@@ -255,6 +256,37 @@ Switch to Kinyarwanda in **Settings → Appearance** and re-walk the worker
 journey. Every scoring reason and provenance tier must render translated —
 they are emitted as i18n keys with params, never as server-rendered sentences.
 `node scripts/check-i18n-parity.mjs` gates this in CI.
+
+### 7. Escrow, receipts, disputes and the rest of the October features
+
+Each step names the account to use. All money is simulated.
+
+1. **Quote** — as **`claudine`**, open *Tailor 20 school uniforms*, **Apply**, and quote
+   20,000. The usual-range hint appears and warns that the price is low. As **`grace`**
+   posting a gig, a low budget gets the client version of the same warning.
+2. **Escrow and the code** — approve an application as **`emmanuel`**, accept it as the
+   worker. On **Marketplace → Your matches** the client sees *Pay into escrow*; after paying,
+   the card shows a 4-digit **completion code**. The worker's card shows an entry box. A
+   wrong code says how many tries are left; after 5 it locks. The right code completes the
+   job and releases the money; **Wallet** shows it as *Released*.
+3. **Receipt** — the completed match card links to `/r/ISK-…`. Open it in a private window:
+   it loads without an account, with a QR code and a Print button.
+4. **No code to hand over** — the worker taps *Client not here? Report the job done*. The
+   card shows when it will release on its own (72 hours). The sweep runs every 10 minutes.
+5. **Dispute** — on a funded job, *Open a dispute* from either side. The money freezes and
+   the card says so. **Disputes** in the sidebar: the other party adds their side; the panel
+   votes (two matching votes decide); an admin decides escalated ones and must give a reason.
+   With the demo accounts most disputes go straight to an admin, because only one member is
+   eligible to mediate for Robert and Jean Bosco (see Plan.md, Phase 3).
+6. **Job photos and work history** — on an in-progress or completed match the worker adds up
+   to 3 photos. Once paid, the job appears under **Work history** on their profile, with the
+   rating, photos and receipt link. The passport shows paid jobs per skill.
+7. **Rejection reasons** — reject an application as **`emmanuel`**: a reason is required.
+   The worker sees it under **My applications**; *skill level* links to the add-skill form.
+   **Admin → Overview** counts reasons by skill.
+8. **Photos in messages** — two browsers, **`grace`** and **`eric`**. Grace sends a photo from
+   **Notifications → Messages**; Eric, on any other page, gets a pop-up that opens the
+   conversation. Grace's side then shows *Seen*.
 
 ---
 
