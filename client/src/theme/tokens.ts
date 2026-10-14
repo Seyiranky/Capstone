@@ -15,7 +15,11 @@ export const BRAND = {
   hairline: 'rgba(24,24,27,0.09)',
 } as const;
 
-export const CHART_COLORS = ['#18181b', '#52525b', '#8b8b93', '#b8b8bf', '#d8d8dd'];
+/** Data colours: distinct hues so categories can be told apart at a glance.
+ *  The interface stays monochrome; colour is kept for data. */
+export const CHART_COLORS = ['#2563eb', '#0d9488', '#f59e0b', '#7c3aed', '#e11d48', '#16a34a', '#0891b2', '#ea580c'];
+/** Brighter versions of the same hues, readable on the dark background. */
+export const CHART_COLORS_DARK = ['#60a5fa', '#2dd4bf', '#fbbf24', '#a78bfa', '#fb7185', '#4ade80', '#22d3ee', '#fb923c'];
 
 const shared: ThemeConfig['token'] = {
   colorPrimary: BRAND.ink,

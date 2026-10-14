@@ -91,6 +91,25 @@ a:hover {
   }
 }
 
+/* Coloured icon badges for figures (StatTile accent). */
+.isoko-stat-icon.isoko-accent-blue { background: #eff6ff; color: #2563eb; }
+.isoko-stat-icon.isoko-accent-teal { background: #f0fdfa; color: #0d9488; }
+.isoko-stat-icon.isoko-accent-amber { background: #fffbeb; color: #d97706; }
+.isoko-stat-icon.isoko-accent-violet { background: #f5f3ff; color: #7c3aed; }
+.isoko-stat-icon.isoko-accent-rose { background: #fff1f2; color: #e11d48; }
+.isoko-stat-icon.isoko-accent-green { background: #f0fdf4; color: #16a34a; }
+:root[data-theme='dark'] .isoko-stat-icon.isoko-accent-blue { background: rgba(96, 165, 250, 0.14); color: #60a5fa; }
+:root[data-theme='dark'] .isoko-stat-icon.isoko-accent-teal { background: rgba(45, 212, 191, 0.14); color: #2dd4bf; }
+:root[data-theme='dark'] .isoko-stat-icon.isoko-accent-amber { background: rgba(251, 191, 36, 0.14); color: #fbbf24; }
+:root[data-theme='dark'] .isoko-stat-icon.isoko-accent-violet { background: rgba(167, 139, 250, 0.14); color: #a78bfa; }
+:root[data-theme='dark'] .isoko-stat-icon.isoko-accent-rose { background: rgba(251, 113, 133, 0.14); color: #fb7185; }
+:root[data-theme='dark'] .isoko-stat-icon.isoko-accent-green { background: rgba(74, 222, 128, 0.14); color: #4ade80; }
+
+.isoko-tile-link { cursor: pointer; border-radius: 6px; }
+.isoko-tile-link .ant-card { transition: border-color 0.15s; }
+.isoko-tile-link:hover .ant-card { border-color: var(--isoko-muted); }
+.isoko-tile-link:focus-visible { outline: 2px solid var(--isoko-navy); outline-offset: 2px; }
+
 /* Labels laid over gig photos. */
 .isoko-cover__chip { position: absolute; top: 10px; left: 10px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; background: #18181b; color: #fff; }
 

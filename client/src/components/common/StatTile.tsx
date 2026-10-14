@@ -8,6 +8,7 @@ const StatTile = ({
   value,
   suffix,
   footer,
+  accent,
 }: {
   icon: ReactNode;
   label: ReactNode;
@@ -16,10 +17,12 @@ const StatTile = ({
   /** Accepted for older callers; tiles use one brand tone. */
   tone?: 'navy' | 'gold' | 'terracotta';
   footer?: ReactNode;
+  /** A coloured icon badge, for pages of figures that need telling apart. */
+  accent?: 'blue' | 'teal' | 'amber' | 'violet' | 'rose' | 'green';
 }) => (
   <Card size="small" style={{ height: '100%' }} styles={{ body: { padding: 16 } }}>
     <Flex gap={12} align="flex-start">
-      <span className="isoko-stat-icon isoko-stat-tile-icon">{icon}</span>
+      <span className={`isoko-stat-icon isoko-stat-tile-icon${accent ? ` isoko-accent-${accent}` : ''}`}>{icon}</span>
       <div style={{ minWidth: 0, flex: 1 }}>
         <Typography.Text type="secondary" style={{ fontSize: 12.5, display: 'block' }}>
           {label}

@@ -1,10 +1,11 @@
 import { Bar as HorizontalBar, Column, Line, Pie } from '@ant-design/charts';
 import { useThemeMode } from '../../../theme/ThemeProvider';
-import { CHART_COLORS } from '../../../theme/tokens';
+import { CHART_COLORS, CHART_COLORS_DARK } from '../../../theme/tokens';
 
 const useChartTheme = () => (useThemeMode().isDark ? 'classicDark' : 'classic');
-/** The single series colour: navy on white, light grey on black. */
-const useSeriesColor = () => (useThemeMode().isDark ? '#d4d4d8' : CHART_COLORS[0]);
+const usePalette = () => (useThemeMode().isDark ? CHART_COLORS_DARK : CHART_COLORS);
+/** The single series colour: the first data hue. */
+const useSeriesColor = () => usePalette()[0];
 
 interface Point {
   x: string;
@@ -29,7 +30,9 @@ interface Slice {
   value: number;
 }
 
-export const PieChart = ({ data, height = 240 }: { data: Slice[]; height?: number }) => (
+export const PieChart = ({ data, height = 240, colors }: { data: Slice[]; height?: number; colors?: string[] }) => {
+  const palette = usePalette();
+  return (
   <Pie
     data={data}
     angleField="value"
@@ -38,10 +41,11 @@ export const PieChart = ({ data, height = 240 }: { data: Slice[]; height?: numbe
     autoFit
     theme={useChartTheme()}
     innerRadius={0.62}
-    scale={{ color: { range: CHART_COLORS } }}
+    scale={{ color: { range: colors ?? palette } }}
     legend={{ color: { position: 'bottom' } }}
   />
-);
+  );
+};
 
 interface Bar {
   label: string;
@@ -52,14 +56,18 @@ export const ColumnChart = ({
   data,
   height = 240,
   single = false,
+  colors,
 }: {
   data: Bar[];
   height?: number;
+  /** A colour per bar, in data order, when the bars have meanings of their own. */
+  colors?: string[];
   /** One colour for every bar, for a series over time rather than categories. */
   single?: boolean;
 }) => {
   const theme = useChartTheme();
   const series = useSeriesColor();
+  const palette = usePalette();
   return (
   <Column
     data={data}
@@ -69,8 +77,8 @@ export const ColumnChart = ({
     height={height}
     autoFit
     theme={theme}
-    scale={single ? undefined : { color: { range: CHART_COLORS } }}
-    style={single ? { fill: series, radiusTopLeft: 4, radiusTopRight: 4, maxWidth: 36 } : undefined}
+    scale={single ? undefined : { color: { range: colors ?? palette } }}
+    style={single ? { fill: series, radiusTopLeft: 4, radiusTopRight: 4, maxWidth: 36 } : { radiusTopLeft: 4, radiusTopRight: 4, maxWidth: 56 }}
     axis={single ? { y: { labelFormatter: (v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`) } } : undefined}
     legend={false}
   />
@@ -87,7 +95,8 @@ export const BarChart = ({ data, height }: { data: Bar[]; height?: number }) => 
     height={height ?? Math.max(160, data.length * 40 + 40)}
     autoFit
     theme={useChartTheme()}
-    scale={{ color: { range: CHART_COLORS } }}
+    scale={{ color: { range: usePalette() } }}
+    style={{ radiusTopRight: 4, radiusBottomRight: 4, maxWidth: 24 }}
     legend={false}
     axis={{ x: { title: false }, y: { title: false } }}
   />

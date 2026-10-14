@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card, Col, Progress, Row, Skeleton, Statistic, Table, Typography } from 'antd';
+import { Card, Col, Progress, Row, Skeleton, Table, Typography } from 'antd';
+import { CheckCircleOutlined, FieldTimeOutlined, RiseOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import StatTile from '../common/StatTile';
 import { adminApi } from '../../api/adminApi';
 import PageContainer from '../Layout/PageContainer';
 import type { AcceptanceStats, PilotMetrics, TimeSummary } from '../../types';
@@ -52,24 +54,16 @@ const AdminMetrics = () => {
     <PageContainer title={t('adminNav.metrics')} subtitle={t('adminNav.metricsSub')}>
       <Row gutter={[16, 16]}>
         <Col xs={12} md={6}>
-          <Card size="small" style={{ height: '100%' }}>
-            <Statistic title="Acceptance rate" value={pct(m.matchAcceptance.overall.acceptanceRate)} />
-          </Card>
+          <StatTile icon={<CheckCircleOutlined />} label="Acceptance rate" value={pct(m.matchAcceptance.overall.acceptanceRate)} accent="green" />
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small" style={{ height: '100%' }}>
-            <Statistic title="Median response" value={hours(m.matchAcceptance.overall.responseTime)} />
-          </Card>
+          <StatTile icon={<ThunderboltOutlined />} label="Median response" value={hours(m.matchAcceptance.overall.responseTime)} accent="amber" />
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small" style={{ height: '100%' }}>
-            <Statistic title="Newcomer share of invites" value={pct(na.invitations.share)} />
-          </Card>
+          <StatTile icon={<RiseOutlined />} label="Newcomer share of invites" value={pct(na.invitations.share)} accent="violet" />
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small" style={{ height: '100%' }}>
-            <Statistic title="Median time to first match" value={hours(m.timeToFirstMatch.toFirstAcceptedMatch)} />
-          </Card>
+          <StatTile icon={<FieldTimeOutlined />} label="Median time to first match" value={hours(m.timeToFirstMatch.toFirstAcceptedMatch)} accent="blue" />
         </Col>
       </Row>
 
@@ -102,7 +96,7 @@ const AdminMetrics = () => {
         <Row gutter={[24, 16]}>
           <Col xs={24} md={12}>
             <Typography.Text>Invitations going to newcomers</Typography.Text>
-            <Progress percent={Math.round((na.invitations.share ?? 0) * 100)} strokeColor="var(--isoko-navy)" />
+            <Progress percent={Math.round((na.invitations.share ?? 0) * 100)} strokeColor="#7c3aed" />
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {na.invitations.toNewcomers} of {na.invitations.total} · {na.invitations.byReason.exploration} through the
               exploration slot, {na.invitations.byReason.ranked} on merit
@@ -110,7 +104,7 @@ const AdminMetrics = () => {
           </Col>
           <Col xs={24} md={12}>
             <Typography.Text>Accepted jobs going to newcomers</Typography.Text>
-            <Progress percent={Math.round((na.acceptedMatches.share ?? 0) * 100)} strokeColor="#71717a" />
+            <Progress percent={Math.round((na.acceptedMatches.share ?? 0) * 100)} strokeColor="#0d9488" />
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {na.acceptedMatches.byNewcomers} of {na.acceptedMatches.total} · {na.newcomers} newcomers,{' '}
               {na.newcomersNeverInvited} never invited yet
