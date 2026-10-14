@@ -199,7 +199,9 @@ describe('reliability signals', () => {
     });
 
     const after = (await trustScoreService.recalculate(worker.id))!.score;
-    expect(after).toBeCloseTo(before, 10);
+    // The score decays with time, so two runs milliseconds apart differ in the
+    // tenth decimal place. A decline penalty would move it by far more than this.
+    expect(after).toBeCloseTo(before, 6);
   });
 
   test('the abandonment penalty decays out of the recency window', async () => {

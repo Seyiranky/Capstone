@@ -11,6 +11,7 @@ const findLocationName = (lat?: number | null, lng?: number | null) =>
   lookupLocationName(lat, lng) ?? KIGALI_LOCATIONS[0].name;
 
 interface ProfileValues {
+  name: string;
   bio?: string;
   locationName: string;
   yearsExperience?: number | null;
@@ -32,6 +33,7 @@ const ProfileEditor = () => {
       const location =
         KIGALI_LOCATIONS.find((l) => l.name === values.locationName) ?? KIGALI_LOCATIONS[0];
       await userApi.updateProfile({
+        name: values.name.trim(),
         bio: values.bio || undefined,
         locationLat: location.lat,
         locationLng: location.lng,
@@ -49,6 +51,8 @@ const ProfileEditor = () => {
       });
       await dispatch(fetchCurrentUser());
       message.success(t('settings.saved'));
+    } catch (err) {
+      message.error((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? t('settings.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -60,6 +64,7 @@ const ProfileEditor = () => {
       requiredMark={false}
       onFinish={onFinish}
       initialValues={{
+        name: profile?.name ?? '',
         bio: profile?.bio ?? '',
         locationName: findLocationName(profile?.locationLat, profile?.locationLng),
         yearsExperience: profile?.yearsExperience ?? undefined,
@@ -68,6 +73,17 @@ const ProfileEditor = () => {
         availableFrom: profile?.availableFrom ? profile.availableFrom.slice(0, 10) : undefined,
       }}
     >
+      <Form.Item
+        name="name"
+        label={t('settings.nameLabel')}
+        extra={t('settings.nameHint')}
+        rules={[
+          { required: true, whitespace: true, message: t('settings.nameRequired') },
+          { min: 2, max: 80, message: t('settings.nameLength') },
+        ]}
+      >
+        <Input maxLength={80} autoComplete="name" />
+      </Form.Item>
       <Form.Item name="bio" label={t('settings.bioLabel')}>
         <Input.TextArea rows={3} />
       </Form.Item>

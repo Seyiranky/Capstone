@@ -84,3 +84,18 @@ describe('availability', () => {
     expect(await inList()).toBe(true);
   });
 });
+
+describe('changing your name', () => {
+  test('a name is trimmed and saved', async () => {
+    const res = await request(app).put('/api/users/me').set(as('worker')).send({ name: '  Grace   Uwase ' });
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe('Grace Uwase');
+  });
+
+  test('a blank, too short or made-up name is refused', async () => {
+    for (const name of ['', ' ', 'A', '<script>', '12345', 'x'.repeat(81)]) {
+      const res = await request(app).put('/api/users/me').set(as('worker')).send({ name });
+      expect(res.status).toBe(400);
+    }
+  });
+});

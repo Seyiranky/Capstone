@@ -280,8 +280,8 @@
     "title": "Settings",
     "subtitle": "Manage your public profile, location visibility, and account data.",
     "profile": "Profile",
-    "profileDescWorker": "Your bio and location appear on your public profile, which clients can see.",
-    "profileDescOther": "Your bio appears on your public profile, which other users can see.",
+    "profileDescWorker": "Your name, bio and location appear on your public profile, which clients can see.",
+    "profileDescOther": "Your name and bio appear on your public profile, which other users can see.",
     "bioLabel": "Bio",
     "locationLabel": "Location",
     "saveProfile": "Save profile",
@@ -340,7 +340,12 @@
     "exportPdf": "Download PDF",
     "exportJson": "Download JSON",
     "exportFormats": "PDF is a readable report you can open and print. JSON holds the same records as data, for moving them to another service.",
-    "exportFailed": "Could not prepare your data. Try again."
+    "exportFailed": "Could not prepare your data. Try again.",
+    "nameLabel": "Full name",
+    "nameHint": "Shown on your profile, your jobs and your receipts. Use the name people know you by.",
+    "nameRequired": "Enter your name.",
+    "nameLength": "Your name should be between 2 and 80 characters.",
+    "saveFailed": "Could not save. Try again."
   },
   "match": {
     "component": {

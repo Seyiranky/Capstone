@@ -245,6 +245,7 @@ export interface Review {
 export interface PublicProfile {
   id: string;
   name: string;
+  avatarUrl?: string | null;
   role: Role;
   bio?: string | null;
   experienceSummary?: string | null;

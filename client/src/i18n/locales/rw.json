@@ -280,8 +280,8 @@
     "title": "Igenamiterere",
     "subtitle": "Genzura umwirondoro wawe rusange, kugaragara kw'aho uherereye, n'amakuru ya konti yawe.",
     "profile": "Umwirondoro",
-    "profileDescWorker": "Amakuru yawe n'aho uherereye bigaragara ku mwirondoro wawe rusange, abakiriya bakabibona.",
-    "profileDescOther": "Amakuru yawe agaragara ku mwirondoro wawe rusange, abandi bakoresha bakabibona.",
+    "profileDescWorker": "Izina ryawe, ibikuranga n'aho uherereye bigaragara ku mwirondoro wawe abakiriya babona.",
+    "profileDescOther": "Izina ryawe n'ibikuranga bigaragara ku mwirondoro wawe abandi bakoresha babona.",
     "bioLabel": "Amakuru yawe",
     "locationLabel": "Aho biherereye",
     "saveProfile": "Bika umwirondoro",
@@ -340,7 +340,12 @@
     "exportPdf": "Kuramo PDF",
     "exportJson": "Kuramo JSON",
     "exportFormats": "PDF ni raporo isomeka ushobora gufungura no gucapa. JSON ifite amakuru amwe nk'amakuru mbisi, yo kuyimurira ahandi.",
-    "exportFailed": "Ntibyashobotse gutegura amakuru yawe. Ongera ugerageze."
+    "exportFailed": "Ntibyashobotse gutegura amakuru yawe. Ongera ugerageze.",
+    "nameLabel": "Amazina yose",
+    "nameHint": "Agaragara ku mwirondoro wawe, ku kazi kawe no ku nyemezabwishyu. Koresha izina abantu bakuziho.",
+    "nameRequired": "Andika izina ryawe.",
+    "nameLength": "Izina ryawe rigomba kugira hagati y'inyuguti 2 na 80.",
+    "saveFailed": "Ntibyabitswe. Ongera ugerageze."
   },
   "match": {
     "component": {

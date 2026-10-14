@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   Col,
+  Drawer,
   Dropdown,
   Empty,
   Flex,
@@ -23,23 +24,18 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   EditOutlined,
+  EllipsisOutlined,
   FlagOutlined,
   InboxOutlined,
-  LikeOutlined,
   LinkOutlined,
   LockOutlined,
-  MessageOutlined,
   SearchOutlined,
-  SendOutlined,
-  ThunderboltOutlined,
-  UserOutlined,
 } from '@ant-design/icons';
 import PageContainer from '../Layout/PageContainer';
-import StatTile from '../common/StatTile';
 import Avatar from '../common/Avatar';
 import SupportThread from '../Support/SupportThread';
 import SupportComposer from '../Support/SupportComposer';
-import { CategoryIcon, PriorityTag, StatusPill, priorityColor, waited } from '../Support/supportUi';
+import { PriorityTag, StatusPill, priorityColor, waited } from '../Support/supportUi';
 import SavedRepliesModal from './SavedRepliesModal';
 import { useAppSelector } from '../../store/hooks';
 import { fromNow } from '../../lib/time';
@@ -143,7 +139,7 @@ const PersonPanel = ({ ticket }: { ticket: AdminTicketDetail }) => {
                 {p.name}
               </Link>
               <div className="isoko-support-side__sub">
-                {p.role[0].toUpperCase() + p.role.slice(1)} · joined {new Date(p.createdAt).toLocaleDateString()}
+                {p.role ? p.role[0].toUpperCase() + p.role.slice(1) : 'User'} · joined {new Date(p.createdAt).toLocaleDateString()}
               </div>
             </div>
           </Flex>
@@ -266,7 +262,7 @@ const TicketDetail = ({
   const [mode, setMode] = useState<'reply' | 'note'>('reply');
   const [draft, setDraft] = useState('');
   const [savedId, setSavedId] = useState<string | undefined>();
-  const [lang, setLang] = useState<'en' | 'rw'>('en');
+  const [personOpen, setPersonOpen] = useState(false);
 
   const load = useCallback(() => supportApi.admin.get(id).then(setTicket), [id]);
   useEffect(() => {
@@ -285,7 +281,7 @@ const TicketDetail = ({
     onChanged();
   };
 
-  const insertSaved = (r: SavedReply) => {
+  const insertSaved = (r: SavedReply, lang: 'en' | 'rw') => {
     const text = (lang === 'rw' && r.bodyRw ? r.bodyRw : r.body).replace(/\{\{name\}\}/g, firstName);
     setDraft((d) => (d.trim() ? `${d.trim()}\n\n${text}` : text));
     setSavedId(r.id);
@@ -320,181 +316,178 @@ const TicketDetail = ({
     onChanged();
   };
 
+  const person = ticket.person;
+  const name = person?.name ?? ticket.guestName ?? 'Guest';
+
   return (
     <Card styles={{ body: { padding: 0 } }} className="isoko-support-card">
-      <div className="isoko-support-head">
+      <div className="isoko-support-head isoko-support-head--calm">
         {onBack && (
           <Button type="text" icon={<ArrowLeftOutlined />} onClick={onBack} style={{ marginBottom: 8, paddingInline: 4 }}>
             All requests
           </Button>
         )}
-        <Flex gap={12} align="flex-start">
-          <CategoryIcon category={ticket.category} size={40} />
-          <div style={{ minWidth: 0, flex: 1 }}>
+        <Flex justify="space-between" align="flex-start" gap={12} wrap="wrap">
+          <div style={{ minWidth: 0, flex: '1 1 260px' }}>
             <Typography.Title level={4} style={{ margin: 0 }}>
               {ticket.subject}
             </Typography.Title>
             <div className="isoko-support-head__meta">
               <span>{ticket.number}</span>
-                            <span>opened {fromNow(ticket.createdAt)}</span>
-              {ticket.firstResponseAt && (
-                <>
-                                    <span>first reply after {hoursLabel((new Date(ticket.firstResponseAt).getTime() - new Date(ticket.createdAt).getTime()) / 3_600_000)}</span>
-                </>
-              )}
+              <span>{CATEGORY_LABEL[ticket.category]}</span>
+              <span>opened {fromNow(ticket.createdAt)}</span>
               {ticket.helpful !== null && (
-                <>
-                                    <span style={{ color: ticket.helpful ? '#16a34a' : '#e11d48' }}>
-                    <LikeOutlined rotate={ticket.helpful ? 0 : 180} /> {ticket.helpful ? 'Helped' : 'Did not help'}
-                  </span>
-                </>
+                <span style={{ color: ticket.helpful ? '#16a34a' : '#e11d48' }}>{ticket.helpful ? 'Helped' : 'Did not help'}</span>
               )}
             </div>
           </div>
+          {/* Who asked: one line here, everything else in the drawer. */}
+          <button type="button" className="isoko-person-chip" onClick={() => setPersonOpen(true)}>
+            <Avatar name={name} src={person?.avatarUrl} size={28} />
+            <span>
+              <strong>{name}</strong>
+              <small>{person ? `${person.role} · ${person.reviewCount ? `${Number(person.trustScore).toFixed(1)} trust` : 'no reviews'}` : 'guest · by email'}</small>
+            </span>
+          </button>
         </Flex>
-        <Flex gap={8} wrap="wrap" style={{ marginTop: 14 }}>
-          <Select size="small" value={ticket.status} options={STATUS_OPTIONS} onChange={(status) => change({ status })} style={{ width: 168 }} />
-          <Select size="small" value={ticket.priority} options={PRIORITY_OPTIONS} onChange={(priority) => change({ priority })} style={{ width: 112 }} />
+
+        <Flex gap={8} wrap="wrap" align="center" style={{ marginTop: 14 }}>
+          <Select size="small" variant="filled" value={ticket.status} options={STATUS_OPTIONS} onChange={(status) => change({ status })} style={{ width: 160 }} />
+          <Select size="small" variant="filled" value={ticket.priority} options={PRIORITY_OPTIONS} onChange={(priority) => change({ priority })} style={{ width: 108 }} />
           <Select
             size="small"
+            variant="filled"
             value={ticket.assigneeId ?? ''}
             onChange={(v) => change({ assigneeId: v || null })}
-            style={{ width: 170 }}
-            options={[{ value: '', label: 'Unassigned' }, ...admins.map((a) => ({ value: a.id, label: a.id === me?.id ? `${a.name} (me)` : a.name }))]}
+            style={{ width: 160 }}
+            options={[{ value: '', label: 'Unassigned' }, ...admins.map((a) => ({ value: a.id, label: a.id === me?.id ? 'Me' : a.name }))]}
           />
-          <Select
-            size="small"
-            value={ticket.category}
-            onChange={(category) => change({ category })}
-            style={{ width: 170 }}
-            options={SUPPORT_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABEL[c] }))}
-          />
-          {ticket.escalatedTo ? (
-            <Link to={ticket.escalatedTo === 'dispute' ? '/disputes' : '/admin/reports'}>
-              <Button size="small" icon={ticket.escalatedTo === 'dispute' ? <AuditOutlined /> : <FlagOutlined />}>
-                Became a {ticket.escalatedTo}
-              </Button>
-            </Link>
-          ) : (
-            <Dropdown
-              trigger={['click']}
-              disabled={!ticket.userId}
-              menu={{
-                items: [
-                  {
-                    key: 'dispute',
-                    label: 'Open a dispute on the job',
-                    icon: <AuditOutlined />,
-                    disabled: !matchLinked,
-                    children: DISPUTE_REASONS.map((r) => ({ key: `dispute:${r.key}`, label: r.label })),
-                  },
-                  {
-                    key: 'report',
-                    label: 'Report the other person',
-                    icon: <FlagOutlined />,
-                    disabled: !matchLinked,
-                    children: REPORT_REASONS.map((r) => ({ key: `report:${r.key}`, label: r.label })),
-                  },
-                ],
-                onClick: ({ key }) => {
-                  const [to, reason] = key.split(':') as ['dispute' | 'report', string];
-                  escalate(to, reason);
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: [
+                {
+                  key: 'topic',
+                  label: 'Change topic',
+                  children: SUPPORT_CATEGORIES.map((c) => ({ key: `topic:${c}`, label: CATEGORY_LABEL[c] })),
                 },
-              }}
-            >
-              <Button size="small" icon={<ThunderboltOutlined />}>
-                Escalate
-              </Button>
-            </Dropdown>
-          )}
+                { type: 'divider' },
+                {
+                  key: 'dispute',
+                  label: ticket.escalatedTo ? `Already a ${ticket.escalatedTo}` : 'Open a dispute on the job',
+                  icon: <AuditOutlined />,
+                  disabled: Boolean(ticket.escalatedTo) || !ticket.userId || !matchLinked,
+                  children: DISPUTE_REASONS.map((r) => ({ key: `dispute:${r.key}`, label: r.label })),
+                },
+                {
+                  key: 'report',
+                  label: 'Report the other person',
+                  icon: <FlagOutlined />,
+                  disabled: Boolean(ticket.escalatedTo) || !ticket.userId || !matchLinked,
+                  children: REPORT_REASONS.map((r) => ({ key: `report:${r.key}`, label: r.label })),
+                },
+              ],
+              onClick: ({ key }) => {
+                const [kind, value] = key.split(':');
+                if (kind === 'topic') change({ category: value as SupportTicket['category'] });
+                else escalate(kind as 'dispute' | 'report', value);
+              },
+            }}
+          >
+            <Button size="small" type="text" icon={<EllipsisOutlined />} aria-label="More actions" />
+          </Dropdown>
         </Flex>
-        {ticket.related && (
-          <div className="isoko-support-related">
+
+        {(ticket.related || ticket.escalatedTo) && (
+          <div className="isoko-support-about">
             <LinkOutlined />
-            <span className="isoko-support-related__text">
-              About: <strong>{ticket.related.title}</strong>
-              {ticket.related.detail ? ` · ${ticket.related.detail}` : ''}
-              {ticket.related.status ? ` · ${ticket.related.status}` : ''}
-            </span>
-            {ticket.related.gigId && <Link to={`/gigs/${ticket.related.gigId}`}>Open</Link>}
+            {ticket.related && (
+              <span className="isoko-support-related__text">
+                {ticket.related.title}
+                {ticket.related.detail ? ` · ${ticket.related.detail}` : ''}
+              </span>
+            )}
+            {ticket.related?.gigId && <Link to={`/gigs/${ticket.related.gigId}`}>Open</Link>}
+            {ticket.escalatedTo && (
+              <Link to={ticket.escalatedTo === 'dispute' ? '/disputes' : '/admin/reports'}>Became a {ticket.escalatedTo}</Link>
+            )}
           </div>
         )}
       </div>
 
-      <Row>
-        <Col xs={24} xl={16} className="isoko-support-main">
-          <div className="isoko-support-body">
-            <SupportThread messages={ticket.messages} viewer="admin" requesterName={ticket.person?.name ?? ticket.guestName ?? 'Guest'} />
-          </div>
-          <div className="isoko-support-foot">
-            <Flex justify="space-between" align="center" gap={8} wrap="wrap" style={{ marginBottom: 8 }}>
-              <Segmented
-                size="small"
-                value={mode}
-                onChange={(v) => setMode(v as 'reply' | 'note')}
-                options={[
-                  { value: 'reply', label: <span><MessageOutlined /> Reply</span> },
-                  { value: 'note', label: <span><LockOutlined /> Internal note</span> },
-                ]}
-              />
-              {mode === 'reply' && (
-                <Flex gap={6} align="center">
-                  <Segmented size="small" value={lang} onChange={(v) => setLang(v as 'en' | 'rw')} options={[{ value: 'en', label: 'EN' }, { value: 'rw', label: 'RW' }]} />
-                  <Dropdown
-                    trigger={['click']}
-                    menu={{
-                      items: saved
-                        .filter((r) => !r.category || r.category === ticket.category)
-                        .concat(saved.filter((r) => r.category && r.category !== ticket.category))
-                        .map((r) => ({
-                          key: r.id,
-                          label: (
-                            <span>
-                              {r.title}
-                              {r.category === ticket.category && <span className="isoko-saved-match"> · fits</span>}
-                            </span>
-                          ),
-                        })),
-                      onClick: ({ key }) => {
-                        const r = saved.find((x) => x.id === key);
-                        if (r) insertSaved(r);
-                      },
-                    }}
-                  >
-                    <Button size="small" icon={<EditOutlined />}>
-                      Saved replies
-                    </Button>
-                  </Dropdown>
-                </Flex>
+      <div className="isoko-support-body">
+        <SupportThread messages={ticket.messages} viewer="admin" requesterName={name} />
+      </div>
+
+      <div className="isoko-support-foot">
+        {ticket.status === 'closed' && mode === 'reply' ? (
+          <Typography.Text type="secondary">Closed. Reopen it from the status menu to reply, or add an internal note.</Typography.Text>
+        ) : (
+          <>
+            <Flex justify="space-between" align="center" gap={8} style={{ marginBottom: 8 }}>
+              <div className="isoko-compose-tabs" role="tablist">
+                <button type="button" role="tab" aria-selected={mode === 'reply'} className={mode === 'reply' ? 'is-on' : ''} onClick={() => setMode('reply')}>
+                  Reply
+                </button>
+                <button type="button" role="tab" aria-selected={mode === 'note'} className={mode === 'note' ? 'is-on' : ''} onClick={() => setMode('note')}>
+                  <LockOutlined /> Internal note
+                </button>
+              </div>
+              {mode === 'reply' && saved.length > 0 && (
+                <Dropdown
+                  trigger={['click']}
+                  menu={{
+                    items: [...saved]
+                      .sort((a, b) => Number(b.category === ticket.category) - Number(a.category === ticket.category))
+                      .map((r) =>
+                        r.bodyRw
+                          ? {
+                              key: r.id,
+                              label: r.title,
+                              children: [
+                                { key: `${r.id}:en`, label: 'English' },
+                                { key: `${r.id}:rw`, label: 'Kinyarwanda' },
+                              ],
+                            }
+                          : { key: `${r.id}:en`, label: r.title },
+                      ),
+                    onClick: ({ key }) => {
+                      const [rid, lang] = key.split(':');
+                      const r = saved.find((x) => x.id === rid);
+                      if (r) insertSaved(r, lang as 'en' | 'rw');
+                    },
+                  }}
+                >
+                  <Button size="small" type="text" icon={<EditOutlined />}>
+                    Saved replies
+                  </Button>
+                </Dropdown>
               )}
             </Flex>
-            {ticket.status === 'closed' && mode === 'reply' ? (
-              <Typography.Text type="secondary">Closed. Reopen it from the status menu to reply, or add an internal note.</Typography.Text>
-            ) : (
-              <SupportComposer
-                tone={mode === 'note' ? 'note' : undefined}
-                value={draft}
-                onChange={setDraft}
-                placeholder={mode === 'note' ? 'Only admins see this.' : `Write to ${firstName || 'them'}…  (Ctrl/⌘ + Enter to send)`}
-                sendLabel={mode === 'note' ? 'Add note' : 'Send'}
-                onSend={(body, file) => send(body, file)}
-                actions={
-                  mode === 'reply'
-                    ? (run, busy) => (
-                        <Button icon={<CheckCircleOutlined />} disabled={busy} onClick={() => run((b, f) => send(b, f, 'resolved'))}>
-                          {screens.sm ? 'Send and resolve' : 'Resolve'}
-                        </Button>
-                      )
-                    : undefined
-                }
-              />
-            )}
-          </div>
-        </Col>
-        <Col xs={24} xl={8}>
-          <PersonPanel ticket={ticket} />
-        </Col>
-      </Row>
+            <SupportComposer
+              tone={mode === 'note' ? 'note' : undefined}
+              value={draft}
+              onChange={setDraft}
+              placeholder={mode === 'note' ? 'Only admins see this.' : `Write to ${firstName || 'them'}…`}
+              sendLabel={mode === 'note' ? 'Add note' : 'Send'}
+              onSend={(body, file) => send(body, file)}
+              actions={
+                mode === 'reply'
+                  ? (run, busy) => (
+                      <Button disabled={busy} onClick={() => run((b, f) => send(b, f, 'resolved'))}>
+                        {screens.sm ? 'Send and resolve' : 'Resolve'}
+                      </Button>
+                    )
+                  : undefined
+              }
+            />
+          </>
+        )}
+      </div>
+
+      <Drawer open={personOpen} onClose={() => setPersonOpen(false)} title="About this person" width={360}>
+        <PersonPanel ticket={ticket} />
+      </Drawer>
     </Card>
   );
 };
@@ -554,32 +547,17 @@ const AdminSupport = () => {
         </Button>
       }
     >
-      <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-        <Col xs={12} md={8} xl={4}>
-          <StatTile icon={<InboxOutlined />} label="Open" value={m?.open ?? '—'} accent="blue" />
-        </Col>
-        <Col xs={12} md={8} xl={5}>
-          <StatTile icon={<UserOutlined />} label="Unassigned" value={m?.unassigned ?? '—'} accent="amber" />
-        </Col>
-        <Col xs={12} md={8} xl={5}>
-          <StatTile icon={<SendOutlined />} label="Waiting on person" value={m?.waiting ?? '—'} accent="violet" />
-        </Col>
-        <Col xs={12} md={12} xl={5}>
-          <StatTile icon={<ClockCircleOutlined />} label="Median first reply" value={hoursLabel(m?.medianFirstReplyHours ?? null)} accent="teal" footer={<Typography.Text type="secondary" style={{ fontSize: 12 }}>last 30 days</Typography.Text>} />
-        </Col>
-        <Col xs={24} md={12} xl={5}>
-          <StatTile
-            icon={<LikeOutlined />}
-            label="Solved it"
-            value={m?.satisfaction == null ? '—' : `${Math.round(m.satisfaction * 100)}%`}
-            accent="green"
-            footer={<Typography.Text type="secondary" style={{ fontSize: 12 }}>{m?.ratedCount ?? 0} rated</Typography.Text>}
-          />
-        </Col>
-      </Row>
+      <div className="isoko-support-summary">
+        <span><strong>{m?.open ?? '—'}</strong> open</span>
+        <span><strong>{m?.unassigned ?? '—'}</strong> unassigned</span>
+        <span><strong>{m?.waiting ?? '—'}</strong> waiting on the person</span>
+        <span><strong>{hoursLabel(m?.medianFirstReplyHours ?? null)}</strong> median first reply</span>
+        <span>
+          <strong>{m?.satisfaction == null ? '—' : `${Math.round(m.satisfaction * 100)}%`}</strong> said it helped
+        </span>
+      </div>
 
-      <Card className="isoko-filterbar" styles={{ body: { padding: 12 } }}>
-        <Flex gap={10} wrap="wrap" align="center">
+      <Flex gap={10} wrap="wrap" align="center" style={{ marginBottom: 14 }}>
           <Segmented
             value={status}
             onChange={(v) => {
@@ -605,8 +583,7 @@ const AdminSupport = () => {
               { value: 'none', label: 'Unassigned' },
             ]}
           />
-        </Flex>
-      </Card>
+      </Flex>
 
       <Row gutter={16}>
         <Col xs={24} lg={9} style={{ display: stacked && selected ? 'none' : undefined }}>

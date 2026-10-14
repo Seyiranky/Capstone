@@ -76,6 +76,17 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     return;
   }
 
+  // A name is shown to everyone the person works with: trimmed, a real length,
+  // and made of the characters names are made of.
+  if (body.name !== undefined) {
+    const name = typeof body.name === 'string' ? body.name.trim().replace(/\s+/g, ' ') : '';
+    if (name.length < 2 || name.length > 80 || !/^[\p{L}\p{M}][\p{L}\p{M} .'’-]*$/u.test(name)) {
+      res.status(400).json({ message: 'Enter your name using letters, between 2 and 80 characters.' });
+      return;
+    }
+    body.name = name;
+  }
+
   // The server-side twin of the Settings screen's rule: SMS is chosen after the
   // number is confirmed, never before, or notices would be skipped silently.
   if (body.preferredChannel === 'sms' && !user.phoneVerifiedAt) {
