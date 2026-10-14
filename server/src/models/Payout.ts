@@ -30,6 +30,10 @@ export class Payout extends Model<InferAttributes<Payout>, InferCreationAttribut
   declare currency: CreationOptional<string>;
   declare receiptNumber: string;
   declare releasedAt: Date;
+  /** Whether the money was sent to the worker's MoMo number (Disbursements API). */
+  declare transferStatus: CreationOptional<'not_sent' | 'sent' | 'failed' | 'no_number'>;
+  declare transferReference: CreationOptional<string | null>;
+  declare transferError: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -56,6 +60,9 @@ export const initPayout = (sequelize: Sequelize) => {
       currency: { type: DataTypes.STRING, allowNull: false, defaultValue: 'RWF' },
       receiptNumber: { type: DataTypes.STRING, allowNull: false, unique: true },
       releasedAt: { type: DataTypes.DATE, allowNull: false },
+      transferStatus: { type: DataTypes.STRING, allowNull: false, defaultValue: 'not_sent' },
+      transferReference: { type: DataTypes.STRING, allowNull: true },
+      transferError: { type: DataTypes.TEXT, allowNull: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

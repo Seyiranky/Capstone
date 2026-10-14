@@ -5,6 +5,7 @@ import app from '../../src/app';
 import db from '../../src/models';
 import * as workHistoryService from '../../src/services/workHistoryService';
 import { must } from '../helpers/fixtures';
+import { payForJob } from '../helpers/payment';
 
 process.env.RANKED_INVITE_LIMIT = '0';
 process.env.EXPLORATION_SLOTS = '0';
@@ -47,9 +48,7 @@ const acceptedJob = async (title = `History fixture ${Math.random().toString(36)
 };
 
 const releaseAndReview = async (matchId: string, rating = 5) => {
-  const tx = must(await db.Transaction.findOne({ where: { matchId } }), 'tx');
-  await request(app).post(`/api/transactions/${tx.id}/confirm`).set(as('client'));
-  await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
+  await payForJob(matchId, tokens.client);
   await request(app).post('/api/reviews').set(as('client')).send({ matchId, rating, comment: 'Neat work' });
 };
 

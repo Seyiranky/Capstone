@@ -278,21 +278,27 @@ describe('match lifecycle and simulated payment', () => {
     expect(res.status).toBe(409);
   });
 
-  test('completing the match auto-initiates a simulated transaction', async () => {
+  test('completing the match asks for nothing yet: the client pays with Mobile Money next', async () => {
     const res = await request(app)
       .put(`/api/matches/${matchId}/status`)
       .set('Authorization', `Bearer ${clientToken}`)
       .send({ status: 'completed' });
     expect(res.status).toBe(200);
-    expect(res.body.transaction).toBeTruthy();
-    expect(res.body.transaction.status).toBe('initiated');
-    transactionId = res.body.transaction.id;
+    expect(res.body.status).toBe('completed');
+    expect(res.body.transaction).toBeFalsy();
   });
 
-  test('either party can confirm the simulated payment', async () => {
+  test('the client pays with MoMo and the payment is confirmed', async () => {
+    const pay = await request(app)
+      .post('/api/transactions/pay')
+      .set('Authorization', `Bearer ${clientToken}`)
+      .send({ matchId, phone: '0788123456' });
+    expect(pay.status).toBe(201);
+    expect(pay.body.status).toBe('initiated');
+    transactionId = pay.body.id;
     const res = await request(app)
       .post(`/api/transactions/${transactionId}/confirm`)
-      .set('Authorization', `Bearer ${workerToken}`);
+      .set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('confirmed');
   });

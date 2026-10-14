@@ -7,9 +7,8 @@ import { Match, MatchMember, Gig, User, Transaction, Review, GigApplication, Job
 import * as teamService from '../services/teamService';
 import * as safeVisitService from '../services/safeVisitService';
 import { MAX_JOB_PHOTOS } from '../middleware/upload';
-import { MAX_CODE_ATTEMPTS, amountToCollect } from '../services/escrowRules';
 import * as trustScoreService from '../services/trustScoreService';
-import * as escrowService from '../services/escrowService';
+import * as completionService from '../services/completionService';
 import notify from '../lib/notify';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
@@ -49,21 +48,6 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         ...MATCH_INCLUDES.slice(1),
       ],
     });
-    // The client is the one party who should see the completion code: they
-    // hand it to the worker on site. It is read separately because the
-    // default scope keeps it out of every other query.
-    const inProgress = matches.filter((m) => m.status === 'accepted').map((m) => m.id);
-    if (inProgress.length) {
-      const codes = await Match.scope('withCompletionCode').findAll({
-        where: { id: inProgress },
-        attributes: ['id', 'completionCode'],
-      });
-      const byId = new Map(codes.map((c) => [c.id, c.completionCode]));
-      res.json(
-        matches.map((m) => ({ ...m.toJSON(), completionCode: byId.get(m.id) ?? null })),
-      );
-      return;
-    }
   }
   res.json(matches);
 };
@@ -141,10 +125,8 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
   }
 
   if (status === 'completed') {
-    // completeMatch owns the status change: it completes only a match that is
-    // still accepted, which is what makes a race with the code or the sweep
-    // release the money once.
-    await escrowService.completeMatch(req, Object.assign(match, { gig }), 'client');
+    // The client marks the job done; they then pay the worker with Mobile Money.
+    await completionService.completeMatch(req, Object.assign(match, { gig }), 'client');
     res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
     return;
   }
@@ -175,16 +157,12 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
           wasQueuedOffline: Boolean(occurred),
         }
       : {}),
-    ...(status === 'accepted'
-      ? { acceptedAt: now, completionCode: escrowService.generateCompletionCode() }
-      : {}),
+    ...(status === 'accepted' ? { acceptedAt: now } : {}),
     ...(status === 'cancelled' && declineReason ? { declineReason } : {}),
   });
 
   if (status === 'accepted' && gig) {
     await gig.update({ status: 'matched' });
-    // The client funds the job now, and the money waits in escrow.
-    await escrowService.fund(match, amountToCollect(match.agreedAmount, gig.budget));
     // Anyone named on the lead's crew is now asked to join.
     await teamService.inviteCrew(req, Object.assign(match, { gig }));
 
@@ -238,17 +216,8 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
   }
 
   if (status === 'cancelled' && !wasPending) {
-    // Called off after acceptance: whatever the client put in escrow goes back.
-    const refunded = await escrowService.refund(match.id);
-    await escrowService.settleLiveDispute(match.id, 'refund');
-    if (refunded && gig) {
-      await notify(req, {
-        userId: gig.clientId,
-        title: 'Payment refunded',
-        body: `${Number(refunded.amount).toLocaleString()} ${refunded.currency} held for "${gig.title}" was returned to you.`,
-        category: 'critical',
-      });
-    }
+    // Called off after acceptance: nothing was paid, so only a live dispute closes.
+    await completionService.settleLiveDispute(match.id, 'refund');
   }
 
   // Abandonment feeds the trust score's completion rate, so it has to be
@@ -262,82 +231,6 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
 
   const updated = await Match.findByPk(match.id, { include: MATCH_INCLUDES });
   res.json(updated);
-};
-
-/** A match the caller is party to, with its gig, or a response already sent. */
-const loadForWorker = async (req: Request, res: Response) => {
-  const caller = authed(req);
-  const match = (await Match.findByPk(pathParam(req, 'id'), {
-    include: [{ model: Gig, as: 'gig' }],
-  })) as (Match & { gig?: Gig | null }) | null;
-  if (!match) {
-    res.status(404).json({ message: 'Match not found' });
-    return null;
-  }
-  if (match.workerId !== caller.id) {
-    res.status(403).json({ message: 'Only the matched worker may do this' });
-    return null;
-  }
-  if (match.status !== 'accepted') {
-    res.status(409).json({ message: `This job is ${match.status}, not in progress` });
-    return null;
-  }
-  return match;
-};
-
-/**
- * The worker enters the code the client gave them on site. A correct code
- * completes the job and releases escrow in one step.
- */
-export const completeWithCode = async (req: Request, res: Response): Promise<void> => {
-  const match = await loadForWorker(req, res);
-  if (!match) return;
-  const { result, attemptsLeft } = await escrowService.checkCompletionCode(
-    req,
-    match.id,
-    String(req.body?.code ?? ''),
-  );
-  if (result === 'wrong') {
-    res.status(400).json({ message: 'That code is not right', attemptsLeft });
-    return;
-  }
-  if (result === 'locked') {
-    res.status(423).json({
-      message: `The code is locked after ${MAX_CODE_ATTEMPTS} wrong tries. Ask the client to release payment in the app.`,
-      attemptsLeft: 0,
-    });
-    return;
-  }
-  if (result === 'disputed') {
-    res.status(409).json({ message: 'Payment is frozen while a dispute is open' });
-    return;
-  }
-  if (result === 'notInProgress') {
-    res.status(409).json({ message: 'This job is no longer in progress' });
-    return;
-  }
-  res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
-};
-
-/**
- * The worker reports the job finished without the code, for when the client
- * was not there to hand it over. Starts the 72-hour clock to automatic release.
- */
-export const markWorkDone = async (req: Request, res: Response): Promise<void> => {
-  const match = await loadForWorker(req, res);
-  if (!match) return;
-  if (!match.workDoneAt) {
-    await match.update({ workDoneAt: new Date() });
-    if (match.gig) {
-      await notify(req, {
-        userId: match.gig.clientId,
-        title: 'Job reported done',
-        body: `The worker says "${match.gig.title}" is finished. Release payment, or it releases on its own in 72 hours.`,
-        category: 'outcome',
-      });
-    }
-  }
-  res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
 };
 
 /**

@@ -10,6 +10,19 @@ export const status = async (req: Request, res: Response): Promise<void> => {
   res.json(await coverService.status(pathParam(req, 'id'), { id: caller.id, role: caller.role }));
 };
 
+/** The client adds Job Cover while the job is in progress; the worker is told they are covered. */
+export const buy = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const match = await coverService.buy(pathParam(req, 'id'), caller.id);
+  await notify(req, {
+    userId: match.workerId,
+    title: 'You are covered',
+    body: 'The client added Job Cover to your job: medical costs from an accident on this job are covered.',
+    category: 'activity',
+  });
+  res.status(201).json(await coverService.status(match.id, { id: caller.id, role: caller.role }));
+};
+
 /** A covered worker files a claim; every admin is told. */
 export const fileClaim = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);

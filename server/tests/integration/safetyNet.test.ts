@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import app from '../../src/app';
 import db from '../../src/models';
 import { must } from '../helpers/fixtures';
+import { CLIENT_MOMO } from '../helpers/payment';
 
 process.env.RANKED_INVITE_LIMIT = '0';
 process.env.EXPLORATION_SLOTS = '0';
@@ -33,15 +34,22 @@ const acceptedJob = async (budget = 40000) => {
   });
   const match = await db.Match.create({ gigId: gig.id, workerId: users.worker.id });
   await request(app).put(`/api/matches/${match.id}/status`).set(as('worker')).send({ status: 'accepted' });
-  const tx = must(await db.Transaction.findOne({ where: { matchId: match.id } }), 'tx');
-  return { matchId: match.id, txId: tx.id };
+  return { matchId: match.id, txId: match.id };
 };
 
-const fund = (txId: string, safetyNet: number, who = 'client') =>
-  request(app).post(`/api/transactions/${txId}/confirm`).set(as(who)).send({ safetyNet });
+/** The client marks the job done and asks to pay, adding `safetyNet` RWF; returns the request. */
+const fund = async (matchId: string, safetyNet: number, who = 'client') => {
+  if (who === 'client') {
+    await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
+  }
+  return request(app).post('/api/transactions/pay').set(as(who)).send({ matchId, phone: CLIENT_MOMO, safetyNet });
+};
 
-const release = (matchId: string) =>
-  request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
+/** The client approves the payment on their phone (simulated). */
+const release = async (matchId: string) => {
+  const tx = must(await db.Transaction.findOne({ where: { matchId } }), 'tx');
+  return request(app).post(`/api/transactions/${tx.id}/confirm`).set(as('client'));
+};
 
 const net = async (who = 'worker') => (await request(app).get('/api/safety-net/me').set(as(who))).body;
 
@@ -63,31 +71,32 @@ afterAll(async () => {
 
 describe('client contributions', () => {
   test('a contribution above 20% of the price is refused', async () => {
-    const { txId } = await acceptedJob(10000);
-    expect((await fund(txId, 2500)).status).toBe(400);
+    const { matchId } = await acceptedJob(10000);
+    expect((await fund(matchId, 2500)).status).toBe(400);
   });
 
   test('only the client can add one', async () => {
-    const { txId } = await acceptedJob(10000);
-    expect((await fund(txId, 300, 'worker')).status).toBe(403);
+    const { matchId } = await acceptedJob(10000);
+    expect((await fund(matchId, 300, 'worker')).status).toBe(403);
   });
 
   test("the contribution lands in the worker's pot when the job is paid out", async () => {
     const before = await net();
-    const { matchId, txId } = await acceptedJob(40000);
-    expect((await fund(txId, 1200)).status).toBe(200);
-    expect((await net()).balance).toBe(before.balance); // held, not yet theirs
+    const { matchId } = await acceptedJob(40000);
+    expect((await fund(matchId, 1200)).status).toBe(201);
+    expect((await net()).balance).toBe(before.balance); // asked for, not yet paid
     await release(matchId);
     const after = await net();
     expect(after.balance - before.balance).toBe(1200);
     expect(after.entries[0].kind).toBe('contribution');
   });
 
-  test('a refunded job puts nothing in the pot', async () => {
+  test('a job called off is never paid, so nothing reaches the pot', async () => {
     const before = await net();
-    const { matchId, txId } = await acceptedJob(20000);
-    await fund(txId, 600);
+    const { matchId } = await acceptedJob(20000);
     await request(app).put(`/api/matches/${matchId}/status`).set(as('worker')).send({ status: 'cancelled' });
+    const pay = await request(app).post('/api/transactions/pay').set(as('client')).send({ matchId, phone: CLIENT_MOMO, safetyNet: 600 });
+    expect(pay.status).toBe(409);
     expect((await net()).balance).toBe(before.balance);
   });
 });
@@ -124,8 +133,8 @@ describe('Ejo Heza savings', () => {
   test('a share of every payout is set aside once the worker opts in', async () => {
     await request(app).put('/api/safety-net/me/savings').set(as('worker')).send({ percent: 10 });
     const before = await net();
-    const { matchId, txId } = await acceptedJob(30000);
-    await fund(txId, 0);
+    const { matchId } = await acceptedJob(30000);
+    await fund(matchId, 0);
     await release(matchId);
     const after = await net();
     expect(after.savingsPercent).toBe(10);
@@ -138,7 +147,7 @@ describe('crew jobs', () => {
     await request(app).put('/api/safety-net/me/savings').set(as('worker')).send({ percent: 0 });
     const lead = await net('worker');
     const crew = await net('crew');
-    const { matchId, txId } = await acceptedJob(40000);
+    const { matchId } = await acceptedJob(40000);
     await db.MatchMember.create({
       matchId,
       userId: users.crew.id,
@@ -150,7 +159,7 @@ describe('crew jobs', () => {
       endorsementNote: null,
       endorsedAt: null,
     });
-    await fund(txId, 1200);
+    await fund(matchId, 1200);
     await release(matchId);
     expect((await net('worker')).balance - lead.balance).toBe(900);
     expect((await net('crew')).balance - crew.balance).toBe(300);

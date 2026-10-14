@@ -4,6 +4,7 @@ import app from '../../src/app';
 import db from '../../src/models';
 import { splitShares } from '../../src/services/payoutService';
 import { must } from '../helpers/fixtures';
+import { payForJob } from '../helpers/payment';
 
 process.env.RANKED_INVITE_LIMIT = '0';
 process.env.EXPLORATION_SLOTS = '0';
@@ -52,9 +53,7 @@ const acceptedJob = async (lead: string, crew?: { userId: string; sharePercent: 
 };
 
 const fundAndRelease = async (matchId: string) => {
-  const tx = must(await db.Transaction.findOne({ where: { matchId } }), 'tx');
-  await request(app).post(`/api/transactions/${tx.id}/confirm`).set(as('client'));
-  await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
+  await payForJob(matchId, tokens.client);
 };
 
 const memberRow = async (matchId: string, who: string) =>

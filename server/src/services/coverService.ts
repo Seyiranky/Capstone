@@ -22,58 +22,67 @@ const coveredPeople = async (match: Match) => {
 };
 
 /**
- * Adds cover to a payment as the client funds it. Only for on-site trades,
- * once per job, and by the client.
+ * The client adds cover while the job is under way, for on-site trades only.
+ * Cover starts at once; the premium is billed in the client's Mobile Money
+ * payment when the job is done.
  */
-export const buy = async (transaction: Transaction, match: MatchWithGig, clientId: string) => {
+export const buy = async (matchId: string, clientId: string) => {
+  const match = await loadMatch(matchId);
   if (match.gig?.clientId !== clientId) throw new HttpError('Only the client can add Job Cover', 403);
   if (!isOnSite(match.gig?.skill?.category)) throw new HttpError('Job Cover is for work done on site', 400);
-  if (transaction.coverPolicyNumber) return transaction;
-  return transaction.update({ coverPremium: premiumFor(Number(transaction.amount)), coverPolicyNumber: policyNumber() });
+  if (match.status !== 'accepted') throw new HttpError('Cover can be added while the job is in progress', 409);
+  if (match.coverPolicyNumber) return match;
+  const price = Number(match.agreedAmount ?? match.gig?.budget ?? 0);
+  return match.update({ coverPremium: premiumFor(price), coverPolicyNumber: policyNumber(), coverStartedAt: new Date() });
 };
 
 /** What a party to the job sees: whether it can be or is covered, and the claims on it. */
 export const status = async (matchId: string, viewer: { id: string; role: string }) => {
   const match = await loadMatch(matchId);
   const people = await coveredPeople(match);
-  const isParty = people.has(viewer.id) || match.gig?.clientId === viewer.id;
-  if (!isParty && viewer.role !== 'admin') throw new HttpError('Only people on this job can see its cover', 403);
-  const tx = await Transaction.findOne({ where: { matchId } });
+  const isClient = match.gig?.clientId === viewer.id;
+  if (!people.has(viewer.id) && !isClient && viewer.role !== 'admin') {
+    throw new HttpError('Only people on this job can see its cover', 403);
+  }
   const claims = await CoverClaim.findAll({
-    where: { matchId, ...(viewer.role === 'admin' || match.gig?.clientId === viewer.id ? {} : { userId: viewer.id }) },
+    where: { matchId, ...(viewer.role === 'admin' || isClient ? {} : { userId: viewer.id }) },
     order: [['createdAt', 'DESC']],
   });
-  const price = Number(tx?.amount ?? match.agreedAmount ?? match.gig?.budget ?? 0);
+  const price = Number(match.agreedAmount ?? match.gig?.budget ?? 0);
+  const eligible = isOnSite(match.gig?.skill?.category);
   return {
-    eligible: isOnSite(match.gig?.skill?.category),
-    covered: Boolean(tx?.coverPolicyNumber),
-    policyNumber: tx?.coverPolicyNumber ?? null,
-    premium: tx?.coverPremium != null ? Number(tx.coverPremium) : premiumFor(price),
+    eligible,
+    covered: Boolean(match.coverPolicyNumber),
+    canBuy: eligible && isClient && match.status === 'accepted' && !match.coverPolicyNumber,
+    policyNumber: match.coverPolicyNumber ?? null,
+    premium: match.coverPremium != null ? Number(match.coverPremium) : premiumFor(price),
     limit: COVER_LIMIT,
     claimWindowDays: CLAIM_WINDOW_DAYS,
     canClaim:
-      Boolean(tx?.coverPolicyNumber) &&
+      Boolean(match.coverPolicyNumber) &&
       people.has(viewer.id) &&
-      claimWindowOpen(tx) &&
+      claimWindowOpen(match) &&
       !claims.some((c) => c.userId === viewer.id && c.status === 'submitted'),
     claims,
   };
 };
 
-const claimWindowOpen = (tx: Transaction | null) => {
-  if (!tx || !tx.coverPolicyNumber) return false;
-  if (tx.escrowStatus === 'held') return true;
-  if (tx.escrowStatus === 'released' && tx.releasedAt) return Date.now() - tx.releasedAt.getTime() <= CLAIM_WINDOW_DAYS * DAY_MS;
+/** Open while the job is under way and for CLAIM_WINDOW_DAYS after it was done. */
+const claimWindowOpen = (match: Match) => {
+  if (!match.coverPolicyNumber) return false;
+  if (match.status === 'accepted') return true;
+  if (match.status === 'completed' && match.completedAt) {
+    return Date.now() - match.completedAt.getTime() <= CLAIM_WINDOW_DAYS * DAY_MS;
+  }
   return false;
 };
 
 export const fileClaim = async (matchId: string, userId: string, input: { description?: unknown; amount?: unknown }) => {
   const match = await loadMatch(matchId);
   if (!(await coveredPeople(match)).has(userId)) throw new HttpError('Only the workers on this job can claim', 403);
-  const tx = await Transaction.findOne({ where: { matchId } });
-  if (!tx?.coverPolicyNumber) throw new HttpError('This job has no Job Cover', 409);
-  if (!claimWindowOpen(tx)) {
-    throw new HttpError(`Claims can be made while the job is under way or up to ${CLAIM_WINDOW_DAYS} days after it is paid`, 409);
+  if (!match.coverPolicyNumber) throw new HttpError('This job has no Job Cover', 409);
+  if (!claimWindowOpen(match)) {
+    throw new HttpError(`Claims can be made while the job is under way or up to ${CLAIM_WINDOW_DAYS} days after it is done`, 409);
   }
   const description = String(input.description ?? '').trim();
   const amount = Math.round(Number(input.amount));
@@ -86,8 +95,9 @@ export const fileClaim = async (matchId: string, userId: string, input: { descri
   if (await CoverClaim.findOne({ where: { matchId, userId, status: 'submitted' } })) {
     throw new HttpError('You already have a claim being reviewed for this job', 409);
   }
+  const tx = await Transaction.findOne({ where: { matchId }, attributes: ['id'] });
   return CoverClaim.create({
-    transactionId: tx.id,
+    transactionId: tx?.id ?? null,
     matchId,
     userId,
     description,
@@ -104,8 +114,7 @@ export const listClaims = async () => {
   const claims = await CoverClaim.findAll({
     include: [
       { model: User, as: 'user', attributes: ['id', 'name'] },
-      { model: Transaction, as: 'transaction', attributes: ['coverPolicyNumber', 'amount'] },
-      { model: Match, as: 'match', include: [{ model: Gig, as: 'gig', attributes: ['id', 'title'] }] },
+      { model: Match, as: 'match', attributes: ['id', 'coverPolicyNumber'], include: [{ model: Gig, as: 'gig', attributes: ['id', 'title'] }] },
     ],
     order: [['createdAt', 'DESC']],
   });

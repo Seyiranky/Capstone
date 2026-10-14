@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { Op } from 'sequelize';
 import type { Request } from 'express';
 import { Dispute, DisputeVote, Gig, Match, Transaction, User, sequelize } from '../models';
-import * as escrowService from './escrowService';
+import * as completionService from './completionService';
 import * as collusionDetectionService from './collusionDetectionService';
 import {
   PEER_MIN_REVIEWS,
@@ -14,7 +14,7 @@ import { HttpError } from '../lib/httpError';
 import type { DisputeOutcome, DisputeReason } from '../types/domain';
 
 /**
- * Disputes over escrowed money, decided by three screened peers.
+ * Disputes about a job in progress, decided by three screened peers.
  *
  * Marketplaces send disputes to a support desk. Here the same rules that keep
  * skill reviews honest pick the panel: mediators must be well rated with a
@@ -77,7 +77,7 @@ export const eligibleMediators = async (workerId: string, clientId: string): Pro
     .filter((id) => !workerTies.has(id) && !clientTies.has(id) && !flagged.has(id));
 };
 
-/** Opens a dispute on a job whose money is held, and seats its panel. */
+/** Opens a dispute on a job in progress, and seats its panel. */
 export const open = async (
   ctx: AppContext,
   { matchId, userId, reason, details }: { matchId: string; userId: string; reason: string; details: string },
@@ -91,11 +91,7 @@ export const open = async (
   const text = String(details ?? '').trim();
   if (text.length < 10) throw new HttpError('Explain what happened in a sentence or two', 400);
 
-  const tx = await Transaction.findOne({ where: { matchId } });
-  if (!tx || tx.status !== 'confirmed' || tx.escrowStatus !== 'held') {
-    throw new HttpError('There is no money in escrow to dispute yet', 409);
-  }
-  if (await escrowService.hasLiveDispute(matchId)) {
+  if (await completionService.hasLiveDispute(matchId)) {
     throw new HttpError('A dispute is already open on this job', 409);
   }
 
@@ -180,11 +176,11 @@ export const respond = async (disputeId: string, userId: string, response: strin
 };
 
 /**
- * Applies an outcome to the held money and closes the dispute.
+ * Applies an outcome to the job and closes the dispute.
  *
- * Release and split complete the job (a split pays the worker half); refund
- * calls it off and returns the money. Runs once: a dispute already closed is
- * left alone.
+ * Release completes the job at the full price; split completes it at half the
+ * price; refund calls it off and nothing is owed. The client then pays what is
+ * due with Mobile Money. Runs once: a dispute already closed is left alone.
  */
 const decide = async (
   ctx: AppContext,
@@ -214,18 +210,17 @@ const decide = async (
   if (!match || !match.gig) return;
   if (outcome === 'refund') {
     await match.update({ status: 'cancelled' });
-    await escrowService.refund(match.id);
     await match.gig.update({ status: 'cancelled' });
   } else {
-    await escrowService.completeMatch(ctx, match, 'dispute', { share: outcome === 'split' ? 0.5 : 1 });
+    await completionService.completeMatch(ctx, match, 'dispute', { share: outcome === 'split' ? 0.5 : 1 });
   }
 
   const summary =
     outcome === 'release'
-      ? 'the payment goes to the worker'
+      ? 'the job counts as done and the client pays the full price with Mobile Money'
       : outcome === 'refund'
-        ? 'the payment goes back to the client'
-        : 'the payment is split equally';
+        ? 'the job is called off and nothing is owed'
+        : 'the job counts as done and the client pays half the price with Mobile Money';
   const decider = by.decidedBy === 'admin' ? 'An admin' : 'The mediators';
   for (const userId of [match.workerId, match.gig.clientId]) {
     await notify(ctx, {

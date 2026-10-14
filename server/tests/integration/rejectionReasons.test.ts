@@ -122,7 +122,8 @@ describe('rejection reasons', () => {
     const payments = await request(app).get('/api/admin/payments').set(as('admin'));
     expect(payments.status).toBe(200);
     expect(Array.isArray(payments.body.recent)).toBe(true);
-    expect(typeof payments.body.payoutCount).toBe('number');
+    expect(payments.body.totals).toHaveProperty('awaiting');
+    expect(payments.body.provider.name).toBe('simulated-momo');
     const rates = await request(app).get('/api/admin/rates').set(as('admin'));
     expect(rates.status).toBe(200);
     expect(rates.body.map((r: { category: string }) => r.category)).toEqual(

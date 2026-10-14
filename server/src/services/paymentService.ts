@@ -1,8 +1,12 @@
 import crypto from 'crypto';
-import { Match, Transaction, sequelize } from '../models';
+import { Gig, Match, Payout, SafetyNetEntry, Transaction, User, sequelize } from '../models';
 import { escrowStateOnFunding, escrowTimestampField, generateReceiptNumber } from './escrowRules';
 import * as payoutService from './payoutService';
 import simulatedAdapter from './payments/simulatedAdapter';
+import mtnMomoAdapter, { disbursementConfigured } from './payments/mtnMomoAdapter';
+import { priceOf } from './completionService';
+import { MAX_CONTRIBUTION } from './safetyNetService';
+import { toRwandanMsisdn } from '../lib/channels/sms';
 import type { PaymentAdapter, PaymentCallback } from './payments/adapter';
 import type { TransactionStatus } from '../types/domain';
 import { HttpError } from '../lib/httpError';
@@ -18,6 +22,7 @@ import { HttpError } from '../lib/httpError';
  */
 const ADAPTERS: Record<string, PaymentAdapter> = {
   [simulatedAdapter.name]: simulatedAdapter,
+  [mtnMomoAdapter.name]: mtnMomoAdapter,
 };
 
 const activeAdapter = (): PaymentAdapter => {
@@ -211,3 +216,140 @@ export const fail = async (transactionId: string, reason?: string): Promise<Tran
 };
 
 export { activeAdapter, ADAPTERS };
+
+// ── Mobile Money payment of a finished job ──────────────────────────────────
+
+/**
+ * Asks the client to pay for a finished job with Mobile Money.
+ *
+ * The amount is the price due (agreed, or the share a dispute decided), plus
+ * any safety-net share the client adds now and the Job Cover premium if cover
+ * was added during the job. A prompt goes to `payerMsisdn`; the payment settles
+ * when they approve it (refreshStatus, or the provider's callback).
+ *
+ * One payment per job: a pending request is returned as it is, a failed one
+ * may be asked for again, a confirmed one is final.
+ */
+export const requestForMatch = async (
+  matchId: string,
+  clientId: string,
+  { payerMsisdn: rawMsisdn, safetyNet = 0 }: { payerMsisdn?: unknown; safetyNet?: unknown },
+): Promise<Transaction> => {
+  const match = (await Match.findByPk(matchId, { include: [{ model: Gig, as: 'gig' }] })) as
+    | (Match & { gig?: Gig | null })
+    | null;
+  if (!match || !match.gig) throw new HttpError('Job not found', 404);
+  if (match.gig.clientId !== clientId) throw new HttpError('Only the client pays for this job', 403);
+  if (match.status !== 'completed') throw new HttpError('Mark the job as done before paying', 409);
+
+  const payerMsisdn = toRwandanMsisdn(String(rawMsisdn ?? ''));
+  if (!payerMsisdn) throw new HttpError('Enter your MTN MoMo number, for example 078 123 4567', 400);
+
+  const price = priceOf(match, match.gig);
+  const contribution = Math.round(Number(safetyNet) || 0);
+  if (contribution < 0 || contribution > price * MAX_CONTRIBUTION) {
+    throw new HttpError('A safety-net contribution can be at most 20% of the price', 400);
+  }
+  const premium = Number(match.coverPremium ?? 0);
+  const total = price + contribution + premium;
+
+  const existing = await Transaction.findOne({ where: { matchId } });
+  if (existing?.status === 'confirmed') throw new HttpError('This job has already been paid', 409);
+  if (existing?.status === 'initiated') return existing;
+
+  const adapter = activeAdapter();
+  const reference = `ISK-${crypto.randomUUID()}`;
+  const result = await adapter.requestPayment({
+    amount: total,
+    currency: 'RWF',
+    payerMsisdn,
+    reference,
+    note: `Isoko Talents: ${match.gig.title}`.slice(0, 160),
+  });
+  const fields = {
+    amount: price,
+    currency: 'RWF',
+    status: 'initiated' as const,
+    provider: adapter.name,
+    // The simulated provider has always used its own reference as ours; a
+    // real provider keeps ours, which is what its callback quotes back.
+    reference: adapter.name === simulatedAdapter.name ? result.providerReference : reference,
+    providerReference: result.providerReference,
+    providerStatus: result.providerStatus,
+    providerRawResponse: result.raw ?? null,
+    payerMsisdn,
+    failureReason: null,
+    safetyNetContribution: contribution || null,
+    coverPremium: premium || null,
+    coverPolicyNumber: match.coverPolicyNumber ?? null,
+  };
+  // A failed attempt is replaced by the new request rather than kept beside it.
+  return existing ? existing.update(fields) : Transaction.create({ matchId, ...fields });
+};
+
+/**
+ * Asks the provider where a pending payment stands and applies the answer.
+ * Used by the client's screen while they approve on their phone, and to
+ * verify a callback instead of trusting what it says.
+ */
+export const refreshStatus = async (transaction: Transaction): Promise<Transaction> => {
+  if (transaction.status !== 'initiated' || !transaction.providerReference) return transaction;
+  const adapter = ADAPTERS[transaction.provider];
+  if (!adapter?.checkStatus) return transaction;
+  const { status, failureReason, raw } = await adapter.checkStatus(transaction.providerReference);
+  if (adapter.normaliseStatus(status) === 'initiated') return transaction;
+  const result = await applyCallback({ provider: adapter.name, providerReference: transaction.providerReference, status, failureReason, raw });
+  if (result.ok && result.transaction && result.transaction.status === 'confirmed' && !result.duplicate) {
+    await sendPayouts(result.transaction);
+  }
+  return result.transaction ?? transaction;
+};
+
+/**
+ * Sends each person's payout to their confirmed MoMo number, where the
+ * provider can (MTN Disbursements configured). Best effort and recorded on the
+ * payout: a transfer that fails is shown to admins to resend, and never undoes
+ * the client's payment.
+ */
+export const sendPayouts = async (transaction: Transaction): Promise<void> => {
+  const adapter = ADAPTERS[transaction.provider];
+  if (!adapter?.transfer || (adapter.name === mtnMomoAdapter.name && !disbursementConfigured())) return;
+  const payouts = await Payout.findAll({ where: { transactionId: transaction.id, transferStatus: ['not_sent', 'failed'] } });
+  for (const payout of payouts) {
+    const user = await User.findByPk(payout.userId);
+    if (!user?.phone || !user.phoneVerifiedAt) {
+      await payout.update({ transferStatus: 'no_number', transferError: 'No confirmed MoMo number' });
+      continue;
+    }
+    // What the worker chose to save toward Ejo Heza stays in their savings.
+    const saved = Number(
+      (await SafetyNetEntry.sum('amount', { where: { payoutId: payout.id, kind: 'ejoHeza' } })) ?? 0,
+    );
+    try {
+      const sent = await adapter.transfer({
+        amount: Number(payout.amount) - saved,
+        currency: payout.currency,
+        payeeMsisdn: user.phone,
+        reference: payout.receiptNumber,
+        note: 'Isoko Talents payout',
+      });
+      await payout.update({ transferStatus: 'sent', transferReference: sent.providerReference, transferError: null });
+    } catch (err) {
+      await payout.update({ transferStatus: 'failed', transferError: (err as Error).message.slice(0, 500) });
+    }
+  }
+};
+
+/** Checks every payment still waiting on the provider (the sweep in server.ts). */
+export const refreshPending = async (): Promise<number> => {
+  const pending = await Transaction.findAll({ where: { status: 'initiated' } });
+  let settled = 0;
+  for (const tx of pending) {
+    try {
+      if ((await refreshStatus(tx)).status !== 'initiated') settled += 1;
+    } catch (err) {
+      console.error(`Could not check payment ${tx.id}`, (err as Error).message);
+    }
+  }
+  return settled;
+};

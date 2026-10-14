@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import app from '../../src/app';
 import db from '../../src/models';
 import { must } from '../helpers/fixtures';
+import { payForJob } from '../helpers/payment';
 
 process.env.RANKED_INVITE_LIMIT = '0';
 process.env.EXPLORATION_SLOTS = '0';
@@ -27,11 +28,9 @@ const acceptedJob = async (category: 'tailoring' | 'digital_web', budget = 40000
   });
   const match = await db.Match.create({ gigId: gig.id, workerId: users.worker.id });
   await request(app).put(`/api/matches/${match.id}/status`).set(as('worker')).send({ status: 'accepted' });
-  const tx = must(await db.Transaction.findOne({ where: { matchId: match.id } }), 'tx');
-  return { matchId: match.id, txId: tx.id };
+  return { matchId: match.id };
 };
-const fund = (txId: string, body: Record<string, unknown>, who = 'client') =>
-  request(app).post(`/api/transactions/${txId}/confirm`).set(as(who)).send(body);
+const addCover = (matchId: string, who = 'client') => request(app).post(`/api/matches/${matchId}/cover`).set(as(who));
 const claim = (matchId: string, body: Record<string, unknown>, who = 'worker') =>
   request(app).post(`/api/matches/${matchId}/cover-claims`).set(as(who)).send(body);
 const injury = { description: 'Cut my hand on the cutting table; three stitches at the health centre.', amount: 12000 };
@@ -54,11 +53,12 @@ afterAll(async () => {
 });
 
 describe('buying cover', () => {
-  test('the client adds it when paying for on-site work: 2%, with a policy number', async () => {
-    const { matchId, txId } = await acceptedJob('tailoring', 40000);
+  test('the client adds it while on-site work is under way: 2%, with a policy number', async () => {
+    const { matchId } = await acceptedJob('tailoring', 40000);
     const before = (await request(app).get(`/api/matches/${matchId}/cover`).set(as('client'))).body;
-    expect(before).toMatchObject({ eligible: true, covered: false, premium: 800 });
-    expect((await fund(txId, { cover: true })).status).toBe(200);
+    expect(before).toMatchObject({ eligible: true, covered: false, canBuy: true, premium: 800 });
+    expect((await addCover(matchId, 'worker')).status).toBe(403);
+    expect((await addCover(matchId)).status).toBe(201);
     const after = (await request(app).get(`/api/matches/${matchId}/cover`).set(as('worker'))).body;
     expect(after.covered).toBe(true);
     expect(after.policyNumber).toMatch(/^COV-[0-9A-Z]{4}-[0-9A-Z]{4}$/);
@@ -71,8 +71,8 @@ describe('buying cover', () => {
   });
 
   test('digital work done from the worker’s own desk cannot be covered', async () => {
-    const { txId } = await acceptedJob('digital_web');
-    expect((await fund(txId, { cover: true })).status).toBe(400);
+    const { matchId } = await acceptedJob('digital_web');
+    expect((await addCover(matchId)).status).toBe(400);
   });
 
   test('only people on the job see its cover', async () => {
@@ -88,7 +88,7 @@ describe('claims', () => {
   beforeAll(async () => {
     const job = await acceptedJob('tailoring', 40000);
     matchId = job.matchId;
-    await fund(job.txId, { cover: true });
+    await addCover(matchId);
   });
 
   test('need a real description and an amount within the limit', async () => {
@@ -105,8 +105,7 @@ describe('claims', () => {
   });
 
   test('an uncovered job cannot be claimed on', async () => {
-    const { matchId: uncovered, txId } = await acceptedJob('tailoring');
-    await fund(txId, {});
+    const { matchId: uncovered } = await acceptedJob('tailoring');
     expect((await claim(uncovered, injury)).status).toBe(409);
   });
 
@@ -123,8 +122,9 @@ describe('claims', () => {
     expect(list.find((c: { id: string }) => c.id === claimId).user).not.toHaveProperty('email');
   });
 
-  test('the policy is printed on the worker’s receipt once paid', async () => {
-    await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
+  test('the premium is billed in the MoMo payment, and the policy is printed on the receipt', async () => {
+    const { pay } = await payForJob(matchId, tokens.client);
+    expect(Number(pay.body.coverPremium)).toBe(800);
     const payout = must(await db.Payout.findOne({ where: { matchId } }), 'payout');
     const receipt = (await request(app).get(`/api/receipts/${payout.receiptNumber}`)).body;
     expect(receipt.cover.policyNumber).toMatch(/^COV-/);

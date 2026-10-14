@@ -96,7 +96,7 @@ export const compute = async (): Promise<FairworkScorecard> => {
   const feeFree = released.filter((t) => !t.platformFeeAmount || Number(t.platformFeeAmount) === 0).length;
 
   // Fair conditions ─────────────────────────────────────────────────────────
-  // (1) Completed jobs whose money was protected by escrow and released.
+  // (1) Finished jobs the worker was actually paid for, through Isoko's Mobile Money.
   const completed = await Match.count({ where: { status: 'completed' } });
   const completedReleased = await Transaction.count({
     where: { escrowStatus: 'released' },
@@ -156,7 +156,7 @@ export const compute = async (): Promise<FairworkScorecard> => {
     {
       key: 'conditions',
       checks: [
-        check('escrowProtected', ratio(completedReleased, completed), 0.9, 'ratio', completed),
+        check('paidThroughIsoko', ratio(completedReleased, completed), 0.9, 'ratio', completed),
         check('disputesOnTime', disputes.length ? ratio(onTime, disputes.length) : 1, 0.9, 'ratio', disputes.length),
       ],
     },

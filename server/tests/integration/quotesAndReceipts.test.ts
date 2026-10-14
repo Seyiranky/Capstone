@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import app from '../../src/app';
 import db from '../../src/models';
 import { must } from '../helpers/fixtures';
+import { CLIENT_MOMO, payForJob } from '../helpers/payment';
 
 process.env.RANKED_INVITE_LIMIT = '0';
 process.env.EXPLORATION_SLOTS = '0';
@@ -55,14 +56,9 @@ const agreedJob = async (quote: number) => {
 };
 
 const releaseJob = async (matchId: string) => {
-  const tx = must(await db.Transaction.findOne({ where: { matchId } }), 'transaction');
-  await request(app).post(`/api/transactions/${tx.id}/confirm`).set(as('client'));
-  const done = await request(app)
-    .put(`/api/matches/${matchId}/status`)
-    .set(as('client'))
-    .send({ status: 'completed' });
-  expect(done.status).toBe(200);
-  return done.body.transaction;
+  const { confirm } = await payForJob(matchId, tokens.client);
+  expect(confirm?.status).toBe(200);
+  return confirm!.body;
 };
 
 beforeAll(async () => {
@@ -92,7 +88,7 @@ describe('quotes', () => {
     expect(res.status).toBe(400);
   });
 
-  test('applying without a quote still works, and escrow collects the budget', async () => {
+  test('applying without a quote still works, and the client pays the budget', async () => {
     const gig = await openGig(26000);
     const applied = await request(app).post('/api/gig-applications').set(as('worker')).send({ gigId: gig.id });
     expect(applied.status).toBe(201);
@@ -105,29 +101,28 @@ describe('quotes', () => {
       .put(`/api/matches/${approved.body.match.id}/status`)
       .set(as('worker'))
       .send({ status: 'accepted' });
-    const tx = must(await db.Transaction.findOne({ where: { matchId: approved.body.match.id } }), 'tx');
-    expect(Number(tx.amount)).toBe(26000);
+    const paid = await releaseJob(approved.body.match.id);
+    expect(Number(paid.amount)).toBe(26000);
   });
 
-  test('an approved quote becomes the agreed price, and escrow collects that', async () => {
+  test('an approved quote becomes the agreed price, and the client pays that', async () => {
     const { matchId, applicationId } = await agreedJob(42000);
     const application = must(await db.GigApplication.findByPk(applicationId), 'application');
     expect(Number(application.quoteAmount)).toBe(42000);
     expect(application.quoteNote).toBe('Includes materials');
     expect(Number(must(await db.Match.findByPk(matchId), 'match').agreedAmount)).toBe(42000);
-    const tx = must(await db.Transaction.findOne({ where: { matchId } }), 'tx');
-    expect(Number(tx.amount)).toBe(42000);
+    const paid = await releaseJob(matchId);
+    expect(Number(paid.amount)).toBe(42000);
   });
 });
 
 describe('receipts', () => {
-  test('held money has no receipt yet', async () => {
+  test('a payment waiting on the client\u2019s phone has no receipt yet', async () => {
     const { matchId } = await agreedJob(15000);
-    const tx = must(await db.Transaction.findOne({ where: { matchId } }), 'tx');
-    await request(app).post(`/api/transactions/${tx.id}/confirm`).set(as('client'));
-    await tx.reload();
-    expect(tx.escrowStatus).toBe('held');
-    expect(tx.receiptNumber).toBeNull();
+    await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
+    const pay = await request(app).post('/api/transactions/pay').set(as('client')).send({ matchId, phone: CLIENT_MOMO });
+    expect(pay.body.status).toBe('initiated');
+    expect(pay.body.receiptNumber).toBeNull();
   });
 
   test('releasing money issues a receipt anyone can check, without contact details', async () => {

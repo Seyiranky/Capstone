@@ -16,7 +16,7 @@ export type CoverClaimStatus = 'submitted' | 'approved' | 'declined';
 /** A covered worker asking the (simulated) insurer to pay for an accident on the job. */
 export class CoverClaim extends Model<InferAttributes<CoverClaim>, InferCreationAttributes<CoverClaim>> {
   declare id: CreationOptional<string>;
-  declare transactionId: string;
+  declare transactionId: string | null;
   declare matchId: string;
   declare userId: string;
   declare description: string;
@@ -43,7 +43,7 @@ export const initCoverClaim = (sequelize: Sequelize) => {
   CoverClaim.init(
     {
       id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-      transactionId: { type: DataTypes.UUID, allowNull: false },
+      transactionId: { type: DataTypes.UUID, allowNull: true },
       matchId: { type: DataTypes.UUID, allowNull: false },
       userId: { type: DataTypes.UUID, allowNull: false },
       description: { type: DataTypes.TEXT, allowNull: false },

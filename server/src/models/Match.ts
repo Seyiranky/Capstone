@@ -42,6 +42,11 @@ export class Match extends Model<InferAttributes<Match>, InferCreationAttributes
   declare completionCodeAttempts: CreationOptional<number>;
   declare workDoneAt: Date | null;
   declare completedVia: CompletionMethod | null;
+  declare completedAt: CreationOptional<Date | null>;
+  /** Job Cover, added by the client while the job is under way; billed in the MoMo payment. */
+  declare coverPremium: CreationOptional<number | string | null>;
+  declare coverPolicyNumber: CreationOptional<string | null>;
+  declare coverStartedAt: CreationOptional<Date | null>;
   /** The accepted quote, which escrow collects. Null means the gig's budget. */
   declare agreedAmount: number | string | null;
   declare createdAt: CreationOptional<Date>;
@@ -133,6 +138,10 @@ export const initMatch = (sequelize: Sequelize) => {
       },
       completionCode: { type: DataTypes.STRING(4), allowNull: true },
       agreedAmount: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
+      completedAt: { type: DataTypes.DATE, allowNull: true },
+      coverPremium: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
+      coverPolicyNumber: { type: DataTypes.STRING, allowNull: true, unique: true },
+      coverStartedAt: { type: DataTypes.DATE, allowNull: true },
       completionCodeAttempts: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       workDoneAt: { type: DataTypes.DATE, allowNull: true },
       completedVia: {

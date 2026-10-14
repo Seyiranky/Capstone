@@ -28,6 +28,22 @@ export interface PaymentAdapter {
 
   /** Maps the provider's vocabulary onto the platform's three states. */
   normaliseStatus(providerStatus: string | null | undefined): TransactionStatus;
+
+  /** Asks the provider where a payment stands. Providers that only call back
+   *  may leave it out. Callbacks are verified with this rather than trusted. */
+  checkStatus?(providerReference: string): Promise<{ status: string; failureReason: string | null; raw?: unknown }>;
+
+  /** Sends money to a worker's mobile-money number, where the provider can. */
+  transfer?(input: TransferRequest): Promise<{ providerReference: string; status: string }>;
+}
+
+export interface TransferRequest {
+  amount: number;
+  currency?: string;
+  payeeMsisdn: string;
+  /** The platform's own reference (the receipt number). */
+  reference: string;
+  note?: string;
 }
 
 export interface PaymentRequest {
@@ -36,6 +52,8 @@ export interface PaymentRequest {
   payerMsisdn?: string | null;
   /** The platform's own reference, passed through for reconciliation. */
   reference: string;
+  /** Shown to the payer on their phone. */
+  note?: string;
 }
 
 export interface PaymentRequestResult {

@@ -82,7 +82,32 @@ export const normaliseStatus = (
 
 export { PROVIDER };
 
+/** When each simulated request was made, so a status check can play the payer approving it. */
+const requestedAt = new Map<string, number>();
+const APPROVE_AFTER_MS = 4000;
+
+/**
+ * Where a simulated payment stands: approved a few seconds after it was
+ * requested, as a person would on their phone. A reference this process never
+ * issued (the server restarted since) counts as approved.
+ */
+export const checkStatus = async (providerReference: string) => {
+  const at = requestedAt.get(providerReference);
+  const approved = at === undefined || Date.now() - at >= APPROVE_AFTER_MS;
+  return { status: approved ? 'SUCCESSFUL' : 'PENDING', failureReason: null, raw: { simulated: true } };
+};
+
 /** The module, viewed through the contract — this is what the façade registers. */
-const simulatedAdapter: PaymentAdapter = { name, requestPayment, buildCallback, normaliseStatus };
+const simulatedAdapter: PaymentAdapter = {
+  name,
+  requestPayment: async (input) => {
+    const result = await requestPayment(input);
+    requestedAt.set(result.providerReference, Date.now());
+    return result;
+  },
+  buildCallback,
+  normaliseStatus,
+  checkStatus,
+};
 
 export default simulatedAdapter;

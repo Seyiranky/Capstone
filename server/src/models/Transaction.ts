@@ -53,6 +53,7 @@ export class Transaction extends Model<
 
   static associate(models: Db) {
     Transaction.belongsTo(models.Match, { foreignKey: 'matchId', as: 'match' });
+    Transaction.hasMany(models.Payout, { foreignKey: 'transactionId', as: 'payouts' });
   }
 }
 

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { Match, Gig, User } from '../models';
+import { Transaction, Match, Gig, User } from '../models';
 import * as paymentService from '../services/paymentService';
 import notify from '../lib/notify';
 import { paymentNotice } from '../lib/paymentNotice';
@@ -70,4 +70,35 @@ export const paymentCallback = async (req: Request, res: Response): Promise<void
     applied: true,
     status: result.transaction.status,
   });
+};
+
+/**
+ * MTN MoMo's callback after a payer approves or declines a request to pay.
+ *
+ * The body is never trusted: it only says which payment to look at (by our
+ * reference, `externalId`), and the status is then read from MTN itself. So a
+ * forged callback can at most make the platform ask MTN a question.
+ */
+export const momoCallback = async (req: Request, res: Response): Promise<void> => {
+  const expected = process.env.MOMO_WEBHOOK_SECRET;
+  const given = req.get('X-Webhook-Secret') ?? (typeof req.query.secret === 'string' ? req.query.secret : undefined);
+  if (expected && !secretMatches(given, expected)) {
+    res.status(401).json({ message: 'Invalid webhook secret' });
+    return;
+  }
+  const reference = String(req.body?.externalId ?? '');
+  const transaction = reference ? await Transaction.findOne({ where: { reference, provider: 'mtn-momo' } }) : null;
+  if (!transaction) {
+    res.status(200).json({ received: true, applied: false });
+    return;
+  }
+  const before = transaction.status;
+  const current = await paymentService.refreshStatus(transaction);
+  if (before === 'initiated' && current.status !== 'initiated') {
+    const match = (await Match.findByPk(current.matchId, { include: [{ model: Gig, as: 'gig' }] })) as
+      | (Match & { gig?: Gig | null })
+      | null;
+    if (match) await notify(req, paymentNotice(current, match));
+  }
+  res.status(200).json({ received: true, applied: before !== current.status, status: current.status });
 };

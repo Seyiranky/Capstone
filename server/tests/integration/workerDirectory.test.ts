@@ -99,11 +99,11 @@ describe('inviting a worker to a gig', () => {
     expect((await request(app).post(`/api/gigs/${gigId}/invite`).set(as('client')).send({ workerId: users.away.id })).status).toBe(409);
   });
 
-  test('the invited worker can accept, which asks the client to pay into escrow', async () => {
+  test('the invited worker can accept; nothing is paid until the job is done', async () => {
     const match = must(await db.Match.findOne({ where: { gigId, workerId: users.proven.id } }), 'match');
     const res = await request(app).put(`/api/matches/${match.id}/status`).set(as('proven')).send({ status: 'accepted' });
     expect(res.status).toBe(200);
-    expect(await db.Transaction.findOne({ where: { matchId: match.id } })).not.toBeNull();
+    expect(await db.Transaction.findOne({ where: { matchId: match.id } })).toBeNull();
   });
 
   test('a second invitation cannot be accepted once the gig is taken', async () => {

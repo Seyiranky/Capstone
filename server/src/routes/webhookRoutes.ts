@@ -13,6 +13,11 @@ router.post(
   webhookController.paymentCallback,
 );
 
+// MTN MoMo's callback: POST or PUT depending on the product. It only names the
+// payment; its status is re-read from MTN before anything is applied.
+router.post('/momo', webhookController.momoCallback);
+router.put('/momo', webhookController.momoCallback);
+
 // Pindo's delivery reports. No idempotency key: applying the same report twice
 // leaves the row as it was, so a duplicate is harmless on its own.
 router.post('/sms/pindo', smsWebhookController.pindoDeliveryReport);

@@ -3,11 +3,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import app from '../../src/app';
 import db from '../../src/models';
-import * as escrowService from '../../src/services/escrowService';
 import * as disputeService from '../../src/services/disputeService';
-import { AUTO_RELEASE_AFTER_MS } from '../../src/services/escrowRules';
 import { jwtSecret } from '../../src/config/env';
 import { must } from '../helpers/fixtures';
+import { CLIENT_MOMO, payForJob } from '../helpers/payment';
 
 process.env.RANKED_INVITE_LIMIT = '0';
 process.env.EXPLORATION_SLOTS = '0';
@@ -37,7 +36,7 @@ const asId = async (id: string) => {
   return { Authorization: `Bearer ${tokenFor(user)}` };
 };
 
-/** A job accepted by the worker with the client's money held in escrow. */
+/** A job the worker accepted and is doing; nothing is paid until it is done. */
 const heldJob = async (budget = 40000) => {
   const gig = await db.Gig.create({
     clientId: users.client.id,
@@ -51,8 +50,6 @@ const heldJob = async (budget = 40000) => {
   });
   const match = await db.Match.create({ gigId: gig.id, workerId: users.worker.id });
   await request(app).put(`/api/matches/${match.id}/status`).set(as('worker')).send({ status: 'accepted' });
-  const tx = must(await db.Transaction.findOne({ where: { matchId: match.id } }), 'tx');
-  await request(app).post(`/api/transactions/${tx.id}/confirm`).set(as('client'));
   return { gig, matchId: match.id };
 };
 
@@ -99,15 +96,10 @@ afterAll(async () => {
 });
 
 describe('opening a dispute', () => {
-  test('nothing can be disputed before the money is in escrow', async () => {
-    const gig = await db.Gig.create({
-      clientId: users.client.id, skillId: skill.id, title: 'Unfunded', description: 'Fixture',
-      budget: 1000, locationLat: -1.95, locationLng: 30.06, status: 'open',
-    });
-    const match = await db.Match.create({ gigId: gig.id, workerId: users.worker.id });
-    await request(app).put(`/api/matches/${match.id}/status`).set(as('worker')).send({ status: 'accepted' });
-    const res = await openDispute(match.id);
-    expect(res.status).toBe(409);
+  test('only a job in progress can be disputed, not one already done', async () => {
+    const { matchId } = await heldJob();
+    await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
+    expect((await openDispute(matchId)).status).toBe(409);
   });
 
   test('only the two parties can open one', async () => {
@@ -139,24 +131,8 @@ describe('opening a dispute', () => {
   });
 });
 
-describe('a dispute freezes the money', () => {
-  test('the completion code stops working', async () => {
-    const { matchId } = await heldJob();
-    await openDispute(matchId);
-    const code = must((await db.Match.scope('withCompletionCode').findByPk(matchId))?.completionCode, 'code');
-    const res = await request(app).post(`/api/matches/${matchId}/complete`).set(as('worker')).send({ code });
-    expect(res.status).toBe(409);
-  });
-
-  test('the 72-hour release skips it', async () => {
-    const { matchId } = await heldJob();
-    await request(app).post(`/api/matches/${matchId}/work-done`).set(as('worker'));
-    await openDispute(matchId, 'worker');
-    await escrowService.releaseDue(undefined, new Date(Date.now() + 2 * AUTO_RELEASE_AFTER_MS));
-    expect(must(await db.Match.findByPk(matchId), 'match').status).toBe('accepted');
-  });
-
-  test('the client can still pay out, which settles the dispute', async () => {
+describe('while a dispute is open', () => {
+  test('the client can still mark the job done, which settles the dispute', async () => {
     const { matchId } = await heldJob();
     const opened = await openDispute(matchId, 'worker');
     await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
@@ -198,7 +174,7 @@ describe('both sides are heard, and votes stay private until the end', () => {
 });
 
 describe('deciding', () => {
-  test('two matching votes decide it: a refund returns the money and calls the job off', async () => {
+  test('two matching votes decide it: a refund calls the job off and nothing is owed', async () => {
     const { gig, matchId } = await heldJob();
     const opened = await openDispute(matchId);
     const [a, b, c] = await panelOf(opened.body.id);
@@ -209,8 +185,9 @@ describe('deciding', () => {
     expect(dispute.status).toBe('decided');
     expect(dispute.outcome).toBe('refund');
     expect(dispute.decidedBy).toBe('mediators');
-    expect(must(await db.Transaction.findOne({ where: { matchId } }), 'tx').escrowStatus).toBe('refunded');
     expect(must(await db.Match.findByPk(matchId), 'match').status).toBe('cancelled');
+    const pay = await request(app).post('/api/transactions/pay').set(as('client')).send({ matchId, phone: CLIENT_MOMO });
+    expect(pay.status).toBe(409);
     expect(must(await db.Gig.findByPk(gig.id), 'gig').status).toBe('cancelled');
 
     // The third seat can no longer vote.
@@ -218,7 +195,7 @@ describe('deciding', () => {
     expect(late.status).toBe(409);
   });
 
-  test('a split pays the worker half, and only half counts as their income', async () => {
+  test('a split makes half the price due, and only half counts as the worker\'s income', async () => {
     const before = await request(app).get('/api/users/me/income-statement').set(as('worker'));
     const { matchId } = await heldJob(50000);
     const opened = await openDispute(matchId);
@@ -226,12 +203,13 @@ describe('deciding', () => {
     await request(app).post(`/api/disputes/${opened.body.id}/votes`).set(await asId(a)).send({ outcome: 'split' });
     await request(app).post(`/api/disputes/${opened.body.id}/votes`).set(await asId(b)).send({ outcome: 'split' });
 
-    const tx = must(await db.Transaction.findOne({ where: { matchId } }), 'tx');
-    expect(tx.escrowStatus).toBe('released');
-    expect(Number(tx.releasedAmount)).toBe(25000);
-    expect(must(await db.Match.findByPk(matchId), 'match').completedVia).toBe('dispute');
+    const match = must(await db.Match.findByPk(matchId), 'match');
+    expect(match.completedVia).toBe('dispute');
+    expect(Number(match.agreedAmount)).toBe(25000);
 
-    const receipt = await request(app).get(`/api/receipts/${tx.receiptNumber}`);
+    const { confirm } = await payForJob(matchId, tokenFor(users.client));
+    expect(Number(confirm?.body.amount)).toBe(25000);
+    const receipt = await request(app).get(`/api/receipts/${confirm?.body.receiptNumber}`);
     expect(receipt.body.amount).toBe(25000);
     const after = await request(app).get('/api/users/me/income-statement').set(as('worker'));
     expect(after.body.summary.totalEarned - before.body.summary.totalEarned).toBe(25000);
@@ -272,7 +250,7 @@ describe('deciding', () => {
       .send({ outcome: 'release', note: 'Work matches the brief in the photos.' });
     expect(resolved.status).toBe(200);
     expect(resolved.body.decidedBy).toBe('admin');
-    expect(must(await db.Transaction.findOne({ where: { matchId } }), 'tx').escrowStatus).toBe('released');
+    expect(must(await db.Match.findByPk(matchId), 'match').status).toBe('completed');
   });
 
   test('a dispute the panel has not decided in 5 days goes to an admin', async () => {

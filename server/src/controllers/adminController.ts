@@ -407,61 +407,106 @@ export const rejectionReasons = async (_req: Request, res: Response): Promise<vo
  * escrow, paid out and refunded, plus the latest transactions with their
  * receipts. Amounts are totals of the transactions in each state.
  */
+/**
+ * Admin: Mobile Money payments.
+ *
+ * Paid jobs, payments waiting on the client to approve on their phone, finished
+ * jobs not yet paid, failed attempts, and whether each worker's share reached
+ * their MoMo number. The payer's number is shown masked.
+ */
 export const payments = async (_req: Request, res: Response): Promise<void> => {
   const transactions = (await Transaction.findAll({
     include: [
       {
         model: Match,
         as: 'match',
-        attributes: ['id', 'workerId', 'status', 'completedVia'],
+        attributes: ['id', 'workerId', 'status', 'completedVia', 'completedAt'],
         include: [
           { model: Gig, as: 'gig', attributes: ['id', 'title'], include: [{ model: User, as: 'client', attributes: ['id', 'name'] }] },
           { model: User, as: 'worker', attributes: ['id', 'name'] },
         ],
       },
+      { model: Payout, as: 'payouts', attributes: ['id', 'transferStatus'] },
     ],
     order: [['updatedAt', 'DESC']],
-  })) as (Transaction & { match?: Match & { gig?: Gig & { client?: User }; worker?: User } })[];
+  })) as (Transaction & { match?: Match & { gig?: Gig & { client?: User }; worker?: User }; payouts?: Payout[] })[];
 
-  const bucket = (tx: Transaction): 'awaiting' | 'held' | 'released' | 'refunded' | 'failed' =>
-    tx.status === 'failed'
-      ? 'failed'
-      : tx.status === 'initiated'
-        ? 'awaiting'
-        : tx.escrowStatus === 'held'
-          ? 'held'
-          : tx.escrowStatus === 'refunded'
-            ? 'refunded'
-            : 'released';
-
-  const totals: Record<string, { count: number; amount: number }> = {};
+  type State = 'paid' | 'pending' | 'failed';
+  const stateOf = (tx: Transaction): State =>
+    tx.status === 'failed' ? 'failed' : tx.status === 'initiated' ? 'pending' : 'paid';
+  const totals: Record<State | 'awaiting', { count: number; amount: number }> = {
+    paid: { count: 0, amount: 0 },
+    pending: { count: 0, amount: 0 },
+    failed: { count: 0, amount: 0 },
+    awaiting: { count: 0, amount: 0 },
+  };
   for (const tx of transactions) {
-    const key = bucket(tx);
-    totals[key] = totals[key] ?? { count: 0, amount: 0 };
-    totals[key].count += 1;
-    totals[key].amount += Number(key === 'released' ? (tx.releasedAmount ?? tx.amount) : tx.amount);
+    const t = totals[stateOf(tx)];
+    t.count += 1;
+    t.amount += Number(tx.releasedAmount ?? tx.amount);
   }
-  const [payoutCount, liveDisputes] = await Promise.all([
-    Payout.count(),
-    Dispute.count({ where: { status: ['open', 'escalated'] } }),
-  ]);
+
+  // Finished jobs the client has not paid yet (no payment, or only a failed one).
+  const settled = new Set(transactions.filter((tx) => tx.status !== 'failed').map((tx) => tx.matchId));
+  const done = (await Match.findAll({
+    where: { status: 'completed' },
+    attributes: ['id', 'agreedAmount', 'completedAt', 'updatedAt'],
+    include: [
+      { model: Gig, as: 'gig', attributes: ['id', 'title', 'budget'], include: [{ model: User, as: 'client', attributes: ['id', 'name'] }] },
+      { model: User, as: 'worker', attributes: ['id', 'name'] },
+    ],
+  })) as (Match & { gig?: Gig & { client?: User }; worker?: User })[];
+  const awaiting = done
+    .filter((m) => !settled.has(m.id) && m.gig)
+    .map((m) => ({
+      matchId: m.id,
+      amount: Number(m.agreedAmount ?? m.gig!.budget),
+      since: m.completedAt ?? m.updatedAt,
+      gig: { id: m.gig!.id, title: m.gig!.title },
+      client: m.gig!.client ? { id: m.gig!.client.id, name: m.gig!.client.name } : null,
+      worker: m.worker ? { id: m.worker.id, name: m.worker.name } : null,
+    }))
+    .sort((a, b) => new Date(a.since).getTime() - new Date(b.since).getTime());
+  totals.awaiting = { count: awaiting.length, amount: awaiting.reduce((sum, a) => sum + a.amount, 0) };
+
+  const transfers = { sent: 0, not_sent: 0, failed: 0, no_number: 0 } as Record<string, number>;
+  for (const p of await Payout.findAll({ attributes: ['transferStatus'] })) transfers[p.transferStatus] = (transfers[p.transferStatus] ?? 0) + 1;
+
+  const mask = (msisdn: string | null) => (msisdn ? `${msisdn.slice(0, 6)}••••${msisdn.slice(-2)}` : null);
+  const provider = process.env.PAYMENT_PROVIDER || 'simulated-momo';
 
   res.json({
+    provider: {
+      name: provider,
+      environment: provider === 'mtn-momo' ? process.env.MOMO_TARGET_ENV || 'sandbox' : 'simulation',
+    },
     totals,
-    payoutCount,
-    liveDisputes,
+    transfers,
+    liveDisputes: await Dispute.count({ where: { status: ['open', 'escalated'] } }),
+    awaiting: awaiting.slice(0, 20),
     recent: transactions.slice(0, 50).map((tx) => ({
       id: tx.id,
-      state: bucket(tx),
-      amount: Number(tx.amount),
-      releasedAmount: tx.releasedAmount != null ? Number(tx.releasedAmount) : null,
+      state: stateOf(tx),
+      amount: Number(tx.releasedAmount ?? tx.amount),
+      extras: Number(tx.safetyNetContribution ?? 0) + Number(tx.coverPremium ?? 0),
       currency: tx.currency,
+      provider: tx.provider,
+      payer: mask(tx.payerMsisdn),
+      failureReason: tx.failureReason,
       receiptNumber: tx.receiptNumber,
+      transfer: tx.payouts?.length
+        ? tx.payouts.every((p) => p.transferStatus === 'sent')
+          ? 'sent'
+          : tx.payouts.some((p) => p.transferStatus === 'failed')
+            ? 'failed'
+            : tx.payouts.some((p) => p.transferStatus === 'no_number')
+              ? 'no_number'
+              : 'not_sent'
+        : null,
       updatedAt: tx.updatedAt,
       gig: tx.match?.gig ? { id: tx.match.gig.id, title: tx.match.gig.title } : null,
       client: tx.match?.gig?.client ? { id: tx.match.gig.client.id, name: tx.match.gig.client.name } : null,
       worker: tx.match?.worker ? { id: tx.match.worker.id, name: tx.match.worker.name } : null,
-      completedVia: tx.match?.completedVia ?? null,
     })),
   });
 };
