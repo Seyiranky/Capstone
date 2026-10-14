@@ -1130,7 +1130,8 @@
   },
   "authPanel": {
     "title": "Hindura ubumenyi bwawe amafaranga.",
-    "body": "Isoko Talents ihuza abakozi b'abahanga i Kigali n'abakeneye akazi kabo. Tanga akazi, uhuzwe, wishyurwe mu mutekano."
+    "body": "Isoko Talents ihuza abakozi b'abahanga i Kigali n'abakeneye akazi kabo. Tanga akazi, uhuzwe, wishyurwe mu mutekano.",
+    "tagline": "Ubumenyi bubyara amafaranga, i Kigali"
   },
   "status": {
     "completed": "Byarangiye",

@@ -50,6 +50,23 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
                 'linear-gradient(180deg, rgba(9,9,11,0.35) 0%, rgba(9,9,11,0.55) 60%, rgba(9,9,11,0.7) 100%)',
             }}
           />
+          <div
+            style={{
+              position: 'absolute',
+              top: 40,
+              left: 56,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 16px 8px 10px',
+              background: '#ffffff',
+              borderRadius: 14,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+            }}
+          >
+            <img src={logo} alt="Isoko Talents" style={{ height: 44, display: 'block' }} />
+            <span style={{ color: '#252b67', fontWeight: 800, fontSize: 18 }}>Isoko Talents</span>
+          </div>
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 440 }}>
             <Typography.Title level={1} style={{ color: '#fff', margin: 0, fontSize: 40, lineHeight: 1.15, textWrap: 'balance' }}>
               {t('authPanel.title')}
@@ -68,24 +85,45 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
           alignItems: 'safe center',
           justifyContent: 'center',
           overflowY: 'auto',
-          padding: showBrand ? 40 : 24,
+          position: 'relative',
+          padding: showBrand ? '64px 40px 40px' : '64px 24px 24px',
           background: token.colorBgContainer,
         }}
       >
+        <div style={{ position: 'absolute', top: 20, right: 24 }}>
+          <LanguageToggle />
+        </div>
         <div style={{ width: '100%', maxWidth: 384 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-            {/* The mark is navy; on the dark theme it sits on a white tile so it stays legible. */}
+          {/* The brand lockup: the mark large enough to read, with the name beside it.
+              On the dark theme the navy mark sits on a white tile so it stays legible. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
             <span
               style={{
                 display: 'inline-flex',
-                padding: isDark ? 8 : 0,
+                padding: isDark ? 10 : 0,
                 background: isDark ? '#ffffff' : 'transparent',
-                borderRadius: 10,
+                borderRadius: 14,
+                flexShrink: 0,
               }}
             >
-              <img src={logo} alt="Isoko Talents" style={{ height: 72, display: 'block' }} />
+              <img src={logo} alt="" style={{ height: showBrand ? 104 : 88, display: 'block' }} />
             </span>
-            <LanguageToggle />
+            <div>
+              <div
+                style={{
+                  fontSize: showBrand ? 30 : 26,
+                  fontWeight: 800,
+                  lineHeight: 1.1,
+                  letterSpacing: '0.01em',
+                  color: isDark ? '#ffffff' : '#252b67',
+                }}
+              >
+                Isoko Talents
+              </div>
+              <div style={{ marginTop: 6, fontSize: 14, color: token.colorTextSecondary }}>
+                {t('authPanel.tagline')}
+              </div>
+            </div>
           </div>
           {children}
         </div>
