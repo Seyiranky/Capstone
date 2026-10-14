@@ -35,7 +35,7 @@ const SupportTicketPage = () => {
   }, [id]);
 
   const back = (
-    <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/support')} style={{ marginBottom: 12, paddingInline: 4 }}>
+    <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/support/requests')} style={{ marginBottom: 12, paddingInline: 4 }}>
       {t('support.back')}
     </Button>
   );

@@ -37,6 +37,9 @@ import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import SupportPage from './pages/SupportPage';
 import SupportTicketPage from './pages/SupportTicketPage';
+import SupportTopicPage from './pages/SupportTopicPage';
+import SupportArticlePage from './pages/SupportArticlePage';
+import SupportRequestsPage from './pages/SupportRequestsPage';
 import { GuestContactPage, GuestTicketPage } from './pages/GuestSupportPage';
 import AdminSupport from './components/Admin/AdminSupport';
 import { useAppDispatch, useAppSelector } from './store/hooks';
@@ -84,6 +87,9 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['worker', 'client']} />}>
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/support" element={<SupportPage />} />
+            <Route path="/support/topics/:category" element={<SupportTopicPage />} />
+            <Route path="/support/topics/:category/:n" element={<SupportArticlePage />} />
+            <Route path="/support/requests" element={<SupportRequestsPage />} />
             <Route path="/support/:id" element={<SupportTicketPage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['client', 'admin']} />}>

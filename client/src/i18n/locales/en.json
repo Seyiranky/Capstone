@@ -1471,6 +1471,25 @@
       }
     },
     "openItem": "Open",
-    "paymentHelp": "Problem with a payment?"
+    "paymentHelp": "Problem with a payment?",
+    "heroGreeting": "Hi, how can we help?",
+    "noArticles": "We couldn't find any articles for:",
+    "askTeam": "Ask the Isoko team instead",
+    "clearSearch": "Clear search",
+    "articles_one": "{{count}} article",
+    "articles_other": "{{count}} articles",
+    "requestsHint": "Follow your conversations with the Isoko team",
+    "requestsCount_one": "{{count}} request",
+    "requestsCount_other": "{{count}} requests",
+    "contactCard": "Contact the team",
+    "replyTime": "Usually replies within a day",
+    "allTopics": "All topics",
+    "didntFind": "Didn't find what you need?",
+    "wasHelpful": "Did this answer your question?",
+    "yes": "Yes",
+    "no": "No",
+    "thanksFeedback": "Thanks for your feedback.",
+    "sorryFeedback": "Sorry it did not help. Tell the team and they will answer you directly.",
+    "moreIn": "More in {{topic}}"
   }
 }

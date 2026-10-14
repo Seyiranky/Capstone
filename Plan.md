@@ -320,6 +320,13 @@ page and private link, admin Support inbox with saved replies and escalation, "N
 the payment panel and wallet, unread counts in the sidebar, support notices in the bell). 502 server
 tests pass.
 
+**Help centre redesign (14 Oct 2026).** At the owner's request the page follows a help-centre layout:
+"Hi, how can we help?" with a search whose results open in a panel over the page, and a 3×3 grid of
+cards (seven topics, Your requests, Contact the team). Each topic has its own page of articles and
+each article its own page with "Did this answer your question?"; a round chat button opens the
+contact form anywhere in the help centre. Routes: /support, /support/topics/:category,
+/support/topics/:category/:n, /support/requests, /support/:id.
+
 ## Security review
 
 A review of authentication, access control, personal data and uploads before the defence.

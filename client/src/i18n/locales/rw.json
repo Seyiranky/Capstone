@@ -1471,6 +1471,25 @@
       }
     },
     "openItem": "Fungura",
-    "paymentHelp": "Hari ikibazo cy'ubwishyu?"
+    "paymentHelp": "Hari ikibazo cy'ubwishyu?",
+    "heroGreeting": "Muraho, twagufasha iki?",
+    "noArticles": "Nta nyandiko twabonye zijyanye na:",
+    "askTeam": "Baza itsinda rya Isoko",
+    "clearSearch": "Siba ibyo washakishije",
+    "articles_one": "Inyandiko {{count}}",
+    "articles_other": "Inyandiko {{count}}",
+    "requestsHint": "Kurikirana ibiganiro byawe n'itsinda rya Isoko",
+    "requestsCount_one": "Ubusabe {{count}}",
+    "requestsCount_other": "Ubusabe {{count}}",
+    "contactCard": "Vugana n'itsinda",
+    "replyTime": "Akenshi risubiza mu munsi umwe",
+    "allTopics": "Ingingo zose",
+    "didntFind": "Ntiwabonye icyo ushaka?",
+    "wasHelpful": "Ibi byasubije ikibazo cyawe?",
+    "yes": "Yego",
+    "no": "Oya",
+    "thanksFeedback": "Urakoze ku gitekerezo cyawe.",
+    "sorryFeedback": "Twihanganire kuba bitafashije. Bwira itsinda rizagusubiza mu buryo bwihariye.",
+    "moreIn": "Ibindi kuri {{topic}}"
   }
 }
