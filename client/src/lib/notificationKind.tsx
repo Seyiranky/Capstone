@@ -3,6 +3,7 @@ import {
   AlertOutlined,
   AuditOutlined,
   BellOutlined,
+  CustomerServiceOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   SafetyCertificateOutlined,
@@ -25,7 +26,8 @@ export type NotificationKind =
   | 'safety'
   | 'cover'
   | 'skill'
-  | 'account';
+  | 'account'
+  | 'support';
 
 interface KindInfo {
   icon: ReactNode;
@@ -49,11 +51,13 @@ export const KINDS: Record<NotificationKind, KindInfo> = {
   cover: { icon: <SafetyOutlined />, tone: 'teal', link: (r) => (r === 'admin' ? '/admin/cover' : toMatches(r)) },
   skill: { icon: <SafetyCertificateOutlined />, tone: 'violet', link: (r) => (r === 'admin' ? '/admin/reviews' : '/dashboard') },
   account: { icon: <BellOutlined />, tone: 'grey', link: (r) => (r === 'admin' ? '/admin/reports' : '/settings') },
+  support: { icon: <CustomerServiceOutlined />, tone: 'blue', link: (r) => (r === 'admin' ? '/admin/support' : '/support') },
 };
 
 // Notices are stored as sent, with no type column, so the kind is read from the
 // title. Order matters: the first rule that fits wins.
 const RULES: [RegExp, NotificationKind][] = [
+  [/support/i, 'support'],
   [/paid|payment/i, 'payment'],
   [/marked done/i, 'done'],
   [/dispute|mediate|appeal/i, 'dispute'],

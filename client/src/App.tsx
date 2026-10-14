@@ -35,6 +35,10 @@ import FindWorkersPage from './components/Workers/FindWorkersPage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import SupportPage from './pages/SupportPage';
+import SupportTicketPage from './pages/SupportTicketPage';
+import { GuestContactPage, GuestTicketPage } from './pages/GuestSupportPage';
+import AdminSupport from './components/Admin/AdminSupport';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { fetchCurrentUser } from './store/slices/authSlice';
 
@@ -61,6 +65,9 @@ function App() {
       <Route path="/p/:token" element={<PassportPage />} />
       <Route path="/r/:number" element={<ReceiptPage />} />
       <Route path="/fairwork" element={<FairworkPage />} />
+      {/* Support for people who cannot sign in, and the private link they are emailed. */}
+      <Route path="/support/contact" element={<GuestContactPage />} />
+      <Route path="/support/t/:token" element={<GuestTicketPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
@@ -76,6 +83,8 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['worker', 'client']} />}>
             <Route path="/wallet" element={<WalletPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/support/:id" element={<SupportTicketPage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['client', 'admin']} />}>
             <Route path="/workers" element={<FindWorkersPage />} />
@@ -94,6 +103,7 @@ function App() {
             <Route path="/admin/fairwork" element={<AdminFairwork />} />
             <Route path="/admin/safety" element={<AdminSafety />} />
             <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/support" element={<AdminSupport />} />
             <Route path="/admin/cover" element={<AdminCover />} />
             <Route path="/admin/audit" element={<AdminAuditPage />} />
           </Route>

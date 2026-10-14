@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchMatches } from '../../store/slices/matchSlice';
 import { transactionApi } from '../../api/transactionApi';
 import PageContainer from '../Layout/PageContainer';
+import HelpLink from '../Support/HelpLink';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
 import { awaitingPayment, countsAsMoved, paymentLabel } from '../../lib/money';
@@ -100,6 +101,7 @@ const Wallet = () => {
     <PageContainer
       title={t('wallet.title')}
       subtitle={isClient ? t('wallet.subtitleClient') : t('wallet.subtitleWorker')}
+      extra={<HelpLink category="payment" label={t('support.paymentHelp')} />}
     >
       <Row gutter={[16, 16]}>
         <Col xs={12} md={8}>

@@ -1,7 +1,7 @@
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu } from 'antd';
+import { Badge, Flex, Menu } from 'antd';
 import {
   AlertOutlined,
   AppstoreOutlined,
@@ -24,7 +24,9 @@ import {
   WifiOutlined,
   FlagOutlined,
   MedicineBoxOutlined,
+  CustomerServiceOutlined,
 } from '@ant-design/icons';
+import { supportApi } from '../../api/supportApi';
 import { useAppSelector } from '../../store/hooks';
 import { activeNavKey, visibleNavEntries } from './navConfig';
 
@@ -51,6 +53,8 @@ const ICONS: Record<string, ReactNode> = {
   '/admin/fairwork': <TrophyOutlined />,
   '/admin/safety': <AlertOutlined />,
   '/admin/reports': <FlagOutlined />,
+  '/support': <CustomerServiceOutlined />,
+  '/admin/support': <CustomerServiceOutlined />,
 };
 
 const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void }) => {
@@ -58,6 +62,16 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
   const { role } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
+  // Requests with something new: replies from the team for people, waiting requests for admins.
+  const [supportUnread, setSupportUnread] = useState(0);
+  useEffect(() => {
+    if (!role) return;
+    const load = () =>
+      (role === 'admin' ? supportApi.admin.unread() : supportApi.unread()).then(setSupportUnread).catch(() => undefined);
+    load();
+    const poll = window.setInterval(load, 60000);
+    return () => window.clearInterval(poll);
+  }, [role, location.pathname]);
 
   // Entries without a group come first, flat; grouped ones sit under a heading.
   // A collapsed sider hides the headings (antd shows a divider instead).
@@ -66,7 +80,15 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
     const item = (entry: (typeof entries)[number]) => ({
       key: entry.key,
       icon: ICONS[entry.key],
-      label: t(entry.labelKey),
+      label:
+        (entry.key === '/support' || entry.key === '/admin/support') && supportUnread > 0 ? (
+          <Flex justify="space-between" align="center" gap={8}>
+            {t(entry.labelKey)}
+            <Badge count={supportUnread} size="small" />
+          </Flex>
+        ) : (
+          t(entry.labelKey)
+        ),
     });
     const flat = entries.filter((e) => !e.group).map(item);
     const groups: { type: 'group'; key: string; label: string; children: ReturnType<typeof item>[] }[] = [];
@@ -79,7 +101,7 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
       group.children.push(item(entry));
     }
     return [...flat, ...groups];
-  }, [role, t]);
+  }, [role, t, supportUnread]);
 
   const selected = activeNavKey(location.pathname);
 

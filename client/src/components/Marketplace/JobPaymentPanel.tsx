@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { App, Button, Flex, Input, Segmented, Spin, Typography } from 'antd';
 import { MedicineBoxOutlined, MobileOutlined, WarningOutlined } from '@ant-design/icons';
+import HelpLink from '../Support/HelpLink';
 import OpenDisputeModal from '../Disputes/OpenDisputeModal';
 import { matchApi } from '../../api/matchApi';
 import { transactionApi } from '../../api/transactionApi';
@@ -208,6 +209,9 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
               {t('pay.approveSimulated')}
             </Button>
           )}
+          <div style={{ marginTop: 10 }}>
+            <HelpLink category="payment" relatedType="transaction" relatedId={payment.id} />
+          </div>
         </div>
       );
     }
@@ -220,7 +224,7 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
         </Flex>
         {payment?.status === 'failed' && (
           <Typography.Text type="danger" style={{ display: 'block', fontSize: 13, marginBottom: 8 }}>
-            {t('pay.failedBefore')}
+            {t('pay.failedBefore')} <HelpLink category="payment" relatedType="transaction" relatedId={payment.id} />
           </Typography.Text>
         )}
         <Typography.Text type="secondary" style={{ fontSize: 12.5 }}>

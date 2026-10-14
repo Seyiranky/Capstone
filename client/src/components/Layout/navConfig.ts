@@ -26,8 +26,10 @@ export const NAV_ENTRIES: NavEntry[] = [
   { key: '/wallet', labelKey: 'sidebar.wallet', roles: ['worker', 'client'] },
   { key: '/disputes', labelKey: 'sidebar.disputes', roles: ['worker', 'client'] },
   { key: '/notifications', labelKey: 'sidebar.notifications', roles: ['worker', 'client'] },
+  { key: '/support', labelKey: 'sidebar.support', roles: ['worker', 'client'] },
   { key: '/settings', labelKey: 'sidebar.settings', roles: ['worker', 'client'] },
 
+  { key: '/admin/support', labelKey: 'adminNav.support', roles: ['admin'], group: 'adminNav.operations' },
   { key: '/admin/gigs/pending', labelKey: 'adminNav.gigApprovals', roles: ['admin'], group: 'adminNav.operations' },
   { key: '/admin/reviews', labelKey: 'adminNav.skillReviews', roles: ['admin'], group: 'adminNav.operations' },
   { key: '/admin/jobs', labelKey: 'adminNav.jobs', roles: ['admin'], group: 'adminNav.operations' },

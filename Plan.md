@@ -286,7 +286,7 @@ Phase 1, with the real MTN MoMo API behind the existing payment adapter.
 **Status: done.** Server and client switched; admin Payments and Disputes pages redesigned for the
 new flow; 468 server tests pass, including `momoPayments.test.ts` against a mocked MTN API.
 
-## Round 6 — Help & support (started 14 Oct 2026)
+## Round 6 — Help & support (done 14 Oct 2026)
 
 One front door for "something is wrong", answered by the admins. A **support ticket** is a
 conversation between one person and the Isoko team, with a status; Reports and Disputes stay
@@ -313,6 +313,12 @@ as they are and a ticket can be turned into either.
    escalation into a dispute on the linked job or a report about the other person.
 6. **Limits.** At most 5 open tickets and 10 new a day per person; signed-out forms rate-limited
    by address; attachments checked by content, not name; people only ever see their own tickets.
+
+**Status: done.** Server (`supportService`, `/api/support`, migration `20261015100000`, 21 tests in
+`support.test.ts`) and client (Help & support page, request thread, contact form, "Can't sign in?"
+page and private link, admin Support inbox with saved replies and escalation, "Need help?" links on
+the payment panel and wallet, unread counts in the sidebar, support notices in the bell). 502 server
+tests pass.
 
 ## Security review
 
