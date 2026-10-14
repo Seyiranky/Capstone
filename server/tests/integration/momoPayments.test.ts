@@ -97,6 +97,31 @@ describe('paying for a finished job with Mobile Money', () => {
   });
 });
 
+describe('money paid in advance under the old escrow flow', () => {
+  const heldPayment = async (matchId: string, amount: number) =>
+    db.Transaction.create({
+      matchId, amount, status: 'confirmed', escrowStatus: 'held', heldAt: new Date(),
+      provider: 'simulated-momo', reference: `MOMO-SIM-${Math.random().toString(36).slice(2)}`,
+    });
+
+  test('is paid out with a receipt when the job is marked done', async () => {
+    const matchId = await jobInProgress(17000);
+    await heldPayment(matchId, 17000);
+    await markDone(matchId);
+    const tx = must(await db.Transaction.findOne({ where: { matchId } }), 'tx');
+    expect(tx.escrowStatus).toBe('released');
+    expect(tx.receiptNumber).toMatch(/^ISK-/);
+    expect(Number(must(await db.Payout.findOne({ where: { matchId } }), 'payout').amount)).toBe(17000);
+  });
+
+  test('goes back to the client when the job is called off', async () => {
+    const matchId = await jobInProgress(9000);
+    await heldPayment(matchId, 9000);
+    await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'cancelled' });
+    expect(must(await db.Transaction.findOne({ where: { matchId } }), 'tx').escrowStatus).toBe('refunded');
+  });
+});
+
 describe('the MTN MoMo adapter', () => {
   const ENV = {
     PAYMENT_PROVIDER: 'mtn-momo',

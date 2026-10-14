@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Card, Flex, Typography } from 'antd';
-import { AuditOutlined, FileProtectOutlined, KeyOutlined, LockOutlined } from '@ant-design/icons';
+import { AuditOutlined, FileProtectOutlined, MedicineBoxOutlined, MobileOutlined } from '@ant-design/icons';
 
 /**
  * What protects both sides on every Isoko job, shown where a worker decides to
@@ -10,8 +10,8 @@ import { AuditOutlined, FileProtectOutlined, KeyOutlined, LockOutlined } from '@
 const ProtectionCard = () => {
   const { t } = useTranslation();
   const rows = [
-    { key: 'escrow', icon: <LockOutlined /> },
-    { key: 'code', icon: <KeyOutlined /> },
+    { key: 'momo', icon: <MobileOutlined /> },
+    { key: 'cover', icon: <MedicineBoxOutlined /> },
     { key: 'dispute', icon: <AuditOutlined /> },
     { key: 'receipt', icon: <FileProtectOutlined /> },
   ];

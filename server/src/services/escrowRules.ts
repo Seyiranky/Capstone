@@ -2,16 +2,10 @@ import crypto from 'crypto';
 import type { EscrowStatus, MatchStatus } from '../types/domain';
 
 /**
- * Pure escrow rules, kept apart from escrowService so paymentService can apply
- * them inside its callback transaction without the two services importing each
- * other.
+ * Pure payment rules, kept apart from the services so paymentService can apply
+ * them inside its callback transaction without services importing each other.
+ * Escrow states remain for payments made under the earlier escrow flow.
  */
-
-/** How long after the worker reports the job done the money moves on its own. */
-export const AUTO_RELEASE_AFTER_MS = 72 * 60 * 60 * 1000;
-
-/** Wrong completion codes allowed before the code stops working. */
-export const MAX_CODE_ATTEMPTS = 5;
 
 const ALLOWED_TRANSITIONS: Record<EscrowStatus, EscrowStatus[]> = {
   none: ['held', 'released', 'refunded'],
@@ -65,7 +59,7 @@ export const generateReceiptNumber = (): string => {
 };
 
 /**
- * The agreed price is what escrow collects: the worker's accepted quote, or the
+ * The agreed price is what the client pays: the worker's accepted quote, or the
  * gig's budget when there was no quote (ranked invitations, older matches).
  */
 export const amountToCollect = (agreedAmount: number | string | null | undefined, budget: number | string): number =>

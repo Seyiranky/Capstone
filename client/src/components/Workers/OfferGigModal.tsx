@@ -10,7 +10,7 @@ import type { Gig } from '../../types';
 
 /**
  * A client offers one of their open gigs to a worker. The worker confirms;
- * then the client pays into escrow, as for any match.
+ * the client pays with Mobile Money once the job is done, as for any match.
  */
 const OfferGigModal = ({ worker, onClose }: { worker: { id: string; name: string } | null; onClose: () => void }) => {
   const { t } = useTranslation();

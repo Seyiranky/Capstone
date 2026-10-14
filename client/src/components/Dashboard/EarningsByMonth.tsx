@@ -14,7 +14,7 @@ const EarningsByMonth = ({ transactions, role }: { transactions: Transaction[]; 
     const sums = new Map(months.map((m) => [`${m.getFullYear()}-${m.getMonth()}`, 0]));
     let sum = 0;
     for (const tx of transactions.filter((x) => countsAsMoved(x, role))) {
-      const d = new Date(movedAt(tx, role));
+      const d = new Date(movedAt(tx));
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (sums.has(key)) {
         const amount = Number(tx.releasedAmount ?? tx.amount);

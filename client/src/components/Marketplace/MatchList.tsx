@@ -18,12 +18,11 @@ import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchMatches } from "../../store/slices/matchSlice";
 import { matchApi } from "../../api/matchApi";
-import { transactionApi } from "../../api/transactionApi";
 import { reviewApi } from "../../api/reviewApi";
 import IdentityLink from "../common/IdentityLink";
 import StatusTag from "../common/StatusTag";
 import MatchExplanation from "../common/MatchExplanation";
-import JobEscrowPanel from "./JobEscrowPanel";
+import JobPaymentPanel from "./JobPaymentPanel";
 import JobPhotos from "./JobPhotos";
 import TeamSection from "../Team/TeamSection";
 import SafeVisitBar from "../Safety/SafeVisitBar";
@@ -181,16 +180,6 @@ const MatchList = () => {
     });
   };
 
-  const confirmPayment = async (transactionId: string) => {
-    setBusyId(transactionId);
-    try {
-      await transactionApi.confirmTransaction(transactionId);
-      refresh();
-    } finally {
-      setBusyId(null);
-    }
-  };
-
   if (!profile) return null;
   const isWorker = profile.role === "worker";
 
@@ -307,8 +296,12 @@ const MatchList = () => {
                       })}
                     </Typography.Text>
                   )}
-                  {match.status === "accepted" && isLead && (
-                    <JobEscrowPanel
+                  {/* In progress, or done and waiting for the client's Mobile Money payment. */}
+                  {isLead &&
+                    (match.status === "accepted" ||
+                      (match.status === "completed" &&
+                        match.transaction?.status !== "confirmed")) && (
+                    <JobPaymentPanel
                       match={match}
                       isWorker={isWorker}
                       liveDispute={liveDisputes.get(match.id)}
@@ -316,26 +309,21 @@ const MatchList = () => {
                     />
                   )}
 
-                  {match.status === "completed" && match.transaction && (
+                  {match.status === "completed" &&
+                    match.transaction?.status === "confirmed" && (
                     <Space
                       direction="vertical"
                       size={8}
                       style={{ width: "100%" }}
                     >
                       <Flex align="center" gap={8} wrap="wrap">
-                        <StatusTag
-                          status={
-                            match.transaction.escrowStatus === "released"
-                              ? "released"
-                              : match.transaction.status
-                          }
-                        />
+                        <StatusTag status="paid" />
                         {match.completedVia && (
                           <Typography.Text
                             type="secondary"
                             style={{ fontSize: 12 }}
                           >
-                            {t(`escrow.completedVia_${match.completedVia}`)}
+                            {t(`pay.completedVia_${match.completedVia}`)}
                           </Typography.Text>
                         )}
                       </Flex>
@@ -348,21 +336,6 @@ const MatchList = () => {
                           {match.transaction.receiptNumber}
                         </Link>
                       )}
-                      {/* A job completed before it was funded is paid now, and the
-                        money goes straight to the worker. */}
-                      {match.transaction.status === "initiated" &&
-                        !isWorker && (
-                          <Button
-                            type="primary"
-                            block
-                            loading={busyId === match.transaction.id}
-                            onClick={() =>
-                              confirmPayment(match.transaction!.id)
-                            }
-                          >
-                            {t("escrow.fundButton")}
-                          </Button>
-                        )}
                       {isLead &&
                         match.transaction.status === "confirmed" &&
                         (alreadyReviewed ? (

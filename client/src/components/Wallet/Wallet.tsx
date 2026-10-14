@@ -3,28 +3,31 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card, Col, Flex, Grid, List, Row, Table, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useAppSelector } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchMatches } from '../../store/slices/matchSlice';
 import { transactionApi } from '../../api/transactionApi';
 import PageContainer from '../Layout/PageContainer';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
-import { countsAsMoved, isHeld } from '../../lib/money';
+import { awaitingPayment, countsAsMoved, paymentLabel } from '../../lib/money';
 import SafetyNetCard from './SafetyNetCard';
 import StatTile from '../common/StatTile';
-import { LockOutlined, SwapOutlined, WalletOutlined } from '@ant-design/icons';
+import { ClockCircleOutlined, SwapOutlined, WalletOutlined } from '@ant-design/icons';
 import type { Transaction } from '../../types';
-
-/** A collected payment is described by where it is now, not just that it was collected. */
-const escrowLabel = (tx: Transaction): string =>
-  tx.status === 'confirmed' && tx.escrowStatus !== 'none' ? tx.escrowStatus : tx.status;
 
 const Wallet = () => {
   const { t } = useTranslation();
-  const { role } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const { role, profile } = useAppSelector((state) => state.auth);
+  const matches = useAppSelector((state) => state.matches.items);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const isClient = role === 'client';
   const screens = Grid.useBreakpoint();
+
+  useEffect(() => {
+    dispatch(fetchMatches());
+  }, [dispatch]);
 
   useEffect(() => {
     setLoading(true);
@@ -37,7 +40,8 @@ const Wallet = () => {
   const confirmedTotal = transactions
     .filter((x) => countsAsMoved(x, role))
     .reduce((sum, x) => sum + Number(x.amount), 0);
-  const heldTotal = transactions.filter(isHeld).reduce((sum, x) => sum + Number(x.amount), 0);
+  const due = awaitingPayment(matches, role, profile?.id);
+  const simulated = transactions.some((x) => x.provider === 'simulated-momo');
 
   const steps = isClient
     ? [
@@ -75,7 +79,7 @@ const Wallet = () => {
     {
       title: t('wallet.colStatus'),
       key: 'status',
-      render: (_, tx) => <StatusTag status={escrowLabel(tx)} />,
+      render: (_, tx) => <StatusTag status={paymentLabel(tx)} />,
     },
     {
       title: t('receipt.number'),
@@ -107,7 +111,12 @@ const Wallet = () => {
           />
         </Col>
         <Col xs={12} md={8}>
-          <StatTile icon={<LockOutlined />} label={t('wallet.pending')} value={heldTotal.toLocaleString()} suffix="RWF" />
+          <StatTile
+            icon={<ClockCircleOutlined />}
+            label={isClient ? t('dashboard.toPay') : t('dashboard.toBePaid')}
+            value={due.amount.toLocaleString()}
+            suffix="RWF"
+          />
         </Col>
         <Col xs={24} md={8}>
           <StatTile icon={<SwapOutlined />} label={t('wallet.transactions')} value={transactions.length} />
@@ -158,7 +167,7 @@ const Wallet = () => {
             borderTop: '1px solid var(--ant-color-border-secondary, #e4e4e7)',
           }}
         >
-          {t('wallet.simulatedNotice')}
+          {simulated ? t('wallet.simulatedNotice') : t('wallet.momoNotice')}
         </Typography.Paragraph>
       </Card>
 
@@ -191,7 +200,7 @@ const Wallet = () => {
                     <Typography.Text strong style={{ whiteSpace: 'nowrap' }}>
                       {Number(tx.amount).toLocaleString()} RWF
                     </Typography.Text>
-                    <StatusTag status={escrowLabel(tx)} />
+                    <StatusTag status={paymentLabel(tx)} />
                   </Flex>
                 </Flex>
               </List.Item>

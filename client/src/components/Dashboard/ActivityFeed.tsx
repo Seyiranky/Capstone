@@ -39,7 +39,7 @@ const ActivityFeed = ({ role, matches, transactions, tasks, limit = 8 }: Activit
   for (const tx of transactions) {
     if (countsAsMoved(tx, role)) {
       events.push({
-        at: movedAt(tx, role),
+        at: movedAt(tx),
         icon: <DollarOutlined />,
         text: `${role === 'client' ? 'Paid' : 'Received'} ${Number(tx.amount).toLocaleString()} RWF`,
       });

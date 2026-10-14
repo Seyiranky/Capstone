@@ -210,6 +210,7 @@ const decide = async (
   if (!match || !match.gig) return;
   if (outcome === 'refund') {
     await match.update({ status: 'cancelled' });
+    await completionService.settleLegacyHold(match.id, 'refunded');
     await match.gig.update({ status: 'cancelled' });
   } else {
     await completionService.completeMatch(ctx, match, 'dispute', { share: outcome === 'split' ? 0.5 : 1 });

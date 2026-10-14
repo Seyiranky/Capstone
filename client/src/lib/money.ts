@@ -1,27 +1,36 @@
-import type { Role, Transaction } from '../types';
+import type { Match, Role, Transaction } from '../types';
 
 /**
- * What a transaction means for someone's totals, now that collected money can
- * sit in escrow.
+ * What a payment means for someone's totals.
  *
- * A worker has earned money only once it is released to them. A client has
- * paid as soon as it is collected, unless it came back to them.
+ * Clients pay with Mobile Money once a job is done, so a confirmed payment is
+ * money moved for both sides: paid by the client, received by the worker.
  */
 export const countsAsMoved = (tx: Transaction, role: Role | null | undefined): boolean => {
   if (tx.status !== 'confirmed') return false;
-  if (role === 'client') return tx.escrowStatus !== 'refunded';
-  return tx.escrowStatus === 'released';
+  return role === 'client' ? true : tx.escrowStatus === 'released';
 };
 
-export const isHeld = (tx: Transaction): boolean =>
-  tx.status === 'confirmed' && tx.escrowStatus === 'held';
+/** When money moved, for charts and feeds. */
+export const movedAt = (tx: Transaction): string => tx.releasedAt ?? tx.createdAt;
 
-/** When money moved, for charts and feeds: release for workers, collection for clients. */
-export const movedAt = (tx: Transaction, role: Role | null | undefined): string =>
-  (role === 'client' ? tx.heldAt : tx.releasedAt) ?? tx.createdAt;
+/** The price due on a job: the agreed amount, or the gig's budget. */
+export const priceOf = (m: Match): number => Number(m.agreedAmount ?? m.gig?.budget ?? 0);
 
-/** Wrong codes allowed before the server locks the code, matching MAX_CODE_ATTEMPTS. */
-export const MAX_CODE_ATTEMPTS = 5;
+/**
+ * Finished jobs not paid yet, and what they come to: for a client what they
+ * owe, for a worker what they are owed (jobs they lead).
+ */
+export const awaitingPayment = (matches: Match[], role: Role | null | undefined, userId?: string) => {
+  const due = matches.filter(
+    (m) =>
+      m.status === 'completed' &&
+      m.transaction?.status !== 'confirmed' &&
+      (role !== 'worker' || m.workerId === userId),
+  );
+  return { count: due.length, amount: due.reduce((sum, m) => sum + priceOf(m), 0) };
+};
 
-/** The 72-hour window after the worker reports done, matching the server's AUTO_RELEASE_AFTER_MS. */
-export const AUTO_RELEASE_AFTER_MS = 72 * 60 * 60 * 1000;
+/** A payment's state in words people use: paid, waiting for approval, failed. */
+export const paymentLabel = (tx: Transaction): string =>
+  tx.status === 'confirmed' ? 'paid' : tx.status === 'initiated' ? 'awaiting_approval' : 'failed';

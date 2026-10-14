@@ -17,6 +17,7 @@ export interface CoverClaim {
 export interface CoverStatus {
   eligible: boolean;
   covered: boolean;
+  canBuy: boolean;
   policyNumber: string | null;
   premium: number;
   limit: number;
@@ -26,6 +27,8 @@ export interface CoverStatus {
 }
 
 export const coverApi = {
+  /** The client adds cover while the job is in progress; billed with the MoMo payment. */
+  buy: (matchId: string) => axiosClient.post<CoverStatus>(`/matches/${matchId}/cover`).then((res) => res.data),
   status: (matchId: string) => axiosClient.get<CoverStatus>(`/matches/${matchId}/cover`).then((res) => res.data),
   claim: (matchId: string, payload: { description: string; amount: number }) =>
     axiosClient.post<CoverClaim>(`/matches/${matchId}/cover-claims`, payload).then((res) => res.data),

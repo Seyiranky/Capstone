@@ -1,43 +1,37 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { App, Button, Card, Flex, Input, Radio, Space, Tag, Typography } from 'antd';
-import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
-import { isAxiosError } from 'axios';
+import { App, Button, Card, Col, Flex, Input, Row, Typography } from 'antd';
+import { CheckCircleFilled, ClockCircleOutlined, TeamOutlined } from '@ant-design/icons';
 import { disputeApi } from '../../api/disputeApi';
 import { useAppSelector } from '../../store/hooks';
+import { apiErrorMessage } from '../../utils/apiError';
 import type { Dispute, DisputeOutcome } from '../../types';
 
-const OUTCOMES: DisputeOutcome[] = ['release', 'refund', 'split'];
+const OUTCOMES: DisputeOutcome[] = ['release', 'split', 'refund'];
 
-const STATUS_COLOR: Record<Dispute['status'], string> = {
-  open: 'processing',
+const STATUS_TONE: Record<Dispute['status'], string> = {
+  open: 'info',
   escalated: 'warning',
   decided: 'success',
-  settled: 'default',
+  settled: 'neutral',
 };
 
-const Quote = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div
-    style={{
-      borderInlineStart: '3px solid var(--ant-color-border, #e4e4e7)',
-      paddingInlineStart: 12,
-      margin: '12px 0',
-    }}
-  >
-    <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+const Statement = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="isoko-dispute__statement">
+    <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
       {label}
     </Typography.Text>
-    <Typography.Paragraph style={{ margin: '2px 0 0', whiteSpace: 'pre-wrap' }}>{children}</Typography.Paragraph>
+    <Typography.Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{children}</Typography.Paragraph>
   </div>
 );
 
 /**
  * One dispute, from whichever seat the viewer occupies.
  *
- * The other party can add their side once. A mediator votes with a reason. An
- * admin decides escalated disputes and must record why. Everyone sees the
- * same progress, but votes stay hidden until the dispute closes.
+ * The other party can add their side once. A mediator chooses an outcome with
+ * a reason. An admin decides escalated disputes and must record why. Everyone
+ * sees the same progress, but votes stay hidden until the dispute closes.
  */
 const DisputeCard = ({ dispute, onChanged }: { dispute: Dispute; onChanged: () => void }) => {
   const { t, i18n } = useTranslation();
@@ -52,7 +46,7 @@ const DisputeCard = ({ dispute, onChanged }: { dispute: Dispute; onChanged: () =
   const isOpener = dispute.openedById === me?.id;
   const mySeat = dispute.votes.find((v) => v.mediator?.id === me?.id);
   const voted = dispute.votes.filter((v) => v.voted).length;
-  const amount = Number(match?.transaction?.amount ?? 0).toLocaleString();
+  const price = Number(match?.agreedAmount ?? match?.gig?.budget ?? 0).toLocaleString();
   const date = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -64,7 +58,7 @@ const DisputeCard = ({ dispute, onChanged }: { dispute: Dispute; onChanged: () =
       setChoice(null);
       onChanged();
     } catch (error) {
-      message.error(isAxiosError(error) ? (error.response?.data?.message ?? 'Something went wrong') : 'Something went wrong');
+      message.error(apiErrorMessage(error, t('pay.genericError')));
     } finally {
       setBusy(false);
     }
@@ -75,155 +69,163 @@ const DisputeCard = ({ dispute, onChanged }: { dispute: Dispute; onChanged: () =
   const canResolve = live && dispute.myRole === 'admin';
 
   return (
-    <Card>
-      <Flex justify="space-between" align="flex-start" gap={12} wrap="wrap">
+    <Card styles={{ body: { padding: 0 } }} className="isoko-dispute">
+      {/* What the dispute is about */}
+      <Flex justify="space-between" align="flex-start" gap={12} wrap="wrap" className="isoko-dispute__head">
         <div style={{ minWidth: 0 }}>
           {match?.gig ? (
-            <Link to={`/gigs/${match.gigId}`} style={{ fontWeight: 600 }}>
+            <Link to={`/gigs/${match.gigId}`} style={{ fontWeight: 600, fontSize: 15 }}>
               {match.gig.title}
             </Link>
           ) : null}
-          <Typography.Text type="secondary" style={{ display: 'block', fontSize: 13 }}>
-            {match?.worker?.name} · {match?.gig?.client?.name} · {t('dispute.held', { amount })}
+          <Typography.Text type="secondary" style={{ display: 'block', fontSize: 13, marginTop: 2 }}>
+            {t('dispute.people', { worker: match?.worker?.name ?? '—', client: match?.gig?.client?.name ?? '—' })} ·{' '}
+            {t('dispute.price', { amount: price })}
           </Typography.Text>
         </div>
-        <Tag color={STATUS_COLOR[dispute.status]} style={{ marginInlineEnd: 0 }}>
-          {t(`dispute.status_${dispute.status}`)}
-        </Tag>
+        <span className={`isoko-status isoko-status--${STATUS_TONE[dispute.status]}`}>{t(`dispute.status_${dispute.status}`)}</span>
       </Flex>
 
-      <Quote label={`${t(`dispute.reason_${dispute.reason}`)} · ${t('dispute.openedBy', { name: dispute.openedBy?.name ?? '' })}`}>
-        {dispute.details}
-      </Quote>
-      {dispute.response ? (
-        <Quote label={t('dispute.response')}>{dispute.response}</Quote>
-      ) : (
-        !canRespond && (
-          <Typography.Text type="secondary" style={{ fontSize: 13, display: 'block', marginBottom: 12 }}>
-            {t('dispute.noResponse')}
-          </Typography.Text>
-        )
-      )}
+      <Row gutter={[20, 16]} className="isoko-dispute__body">
+        <Col xs={24} lg={15}>
+          <Flex vertical gap={12}>
+            <Statement label={`${t(`dispute.reason_${dispute.reason}`)} · ${t('dispute.openedBy', { name: dispute.openedBy?.name ?? '' })}`}>
+              {dispute.details}
+            </Statement>
+            {dispute.response ? (
+              <Statement label={t('dispute.response')}>{dispute.response}</Statement>
+            ) : (
+              !canRespond && (
+                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                  {t('dispute.noResponse')}
+                </Typography.Text>
+              )
+            )}
+          </Flex>
+        </Col>
+        <Col xs={24} lg={9}>
+          <div className="isoko-dispute__panel">
+            <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
+              <TeamOutlined />
+              <Typography.Text strong style={{ fontSize: 13 }}>
+                {t('dispute.panelTitle')}
+              </Typography.Text>
+            </Flex>
+            {dispute.votes.length > 0 && (
+              <Flex align="center" gap={10} style={{ marginBottom: 6 }}>
+                <Flex gap={5} aria-hidden>
+                  {dispute.votes.map((v) => (
+                    <span key={v.id} className={`isoko-dispute__dot${v.voted ? ' isoko-dispute__dot--on' : ''}`} />
+                  ))}
+                </Flex>
+                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                  {t('dispute.votesProgress', { count: voted })}
+                </Typography.Text>
+              </Flex>
+            )}
+            {live && (
+              <Flex align="center" gap={6}>
+                <ClockCircleOutlined style={{ fontSize: 12, opacity: 0.6 }} />
+                <Typography.Text type="secondary" style={{ fontSize: 12.5 }}>
+                  {dispute.status === 'escalated' ? t('dispute.withAdmin') : t('dispute.deadline', { date: date(dispute.deadlineAt) })}
+                </Typography.Text>
+              </Flex>
+            )}
+            {dispute.myRole !== 'party' && dispute.panelPoolSize != null && dispute.votes.length > 0 && (
+              <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 6 }}>
+                {t('dispute.panelNote', { count: dispute.panelPoolSize })}
+              </Typography.Text>
+            )}
+            {mySeat?.vote && (
+              <Typography.Text style={{ display: 'block', marginTop: 8, fontSize: 13 }}>
+                <CheckCircleFilled style={{ marginInlineEnd: 6, color: '#16a34a' }} />
+                {t('dispute.youVoted', { vote: t(`dispute.vote_${mySeat.vote}`) })}
+              </Typography.Text>
+            )}
+          </div>
+        </Col>
+      </Row>
 
+      {/* What the viewer can do now */}
       {canRespond && (
-        <Space direction="vertical" size={8} style={{ width: '100%', marginBottom: 12 }}>
-          <Typography.Text strong>{t('dispute.addSide')}</Typography.Text>
-          <Input.TextArea
-            rows={3}
-            maxLength={2000}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t('dispute.addSidePlaceholder')}
-          />
-          <Button
-            type="primary"
-            disabled={text.trim().length < 10}
-            loading={busy}
-            onClick={() => act(() => disputeApi.respond(dispute.id, text))}
-          >
+        <div className="isoko-dispute__foot">
+          <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+            {t('dispute.addSide')}
+          </Typography.Text>
+          <Input.TextArea rows={3} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} placeholder={t('dispute.addSidePlaceholder')} />
+          <Button type="primary" style={{ marginTop: 10 }} disabled={text.trim().length < 10} loading={busy} onClick={() => act(() => disputeApi.respond(dispute.id, text))}>
             {t('dispute.sendResponse')}
           </Button>
-        </Space>
-      )}
-
-      {/* Progress: who has voted, never how, until it closes. */}
-      {dispute.votes.length > 0 && (
-        <Flex align="center" gap={10} wrap="wrap" style={{ marginBottom: 8 }}>
-          <Flex gap={4} aria-hidden>
-            {dispute.votes.map((v) => (
-              <span
-                key={v.id}
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  background: v.voted ? 'var(--ant-color-text, #18181b)' : 'var(--ant-color-fill-secondary, #e4e4e7)',
-                }}
-              />
-            ))}
-          </Flex>
-          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-            {t('dispute.votesProgress', { count: voted })}
-          </Typography.Text>
-        </Flex>
-      )}
-      {dispute.status === 'open' && (
-        <Flex align="center" gap={6} style={{ marginBottom: 4 }}>
-          <ClockCircleOutlined style={{ fontSize: 12, opacity: 0.6 }} />
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            {t('dispute.deadline', { date: date(dispute.deadlineAt) })}
-          </Typography.Text>
-        </Flex>
-      )}
-      {dispute.myRole !== 'party' && dispute.panelPoolSize != null && dispute.votes.length > 0 && (
-        <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
-          {t('dispute.panelNote', { count: dispute.panelPoolSize })}
-        </Typography.Text>
-      )}
-
-      {mySeat?.vote && (
-        <Typography.Text style={{ display: 'block', marginTop: 10 }}>
-          <CheckCircleFilled style={{ marginInlineEnd: 6 }} />
-          {t('dispute.youVoted', { vote: t(`dispute.vote_${mySeat.vote}`) })}
-        </Typography.Text>
+        </div>
       )}
 
       {(canVote || canResolve) && (
-        <Space direction="vertical" size={8} style={{ width: '100%', marginTop: 14 }}>
-          <Typography.Text strong>{canResolve ? t('dispute.resolveTitle') : t('dispute.vote')}</Typography.Text>
-          <Radio.Group value={choice} onChange={(e) => setChoice(e.target.value)}>
-            <Space direction="vertical" size={4}>
-              {OUTCOMES.map((o) => (
-                <Radio key={o} value={o}>
-                  {t(`dispute.vote_${o}`)}
-                </Radio>
-              ))}
-            </Space>
-          </Radio.Group>
+        <div className="isoko-dispute__foot">
+          <Typography.Text strong style={{ display: 'block', marginBottom: 10 }}>
+            {canResolve ? t('dispute.resolveTitle') : t('dispute.vote')}
+          </Typography.Text>
+          <Row gutter={[10, 10]}>
+            {OUTCOMES.map((o) => (
+              <Col key={o} xs={24} md={8}>
+                <button
+                  type="button"
+                  className={`isoko-dispute__choice${choice === o ? ' isoko-dispute__choice--on' : ''}`}
+                  aria-pressed={choice === o}
+                  onClick={() => setChoice(o)}
+                >
+                  <span className="isoko-dispute__choice-title">{t(`dispute.vote_${o}`)}</span>
+                  <span className="isoko-dispute__choice-body">{t(`dispute.means_${o}`, { amount: price })}</span>
+                </button>
+              </Col>
+            ))}
+          </Row>
           <Input.TextArea
             rows={2}
+            style={{ marginTop: 12 }}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={canResolve ? t('dispute.resolveNote') : t('dispute.rationalePlaceholder')}
           />
           <Button
             type="primary"
+            style={{ marginTop: 10 }}
             disabled={!choice || (canResolve && text.trim().length < 5)}
             loading={busy}
             onClick={() =>
               choice &&
-              act(() =>
-                canResolve
-                  ? disputeApi.resolve(dispute.id, choice, text)
-                  : disputeApi.vote(dispute.id, choice, text || undefined),
-              )
+              act(() => (canResolve ? disputeApi.resolve(dispute.id, choice, text) : disputeApi.vote(dispute.id, choice, text || undefined)))
             }
           >
             {canResolve ? t('dispute.resolve') : t('dispute.submitVote')}
           </Button>
-        </Space>
+        </div>
       )}
 
+      {/* How it ended */}
       {!live && dispute.outcome && (
-        <div style={{ marginTop: 12 }}>
-          <Typography.Text>
-            {t('dispute.outcome')}: <strong>{t(`dispute.vote_${dispute.outcome}`)}</strong>
+        <div className="isoko-dispute__foot isoko-dispute__result">
+          <Typography.Text strong style={{ display: 'block' }}>
+            {t('dispute.outcome')}: {t(`dispute.vote_${dispute.outcome}`)}
+          </Typography.Text>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+            {t(`dispute.means_${dispute.outcome}`, { amount: price })}
           </Typography.Text>
           {dispute.adminNote && (
-            <Quote label={t('dispute.adminNote')}>{dispute.adminNote}</Quote>
+            <div style={{ marginTop: 10 }}>
+              <Statement label={t('dispute.adminNote')}>{dispute.adminNote}</Statement>
+            </div>
           )}
           {dispute.votes.some((v) => v.vote) && (
-            <ul style={{ margin: '8px 0 0', paddingInlineStart: 18 }}>
+            <Flex vertical gap={6} style={{ marginTop: 10 }}>
               {dispute.votes
                 .filter((v) => v.vote)
                 .map((v) => (
-                  <li key={v.id} style={{ fontSize: 13 }}>
-                    {v.mediator?.name ? `${v.mediator.name}: ` : ''}
-                    {t(`dispute.vote_${v.vote}`)}
-                    {v.rationale ? `: “${v.rationale}”` : ''}
-                  </li>
+                  <Typography.Text key={v.id} style={{ fontSize: 13 }}>
+                    <strong>{v.mediator?.name ?? t('dispute.aMediator')}</strong>: {t(`dispute.vote_${v.vote}`)}
+                    {v.rationale ? <Typography.Text type="secondary"> · “{v.rationale}”</Typography.Text> : null}
+                  </Typography.Text>
                 ))}
-            </ul>
+            </Flex>
           )}
         </div>
       )}

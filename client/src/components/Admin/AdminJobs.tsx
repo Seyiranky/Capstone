@@ -7,6 +7,7 @@ import { adminApi } from '../../api/adminApi';
 import PageContainer from '../Layout/PageContainer';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
+import { paymentLabel } from '../../lib/money';
 import type { Gig } from '../../types';
 
 type View = 'live' | 'done';
@@ -69,7 +70,7 @@ const AdminJobs = () => {
         if (view === 'live') return <StatusTag status={g.status} />;
         const tx = doneMatch(g)?.transaction;
         if (!tx) return <Typography.Text type="secondary">—</Typography.Text>;
-        const state = tx.status === 'confirmed' && tx.escrowStatus !== 'none' ? tx.escrowStatus : tx.status;
+        const state = paymentLabel(tx);
         return <StatusTag status={state} />;
       },
     },

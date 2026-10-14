@@ -5,7 +5,7 @@ import {
   BellOutlined,
   CheckCircleOutlined,
   DollarOutlined,
-  KeyOutlined,
+  ToolOutlined,
   StarOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
@@ -32,7 +32,7 @@ const AttentionList = ({ matches, role, userId }: { matches: Match[]; role: Role
   for (const m of matches) {
     const title = m.gig?.title ?? 'Job';
     const tx = m.transaction;
-    const held = tx?.status === 'confirmed' && tx.escrowStatus === 'held';
+    const paid = tx?.status === 'confirmed';
     const reviewed = m.reviews?.some((r) => r.authorId === userId);
     const isLead = m.workerId === userId;
     const invite = m.members?.find((x) => x.userId === userId && x.status === 'invited');
@@ -42,21 +42,20 @@ const AttentionList = ({ matches, role, userId }: { matches: Match[]; role: Role
         items.push({ key: `team-${m.id}`, icon: <TeamOutlined />, title: t('attention.teamInvite', { title }), detail: t('attention.teamInviteDetail', { percent: invite.sharePercent }), to: toMatches });
       } else if (isLead && m.status === 'pending') {
         items.push({ key: `inv-${m.id}`, icon: <BellOutlined />, title: t('attention.invitation', { title }), detail: t('attention.invitationDetail'), to: toMatches });
-      } else if (isLead && m.status === 'accepted' && held) {
-        items.push({ key: `code-${m.id}`, icon: <KeyOutlined />, title: t('attention.inProgress', { title }), detail: t('attention.enterCode'), to: toMatches });
       } else if (isLead && m.status === 'accepted') {
-        items.push({ key: `wait-${m.id}`, icon: <DollarOutlined />, title: t('attention.awaitingFunds', { title }), detail: t('attention.awaitingFundsDetail'), to: toMatches });
+        items.push({ key: `job-${m.id}`, icon: <ToolOutlined />, title: t('attention.inProgress', { title }), detail: t('attention.inProgressWorker'), to: toMatches });
+      } else if (isLead && m.status === 'completed' && !paid) {
+        items.push({ key: `wait-${m.id}`, icon: <DollarOutlined />, title: t('attention.awaitingPayment', { title }), detail: t('attention.awaitingPaymentDetail'), to: toMatches });
       } else if (isLead && m.status === 'completed' && !reviewed) {
         items.push({ key: `rev-${m.id}`, icon: <StarOutlined />, title: t('attention.review', { title }), detail: t('attention.reviewDetailWorker'), to: toMatches });
       }
     }
     if (role === 'client') {
-      if (m.status === 'accepted' && tx?.status === 'initiated') {
-        items.push({ key: `fund-${m.id}`, icon: <DollarOutlined />, title: t('attention.fund', { title }), detail: t('attention.fundDetail', { amount: Number(tx.amount).toLocaleString() }), to: toMatches });
-      } else if (m.status === 'accepted' && held && m.workDoneAt) {
-        items.push({ key: `rel-${m.id}`, icon: <CheckCircleOutlined />, title: t('attention.release', { title }), detail: t('attention.releaseDetail'), to: toMatches });
-      } else if (m.status === 'accepted' && held) {
-        items.push({ key: `code-${m.id}`, icon: <KeyOutlined />, title: t('attention.inProgress', { title }), detail: t('attention.handCode', { code: m.completionCode ?? '' }), to: toMatches });
+      if (m.status === 'completed' && !paid) {
+        const due = Number(m.agreedAmount ?? m.gig?.budget ?? 0).toLocaleString();
+        items.push({ key: `pay-${m.id}`, icon: <DollarOutlined />, title: t('attention.pay', { title }), detail: t('attention.payDetail', { amount: due }), to: toMatches });
+      } else if (m.status === 'accepted') {
+        items.push({ key: `job-${m.id}`, icon: <CheckCircleOutlined />, title: t('attention.inProgress', { title }), detail: t('attention.inProgressClient'), to: toMatches });
       } else if (m.status === 'completed' && !reviewed) {
         items.push({ key: `rev-${m.id}`, icon: <StarOutlined />, title: t('attention.review', { title }), detail: t('attention.reviewDetailClient'), to: toMatches });
       }

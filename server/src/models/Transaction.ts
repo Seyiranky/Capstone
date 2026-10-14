@@ -41,7 +41,7 @@ export class Transaction extends Model<
   declare receiptNumber: string | null;
   /** Set only when less than the full amount went to the worker (a split decision). */
   declare releasedAmount: number | string | null;
-  /** The client's optional addition to the worker's safety net, collected with escrow. */
+  /** The client's optional addition to the worker's safety net, collected with the payment. */
   declare safetyNetContribution: number | string | null;
   /** Job Cover bought with this payment, if any (lib/jobCover). */
   declare coverPremium: CreationOptional<number | string | null>;

@@ -1,9 +1,10 @@
 import type { Request } from 'express';
-import { Dispute, Gig, Match } from '../models';
+import { Dispute, Gig, Match, Transaction, sequelize } from '../models';
+import * as payoutService from './payoutService';
 import * as trustScoreService from './trustScoreService';
 import * as competenceService from './competenceService';
 import notify from '../lib/notify';
-import { amountToCollect } from './escrowRules';
+import { amountToCollect, generateReceiptNumber } from './escrowRules';
 import type { CompletionMethod, DisputeOutcome } from '../types/domain';
 
 /**
@@ -30,6 +31,30 @@ export const settleLiveDispute = async (matchId: string, outcome: DisputeOutcome
     { where: { matchId, status: LIVE_DISPUTE } },
   );
 };
+
+/**
+ * Money a client paid in advance under the old escrow flow, for a job that was
+ * still in progress when Isoko moved to paying at the end. Finishing the job
+ * pays it out (with a receipt), calling it off returns it, so none is left
+ * held for ever.
+ */
+export const settleLegacyHold = async (matchId: string, to: 'released' | 'refunded', share = 1) =>
+  sequelize.transaction(async (t) => {
+    const tx = await Transaction.findOne({ where: { matchId, status: 'confirmed', escrowStatus: 'held' }, lock: t.LOCK.UPDATE, transaction: t });
+    if (!tx) return null;
+    if (to === 'refunded') return tx.update({ escrowStatus: 'refunded', refundedAt: new Date() }, { transaction: t });
+    await tx.update(
+      {
+        escrowStatus: 'released',
+        releasedAt: new Date(),
+        receiptNumber: generateReceiptNumber(),
+        ...(share < 1 ? { releasedAmount: Math.round(Number(tx.amount) * share) } : {}),
+      },
+      { transaction: t },
+    );
+    await payoutService.createFor(tx, t);
+    return tx;
+  });
 
 /** What the worker is owed or was paid for a job: the agreed price, or the share a dispute decided. */
 export const priceOf = (match: Pick<Match, 'agreedAmount'>, gig: Pick<Gig, 'budget'>): number =>
@@ -61,6 +86,7 @@ export const completeMatch = async (
   );
   if (changed === 0) return false;
 
+  await settleLegacyHold(match.id, 'released', share);
   if (via === 'client') await settleLiveDispute(match.id, 'release');
   if (gig) {
     await gig.update({ status: 'completed' });

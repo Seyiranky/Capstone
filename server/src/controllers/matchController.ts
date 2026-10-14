@@ -114,13 +114,10 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
     return;
   }
 
-  // Completing releases the client's money, so only the client may do it
-  // directly. The worker completes with the client's code, or reports the job
-  // done and lets the 72-hour release run.
+  // Marking the job done is the client's word that the work was delivered, and
+  // it is what asks them to pay, so only the client may do it.
   if (status === 'completed' && !isClient) {
-    res.status(403).json({
-      message: 'Only the client may complete this match directly; enter their completion code instead',
-    });
+    res.status(403).json({ message: 'Only the client may mark this job as done' });
     return;
   }
 
@@ -216,7 +213,9 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
   }
 
   if (status === 'cancelled' && !wasPending) {
-    // Called off after acceptance: nothing was paid, so only a live dispute closes.
+    // Called off after acceptance: nothing is owed. Money paid in advance under
+    // the old escrow flow goes back to the client.
+    await completionService.settleLegacyHold(match.id, 'refunded');
     await completionService.settleLiveDispute(match.id, 'refund');
   }
 

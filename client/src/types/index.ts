@@ -187,9 +187,9 @@ export interface Match {
   declineReason?: string | null;
   scoreBreakdown?: MatchScoreBreakdown | null;
   /** Only ever present for the client, and only while the job is in progress. */
-  completionCode?: string | null;
-  completionCodeAttempts?: number;
-  workDoneAt?: string | null;
+  completedAt?: string | null;
+  coverPolicyNumber?: string | null;
+  coverPremium?: number | string | null;
   completedVia?: 'code' | 'client' | 'auto' | 'dispute' | null;
   agreedAmount?: number | string | null;
   photos?: JobPhoto[];
@@ -221,6 +221,10 @@ export interface Transaction {
   currency?: string;
   provider: string;
   reference: string;
+  payerMsisdn?: string | null;
+  failureReason?: string | null;
+  safetyNetContribution?: number | string | null;
+  coverPremium?: number | string | null;
   createdAt: string;
   match?: Match;
 }
@@ -553,21 +557,35 @@ export interface WorkerHit {
 }
 
 export interface AdminPayments {
-  totals: Partial<Record<'awaiting' | 'held' | 'released' | 'refunded' | 'failed', { count: number; amount: number }>>;
-  payoutCount: number;
+  provider: { name: string; environment: string };
+  totals: Record<'paid' | 'pending' | 'failed' | 'awaiting', { count: number; amount: number }>;
+  transfers: Record<'sent' | 'not_sent' | 'failed' | 'no_number', number>;
   liveDisputes: number;
+  awaiting: {
+    matchId: string;
+    amount: number;
+    since: string;
+    gig: { id: string; title: string };
+    client: { id: string; name: string } | null;
+    worker: { id: string; name: string } | null;
+  }[];
   recent: {
     id: string;
-    state: 'awaiting' | 'held' | 'released' | 'refunded' | 'failed';
+    state: 'paid' | 'pending' | 'failed';
     amount: number;
-    releasedAmount: number | null;
+    extras: number;
     currency: string;
+    provider: string;
+    paidInAdvance: boolean;
+    refunded: boolean;
+    payer: string | null;
+    failureReason: string | null;
     receiptNumber: string | null;
+    transfer: 'sent' | 'not_sent' | 'failed' | 'no_number' | null;
     updatedAt: string;
     gig: { id: string; title: string } | null;
     client: { id: string; name: string } | null;
     worker: { id: string; name: string } | null;
-    completedVia: string | null;
   }[];
 }
 

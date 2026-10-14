@@ -433,7 +433,7 @@ export const payments = async (_req: Request, res: Response): Promise<void> => {
 
   type State = 'paid' | 'pending' | 'failed';
   const stateOf = (tx: Transaction): State =>
-    tx.status === 'failed' ? 'failed' : tx.status === 'initiated' ? 'pending' : 'paid';
+    tx.status === 'failed' || tx.escrowStatus === 'refunded' ? 'failed' : tx.status === 'initiated' ? 'pending' : 'paid';
   const totals: Record<State | 'awaiting', { count: number; amount: number }> = {
     paid: { count: 0, amount: 0 },
     pending: { count: 0, amount: 0 },
@@ -491,6 +491,8 @@ export const payments = async (_req: Request, res: Response): Promise<void> => {
       extras: Number(tx.safetyNetContribution ?? 0) + Number(tx.coverPremium ?? 0),
       currency: tx.currency,
       provider: tx.provider,
+      paidInAdvance: tx.escrowStatus === 'held',
+      refunded: tx.escrowStatus === 'refunded',
       payer: mask(tx.payerMsisdn),
       failureReason: tx.failureReason,
       receiptNumber: tx.receiptNumber,

@@ -132,3 +132,27 @@ a:hover {
   justify-content: center;
 }
 .isoko-header-fixed { flex-shrink: 0; }
+
+/* The payment box on a job card. */
+.isoko-paybox { border: 1px solid var(--isoko-border); border-radius: 10px; padding: 14px; background: var(--ant-color-fill-quaternary); }
+.isoko-paybox--warning { border-color: #fcd34d; background: #fffbeb; }
+:root[data-theme='dark'] .isoko-paybox--warning { border-color: rgba(217, 160, 50, 0.4); background: rgba(217, 160, 50, 0.1); }
+.isoko-paybox__offer { padding: 10px 12px; border-radius: 8px; background: var(--ant-color-bg-container); border: 1px dashed var(--isoko-border); }
+.isoko-paybox__lines { display: flex; flex-direction: column; gap: 4px; font-size: 13px; padding: 10px 12px; border-radius: 8px; background: var(--ant-color-bg-container); }
+.isoko-paybox__lines span:last-child { font-variant-numeric: tabular-nums; }
+.isoko-paybox__total { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--isoko-border); font-weight: 600; }
+
+/* Dispute cards. */
+.isoko-dispute__head { padding: 16px 20px; border-bottom: 1px solid var(--isoko-border); }
+.isoko-dispute__body { padding: 16px 20px; margin: 0 !important; }
+.isoko-dispute__statement { padding: 12px 14px; border-radius: 10px; background: var(--ant-color-fill-quaternary); }
+.isoko-dispute__panel { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--isoko-border); height: 100%; }
+.isoko-dispute__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ant-color-fill-secondary); display: inline-block; }
+.isoko-dispute__dot--on { background: var(--ant-color-text); }
+.isoko-dispute__foot { padding: 16px 20px; border-top: 1px solid var(--isoko-border); }
+.isoko-dispute__result { background: var(--ant-color-fill-quaternary); border-radius: 0 0 8px 8px; }
+.isoko-dispute__choice { width: 100%; height: 100%; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--isoko-border); background: var(--ant-color-bg-container); color: inherit; cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 4px; }
+.isoko-dispute__choice:hover { border-color: var(--isoko-muted); }
+.isoko-dispute__choice--on { border-color: var(--ant-color-text); box-shadow: 0 0 0 1px var(--ant-color-text); }
+.isoko-dispute__choice-title { font-weight: 600; font-size: 13.5px; }
+.isoko-dispute__choice-body { font-size: 12.5px; color: var(--isoko-muted); }

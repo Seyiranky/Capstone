@@ -1,11 +1,11 @@
 /**
  * Spots messages that move a deal off the platform.
  *
- * The commonest marketplace fraud is "pay me directly on MoMo": the money
- * never reaches escrow, so neither the completion code nor a dispute can
- * protect it. A message is not blocked for this; people have good reasons to
- * share a number (directions on the day). It is flagged, and the app reminds
- * both sides that only money in escrow is protected.
+ * The commonest marketplace fraud is "pay me directly on MoMo": the payment
+ * never goes through Isoko, so there is no receipt, no Job Cover and no
+ * dispute record behind it. A message is not blocked for this; people have
+ * good reasons to share a number (directions on the day). It is flagged, and
+ * the app reminds both sides that only payments made through Isoko are covered.
  *
  * `payment` wins over `contact`: talk of paying outside is the stronger signal.
  */

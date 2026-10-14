@@ -279,6 +279,12 @@ Phase 1, with the real MTN MoMo API behind the existing payment adapter.
    as sent. Payouts to workers go out through the Disbursements API when it is configured; the
    payout records whether the transfer was sent. A script creates the sandbox API user and key
    from the subscription key. `PAYMENT_PROVIDER=simulated-momo` keeps working for tests and demos.
+6. **Payments made under escrow.** Money already held when the switch was made shows as "Paid in
+   advance": it goes to the worker, with a receipt, when the client marks the job done, and back
+   to the client if the job is called off or a dispute ends in a refund.
+
+**Status: done.** Server and client switched; admin Payments and Disputes pages redesigned for the
+new flow; 468 server tests pass, including `momoPayments.test.ts` against a mocked MTN API.
 
 ## Security review
 

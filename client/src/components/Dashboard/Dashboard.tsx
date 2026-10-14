@@ -7,7 +7,6 @@ import {
   ClockCircleOutlined,
   DollarOutlined,
   FileDoneOutlined,
-  LockOutlined,
   PlusOutlined,
   SafetyCertificateOutlined,
   ThunderboltOutlined,
@@ -21,7 +20,7 @@ import { userApi } from '../../api/userApi';
 import { adminApi } from '../../api/adminApi';
 import { gigApi } from '../../api/gigApi';
 import { gigApplicationApi } from '../../api/gigApplicationApi';
-import { countsAsMoved, isHeld, movedAt } from '../../lib/money';
+import { awaitingPayment, countsAsMoved, movedAt } from '../../lib/money';
 import HeroBanner from '../common/HeroBanner';
 import StatTile from '../common/StatTile';
 import StatusTag from '../common/StatusTag';
@@ -117,11 +116,11 @@ const Dashboard = () => {
   const now = new Date();
   const thisMonth = moved
     .filter((x) => {
-      const d = new Date(movedAt(x, role));
+      const d = new Date(movedAt(x));
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     })
     .reduce((sum, x) => sum + amountOf(x), 0);
-  const heldTotal = transactions.filter(isHeld).reduce((sum, x) => sum + Number(x.amount), 0);
+  const due = awaitingPayment(matches, role, profile.id);
   const needsLocation = role === 'worker' && (profile.locationLat == null || profile.locationLng == null);
   const categories = skills
     .map((s) => s.skill?.category)
@@ -220,8 +219,8 @@ const Dashboard = () => {
             ),
           },
           {
-            key: 'escrow',
-            node: <StatTile icon={<LockOutlined />} label={t('dashboard.inEscrow')} value={heldTotal.toLocaleString()} suffix="RWF" />,
+            key: 'due',
+            node: <StatTile icon={<ClockCircleOutlined />} label={t('dashboard.toBePaid')} value={due.amount.toLocaleString()} suffix="RWF" />,
           },
           {
             key: 'active',
@@ -245,8 +244,8 @@ const Dashboard = () => {
               node: <StatTile icon={<ThunderboltOutlined />} label={t('dashboard.activeJobs')} value={activeMatches.length} />,
             },
             {
-              key: 'escrow',
-              node: <StatTile icon={<LockOutlined />} label={t('dashboard.inEscrow')} value={heldTotal.toLocaleString()} suffix="RWF" />,
+              key: 'due',
+              node: <StatTile icon={<ClockCircleOutlined />} label={t(role === 'client' ? 'dashboard.toPay' : 'dashboard.toBePaid')} value={due.amount.toLocaleString()} suffix="RWF" />,
             },
             {
               key: 'paid',
@@ -267,12 +266,12 @@ const Dashboard = () => {
               node: <StatTile icon={<AuditOutlined />} label={t('dashboard.liveDisputes')} value={payments?.liveDisputes ?? '—'} />,
             },
             {
-              key: 'escrow',
+              key: 'due',
               node: (
                 <StatTile
-                  icon={<LockOutlined />}
-                  label={t('dashboard.inEscrow')}
-                  value={(payments?.totals.held?.amount ?? 0).toLocaleString()}
+                  icon={<ClockCircleOutlined />}
+                  label={t('dashboard.awaitingPayment')}
+                  value={(payments?.totals.awaiting?.amount ?? 0).toLocaleString()}
                   suffix="RWF"
                 />
               ),
@@ -412,7 +411,7 @@ const Dashboard = () => {
                   <Link to="/admin/payments">{(payments?.totals.awaiting?.amount ?? 0).toLocaleString()} RWF</Link>
                 </SideRow>
                 <SideRow label={t('dashboard.paidOut')}>
-                  <Link to="/admin/payments">{(payments?.totals.released?.amount ?? 0).toLocaleString()} RWF</Link>
+                  <Link to="/admin/payments">{(payments?.totals.paid?.amount ?? 0).toLocaleString()} RWF</Link>
                 </SideRow>
                 <SideRow label={t('adminNav.metrics')}>
                   <Link to="/admin/metrics">{t('dashboard.open')} →</Link>

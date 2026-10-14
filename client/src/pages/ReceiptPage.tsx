@@ -104,7 +104,7 @@ const ReceiptPage = () => {
           </Row>
         )}
         {receipt.completedVia && (
-          <Row label={t('receipt.method')}>{t(`escrow.completedVia_${receipt.completedVia}`)}</Row>
+          <Row label={t('receipt.method')}>{t(`pay.completedVia_${receipt.completedVia}`)}</Row>
         )}
         {/* Long provider references read better on their own line than squeezed right. */}
         <div style={{ padding: '7px 0' }}>
