@@ -256,6 +256,30 @@ that trade (Pexels, credited in `client/src/assets/gigs/CREDITS.md`); the gig's 
 one, so a gig keeps its photo and neighbouring cards rarely repeat. A photo the client
 uploads still comes first.
 
+## Round 5 — Mobile Money instead of escrow (decided 14 Oct 2026)
+
+The owner decided to drop escrow: Isoko does not hold money. The flow returns to the one before
+Phase 1, with the real MTN MoMo API behind the existing payment adapter.
+
+1. **Job flow.** A worker accepts; nothing is collected. The client marks the job done, then pays
+   with MTN Mobile Money from the job card: a payment request goes to the client's MoMo number,
+   they approve it on their phone, and the payment is confirmed (by polling the provider, or by
+   its callback). Payouts and receipts are created on confirmation, as before.
+2. **Removed:** collection at acceptance, the 4-digit completion code, "report the job done" and
+   the 72-hour automatic release, every "held in escrow" screen.
+3. **Disputes stay, as mediation.** Either side can still open one while the job is in progress;
+   the panel decides: release (the job is done and the full price is due), refund (the job is
+   called off, nothing is due) or split (the job is done and the share decided is due).
+4. **Add-ons in the same MoMo payment.** The safety-net share is chosen when paying. Job Cover is
+   added by the client while the job is in progress (cover starts then); its premium is billed in
+   the final payment. Cover data moves from the transaction to the match.
+5. **MTN MoMo API.** A `mtn-momo` adapter for the Collections API: token, `requesttopay`, status
+   check; sandbox first (`MOMO_TARGET_ENV=sandbox`, currency EUR in the sandbox), production by
+   environment variables. Callbacks are verified by re-reading the status from MTN, never trusted
+   as sent. Payouts to workers go out through the Disbursements API when it is configured; the
+   payout records whether the transfer was sent. A script creates the sandbox API user and key
+   from the subscription key. `PAYMENT_PROVIDER=simulated-momo` keeps working for tests and demos.
+
 ## Security review
 
 A review of authentication, access control, personal data and uploads before the defence.
