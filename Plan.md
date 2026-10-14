@@ -286,6 +286,34 @@ Phase 1, with the real MTN MoMo API behind the existing payment adapter.
 **Status: done.** Server and client switched; admin Payments and Disputes pages redesigned for the
 new flow; 468 server tests pass, including `momoPayments.test.ts` against a mocked MTN API.
 
+## Round 6 — Help & support (started 14 Oct 2026)
+
+One front door for "something is wrong", answered by the admins. A **support ticket** is a
+conversation between one person and the Isoko team, with a status; Reports and Disputes stay
+as they are and a ticket can be turned into either.
+
+1. **Ticket model.** Reference number (SUP-XXXX-XXXX), category (payment, account, skills, job,
+   safety, bug, other), subject, status (open → waiting on you → resolved → closed), priority
+   (safety starts urgent, payment high), an optional link to the job, payment or skill
+   submission it is about, the page it was opened from, an assignee, first-reply, resolved and
+   closed times, and the person's rating ("Did this solve it?").
+2. **Thread.** Replies both ways with one optional photo or PDF each (private, signed links like
+   chat media). Admins can also write internal notes the person never sees. System events
+   (received, reopened, resolved, escalated) appear in the thread in the reader's language.
+3. **People.** A Help & support page: search and quick answers by category first, then a contact
+   form that can attach the job or payment in question; "My requests" with unread marks; a
+   thread view to reply, close, or rate. "Need help?" links on the payment panel and the wallet
+   open the form already filled in. Replies arrive through the bell, email or SMS.
+4. **Signed out.** "Can't sign in?" on the login page opens a short form (name, email, message).
+   The person gets a private link by email to follow and answer the ticket without an account.
+5. **Admins.** A Support inbox under Operations: counts (open, unassigned, waiting, median first
+   reply, satisfaction), filters, oldest-waiting first; a ticket view with the person's trust,
+   jobs, payments and earlier tickets beside the thread; reply or internal note; saved replies in
+   English and Kinyarwanda with the person's name filled in; status, priority and assignee;
+   escalation into a dispute on the linked job or a report about the other person.
+6. **Limits.** At most 5 open tickets and 10 new a day per person; signed-out forms rate-limited
+   by address; attachments checked by content, not name; people only ever see their own tickets.
+
 ## Security review
 
 A review of authentication, access control, personal data and uploads before the defence.
