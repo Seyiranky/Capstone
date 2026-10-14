@@ -18,7 +18,7 @@
     },
     "register": {
       "title": "Create your account",
-      "subtitle": "Join Isoko Talents as a worker or a client.",
+      "subtitle": "Join Isoko as a worker or a client.",
       "nameLabel": "Name",
       "emailLabel": "Email",
       "passwordLabel": "Password",
@@ -245,8 +245,8 @@
   },
   "wallet": {
     "title": "Wallet",
-    "subtitleClient": "Track what you’ve paid out to workers through Isoko Talents.",
-    "subtitleWorker": "Track what you’ve earned through Isoko Talents.",
+    "subtitleClient": "Track what you’ve paid out to workers through Isoko.",
+    "subtitleWorker": "Track what you’ve earned through Isoko.",
     "totalPaid": "Total paid (confirmed)",
     "totalEarned": "Total earned (confirmed)",
     "transactions": "Transactions",
@@ -290,7 +290,7 @@
     "securityDesc": "Change your password here. Every other phone or computer signed in to your account is signed out.",
     "resetPasswordLink": "Reset your password",
     "yourData": "Your data",
-    "exportDesc": "Download a copy of everything Isoko Talents holds about your account: your profile, skill submissions, gigs, matches, payments, reviews, and messages: as a JSON file.",
+    "exportDesc": "Download a copy of everything Isoko holds about your account: your profile, skill submissions, gigs, matches, payments, reviews, and messages: as a JSON file.",
     "exportButton": "Export my data",
     "exporting": "Preparing export...",
     "notifications": {
@@ -664,7 +664,7 @@
   "verifyEmail": {
     "checking": "Confirming your address...",
     "successTitle": "Email address confirmed",
-    "successBody": "You will now receive Isoko Talents notifications by email.",
+    "successBody": "You will now receive Isoko notifications by email.",
     "failedTitle": "This link did not work",
     "failedBody": "It may have expired or already been used. Request a new one from Settings.",
     "missingToken": "This link is incomplete. Open the link from your email again.",
@@ -684,7 +684,7 @@
   },
   "receipt": {
     "title": "Payment receipt",
-    "verified": "Checked against Isoko Talents' records",
+    "verified": "Checked against Isoko's records",
     "number": "Receipt number",
     "amount": "Amount paid",
     "releasedOn": "Paid on",
@@ -1066,7 +1066,7 @@
   },
   "rpl": {
     "title": "Evidence for Recognition of Prior Learning",
-    "subtitle": "Skills and paid work recorded on Isoko Talents",
+    "subtitle": "Skills and paid work recorded on Isoko",
     "memberSince": "Member since {{date}}",
     "skills": "Skills and how they were established",
     "skill": "Skill",
@@ -1130,7 +1130,7 @@
   },
   "authPanel": {
     "title": "Turn your skills into income.",
-    "body": "Isoko Talents connects skilled workers in Kigali with people who need their work. Post a job, get matched, get paid safely."
+    "body": "Isoko connects skilled workers in Kigali with people who need their work. Post a job, get matched, get paid safely."
   },
   "status": {
     "completed": "Completed",

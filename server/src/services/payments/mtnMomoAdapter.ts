@@ -94,7 +94,7 @@ export const requestPayment = async ({ amount, payerMsisdn, reference, note }: P
     currency: currency(),
     externalId: reference,
     payer: { partyIdType: 'MSISDN', partyId: partyId(payerMsisdn) },
-    payerMessage: (note ?? 'Isoko Talents payment').slice(0, 160),
+    payerMessage: (note ?? 'Isoko payment').slice(0, 160),
     payeeNote: reference,
   };
   const res = await fetch(`${baseUrl()}/collection/v1_0/requesttopay`, {
@@ -134,7 +134,7 @@ export const transfer = async ({ amount, payeeMsisdn, reference, note }: Transfe
       currency: currency(),
       externalId: reference,
       payee: { partyIdType: 'MSISDN', partyId: partyId(payeeMsisdn) },
-      payerMessage: (note ?? 'Isoko Talents payout').slice(0, 160),
+      payerMessage: (note ?? 'Isoko payout').slice(0, 160),
       payeeNote: reference,
     }),
   });

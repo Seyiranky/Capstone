@@ -15,7 +15,7 @@ import nodemailer from 'nodemailer';
  * SMTP2GO or anything else is four variables away.
  */
 
-const DEFAULT_FROM = 'Isoko Talents <notifications@example.invalid>';
+const DEFAULT_FROM = 'Isoko <notifications@example.invalid>';
 
 export interface EmailResult {
   provider: string;

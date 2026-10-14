@@ -52,7 +52,7 @@ const GoogleLoginButton = () => {
         onCancel={() => setPendingCredential(null)}
       >
         <Typography.Paragraph type="secondary">
-          Welcome, {pendingName}! Tell us how you'll be using Isoko Talents.
+          Welcome, {pendingName}! Tell us how you'll be using Isoko.
         </Typography.Paragraph>
         <Form layout="vertical">
           <Form.Item label={t('common.iAmA')}>

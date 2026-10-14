@@ -238,7 +238,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
   try {
     await email.send({
       to: user.email,
-      subject: 'Reset your Isoko Talents password',
+      subject: 'Reset your Isoko password',
       text: `Someone asked to reset the password for this account.\n\n${link}\n\nThe link works for one hour, once. If it was not you, ignore this email and your password stays the same.`,
       html: `<p>Someone asked to reset the password for this account.</p><p><a href="${link}">Choose a new password</a></p><p style="color:#71717a;font-size:13px">The link works for one hour, once. If it was not you, ignore this email and your password stays the same.</p>`,
     });
@@ -355,7 +355,7 @@ export const sendVerificationEmail = async (req: Request, res: Response): Promis
   });
 
   const link = `${email.appUrl()}/verify-email?token=${token}`;
-  const body = `Confirm this address to start receiving Isoko Talents notifications by email.\n\n${link}\n\nThe link works for 24 hours. If you did not ask for this, ignore it.`;
+  const body = `Confirm this address to start receiving Isoko notifications by email.\n\n${link}\n\nThe link works for 24 hours. If you did not ask for this, ignore it.`;
 
   try {
     await email.send({ to: user.email, ...email.render('Confirm your email address', body) });

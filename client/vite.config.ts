@@ -19,7 +19,7 @@ export default defineConfig({
       // screen, so precaching it taxes every visitor for a rare case.
       includeAssets: ['favicon-32.png', 'favicon-64.png'],
       manifest: {
-        name: 'Isoko Talents',
+        name: 'Isoko',
         short_name: 'Isoko',
         description:
           'Find work, show your skills, and get paid — built for informal workers in Kigali.',

@@ -90,7 +90,7 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
                 flexShrink: 0,
               }}
             >
-              <img src={logo} alt="Isoko Talents" style={{ height: showBrand ? 92 : 80, display: 'block' }} />
+              <img src={logo} alt="Isoko" style={{ height: showBrand ? 92 : 80, display: 'block' }} />
             </span>
           </div>
           {children}

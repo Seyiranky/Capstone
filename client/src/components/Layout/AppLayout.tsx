@@ -82,20 +82,20 @@ const AppLayout = () => {
             flexShrink: 0,
           }}
         >
-          <img src={logo} alt="Isoko Talents" style={{ height: 38, display: 'block' }} />
+          <img src={logo} alt="Isoko" style={{ height: 38, display: 'block' }} />
         </span>
         {!narrow && (
           <span
             style={{
               marginInlineStart: 10,
-              fontWeight: 700,
-              fontSize: 16,
-              letterSpacing: '0.01em',
+              fontWeight: 800,
+              fontSize: 19,
+              letterSpacing: '0.02em',
               color: isDark ? '#f4f4f5' : '#252b67',
               whiteSpace: 'nowrap',
             }}
           >
-            Isoko Talents
+            Isoko
           </span>
         )}
       </Link>

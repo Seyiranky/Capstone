@@ -36,5 +36,5 @@ setInterval(() => {
 }, SWEEP_EVERY_MS).unref();
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Isoko Talents API listening on port ${PORT}`);
+  console.log(`Isoko API listening on port ${PORT}`);
 });

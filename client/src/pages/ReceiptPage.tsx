@@ -63,7 +63,7 @@ const ReceiptPage = () => {
       <Card>
         <Flex justify="space-between" align="flex-start" gap={16} wrap="wrap">
           <div>
-            <img src={logo} alt="Isoko Talents" style={{ height: 48, display: 'block', marginBottom: 12 }} />
+            <img src={logo} alt="Isoko" style={{ height: 48, display: 'block', marginBottom: 12 }} />
             <Typography.Title level={4} style={{ margin: 0 }}>
               {t('receipt.title')}
             </Typography.Title>

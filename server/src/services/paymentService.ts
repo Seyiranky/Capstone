@@ -264,7 +264,7 @@ export const requestForMatch = async (
     currency: 'RWF',
     payerMsisdn,
     reference,
-    note: `Isoko Talents: ${match.gig.title}`.slice(0, 160),
+    note: `Isoko: ${match.gig.title}`.slice(0, 160),
   });
   const fields = {
     amount: price,
@@ -331,7 +331,7 @@ export const sendPayouts = async (transaction: Transaction): Promise<void> => {
         currency: payout.currency,
         payeeMsisdn: user.phone,
         reference: payout.receiptNumber,
-        note: 'Isoko Talents payout',
+        note: 'Isoko payout',
       });
       await payout.update({ transferStatus: 'sent', transferReference: sent.providerReference, transferError: null });
     } catch (err) {

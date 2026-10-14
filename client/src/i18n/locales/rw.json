@@ -18,7 +18,7 @@
     },
     "register": {
       "title": "Fungura konti yawe",
-      "subtitle": "Injira muri Isoko Talents nk'umukozi cyangwa umukiriya.",
+      "subtitle": "Injira muri Isoko nk'umukozi cyangwa umukiriya.",
       "nameLabel": "Amazina",
       "emailLabel": "Imeyili",
       "passwordLabel": "Ijambo ry'ibanga",
@@ -245,8 +245,8 @@
   },
   "wallet": {
     "title": "Ipochi",
-    "subtitleClient": "Kurikirana ibyo wishyuye abakozi ukoresheje Isoko Talents.",
-    "subtitleWorker": "Kurikirana ibyo winjije ukoresheje Isoko Talents.",
+    "subtitleClient": "Kurikirana ibyo wishyuye abakozi ukoresheje Isoko.",
+    "subtitleWorker": "Kurikirana ibyo winjije ukoresheje Isoko.",
     "totalPaid": "Byose byishyuwe (byemejwe)",
     "totalEarned": "Byose winjije (byemejwe)",
     "transactions": "Ibikorwa by'imari",
@@ -290,7 +290,7 @@
     "securityDesc": "Hindura ijambo ry'ibanga hano. Izindi telefoni cyangwa mudasobwa zinjiye kuri konti yawe zirasohorwa.",
     "resetPasswordLink": "Hindura ijambo ry'ibanga",
     "yourData": "Amakuru yawe",
-    "exportDesc": "Kuramo kopi y'ibyose Isoko Talents ifite kuri konti yawe: umwirondoro wawe, ubuhanga bwoherejwe, imirimo, imirimo mwahuriyeho, ubwishyu, ibitekerezo, n'ubutumwa: nk'idosiye ya JSON.",
+    "exportDesc": "Kuramo kopi y'ibyose Isoko ifite kuri konti yawe: umwirondoro wawe, ubuhanga bwoherejwe, imirimo, imirimo mwahuriyeho, ubwishyu, ibitekerezo, n'ubutumwa: nk'idosiye ya JSON.",
     "exportButton": "Kuramo amakuru yanjye",
     "exporting": "Gutegura gukuramo...",
     "notifications": {
@@ -664,7 +664,7 @@
   "verifyEmail": {
     "checking": "Turimo kwemeza aderesi yawe...",
     "successTitle": "Aderesi ya imeyili yemejwe",
-    "successBody": "Ubu uzahabwa amatangazo ya Isoko Talents kuri imeyili.",
+    "successBody": "Ubu uzahabwa amatangazo ya Isoko kuri imeyili.",
     "failedTitle": "Uyu muhuza ntiwakoze",
     "failedBody": "Ashobora kuba yarangiye cyangwa yakoreshejwe. Saba undi mushya muri Igenamiterere.",
     "missingToken": "Uyu muhuza wuzuye. Ongera ufungure umuhuza uri muri imeyili yawe.",
@@ -684,7 +684,7 @@
   },
   "receipt": {
     "title": "Inyemezabwishyu",
-    "verified": "Byemejwe n'inyandiko za Isoko Talents",
+    "verified": "Byemejwe n'inyandiko za Isoko",
     "number": "Nimero y'inyemezabwishyu",
     "amount": "Amafaranga yishyuwe",
     "releasedOn": "Byishyuwe ku wa",
@@ -1066,7 +1066,7 @@
   },
   "rpl": {
     "title": "Ibimenyetso byo Kwemeza Ubumenyi (RPL)",
-    "subtitle": "Ubumenyi n’akazi kishyuwe byanditswe kuri Isoko Talents",
+    "subtitle": "Ubumenyi n’akazi kishyuwe byanditswe kuri Isoko",
     "memberSince": "Umunyamuryango kuva {{date}}",
     "skills": "Ubumenyi n’uko bwemejwe",
     "skill": "Ubumenyi",
@@ -1130,7 +1130,7 @@
   },
   "authPanel": {
     "title": "Hindura ubumenyi bwawe amafaranga.",
-    "body": "Isoko Talents ihuza abakozi b'abahanga i Kigali n'abakeneye akazi kabo. Tanga akazi, uhuzwe, wishyurwe mu mutekano."
+    "body": "Isoko ihuza abakozi b'abahanga i Kigali n'abakeneye akazi kabo. Tanga akazi, uhuzwe, wishyurwe mu mutekano."
   },
   "status": {
     "completed": "Byarangiye",
