@@ -290,8 +290,7 @@
     "securityDesc": "Hindura ijambo ry'ibanga hano. Izindi telefoni cyangwa mudasobwa zinjiye kuri konti yawe zirasohorwa.",
     "resetPasswordLink": "Hindura ijambo ry'ibanga",
     "yourData": "Amakuru yawe",
-    "exportDesc": "Kuramo kopi y'ibyose Isoko ifite kuri konti yawe: umwirondoro wawe, ubuhanga bwoherejwe, imirimo, imirimo mwahuriyeho, ubwishyu, ibitekerezo, n'ubutumwa: nk'idosiye ya JSON.",
-    "exportButton": "Kuramo amakuru yanjye",
+    "exportDesc": "Kuramo kopi y'ibyo Isoko ifite byose kuri konti yawe: umwirondoro wawe, ubuhanga bwoherejwe, imirimo, akazi, ubwishyu, ibitekerezo n'ubutumwa.",
     "exporting": "Gutegura gukuramo...",
     "notifications": {
       "title": "Amatangazo",
@@ -336,7 +335,11 @@
     "changePassword": "Hindura ijambo ry'ibanga",
     "passwordChanged": "Ijambo ry'ibanga ryahinduwe. Ibindi bikoresho byasohowe.",
     "passwordChangeFailed": "Ntibyakunze guhindura ijambo ry'ibanga. Ongera ugerageze.",
-    "forgotCurrent": "Wibagiwe ijambo ry'ibanga usanzwe ukoresha?"
+    "forgotCurrent": "Wibagiwe ijambo ry'ibanga usanzwe ukoresha?",
+    "exportPdf": "Kuramo PDF",
+    "exportJson": "Kuramo JSON",
+    "exportFormats": "PDF ni raporo isomeka ushobora gufungura no gucapa. JSON ifite amakuru amwe nk'amakuru mbisi, yo kuyimurira ahandi.",
+    "exportFailed": "Ntibyashobotse gutegura amakuru yawe. Ongera ugerageze."
   },
   "match": {
     "component": {

@@ -6,18 +6,13 @@ import {
   User,
   UserSkill,
   Skill,
-  SkillTask,
-  Gig,
-  Match,
-  Transaction,
-  Review,
-  Message,
 } from '../models';
 import { authed } from '../lib/authed';
 import { AVATAR_DIR, looksLikeImage } from '../middleware/upload';
 import { pathParam } from '../lib/query';
 import * as workHistoryService from '../services/workHistoryService';
 import * as levelService from '../services/levelService';
+import * as dataExportService from '../services/dataExportService';
 import * as sms from '../lib/channels/sms';
 
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
@@ -175,54 +170,23 @@ export const getUserSkills = async (req: Request, res: Response): Promise<void> 
 };
 
 export const exportMyData = async (req: Request, res: Response): Promise<void> => {
-  const userId = authed(req).id;
+  const data = await dataExportService.collect(authed(req).id);
+  res.setHeader('Content-Disposition', 'attachment; filename="isoko-my-data.json"');
+  res.json(dataExportService.toJson(data));
+};
 
-  const [
-    profile,
-    skillTasksAsWorker,
-    skillTasksAsReviewer,
-    gigsPosted,
-    matchesAsWorker,
-    matchesAsClient,
-    reviewsGiven,
-    reviewsReceived,
-    messagesSent,
-    messagesReceived,
-  ] = await Promise.all([
-    User.findByPk(userId),
-    SkillTask.findAll({ where: { workerId: userId } }),
-    SkillTask.findAll({ where: { reviewerId: userId } }),
-    Gig.findAll({ where: { clientId: userId } }),
-    Match.findAll({ where: { workerId: userId } }),
-    Match.findAll({
-      include: [{ model: Gig, as: 'gig', where: { clientId: userId }, required: true }],
-    }),
-    Review.findAll({ where: { authorId: userId } }),
-    Review.findAll({ where: { recipientId: userId } }),
-    Message.findAll({ where: { senderId: userId } }),
-    Message.findAll({ where: { recipientId: userId } }),
-  ]);
-
-  const matchIds = [...matchesAsWorker, ...matchesAsClient].map((m) => m.id);
-  const transactions = matchIds.length
-    ? await Transaction.findAll({ where: { matchId: matchIds } })
-    : [];
-
-  res.setHeader('Content-Disposition', 'attachment; filename="isoko-talents-my-data.json"');
-  res.json({
-    exportedAt: new Date().toISOString(),
-    profile: profile?.privateJSON() ?? null,
-    skillTasksAsWorker,
-    skillTasksAsReviewer,
-    gigsPosted,
-    matchesAsWorker,
-    matchesAsClient,
-    transactions,
-    reviewsGiven,
-    reviewsReceived,
-    messagesSent,
-    messagesReceived,
-  });
+/** The same records as a readable PDF report. */
+export const exportMyDataPdf = async (req: Request, res: Response): Promise<void> => {
+  const data = await dataExportService.collect(authed(req).id);
+  if (!data.profile) {
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+  const pdf = dataExportService.toPdf(data);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename="isoko-my-data.pdf"');
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(pdf);
 };
 
 /** A worker's paid jobs, with ratings and photos of the work, for their profile. */

@@ -11,6 +11,7 @@ const router = express.Router();
 router.get('/me', verifyToken, userController.getProfile);
 router.put('/me', verifyToken, userController.updateProfile);
 router.get('/me/export', verifyToken, userController.exportMyData);
+router.get('/me/export.pdf', verifyToken, userController.exportMyDataPdf);
 router.post('/me/avatar', verifyToken, uploadAvatar, userController.uploadAvatar);
 router.delete('/me/avatar', verifyToken, userController.deleteAvatar);
 // Before '/:id', which would otherwise take 'search' as an id.

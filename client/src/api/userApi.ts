@@ -46,4 +46,8 @@ export const userApi = {
 
 
   exportMyData: () => axiosClient.get<Record<string, unknown>>('/users/me/export').then((res) => res.data),
+
+  /** The same data as a readable PDF report. */
+  exportMyDataPdf: () =>
+    axiosClient.get<Blob>('/users/me/export.pdf', { responseType: 'blob' }).then((res) => res.data),
 };

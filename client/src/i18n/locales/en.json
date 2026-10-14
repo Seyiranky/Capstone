@@ -290,8 +290,7 @@
     "securityDesc": "Change your password here. Every other phone or computer signed in to your account is signed out.",
     "resetPasswordLink": "Reset your password",
     "yourData": "Your data",
-    "exportDesc": "Download a copy of everything Isoko holds about your account: your profile, skill submissions, gigs, matches, payments, reviews, and messages: as a JSON file.",
-    "exportButton": "Export my data",
+    "exportDesc": "Download a copy of everything Isoko holds about your account: your profile, skill submissions, gigs, jobs, payments, reviews and messages.",
     "exporting": "Preparing export...",
     "notifications": {
       "title": "Notifications",
@@ -336,7 +335,11 @@
     "changePassword": "Change password",
     "passwordChanged": "Password changed. Other devices have been signed out.",
     "passwordChangeFailed": "Could not change the password. Try again.",
-    "forgotCurrent": "Forgot your current password?"
+    "forgotCurrent": "Forgot your current password?",
+    "exportPdf": "Download PDF",
+    "exportJson": "Download JSON",
+    "exportFormats": "PDF is a readable report you can open and print. JSON holds the same records as data, for moving them to another service.",
+    "exportFailed": "Could not prepare your data. Try again."
   },
   "match": {
     "component": {
