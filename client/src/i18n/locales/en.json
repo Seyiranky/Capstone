@@ -1256,5 +1256,20 @@
     "completedVia_dispute": "Decided by mediation",
     "completedVia_code": "Completed with a code",
     "completedVia_auto": "Completed automatically"
+  },
+  "inbox": {
+    "title": "Notifications",
+    "updates": "Updates",
+    "markAllRead": "Mark all as read",
+    "all": "All",
+    "unread": "Unread",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "earlier": "Earlier",
+    "viewAll": "See all notifications",
+    "empty": "You're all caught up",
+    "emptyHint": "Updates about your jobs, payments and disputes will show up here.",
+    "noUnread": "No unread notifications",
+    "open": "Open"
   }
 }

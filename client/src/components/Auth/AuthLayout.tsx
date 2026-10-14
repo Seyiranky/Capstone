@@ -4,6 +4,7 @@ import { Grid, Typography, theme } from 'antd';
 import LanguageToggle from '../common/LanguageToggle';
 import authHeroPhoto from '../../assets/auth-hero.jpg';
 import logo from '../../assets/logo.png';
+import { useThemeMode } from '../../theme/ThemeProvider';
 
 const { useToken } = theme;
 
@@ -13,6 +14,7 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
   const { t } = useTranslation();
   const screens = Grid.useBreakpoint();
   const showBrand = screens.md;
+  const { isDark } = useThemeMode();
 
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', overflow: 'hidden' }}>
@@ -49,7 +51,6 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
             }}
           />
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 440 }}>
-            <img src={logo} alt="Isoko Talents" style={{ height: 44, alignSelf: 'flex-start', marginBottom: 8 }} />
             <Typography.Title level={1} style={{ color: '#fff', margin: 0, fontSize: 40, lineHeight: 1.15, textWrap: 'balance' }}>
               {t('authPanel.title')}
             </Typography.Title>
@@ -72,7 +73,18 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
         }}
       >
         <div style={{ width: '100%', maxWidth: 384 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+            {/* The mark is navy; on the dark theme it sits on a white tile so it stays legible. */}
+            <span
+              style={{
+                display: 'inline-flex',
+                padding: isDark ? 8 : 0,
+                background: isDark ? '#ffffff' : 'transparent',
+                borderRadius: 10,
+              }}
+            >
+              <img src={logo} alt="Isoko Talents" style={{ height: 72, display: 'block' }} />
+            </span>
             <LanguageToggle />
           </div>
           {children}

@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { App, Badge, Button, Flex, Grid, Segmented, Space, Tooltip, Typography } from 'antd';
+import { App, Button, Flex, Grid, Segmented, Space, Tooltip, Typography } from 'antd';
 import {
-  BellOutlined,
   MoonOutlined,
   SunOutlined,
   MenuFoldOutlined,
@@ -11,11 +10,11 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { useAppSelector } from '../../store/hooks';
-import { notificationApi } from '../../api/notificationApi';
 import { connectSocket } from '../../lib/socket';
 import { useThemeMode } from '../../theme/ThemeProvider';
 import { NAV_ENTRIES, activeNavKey } from './navConfig';
-import type { AppNotification, Message } from '../../types';
+import NotificationBell from '../Notifications/NotificationBell';
+import type { Message } from '../../types';
 
 const pageTitle = (pathname: string, t: (k: string) => string): string => {
   const key = activeNavKey(pathname);
@@ -40,30 +39,13 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
   const { isDark, setMode } = useThemeMode();
   const { notification } = App.useApp();
   const screens = Grid.useBreakpoint();
-  const [unread, setUnread] = useState(0);
   const myId = useAppSelector((state) => state.auth.profile?.id);
   const locationRef = useRef(location.pathname);
   locationRef.current = location.pathname;
 
   useEffect(() => {
-    notificationApi
-      .listNotifications()
-      .then((n) => setUnread(n.filter((x) => !x.readAt).length))
-      .catch(() => setUnread(0));
-  }, [location.pathname, role]);
-
-  useEffect(() => {
     if (!role) return;
     const socket = connectSocket();
-    const onNew = (n: AppNotification) => {
-      setUnread((u) => u + 1);
-      notification.open({
-        message: n.title,
-        description: n.body,
-        placement: 'bottomRight',
-        duration: 4,
-      });
-    };
     // A message from someone else, while the inbox is not the page in front
     // of the user, gets a notice they can open the conversation from.
     const onMessage = (m: Message) => {
@@ -82,10 +64,8 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
         style: { cursor: 'pointer' },
       });
     };
-    socket.on('notification:new', onNew);
     socket.on('message:new', onMessage);
     return () => {
-      socket.off('notification:new', onNew);
       socket.off('message:new', onMessage);
     };
   }, [role, notification, myId, navigate, t]);
@@ -154,16 +134,7 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
             />
           </Tooltip>
         )}
-        <Badge count={unread} size="small" overflowCount={99} offset={[-3, 3]}>
-          <Button
-            type="text"
-            shape="circle"
-            className="isoko-icon-btn"
-            aria-label={t('sidebar.notifications')}
-            icon={<BellOutlined />}
-            onClick={() => navigate('/notifications')}
-          />
-        </Badge>
+        <NotificationBell />
       </Space>
     </Flex>
   );

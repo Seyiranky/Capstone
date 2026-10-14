@@ -72,28 +72,32 @@ const AppLayout = () => {
           borderBottom: `1px solid ${hairline}`,
         }}
       >
-        {/* The wordmark is navy; on the dark sider it sits on a white backing so it stays legible. */}
+        {/* The mark is navy; on the dark sider it sits on a white tile so it stays legible. */}
         <span
           style={{
             display: 'inline-flex',
-            padding: isDark ? '4px 8px' : 0,
+            padding: isDark ? 3 : 0,
             background: isDark ? '#ffffff' : 'transparent',
             borderRadius: 6,
+            flexShrink: 0,
           }}
         >
-          {/* Collapsed, only the round emblem at the left of the logo shows. */}
-          <img
-            src={logo}
-            alt="Isoko Talents"
-            style={{
-              height: narrow ? 34 : 32,
-              width: narrow ? 34 : 'auto',
-              objectFit: narrow ? 'cover' : 'contain',
-              objectPosition: 'left center',
-              display: 'block',
-            }}
-          />
+          <img src={logo} alt="Isoko Talents" style={{ height: 38, display: 'block' }} />
         </span>
+        {!narrow && (
+          <span
+            style={{
+              marginInlineStart: 10,
+              fontWeight: 700,
+              fontSize: 16,
+              letterSpacing: '0.01em',
+              color: isDark ? '#f4f4f5' : '#252b67',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Isoko Talents
+          </span>
+        )}
       </Link>
       <div style={{ flex: 1, overflowY: 'auto', paddingTop: 8 }}>
         <SideNav dark={isDark} />

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Avatar as AntAvatar,
   Badge,
   Button,
   Card,
@@ -32,19 +31,25 @@ import { fromNow } from '../../lib/time';
 import PageContainer from '../Layout/PageContainer';
 import Avatar from '../common/Avatar';
 import ChatThread from '../common/ChatThread';
+import NotificationList from './NotificationList';
+import { KINDS, kindOf } from '../../lib/notificationKind';
 import type { AppNotification, ChatContact, Message } from '../../types';
 
 type Contact = ChatContact;
-type NavState = { contact?: Contact };
+type NavState = { contact?: Contact; tab?: 'messages' | 'updates' };
 
 const NotificationCenter = () => {
   const { t } = useTranslation();
   const { role } = useAppSelector((state) => state.auth);
   const location = useLocation();
+  const navigate = useNavigate();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [tab, setTab] = useState<'messages' | 'updates'>('messages');
+  const [tab, setTab] = useState<'messages' | 'updates'>(
+    (location.state as NavState | null)?.tab ?? 'messages',
+  );
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
   // Below md the list and the thread don't fit side by side, so show one at a time.
   const stacked = !Grid.useBreakpoint().md;
 
@@ -126,10 +131,13 @@ const NotificationCenter = () => {
       })
       .catch(() => undefined);
 
-  const markRead = async (n: AppNotification) => {
-    if (n.readAt) return;
-    const updated = await notificationApi.markRead(n.id);
-    setNotifications((cur) => cur.map((x) => (x.id === updated.id ? updated : x)));
+  // Opening a notice marks it read and goes to what it is about.
+  const openNotice = (n: AppNotification) => {
+    if (!n.readAt) {
+      setNotifications((cur) => cur.map((x) => (x.id === n.id ? { ...x, readAt: new Date().toISOString() } : x)));
+      notificationApi.markRead(n.id).catch(() => undefined);
+    }
+    navigate(KINDS[kindOf(n.title)].link(role));
   };
 
   const markAllRead = async () => {
@@ -153,7 +161,7 @@ const NotificationCenter = () => {
             label: (
               <Space size={6}>
                 <BellOutlined />
-                Updates
+                {t('inbox.updates')}
                 {unread > 0 && <Badge count={unread} size="small" />}
               </Space>
             ),
@@ -275,55 +283,32 @@ const NotificationCenter = () => {
         </Row>
       ) : (
         <Card
-          title={`${notifications.length} update${notifications.length === 1 ? '' : 's'}`}
+          style={{ maxWidth: 760 }}
+          styles={{ body: { padding: '8px 8px 12px' } }}
+          title={
+            <Segmented
+              size="small"
+              value={filter}
+              onChange={(v) => setFilter(v as 'all' | 'unread')}
+              options={[
+                { label: t('inbox.all'), value: 'all' },
+                { label: unread ? `${t('inbox.unread')} (${unread})` : t('inbox.unread'), value: 'unread' },
+              ]}
+            />
+          }
           extra={
             unread > 0 && (
-              <Button type="link" icon={<CheckOutlined />} onClick={markAllRead}>
-                Mark all read
+              <Button type="link" icon={<CheckOutlined />} onClick={markAllRead} style={{ paddingInline: 0 }}>
+                {t('inbox.markAllRead')}
               </Button>
             )
           }
         >
-          {notifications.length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('common.nothingYet')} />
-          ) : (
-            <List
-              dataSource={notifications}
-              renderItem={(n) => (
-                <List.Item
-                  onClick={() => markRead(n)}
-                  style={{
-                    cursor: n.readAt ? 'default' : 'pointer',
-                    background: n.readAt ? undefined : 'var(--ant-color-fill-quaternary)',
-                    borderRadius: 4,
-                    paddingInline: 12,
-                  }}
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <Badge dot={!n.readAt} offset={[-2, 4]}>
-                        <AntAvatar
-                          shape="square"
-                          size={36}
-                          style={{ background: 'var(--isoko-navy-soft)', color: 'var(--isoko-navy)' }}
-                          icon={<BellOutlined />}
-                        />
-                      </Badge>
-                    }
-                    title={
-                      <Flex justify="space-between" gap={12}>
-                        <Typography.Text strong={!n.readAt}>{n.title}</Typography.Text>
-                        <Typography.Text type="secondary" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
-                          {fromNow(n.createdAt)}
-                        </Typography.Text>
-                      </Flex>
-                    }
-                    description={n.body}
-                  />
-                </List.Item>
-              )}
-            />
-          )}
+          <NotificationList
+            items={filter === 'unread' ? notifications.filter((n) => !n.readAt) : notifications}
+            onOpen={openNotice}
+            emptyText={filter === 'unread' ? t('inbox.noUnread') : undefined}
+          />
         </Card>
       )}
     </PageContainer>

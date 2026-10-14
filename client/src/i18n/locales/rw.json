@@ -1256,5 +1256,20 @@
     "completedVia_dispute": "Byemejwe n'abahuza",
     "completedVia_code": "Byarangijwe na kode",
     "completedVia_auto": "Byarangiye byonyine"
+  },
+  "inbox": {
+    "title": "Imenyesha",
+    "updates": "Amakuru mashya",
+    "markAllRead": "Byose byasomwe",
+    "all": "Byose",
+    "unread": "Bitarasomwa",
+    "today": "Uyu munsi",
+    "yesterday": "Ejo hashize",
+    "earlier": "Mbere",
+    "viewAll": "Reba imenyesha ryose",
+    "empty": "Nta kintu gishya",
+    "emptyHint": "Amakuru ku mirimo yawe, kwishyurwa n'impaka azagaragara hano.",
+    "noUnread": "Nta menyesha ritarasomwa",
+    "open": "Fungura"
   }
 }
