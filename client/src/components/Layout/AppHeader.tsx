@@ -131,6 +131,7 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
         )}
         <Segmented
           size="small"
+          className="isoko-header-fixed"
           value={lang}
           onChange={(v) => i18n.changeLanguage(v as string)}
           options={[
@@ -140,18 +141,24 @@ const AppHeader = ({ collapsed, onToggle, onSearch }: AppHeaderProps) => {
         />
         {/* Phones keep the header to essentials; theme stays reachable in Settings. */}
         {screens.sm && (
-          <Tooltip title={isDark ? t('header.lightMode') : t('header.darkMode')}>
+          // A fixed 32px circle and a tooltip below, removed when hidden: swapping
+          // the sun and moon icons must not reflow the language switch or the bell.
+          <Tooltip placement="bottom" destroyOnHidden title={isDark ? t('header.lightMode') : t('header.darkMode')}>
             <Button
               type="text"
+              shape="circle"
+              className="isoko-icon-btn"
               aria-label={isDark ? t('header.lightMode') : t('header.darkMode')}
               icon={isDark ? <SunOutlined /> : <MoonOutlined />}
               onClick={() => setMode(isDark ? 'light' : 'dark')}
             />
           </Tooltip>
         )}
-        <Badge count={unread} size="small" overflowCount={99} offset={[-6, 6]}>
+        <Badge count={unread} size="small" overflowCount={99} offset={[-3, 3]}>
           <Button
             type="text"
+            shape="circle"
+            className="isoko-icon-btn"
             aria-label={t('sidebar.notifications')}
             icon={<BellOutlined />}
             onClick={() => navigate('/notifications')}

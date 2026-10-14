@@ -118,3 +118,17 @@ a:hover {
   .isoko-composer__rec-label { display: none !important; }
   .isoko-composer__rec-spacer { display: block; }
 }
+
+/* Header controls keep a fixed size, so toggling the theme (sun/moon) or
+   language never reflows their neighbours. */
+.ant-btn.ant-btn-circle.ant-btn-icon-only.isoko-icon-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.isoko-header-fixed { flex-shrink: 0; }
