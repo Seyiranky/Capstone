@@ -49,6 +49,8 @@ export interface User {
   role: Role;
   status: UserStatus;
   bio?: string | null;
+  /** Public path of the profile picture; initials show when it is null. */
+  avatarUrl?: string | null;
   locationLat?: number | null;
   locationLng?: number | null;
   trustScore: number;
@@ -434,6 +436,7 @@ export interface Message {
 export interface ChatContact {
   id: string;
   name: string;
+  avatarUrl?: string | null;
   unreadCount?: number;
   lastMessage?: { body: string; hasImage: boolean; hasAudio?: boolean; fromMe: boolean; createdAt: string };
 }

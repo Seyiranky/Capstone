@@ -69,7 +69,7 @@ const SideFooter = ({ collapsed, dark }: SideFooterProps) => {
             cursor: 'pointer',
           }}
         >
-          <Avatar name={profile?.name ?? '?'} size={32} />
+          <Avatar name={profile?.name ?? '?'} src={profile?.avatarUrl} size={32} />
           {!collapsed && (
             <>
               <Space direction="vertical" size={0} style={{ lineHeight: 1.2, minWidth: 0, flex: 1 }}>

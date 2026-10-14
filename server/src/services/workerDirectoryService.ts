@@ -74,6 +74,7 @@ export const list = async (filters: DirectoryFilters, viewer: { id: string; arm:
     workers: page.map((w, i) => ({
       id: w.id,
       name: w.name,
+      avatarUrl: w.avatarUrl ?? null,
       level: levels[i].level,
       trustScore: w.trustScore,
       reviewCount: w.reviewCount,

@@ -34,6 +34,8 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
   declare role: Role;
   declare status: CreationOptional<UserStatus>;
   declare bio: string | null;
+  /** Public path of the profile picture, or null for initials. */
+  declare avatarUrl: CreationOptional<string | null>;
   declare locationLat: number | null;
   declare locationLng: number | null;
   declare trustScore: CreationOptional<number>;
@@ -104,6 +106,7 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
     'role',
     'status',
     'bio',
+    'avatarUrl',
     'trustScore',
     'trustScoreBreakdown',
     'trustScoreUpdatedAt',
@@ -233,6 +236,7 @@ export const initUser = (sequelize: Sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      avatarUrl: { type: DataTypes.STRING, allowNull: true },
       locationLat: {
         type: DataTypes.FLOAT,
         allowNull: true,

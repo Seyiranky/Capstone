@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import {
@@ -12,6 +14,7 @@ import {
   Message,
 } from '../models';
 import { authed } from '../lib/authed';
+import { AVATAR_DIR, looksLikeImage } from '../middleware/upload';
 import { pathParam } from '../lib/query';
 import * as workHistoryService from '../services/workHistoryService';
 import * as levelService from '../services/levelService';
@@ -136,6 +139,7 @@ export const getPublicProfile = async (req: Request, res: Response): Promise<voi
     name: user.name,
     role: user.role,
     bio: user.bio,
+    avatarUrl: user.avatarUrl ?? null,
     experienceSummary: user.experienceSummary,
     yearsExperience: user.yearsExperience,
     trustScore: user.trustScore,
@@ -253,3 +257,48 @@ export const searchWorkers = async (req: Request, res: Response): Promise<void> 
   res.json(workers);
 };
 
+
+const removeAvatarFile = (url: string | null) => {
+  // Only ever a file in the avatars folder, named by the server.
+  const name = url?.startsWith('/uploads/avatars/') ? path.basename(url) : null;
+  if (name) fs.rm(path.join(AVATAR_DIR, name), { force: true }, () => undefined);
+};
+
+/** Sets the caller's profile picture: a square image cropped in the browser. */
+export const uploadAvatar = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const file = req.file;
+  if (!file) {
+    res.status(400).json({ message: 'Choose a picture to upload' });
+    return;
+  }
+  if (!looksLikeImage(file.path)) {
+    fs.rm(file.path, { force: true }, () => undefined);
+    res.status(400).json({ message: 'That file is not a picture' });
+    return;
+  }
+  const user = await User.findByPk(caller.id);
+  if (!user) {
+    fs.rm(file.path, { force: true }, () => undefined);
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+  const previous = user.avatarUrl;
+  await user.update({ avatarUrl: `/uploads/avatars/${file.filename}` });
+  removeAvatarFile(previous);
+  res.json(user.privateJSON());
+};
+
+/** Removes the caller's profile picture; their initials show again. */
+export const deleteAvatar = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const user = await User.findByPk(caller.id);
+  if (!user) {
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+  const previous = user.avatarUrl;
+  await user.update({ avatarUrl: null });
+  removeAvatarFile(previous);
+  res.json(user.privateJSON());
+};

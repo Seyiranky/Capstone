@@ -4,6 +4,7 @@ import type { LevelKey, Provenance, SkillCategory } from '../types';
 export interface DirectoryWorker {
   id: string;
   name: string;
+  avatarUrl: string | null;
   level: LevelKey | null;
   trustScore: number;
   reviewCount: number;

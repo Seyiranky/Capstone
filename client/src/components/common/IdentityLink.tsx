@@ -5,9 +5,11 @@ interface IdentityLinkProps {
   id: string;
   name: string;
   size?: number;
+  /** Profile picture, if they have one. */
+  src?: string | null;
 }
 
-const IdentityLink = ({ id, name, size = 28 }: IdentityLinkProps) => (
+const IdentityLink = ({ id, name, size = 28, src }: IdentityLinkProps) => (
   <Link
     to={`/profile/${id}`}
     style={{
@@ -18,7 +20,7 @@ const IdentityLink = ({ id, name, size = 28 }: IdentityLinkProps) => (
       maxWidth: '100%',
     }}
   >
-    <Avatar name={name} size={size} />
+    <Avatar name={name} size={size} src={src} />
     <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
   </Link>
 );

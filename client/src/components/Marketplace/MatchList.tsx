@@ -228,6 +228,7 @@ const MatchList = () => {
                       <IdentityLink
                         id={counterparty.id}
                         name={counterparty.name}
+                        src={counterparty.avatarUrl}
                         size={24}
                       />
                     ) : (

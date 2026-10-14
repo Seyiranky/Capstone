@@ -59,7 +59,7 @@ const WorkerCard = ({
     >
       <Flex gap={12} align="flex-start">
         <span className="isoko-worker-card__avatar">
-          <Avatar name={worker.name} size={48} />
+          <Avatar name={worker.name} src={worker.avatarUrl} size={48} />
           <Tooltip title={t(`growth.av_${worker.availability}`)}>
             <span className={`isoko-worker-card__presence isoko-worker-card__presence--${worker.availability}`} />
           </Tooltip>

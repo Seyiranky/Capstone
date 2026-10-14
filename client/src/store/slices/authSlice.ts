@@ -93,6 +93,10 @@ const authSlice = createSlice({
       state.token = action.payload;
       localStorage.setItem('token', action.payload);
     },
+    /** The signed-in user's own record changed, e.g. a new profile picture. */
+    profileUpdated: (state, action: PayloadAction<User>) => {
+      state.profile = action.payload;
+    },
     logout: (state) => {
       state.userId = null;
       state.role = null;
@@ -151,5 +155,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, tokenRefreshed } = authSlice.actions;
+export const { logout, tokenRefreshed, profileUpdated } = authSlice.actions;
 export default authSlice.reducer;

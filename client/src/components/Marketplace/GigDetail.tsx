@@ -397,7 +397,7 @@ const GigDetail = () => {
 
             {gig.client && (
               <Card title={t('marketplace.gigDetail.aboutClient')}>
-                <IdentityLink id={gig.client.id} name={gig.client.name} size={36} />
+                <IdentityLink id={gig.client.id} name={gig.client.name} size={36} src={gig.client.avatarUrl} />
                 <div style={{ marginTop: 12 }}>
                   <MetaRow label={t('dashboard.trustScore')}>
                     {gig.client.reviewCount ? `${Number(gig.client.trustScore).toFixed(1)} / 5` : t('match.reason.trustProvisional')}

@@ -579,7 +579,8 @@
       "client": "Umukiriya",
       "admin": "Umuyobozi"
     },
-    "saveChanges": "Bika impinduka"
+    "saveChanges": "Bika impinduka",
+    "cancel": "Hagarika"
   },
   "review": {
     "awaitingYou": "Ibyoherejwe bitegereje isuzuma ryawe",
@@ -1280,5 +1281,25 @@
     "emptyHint": "Amakuru ku mirimo yawe, kwishyurwa n'impaka azagaragara hano.",
     "noUnread": "Nta menyesha ritarasomwa",
     "open": "Fungura"
+  },
+  "avatar": {
+    "title": "Ifoto y'umwirondoro",
+    "hint": "Ifoto igaragaza neza isura yawe ifasha abakiriya n'abakozi kukwizera. JPEG, PNG cyangwa WebP.",
+    "upload": "Shyiraho ifoto",
+    "change": "Hindura ifoto",
+    "remove": "Siba",
+    "removeConfirm": "Gusiba ifoto yawe? Inyuguti z'izina ryawe zizagaragara aho.",
+    "cropTitle": "Hindura ingano y'ifoto",
+    "cropHint": "Kurura ifoto ushyire isura yawe mu ruziga. Koresha umurongo kugira ngo wegereze.",
+    "zoom": "Egereza",
+    "zoomIn": "Egereza",
+    "zoomOut": "Igiza kure",
+    "rotate": "Hindukiza",
+    "done": "Byarangiye",
+    "saved": "Ifoto yawe yahinduwe.",
+    "removed": "Ifoto yawe yasibwe.",
+    "failed": "Ntibyashobotse kubika ifoto. Ongera ugerageze.",
+    "wrongType": "Hitamo ifoto ya JPEG, PNG cyangwa WebP.",
+    "tooLarge": "Iyo foto ni nini cyane. Hitamo iri munsi ya MB 15."
   }
 }

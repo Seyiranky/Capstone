@@ -45,7 +45,7 @@ const AdminJobs = () => {
       title: 'Client',
       key: 'client',
       responsive: ['md'],
-      render: (_, g) => (g.client ? <IdentityLink id={g.client.id} name={g.client.name} size={22} /> : '—'),
+      render: (_, g) => (g.client ? <IdentityLink id={g.client.id} name={g.client.name} size={22} src={g.client.avatarUrl} /> : '—'),
     },
     {
       title: view === 'live' ? 'Worker' : 'Completed by',
@@ -53,7 +53,7 @@ const AdminJobs = () => {
       responsive: ['md'],
       render: (_, g) => {
         const w = (view === 'live' ? liveMatch(g) : doneMatch(g))?.worker;
-        return w ? <IdentityLink id={w.id} name={w.name} size={22} /> : <Typography.Text type="secondary">—</Typography.Text>;
+        return w ? <IdentityLink id={w.id} name={w.name} size={22} src={w.avatarUrl} /> : <Typography.Text type="secondary">—</Typography.Text>;
       },
     },
     {

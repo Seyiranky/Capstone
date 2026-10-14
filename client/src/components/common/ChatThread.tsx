@@ -19,6 +19,7 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 interface ChatThreadProps {
   recipientId: string;
   recipientName?: string;
+  recipientAvatar?: string | null;
   showHeader?: boolean;
   placeholder?: string;
   emptyText?: string;
@@ -38,6 +39,7 @@ const time = (iso: string) =>
 const ChatThread = ({
   recipientId,
   recipientName,
+  recipientAvatar,
   showHeader = false,
   placeholder,
   emptyText,
@@ -166,7 +168,7 @@ const ChatThread = ({
     <div>
       {showHeader && recipientName && (
         <Flex align="center" gap={8} style={{ marginBottom: 12 }}>
-          <Avatar name={recipientName} size={28} />
+          <Avatar name={recipientName} src={recipientAvatar} size={28} />
           <Typography.Text strong style={{ flex: 1, minWidth: 0 }} ellipsis>
             {recipientName}
           </Typography.Text>

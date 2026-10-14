@@ -4,12 +4,15 @@ import * as userController from '../controllers/userController';
 import { verifyToken } from '../middleware/authMiddleware';
 import { authorize } from '../middleware/roleMiddleware';
 import * as passportController from '../controllers/passportController';
+import { uploadAvatar } from '../middleware/upload';
 
 const router = express.Router();
 
 router.get('/me', verifyToken, userController.getProfile);
 router.put('/me', verifyToken, userController.updateProfile);
 router.get('/me/export', verifyToken, userController.exportMyData);
+router.post('/me/avatar', verifyToken, uploadAvatar, userController.uploadAvatar);
+router.delete('/me/avatar', verifyToken, userController.deleteAvatar);
 // Before '/:id', which would otherwise take 'search' as an id.
 router.get('/search', verifyToken, userController.searchWorkers);
 router.get('/directory', verifyToken, authorize('client', 'admin'), workerDirectoryController.list);

@@ -13,6 +13,7 @@ import { useAppSelector } from '../../store/hooks';
 import { useThemeMode } from '../../theme/ThemeProvider';
 import PageContainer from '../Layout/PageContainer';
 import ProfileEditor from './ProfileEditor';
+import ProfilePictureField from './ProfilePictureField';
 import ExportDataButton from './ExportDataButton';
 import NotificationPreferences from './NotificationPreferences';
 import ChangePasswordForm from './ChangePasswordForm';
@@ -38,6 +39,7 @@ const Settings = () => {
       ),
       children: (
         <Card title={t('settings.profile')}>
+          <ProfilePictureField />
           <Typography.Paragraph type="secondary">
             {role === 'worker' ? t('settings.profileDescWorker') : t('settings.profileDescOther')}
           </Typography.Paragraph>

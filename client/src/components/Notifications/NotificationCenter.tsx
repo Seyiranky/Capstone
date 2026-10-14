@@ -199,7 +199,7 @@ const NotificationCenter = () => {
                         <List.Item.Meta
                           avatar={
                             <Badge count={active ? 0 : contact.unreadCount} size="small" offset={[-2, 2]}>
-                              <Avatar name={contact.name} size={34} />
+                              <Avatar name={contact.name} src={contact.avatarUrl} size={34} />
                             </Badge>
                           }
                           title={
@@ -263,6 +263,7 @@ const NotificationCenter = () => {
                   key={selectedContact.id}
                   recipientId={selectedContact.id}
                   recipientName={selectedContact.name}
+                  recipientAvatar={selectedContact.avatarUrl}
                   showHeader
                   onRead={() =>
                     setContacts((cur) =>

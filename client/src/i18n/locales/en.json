@@ -579,7 +579,8 @@
       "client": "Client",
       "admin": "Admin"
     },
-    "saveChanges": "Save changes"
+    "saveChanges": "Save changes",
+    "cancel": "Cancel"
   },
   "review": {
     "awaitingYou": "Submissions waiting for your review",
@@ -1280,5 +1281,25 @@
     "emptyHint": "Updates about your jobs, payments and disputes will show up here.",
     "noUnread": "No unread notifications",
     "open": "Open"
+  },
+  "avatar": {
+    "title": "Profile picture",
+    "hint": "A clear photo of your face helps clients and workers trust who they are dealing with. JPEG, PNG or WebP.",
+    "upload": "Upload picture",
+    "change": "Change picture",
+    "remove": "Remove",
+    "removeConfirm": "Remove your profile picture? Your initials will show instead.",
+    "cropTitle": "Crop your picture",
+    "cropHint": "Drag the photo to place your face inside the circle. Use the slider to zoom.",
+    "zoom": "Zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "rotate": "Rotate",
+    "done": "Done",
+    "saved": "Profile picture updated.",
+    "removed": "Profile picture removed.",
+    "failed": "Could not save the picture. Try again.",
+    "wrongType": "Choose a JPEG, PNG or WebP image.",
+    "tooLarge": "That photo is too large. Choose one under 15 MB."
   }
 }

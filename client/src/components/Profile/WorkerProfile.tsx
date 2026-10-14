@@ -114,7 +114,7 @@ const WorkerProfile = () => {
         <Col xs={24} md={8}>
           <Card>
             <Flex vertical align="center" gap={12}>
-              <Avatar name={profile.name} size={72} />
+              <Avatar name={profile.name} src={profile.avatarUrl} size={72} />
               <Typography.Title level={4} style={{ margin: 0 }}>
                 {profile.name}
               </Typography.Title>

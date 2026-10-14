@@ -349,3 +349,33 @@ a:hover {
 .isoko-worker-card__avail--busy { color: #d97706; }
 .isoko-worker-card__avail--busy::before { background: #f59e0b; }
 .isoko-worker-card__actions { margin-top: auto; padding-top: 14px; }
+
+/* Profile picture: the field in Settings and the crop window. */
+.isoko-avatar-field { display: flex; align-items: center; gap: 18px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--isoko-border); }
+.isoko-avatar-field__photo { position: relative; border: 0; padding: 0; background: none; border-radius: 50%; cursor: pointer; flex-shrink: 0; }
+.isoko-avatar-field__photo:focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; }
+.isoko-avatar-field__photo::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: rgba(0, 0, 0, 0); transition: background 0.15s; }
+.isoko-avatar-field__photo:hover::after { background: rgba(0, 0, 0, 0.18); }
+.isoko-avatar-field__badge {
+  position: absolute; right: -2px; bottom: -2px; z-index: 1; width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 14px;
+  background: var(--isoko-ink); color: var(--isoko-surface); border: 2px solid var(--isoko-surface);
+}
+.isoko-crop {
+  position: relative; margin: 0 auto; overflow: hidden; border-radius: 8px;
+  background: #18181b; cursor: grab; touch-action: none; user-select: none;
+}
+.isoko-crop--dragging { cursor: grabbing; }
+.isoko-crop__img { position: absolute; left: 50%; top: 50%; max-width: none; transform-origin: center; pointer-events: none; }
+.isoko-crop__frame {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  border: 2px solid #ffffff; box-shadow: 0 0 0 9999px rgba(9, 9, 11, 0.6);
+}
+/* Thirds, to help centre a face; brighter while dragging. */
+.isoko-crop__grid {
+  position: absolute; inset: 0; border-radius: 50%; opacity: 0.35; transition: opacity 0.15s;
+  background:
+    linear-gradient(to right, transparent calc(33.33% - 0.5px), rgba(255,255,255,0.8) calc(33.33% - 0.5px), rgba(255,255,255,0.8) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255,255,255,0.8) calc(66.66% - 0.5px), rgba(255,255,255,0.8) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.33% - 0.5px), rgba(255,255,255,0.8) calc(33.33% - 0.5px), rgba(255,255,255,0.8) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255,255,255,0.8) calc(66.66% - 0.5px), rgba(255,255,255,0.8) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px));
+}
+.isoko-crop--dragging .isoko-crop__grid { opacity: 0.8; }

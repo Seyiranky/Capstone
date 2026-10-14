@@ -58,7 +58,7 @@ const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: Appl
           >
             <Flex justify="space-between" align="center" gap={12}>
               <div style={{ minWidth: 0 }}>
-                {a.worker ? <IdentityLink id={a.worker.id} name={a.worker.name} size={28} /> : '—'}
+                {a.worker ? <IdentityLink id={a.worker.id} name={a.worker.name} size={28} src={a.worker.avatarUrl} /> : '—'}
               </div>
               <StatusTag status={a.status} />
             </Flex>

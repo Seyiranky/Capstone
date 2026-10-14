@@ -25,6 +25,15 @@ export const userApi = {
   updateProfile: (payload: UpdateProfilePayload) =>
     axiosClient.put<User>('/users/me', payload).then((res) => res.data),
 
+  /** Sets the profile picture: a square image already cropped in the browser. */
+  uploadAvatar: (image: Blob) => {
+    const form = new FormData();
+    form.append('avatar', image, 'avatar.jpg');
+    return axiosClient.post<User>('/users/me/avatar', form).then((res) => res.data);
+  },
+
+  removeAvatar: () => axiosClient.delete<User>('/users/me/avatar').then((res) => res.data),
+
   getPublicProfile: (id: string) => axiosClient.get<PublicProfile>(`/users/${id}`).then((res) => res.data),
 
   getUserSkills: (id: string) => axiosClient.get<UserSkill[]>(`/users/${id}/skills`).then((res) => res.data),

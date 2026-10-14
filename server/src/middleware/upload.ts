@@ -10,6 +10,7 @@ const GIG_IMAGE_DIR = path.join(UPLOAD_ROOT, 'gigs');
 const EVIDENCE_DIR = path.join(UPLOAD_ROOT, 'evidence');
 const JOB_PHOTO_DIR = path.join(UPLOAD_ROOT, 'jobs');
 const MESSAGE_IMAGE_DIR = path.join(UPLOAD_ROOT, 'messages');
+export const AVATAR_DIR = path.join(UPLOAD_ROOT, 'avatars');
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
@@ -212,3 +213,36 @@ export const evidenceLimitFor = (mimetype: string): number => {
 };
 
 export { EVIDENCE_DIR };
+
+/**
+ * A profile picture. The browser crops it to a square and sends a small JPEG,
+ * so 2MB is generous; PNG and WebP are accepted for clients that send those.
+ */
+export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+export const uploadAvatar = multer({
+  storage: diskStorage(AVATAR_DIR),
+  fileFilter: (_req, file, cb) =>
+    ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)
+      ? cb(null, true)
+      : cb(rejectUpload('A profile picture must be a JPEG, PNG or WebP image')),
+  limits: { fileSize: AVATAR_MAX_BYTES, files: 1 },
+}).single('avatar');
+
+/**
+ * Whether a stored file's first bytes are really a JPEG, PNG or WebP image.
+ * The declared type is the uploader's word; the bytes are not. A profile
+ * picture is served to everyone, so anything else is refused.
+ */
+export const looksLikeImage = (filePath: string): boolean => {
+  const fd = fs.openSync(filePath, 'r');
+  try {
+    const head = Buffer.alloc(12);
+    fs.readSync(fd, head, 0, 12, 0);
+    const jpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+    const png = head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const webp = head.toString('ascii', 0, 4) === 'RIFF' && head.toString('ascii', 8, 12) === 'WEBP';
+    return jpeg || png || webp;
+  } finally {
+    fs.closeSync(fd);
+  }
+};
