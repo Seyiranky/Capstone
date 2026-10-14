@@ -11,6 +11,7 @@ const EVIDENCE_DIR = path.join(UPLOAD_ROOT, 'evidence');
 const JOB_PHOTO_DIR = path.join(UPLOAD_ROOT, 'jobs');
 const MESSAGE_IMAGE_DIR = path.join(UPLOAD_ROOT, 'messages');
 export const AVATAR_DIR = path.join(UPLOAD_ROOT, 'avatars');
+const SUPPORT_DIR = path.join(UPLOAD_ROOT, 'support');
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
@@ -242,6 +243,34 @@ export const looksLikeImage = (filePath: string): boolean => {
     const png = head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
     const webp = head.toString('ascii', 0, 4) === 'RIFF' && head.toString('ascii', 8, 12) === 'WEBP';
     return jpeg || png || webp;
+  } finally {
+    fs.closeSync(fd);
+  }
+};
+
+/**
+ * One screenshot or document on a support message. Private: served only with
+ * a signed link, like chat media, because screenshots show numbers and money.
+ */
+export const SUPPORT_ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
+const SUPPORT_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+export const uploadSupportAttachment = multer({
+  storage: diskStorage(SUPPORT_DIR),
+  fileFilter: (_req, file, cb) =>
+    SUPPORT_MIMES.includes(file.mimetype)
+      ? cb(null, true)
+      : cb(rejectUpload('Attach a screenshot (JPEG, PNG or WebP) or a PDF')),
+  limits: { fileSize: SUPPORT_ATTACHMENT_MAX_BYTES, files: 1 },
+}).single('attachment');
+
+/** Whether a stored file really is the image or PDF it claims to be. */
+export const looksLikeImageOrPdf = (filePath: string): boolean => {
+  if (looksLikeImage(filePath)) return true;
+  const fd = fs.openSync(filePath, 'r');
+  try {
+    const head = Buffer.alloc(5);
+    fs.readSync(fd, head, 0, 5, 0);
+    return head.toString('ascii') === '%PDF-';
   } finally {
     fs.closeSync(fd);
   }

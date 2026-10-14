@@ -4,6 +4,7 @@ import { initSocket } from './socket';
 import { assertRequiredEnv } from './config/env';
 import * as paymentService from './services/paymentService';
 import * as disputeService from './services/disputeService';
+import * as supportService from './services/supportService';
 import * as safeVisitService from './services/safeVisitService';
 
 // Fails here rather than at the first request that needs a secret. Without
@@ -32,6 +33,9 @@ setInterval(() => {
   });
   safeVisitService.flagOverdue({ app }).catch((error: unknown) => {
     console.error('Safe visit sweep failed', error);
+  });
+  supportService.autoClose().catch((error: unknown) => {
+    console.error('Support auto-close sweep failed', error);
   });
 }, SWEEP_EVERY_MS).unref();
 

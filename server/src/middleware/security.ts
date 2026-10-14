@@ -84,3 +84,11 @@ export const smsCodeLimiter = limiter({
   keyGenerator: (req) => (req as Request & { user?: { id: string } }).user?.id ?? ip(req),
   message: 'Too many codes requested. Try again in an hour.',
 });
+
+/** Help requests from people who are not signed in: 5 per address an hour. */
+export const supportGuestLimiter = limiter({
+  windowMs: 60 * MINUTE,
+  limit: 5,
+  keyGenerator: ip,
+  message: 'Too many requests from this connection. Try again in an hour.',
+});

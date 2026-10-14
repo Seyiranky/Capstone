@@ -15,7 +15,7 @@ import { secretMatches } from './secrets';
  * Links expire at the end of the next UTC day (24–48 hours), so the same file
  * keeps the same link for a day and browsers can cache it.
  */
-const PRIVATE_DIRS = new Set(['messages', 'evidence']);
+const PRIVATE_DIRS = new Set(['messages', 'evidence', 'support']);
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const secret = () => process.env.UPLOAD_SIGNING_SECRET || requireEnv('JWT_SECRET');

@@ -20,6 +20,9 @@ import { Review, initReview } from './Review';
 import { SafetyEvent, initSafetyEvent } from './SafetyEvent';
 import { SafetyNetEntry, initSafetyNetEntry } from './SafetyNetEntry';
 import { Skill, initSkill } from './Skill';
+import { SupportMessage, initSupportMessage } from './SupportMessage';
+import { SupportSavedReply, initSupportSavedReply } from './SupportSavedReply';
+import { SupportTicket, initSupportTicket } from './SupportTicket';
 import { SkillPassport, initSkillPassport } from './SkillPassport';
 import { SkillTask, initSkillTask } from './SkillTask';
 import { SkillTaskAppeal, initSkillTaskAppeal } from './SkillTaskAppeal';
@@ -100,6 +103,9 @@ initReview(sequelize);
 initSafetyEvent(sequelize);
 initSafetyNetEntry(sequelize);
 initSkill(sequelize);
+initSupportMessage(sequelize);
+initSupportSavedReply(sequelize);
+initSupportTicket(sequelize);
 initSkillPassport(sequelize);
 initSkillTask(sequelize);
 initSkillTaskAppeal(sequelize);
@@ -132,6 +138,9 @@ export const models = {
   SafetyEvent,
   SafetyNetEntry,
   Skill,
+  SupportMessage,
+  SupportSavedReply,
+  SupportTicket,
   SkillPassport,
   SkillTask,
   SkillTaskAppeal,
@@ -175,6 +184,9 @@ export {
   SafetyEvent,
   SafetyNetEntry,
   Skill,
+  SupportMessage,
+  SupportSavedReply,
+  SupportTicket,
   SkillPassport,
   SkillTask,
   SkillTaskAppeal,
