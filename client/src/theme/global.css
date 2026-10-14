@@ -269,3 +269,11 @@ a:hover {
 .isoko-dispute__choice--on { border-color: var(--ant-color-text); box-shadow: 0 0 0 1px var(--ant-color-text); }
 .isoko-dispute__choice-title { font-weight: 600; font-size: 13.5px; }
 .isoko-dispute__choice-body { font-size: 12.5px; color: var(--isoko-muted); }
+
+/* The login form, kept compact: smaller labels and tighter label spacing. */
+.isoko-auth-compact .ant-form-item-label { padding-bottom: 4px !important; }
+.isoko-auth-compact .ant-form-item-label > label { font-size: 13px; height: auto; }
+.isoko-auth-compact .ant-input-affix-wrapper,
+.isoko-auth-compact .ant-input { min-height: 38px; }
+.isoko-auth-compact .ant-input-affix-wrapper .ant-input { min-height: 0; }
+.isoko-auth-compact .ant-input-affix-wrapper { padding-block: 0; }

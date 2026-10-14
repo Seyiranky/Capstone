@@ -76,10 +76,10 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
         <div style={{ position: 'absolute', top: 20, right: 24 }}>
           <LanguageToggle />
         </div>
-        <div style={{ width: '100%', maxWidth: 384 }}>
+        <div style={{ width: '100%', maxWidth: 352 }}>
           {/* The mark, large enough to read. On the dark theme it sits on a white
               tile so the navy stays legible. */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
             <span
               style={{
                 display: 'inline-flex',
@@ -89,7 +89,7 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
                 flexShrink: 0,
               }}
             >
-              <img src={logo} alt="Isoko Talents" style={{ height: showBrand ? 104 : 88, display: 'block' }} />
+              <img src={logo} alt="Isoko Talents" style={{ height: showBrand ? 92 : 80, display: 'block' }} />
             </span>
           </div>
           {children}

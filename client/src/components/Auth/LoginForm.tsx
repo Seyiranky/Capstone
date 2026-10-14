@@ -18,20 +18,21 @@ const LoginForm = () => {
 
   return (
     <div>
-      <Typography.Title level={2} style={{ marginBottom: 4 }}>
+      <Typography.Title level={3} style={{ marginBottom: 2, fontSize: 24, textAlign: 'center' }}>
         {t('auth.login.title')}
       </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ marginBottom: 24 }}>
+      <Typography.Paragraph type="secondary" style={{ marginBottom: 18, fontSize: 13, textAlign: 'center' }}>
         {t('auth.login.subtitle')}
       </Typography.Paragraph>
 
       {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
 
-      <Form layout="vertical" onFinish={onFinish} requiredMark={false} size="large">
+      <Form layout="vertical" onFinish={onFinish} requiredMark={false} className="isoko-auth-compact">
         <Form.Item
           name="email"
           label={t('auth.login.emailLabel')}
           rules={[{ required: true, type: 'email' }]}
+          style={{ marginBottom: 12 }}
         >
           <Input autoComplete="email" />
         </Form.Item>
@@ -39,25 +40,25 @@ const LoginForm = () => {
           name="password"
           label={t('auth.login.passwordLabel')}
           rules={[{ required: true }]}
-          style={{ marginBottom: 8 }}
+          style={{ marginBottom: 4 }}
         >
           <Input.Password autoComplete="current-password" />
         </Form.Item>
-        <div style={{ textAlign: 'right', marginBottom: 16 }}>
+        <div style={{ textAlign: 'right', marginBottom: 14, fontSize: 13 }}>
           <Link to="/forgot-password">{t('auth.login.forgotPassword')}</Link>
         </div>
-        <Button type="primary" htmlType="submit" block loading={status === 'loading'}>
+        <Button type="primary" htmlType="submit" block loading={status === 'loading'} style={{ height: 40 }}>
           {t('auth.login.submit')}
         </Button>
       </Form>
 
-      <Divider plain style={{ color: 'rgba(128,128,128,0.7)' }}>
+      <Divider plain style={{ color: 'rgba(128,128,128,0.7)', margin: '14px 0', fontSize: 13 }}>
         {t('auth.login.or')}
       </Divider>
 
       <GoogleLoginButton />
 
-      <Typography.Paragraph style={{ textAlign: 'center', marginTop: 24, marginBottom: 0 }}>
+      <Typography.Paragraph style={{ textAlign: 'center', marginTop: 16, marginBottom: 0, fontSize: 13 }}>
         {t('auth.login.noAccount')} <Link to="/register">{t('auth.login.registerLink')}</Link>
       </Typography.Paragraph>
     </div>
