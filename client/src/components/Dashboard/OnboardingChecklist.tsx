@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, Flex, Progress, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { CheckCircleFilled } from '@ant-design/icons';
+import { CheckCircleFilled, RightOutlined } from '@ant-design/icons';
 
 export interface ChecklistItem {
   key: string;
@@ -11,6 +11,10 @@ export interface ChecklistItem {
   action: string;
 }
 
+/**
+ * The first steps on Isoko. A step still to do is one link, the whole row,
+ * that goes straight to where it is done; finished steps are struck through.
+ */
 const OnboardingChecklist = ({ items }: { items: ChecklistItem[] }) => {
   const { t } = useTranslation();
   const doneCount = items.filter((i) => i.done).length;
@@ -28,31 +32,24 @@ const OnboardingChecklist = ({ items }: { items: ChecklistItem[] }) => {
           format={() => `${doneCount}/${items.length}`}
         />
         <div style={{ flex: 1, minWidth: 240 }}>
-          {items.map((item) => (
-            <Flex key={item.key} align="center" gap={10} style={{ padding: '7px 0' }}>
-              {item.done ? (
+          {items.map((item) =>
+            item.done ? (
+              <Flex key={item.key} align="center" gap={10} className="isoko-setup-row isoko-setup-row--done">
                 <CheckCircleFilled style={{ color: 'var(--isoko-navy)', fontSize: 16 }} />
-              ) : (
-                <span
-                  style={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: 999,
-                    border: '1.5px solid #d4d4d8',
-                    flexShrink: 0,
-                  }}
-                />
-              )}
-              <Typography.Text
-                delete={item.done}
-                type={item.done ? 'secondary' : undefined}
-                style={{ flex: 1 }}
-              >
-                {item.label}
-              </Typography.Text>
-              {!item.done && <Link to={item.to}>{item.action}</Link>}
-            </Flex>
-          ))}
+                <Typography.Text delete type="secondary" style={{ flex: 1 }}>
+                  {item.label}
+                </Typography.Text>
+              </Flex>
+            ) : (
+              <Link key={item.key} to={item.to} className="isoko-setup-row">
+                <span className="isoko-setup-row__circle" />
+                <span className="isoko-setup-row__label">{item.label}</span>
+                <span className="isoko-setup-row__action">
+                  {item.action} <RightOutlined />
+                </span>
+              </Link>
+            ),
+          )}
         </div>
       </Flex>
     </Card>

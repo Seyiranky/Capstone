@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, Flex, Grid, Segmented, Space, Tabs, Typography } from 'antd';
 import {
@@ -27,6 +28,9 @@ const Settings = () => {
   const { mode, setMode } = useThemeMode();
   const screens = Grid.useBreakpoint();
   const lang = i18n.resolvedLanguage === 'rw' ? 'rw' : 'en';
+  // ?tab=skills (and the others) opens a section directly, e.g. from the dashboard checklist.
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') ?? 'profile';
 
   const items = [
     {
@@ -183,6 +187,8 @@ const Settings = () => {
       <Flex style={{ maxWidth: 860 }}>
         <Tabs
           items={items}
+          activeKey={items.some((i) => i.key === tab) ? tab : 'profile'}
+          onChange={(key) => setParams({ tab: key }, { replace: true })}
           tabPosition={screens.md ? 'left' : 'top'}
           style={{ width: '100%' }}
         />

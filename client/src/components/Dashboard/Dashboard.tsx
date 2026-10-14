@@ -133,14 +133,14 @@ const Dashboard = () => {
             key: 'loc',
             label: t('dashboard.checklist.addLocation'),
             done: profile.locationLat != null,
-            to: '/settings',
+            to: '/settings?tab=profile',
             action: t('dashboard.checklist.setLocation'),
           },
           {
             key: 'skill',
             label: t('dashboard.checklist.submitSkill'),
             done: skills.length > 0 || tasks.length > 0,
-            to: '/dashboard',
+            to: '/settings?tab=skills',
             action: t('dashboard.checklist.addSkill'),
           },
           {
@@ -158,7 +158,7 @@ const Dashboard = () => {
               key: 'bio',
               label: t('dashboard.checklist.addBio'),
               done: !!profile.bio,
-              to: '/settings',
+              to: '/settings?tab=profile',
               action: t('dashboard.checklist.editProfile'),
             },
             {

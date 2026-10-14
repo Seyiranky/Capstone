@@ -559,3 +559,15 @@ a:hover {
 .isoko-support-body { padding: 20px 24px; }
 .isoko-support-foot { padding: 14px 24px 18px; }
 .isoko-support-side { padding: 0; }
+
+/* Dashboard set-up checklist: each step still to do is a link, the whole row. */
+.isoko-setup-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin: 0 -10px; border-radius: 8px; color: var(--ant-color-text) !important; }
+a.isoko-setup-row:hover { background: var(--ant-color-fill-quaternary); }
+a.isoko-setup-row:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
+.isoko-setup-row__circle { width: 16px; height: 16px; border-radius: 999px; border: 1.5px solid #d4d4d8; flex-shrink: 0; }
+.isoko-setup-row__label { flex: 1; min-width: 0; }
+.isoko-setup-row__action {
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding: 4px 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 500; background: var(--isoko-ink); color: var(--isoko-surface);
+}
+.isoko-setup-row__action .anticon { font-size: 10px; }
