@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { apiErrorMessage } from '../../utils/apiError';
 import { isAxiosError } from 'axios';
 import { Alert, App, Button, Card, Flex, Input, Radio, Space, Typography } from 'antd';
 import { BellOutlined, MailOutlined, MessageOutlined } from '@ant-design/icons';
@@ -129,6 +130,9 @@ const NotificationPreferences = () => {
       const status = isAxiosError(error) ? error.response?.status : undefined;
       if (status === 429) {
         setCooldown(Number(isAxiosError(error) && error.response?.data?.retryAfter) || 60);
+      } else if (status === 409) {
+        // The number is already confirmed on another account; say so plainly.
+        message.error(apiErrorMessage(error, t('settings.notifications.smsSendFailed')));
       } else {
         message.error(
           t(
