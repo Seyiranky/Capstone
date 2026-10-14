@@ -25,9 +25,10 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
+            // The words sit at the foot of the photo, clear of the worker's face.
+            justifyContent: 'flex-end',
             gap: 20,
-            padding: 56,
+            padding: '56px 56px 64px',
             color: '#fff',
             background: '#0b0b0d',
             overflow: 'hidden',
@@ -47,14 +48,15 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(180deg, rgba(9,9,11,0.35) 0%, rgba(9,9,11,0.55) 60%, rgba(9,9,11,0.7) 100%)',
+                'linear-gradient(180deg, rgba(9,9,11,0.05) 0%, rgba(9,9,11,0.15) 40%, rgba(9,9,11,0.7) 72%, rgba(9,9,11,0.88) 100%)',
             }}
           />
-          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 440 }}>
-            <Typography.Title level={1} style={{ color: '#fff', margin: 0, fontSize: 40, lineHeight: 1.15, textWrap: 'balance' }}>
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 480 }}>
+            <span style={{ width: 48, height: 4, borderRadius: 2, background: '#ffffff' }} />
+            <Typography.Title level={1} style={{ color: '#fff', margin: 0, fontSize: 38, lineHeight: 1.15, letterSpacing: '-0.01em', textWrap: 'balance' }}>
               {t('authPanel.title')}
             </Typography.Title>
-            <Typography.Paragraph style={{ color: 'rgba(255,255,255,0.88)', fontSize: 16.5, lineHeight: 1.6, margin: 0, textWrap: 'pretty' }}>
+            <Typography.Paragraph style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16, lineHeight: 1.6, margin: 0, maxWidth: 420, textWrap: 'pretty' }}>
               {t('authPanel.body')}
             </Typography.Paragraph>
           </div>
