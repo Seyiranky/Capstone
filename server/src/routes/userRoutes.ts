@@ -10,7 +10,6 @@ const router = express.Router();
 router.get('/me', verifyToken, userController.getProfile);
 router.put('/me', verifyToken, userController.updateProfile);
 router.get('/me/export', verifyToken, userController.exportMyData);
-router.get('/me/growth', verifyToken, authorize('worker'), userController.getGrowth);
 // Before '/:id', which would otherwise take 'search' as an id.
 router.get('/search', verifyToken, userController.searchWorkers);
 router.get('/directory', verifyToken, authorize('client', 'admin'), workerDirectoryController.list);

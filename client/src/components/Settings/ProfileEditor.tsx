@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { App, Button, Divider, Form, Input, InputNumber, Select, Typography } from 'antd';
+import { App, Button, Divider, Form, Input, InputNumber, Radio, Select, Typography } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCurrentUser } from '../../store/slices/authSlice';
 import { userApi } from '../../api/userApi';
@@ -15,6 +15,8 @@ interface ProfileValues {
   locationName: string;
   yearsExperience?: number | null;
   experienceSummary?: string;
+  availability?: 'available' | 'busy' | 'away';
+  availableFrom?: string;
 }
 
 const ProfileEditor = () => {
@@ -39,6 +41,9 @@ const ProfileEditor = () => {
               // they previously set, not merely change it.
               yearsExperience: values.yearsExperience ?? null,
               experienceSummary: values.experienceSummary || null,
+              // Clients filter the directory by this; away hides a worker from shortlists until the date.
+              availability: values.availability,
+              availableFrom: values.availability === 'away' && values.availableFrom ? values.availableFrom : null,
             }
           : {}),
       });
@@ -59,6 +64,8 @@ const ProfileEditor = () => {
         locationName: findLocationName(profile?.locationLat, profile?.locationLng),
         yearsExperience: profile?.yearsExperience ?? undefined,
         experienceSummary: profile?.experienceSummary ?? '',
+        availability: profile?.availability ?? 'available',
+        availableFrom: profile?.availableFrom ? profile.availableFrom.slice(0, 10) : undefined,
       }}
     >
       <Form.Item name="bio" label={t('settings.bioLabel')}>
@@ -66,6 +73,24 @@ const ProfileEditor = () => {
       </Form.Item>
       {role === 'worker' && (
         <>
+          <Form.Item name="availability" label={t('growth.availability')} extra={t('growth.availabilityHelp')}>
+            <Radio.Group optionType="button" buttonStyle="solid">
+              {(['available', 'busy', 'away'] as const).map((a) => (
+                <Radio.Button key={a} value={a}>
+                  {t(`growth.av_${a}`)}
+                </Radio.Button>
+              ))}
+            </Radio.Group>
+          </Form.Item>
+          <Form.Item noStyle shouldUpdate={(a, b) => a.availability !== b.availability}>
+            {({ getFieldValue }) =>
+              getFieldValue('availability') === 'away' && (
+                <Form.Item name="availableFrom" label={t('growth.awayUntil')} rules={[{ required: true }]}>
+                  <Input type="date" min={new Date().toISOString().slice(0, 10)} style={{ maxWidth: 220 }} />
+                </Form.Item>
+              )
+            }
+          </Form.Item>
           <Form.Item name="locationName" label={t('settings.locationLabel')}>
             <Select options={KIGALI_LOCATIONS.map((l) => ({ value: l.name, label: l.name }))} />
           </Form.Item>

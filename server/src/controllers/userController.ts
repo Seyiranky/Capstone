@@ -15,7 +15,6 @@ import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
 import * as workHistoryService from '../services/workHistoryService';
 import * as levelService from '../services/levelService';
-import * as growthService from '../services/growthService';
 import * as sms from '../lib/channels/sms';
 
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
@@ -254,7 +253,3 @@ export const searchWorkers = async (req: Request, res: Response): Promise<void> 
   res.json(workers);
 };
 
-/** Everything the worker's Growth page shows, in one call. */
-export const getGrowth = async (req: Request, res: Response): Promise<void> => {
-  res.json(await growthService.forWorker(authed(req).id));
-};

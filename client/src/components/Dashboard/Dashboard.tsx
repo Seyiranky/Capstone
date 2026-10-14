@@ -147,7 +147,8 @@ const Dashboard = () => {
           {
             key: 'apply',
             label: t('dashboard.checklist.applyFirstGig'),
-            done: myApplicationCount > 0,
+            // Work also comes by invitation, so a worker with any job has done this step.
+            done: myApplicationCount > 0 || matches.length > 0,
             to: '/marketplace',
             action: t('dashboard.checklist.browseGigs'),
           },
@@ -174,14 +175,10 @@ const Dashboard = () => {
   const firstName = profile.name.split(' ')[0];
   const actions =
     role === 'worker' ? (
-      <>
-        <Button size="large" icon={<PlusOutlined />} onClick={() => setModal('skill')}>
-          {t('dashboard.addNewSkill')}
-        </Button>
-        <Button type="primary" size="large" onClick={() => navigate('/marketplace')}>
-          {t('dashboard.hero.findWork')}
-        </Button>
-      </>
+      // Skills are added from the Skills card, beside the skills themselves.
+      <Button type="primary" size="large" onClick={() => navigate('/marketplace')}>
+        {t('dashboard.hero.findWork')}
+      </Button>
     ) : role === 'client' ? (
       <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => navigate('/marketplace?post=1')}>
         {t('dashboard.hero.postGig')}

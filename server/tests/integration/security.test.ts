@@ -183,7 +183,7 @@ describe('sign-up and sign-in', () => {
 
 describe('phone numbers', () => {
   test('a number confirmed on one account cannot be confirmed on another', async () => {
-    const number = `+2507${String(stamp).slice(-8)}`;
+    const number = `+25078${String(stamp).slice(-7)}`;
     await users.client.update({ phone: number, phoneVerifiedAt: new Date() });
     const res = await request(app).post('/api/auth/send-phone-code').set(as('worker')).send({ phone: number });
     expect(res.status).toBe(409);

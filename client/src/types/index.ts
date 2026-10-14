@@ -71,6 +71,8 @@ export interface User {
   reviewerTier?: 'admin' | 'peer' | null;
   trustedContactName?: string | null;
   trustedContactPhone?: string | null;
+  availability?: 'available' | 'busy' | 'away';
+  availableFrom?: string | null;
 }
 
 export interface Skill {
@@ -652,23 +654,4 @@ export interface WorkerLevel {
   level: LevelKey;
   next: Exclude<LevelKey, 'new'> | null;
   steps: { key: Exclude<LevelKey, 'new'>; reached: boolean; criteria: { key: string; value: number; target: number; met: boolean }[] }[];
-}
-
-export interface Growth {
-  level: WorkerLevel;
-  availability: 'available' | 'busy' | 'away';
-  availableFrom: string | null;
-  goal: { monthlyGoal: number | null; earnedThisMonth: number };
-  ladder: {
-    skillId: string;
-    skill: string | null;
-    category: SkillCategory | null;
-    provenance: Provenance;
-    verificationStatus: string;
-    proficiencyLevel: number;
-  }[];
-  demand: {
-    gigs: { id: string; title: string; budget: number; lat: number; lng: number; skill: string | null; category: SkillCategory | null }[];
-    rates: RateGuide[];
-  };
 }

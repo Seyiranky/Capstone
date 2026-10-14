@@ -108,17 +108,28 @@ describe('replaying', () => {
     expect(await deadLetters()).toHaveLength(0);
   });
 
-  test('an item that keeps failing eventually stops and is shown to the worker', async () => {
+  test('an item the server keeps failing on eventually stops and is shown to the worker', async () => {
     await enqueue({ method: 'post', url: '/gig-applications', body: { gigId: 'g1' } });
 
     for (let i = 0; i < 6; i += 1) {
       await flush(async () => {
-        throw networkError();
+        throw Object.assign(new Error('Internal Server Error'), { response: { status: 500 } });
       });
     }
 
     expect(await queueSize()).toBe(0);
     expect(await deadLetters()).toHaveLength(1);
+  });
+
+  test('an unreachable server never uses up attempts, so a long outage loses nothing', async () => {
+    await enqueue({ method: 'post', url: '/gig-applications', body: { gigId: 'g2' } });
+    for (let i = 0; i < 10; i += 1) {
+      await flush(async () => {
+        throw networkError();
+      });
+    }
+    expect(await queueSize()).toBe(1);
+    expect(await deadLetters()).toHaveLength(0);
   });
 
   test('one failure does not block the rest of the queue', async () => {

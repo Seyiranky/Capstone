@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
-import type { Growth, PreferredChannel, PublicProfile, User, UserSkill, WorkerHit, WorkHistoryEntry } from '../types';
+import type { PreferredChannel, PublicProfile, User, UserSkill, WorkerHit, WorkHistoryEntry } from '../types';
 
 export interface UpdateProfilePayload {
   name?: string;
@@ -35,7 +35,6 @@ export const userApi = {
   searchWorkers: (q: string) =>
     axiosClient.get<WorkerHit[]>('/users/search', { params: { q } }).then((res) => res.data),
 
-  growth: () => axiosClient.get<Growth>('/users/me/growth').then((res) => res.data),
 
   exportMyData: () => axiosClient.get<Record<string, unknown>>('/users/me/export').then((res) => res.data),
 };

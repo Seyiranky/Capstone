@@ -31,11 +31,21 @@ const OfflineBanner = () => {
 
     refresh();
     const poll = setInterval(refresh, 4000);
+    // The browser fires "online" only when its own connection returns. When it
+    // was the server that was unreachable, nothing fires, so saved actions are
+    // also retried every 15 seconds while any are waiting.
+    const retry = setInterval(() => {
+      if (!navigator.onLine) return;
+      queueSize().then((n) => {
+        if (n > 0) flushOfflineQueue().finally(refresh);
+      });
+    }, 15000);
 
     return () => {
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
       clearInterval(poll);
+      clearInterval(retry);
       stopSync();
     };
   }, []);

@@ -344,7 +344,9 @@ of their open gigs: a `direct` invitation the worker confirms, after which the c
 escrow as for any match. At most 5 direct invitations wait on a gig at once; posting and offering
 need a confirmed contact.
 
-## Round 3 — the worker's side (research of 14 Oct 2026, done 14 Oct)
+## Round 3 — the worker's side
+
+> The Growth page (monthly goal, evidence ladder, local demand, RPL pack) was removed at the owner's request on 14 Oct. Levels remain on profiles and in the directory; availability moved to Settings › Profile. (research of 14 Oct 2026, done 14 Oct)
 
 What worker-facing platforms give their workers, and how Isoko does it differently.
 

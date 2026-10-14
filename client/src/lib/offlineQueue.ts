@@ -108,6 +108,13 @@ export const flush = async (send: Sender): Promise<{ sent: number; failed: numbe
           continue;
         }
 
+        // Never reached the server (offline, or the server was down): try again
+        // later without using up an attempt, or a long outage would bury the action.
+        if (!status) {
+          remaining.push({ ...item, lastError: message });
+          continue;
+        }
+
         const attempts = item.attempts + 1;
         if (attempts >= MAX_ATTEMPTS) {
           remaining.push({ ...item, attempts, dead: true, lastError: message });

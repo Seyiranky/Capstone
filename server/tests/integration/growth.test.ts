@@ -84,15 +84,3 @@ describe('availability', () => {
     expect(await inList()).toBe(true);
   });
 });
-
-describe('growth page', () => {
-  test('returns level, goal progress, the skill ladder and open work in the trades', async () => {
-    await request(app).put('/api/users/me').set(as('worker')).send({ monthlyGoal: 150000 });
-    const res = await request(app).get('/api/users/me/growth').set(as('worker'));
-    expect(res.status).toBe(200);
-    expect(res.body.goal.monthlyGoal).toBe(150000);
-    expect(res.body.ladder[0]).toMatchObject({ skill: skill.name, verificationStatus: 'verified' });
-    expect(res.body.demand.gigs.every((g: { category: string }) => g.category === 'digital_web')).toBe(true);
-    expect((await request(app).get('/api/users/me/growth').set(as('client'))).status).toBe(403);
-  });
-});
