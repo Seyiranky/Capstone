@@ -52,7 +52,6 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
             }}
           />
           <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 480 }}>
-            <span style={{ width: 48, height: 4, borderRadius: 2, background: '#ffffff' }} />
             <Typography.Title level={1} style={{ color: '#fff', margin: 0, fontSize: 38, lineHeight: 1.15, letterSpacing: '-0.01em', textWrap: 'balance' }}>
               {t('authPanel.title')}
             </Typography.Title>
