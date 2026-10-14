@@ -1,95 +1,169 @@
+import type { MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, Card, Flex, Typography } from 'antd';
-import { EnvironmentOutlined, MessageOutlined, SendOutlined } from '@ant-design/icons';
+import { Button, Flex, Tooltip, Typography } from 'antd';
+import {
+  CheckCircleFilled,
+  EnvironmentOutlined,
+  MessageOutlined,
+  SafetyCertificateFilled,
+  SendOutlined,
+  StarFilled,
+} from '@ant-design/icons';
 import Avatar from '../common/Avatar';
-import ProvenanceTag from '../common/ProvenanceTag';
-import LevelBadge from '../Growth/LevelBadge';
-import VerificationBadges from '../Trust/VerificationBadges';
 import type { DirectoryWorker } from '../../api/directoryApi';
 
-/** One worker in the directory: who they are, how their skills were proven, and how to reach them. */
-const WorkerCard = ({ worker, onOffer }: { worker: DirectoryWorker; onOffer?: (w: DirectoryWorker) => void }) => {
+const MAX_SKILLS = 3;
+
+/** Skills that rest on more than the worker's own word. */
+const isProven = (p: string | null) => p != null && p !== 'self_declared';
+
+/**
+ * One worker in the directory.
+ *
+ * The whole card opens the worker's profile. A skill narrows the list to its
+ * trade, the area to that area, so a client can browse from what they see.
+ */
+const WorkerCard = ({
+  worker,
+  onOffer,
+  onTrade,
+  onArea,
+}: {
+  worker: DirectoryWorker;
+  onOffer?: (w: DirectoryWorker) => void;
+  onTrade?: (category: string) => void;
+  onArea?: (area: string) => void;
+}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const unrated = worker.reviewCount === 0;
+  const verified = worker.phoneVerified && worker.emailVerified;
+  const profile = `/profile/${worker.id}`;
+  const shown = worker.skills.slice(0, MAX_SKILLS);
+  const more = worker.skills.length - shown.length;
+
+  // Buttons and chips inside the card act on their own, not as "open profile".
+  const own = (fn: () => void) => (e: MouseEvent) => {
+    e.stopPropagation();
+    fn();
+  };
 
   return (
-    <Card style={{ height: '100%' }} styles={{ body: { padding: 18, height: '100%', display: 'flex', flexDirection: 'column' } }}>
+    <div
+      className="isoko-worker-card"
+      role="link"
+      tabIndex={0}
+      onClick={() => navigate(profile)}
+      onKeyDown={(e) => e.key === 'Enter' && e.target === e.currentTarget && navigate(profile)}
+    >
       <Flex gap={12} align="flex-start">
-        <Avatar name={worker.name} size={44} />
+        <span className="isoko-worker-card__avatar">
+          <Avatar name={worker.name} size={48} />
+          <Tooltip title={t(`growth.av_${worker.availability}`)}>
+            <span className={`isoko-worker-card__presence isoko-worker-card__presence--${worker.availability}`} />
+          </Tooltip>
+        </span>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <Link to={`/profile/${worker.id}`} style={{ color: 'inherit' }}>
-            <Typography.Text strong style={{ fontSize: 15 }} ellipsis>
+          <Flex align="center" gap={6}>
+            <Link to={profile} onClick={(e) => e.stopPropagation()} className="isoko-worker-card__name">
               {worker.name}
-            </Typography.Text>
-          </Link>
-          <Flex gap={6} wrap="wrap" align="center" style={{ marginTop: 4 }}>
-            <LevelBadge level={worker.level} />
-            <span
-              className={`isoko-status isoko-status--${
-                worker.availability === 'available' ? 'success' : worker.availability === 'busy' ? 'warning' : 'neutral'
-              }`}
-            >
-              {t(`growth.av_${worker.availability}`)}
-            </span>
+            </Link>
+            {verified && (
+              <Tooltip title={t('workers.verified')}>
+                <CheckCircleFilled style={{ color: '#2563eb', fontSize: 14, flexShrink: 0 }} />
+              </Tooltip>
+            )}
           </Flex>
+          <div className="isoko-worker-card__sub">
+            {worker.level && <span>{t(`growth.level_${worker.level}`)}</span>}
+            {worker.level && worker.area && <span aria-hidden> · </span>}
+            {worker.area && (
+              <button
+                type="button"
+                className="isoko-worker-card__area"
+                onClick={own(() => onArea?.(worker.area!))}
+                title={t('workers.filterArea', { area: worker.area })}
+              >
+                <EnvironmentOutlined /> {worker.area}
+              </button>
+            )}
+          </div>
         </div>
-        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <Typography.Text strong style={{ fontSize: 18, display: 'block', lineHeight: 1.1 }}>
-            {unrated ? t('workers.new') : worker.trustScore.toFixed(1)}
-          </Typography.Text>
-          <Typography.Text type="secondary" style={{ fontSize: 11.5 }}>
-            {unrated ? t('workers.noReviews') : t('workers.reviews', { count: worker.reviewCount })}
-          </Typography.Text>
+        <div className="isoko-worker-card__rating">
+          {unrated ? (
+            <span className="isoko-worker-card__new">{t('workers.new')}</span>
+          ) : (
+            <>
+              <span className="isoko-worker-card__score">
+                <StarFilled style={{ color: '#f59e0b', fontSize: 14 }} /> {worker.trustScore.toFixed(1)}
+              </span>
+              <span className="isoko-worker-card__count">{t('workers.reviews', { count: worker.reviewCount })}</span>
+            </>
+          )}
         </div>
       </Flex>
 
       {worker.summary && (
-        <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ fontSize: 13, margin: '12px 0 0' }}>
+        <Typography.Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ fontSize: 13, margin: '14px 0 0' }}>
           {worker.summary}
         </Typography.Paragraph>
       )}
 
-      <Flex vertical gap={6} style={{ marginTop: 12 }}>
-        {worker.skills.map((s) => (
-          <Flex key={s.name} justify="space-between" align="center" gap="4px 8px" wrap="wrap">
-            <Typography.Text style={{ fontSize: 13 }}>{s.name}</Typography.Text>
-            {s.provenance && <ProvenanceTag provenance={s.provenance} />}
-          </Flex>
+      <Flex gap={6} wrap="wrap" style={{ marginTop: 14 }}>
+        {shown.map((s) => (
+          <Tooltip
+            key={s.name}
+            title={
+              s.provenance
+                ? `${t(`credentials.tier.${s.provenance}`)}. ${t('workers.filterTrade', { name: s.name })}`
+                : t('workers.filterTrade', { name: s.name })
+            }
+          >
+            <button type="button" className="isoko-skill-chip" onClick={own(() => onTrade?.(s.category))}>
+              {isProven(s.provenance) && <SafetyCertificateFilled className="isoko-skill-chip__proof" />}
+              {s.name}
+            </button>
+          </Tooltip>
         ))}
+        {more > 0 && <span className="isoko-skill-chip isoko-skill-chip--more">+{more}</span>}
       </Flex>
 
-      <div style={{ marginTop: 12 }}>
-        <VerificationBadges phone={worker.phoneVerified} email={worker.emailVerified} size="small" />
+      <div className="isoko-worker-card__stats">
+        <span>
+          <strong>{worker.completedJobCount}</strong> {t('workers.paidJobsLabel', { count: worker.completedJobCount })}
+        </span>
+        {worker.yearsExperience ? (
+          <span>
+            <strong>{worker.yearsExperience}</strong> {t('workers.yearsLabel', { count: worker.yearsExperience })}
+          </span>
+        ) : null}
+        <span className={`isoko-worker-card__avail isoko-worker-card__avail--${worker.availability}`}>
+          {t(`growth.av_${worker.availability}`)}
+        </span>
       </div>
 
-      <Typography.Text type="secondary" style={{ fontSize: 12.5, marginTop: 8 }}>
-        {t('workers.paidJobs', { count: worker.completedJobCount })}
-        {worker.yearsExperience ? ` · ${t('workers.years', { count: worker.yearsExperience })}` : ''}
-        {worker.area && (
-          <>
-            {' · '}
-            <EnvironmentOutlined /> {worker.area}
-          </>
-        )}
-      </Typography.Text>
-
-      <Flex gap={8} style={{ marginTop: 'auto', paddingTop: 14 }}>
+      <Flex gap={8} className="isoko-worker-card__actions">
         <Button
           block
           icon={<MessageOutlined />}
-          onClick={() => navigate('/notifications', { state: { contact: { id: worker.id, name: worker.name } } })}
+          onClick={own(() => navigate('/notifications', { state: { contact: { id: worker.id, name: worker.name } } }))}
         >
           {t('workers.message')}
         </Button>
         {onOffer && (
-          <Button block type="primary" icon={<SendOutlined />} disabled={worker.availability === 'away'} onClick={() => onOffer(worker)}>
+          <Button
+            block
+            type="primary"
+            icon={<SendOutlined />}
+            disabled={worker.availability === 'away'}
+            onClick={own(() => onOffer(worker))}
+          >
             {t('workers.offer')}
           </Button>
         )}
       </Flex>
-    </Card>
+    </div>
   );
 };
 

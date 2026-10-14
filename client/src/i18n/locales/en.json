@@ -1221,7 +1221,16 @@
     "offered": "Offer sent to {{name}}. You will be told when they answer.",
     "offerFailed": "Could not send the offer. Try again.",
     "noOpenGigs": "You have no open gig to offer yet. Gigs open once an admin approves them.",
-    "postFirst": "Post a gig"
+    "postFirst": "Post a gig",
+    "verified": "Phone and email confirmed",
+    "filterTrade": "Click to show only {{name}} workers",
+    "filterArea": "Show only workers in {{area}}",
+    "clearFilters": "Clear filters",
+    "sortBy": "Sort:",
+    "paidJobsLabel_one": "paid job",
+    "paidJobsLabel_other": "paid jobs",
+    "yearsLabel_one": "year experience",
+    "yearsLabel_other": "years experience"
   },
   "pay": {
     "inProgress": "Job in progress",

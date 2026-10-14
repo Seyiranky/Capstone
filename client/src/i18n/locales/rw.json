@@ -1221,7 +1221,16 @@
     "offered": "Akazi koherejwe kuri {{name}}. Uzamenyeshwa igisubizo.",
     "offerFailed": "Ntibyoherejwe. Ongera ugerageze.",
     "noOpenGigs": "Nta kazi gafunguye ufite. Akazi gafunguka umuyobozi amaze kukemeza.",
-    "postFirst": "Tanga akazi"
+    "postFirst": "Tanga akazi",
+    "verified": "Telefoni na imeyili byemejwe",
+    "filterTrade": "Kanda urebe abakora {{name}} gusa",
+    "filterArea": "Erekana abakozi bo muri {{area}} gusa",
+    "clearFilters": "Kuraho akayunguruzo",
+    "sortBy": "Tondeka:",
+    "paidJobsLabel_one": "akazi kishyuwe",
+    "paidJobsLabel_other": "imirimo yishyuwe",
+    "yearsLabel_one": "umwaka w'uburambe",
+    "yearsLabel_other": "imyaka y'uburambe"
   },
   "pay": {
     "inProgress": "Akazi karakorwa",

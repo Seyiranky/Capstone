@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Button,
+  Card,
   Col,
   Empty,
   Flex,
@@ -8,11 +10,15 @@ import {
   Row,
   Select,
   Skeleton,
-  Space,
-  Switch,
   Typography,
 } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  CheckOutlined,
+  CloseOutlined,
+  SafetyCertificateOutlined,
+  SearchOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
 import PageContainer from "../Layout/PageContainer";
 import WorkerCard from "./WorkerCard";
 import OfferGigModal from "./OfferGigModal";
@@ -73,6 +79,19 @@ const FindWorkersPage = () => {
     };
   }, [query]);
 
+  const filtered = Boolean(
+    query.q || query.category || query.area || query.proven || query.available,
+  );
+  const clearFilters = () => {
+    setSearch("");
+    setQuery({ sort: query.sort });
+  };
+  // A skill or an area clicked on a card narrows the list to it.
+  const pick = (patch: DirectoryQuery) => {
+    setQuery((q) => ({ ...q, ...patch }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const tradeOptions = useMemo(
     () => [
       { value: "", label: t("workers.allTrades") },
@@ -83,84 +102,114 @@ const FindWorkersPage = () => {
 
   return (
     <PageContainer title={t("workers.title")} subtitle={t("workers.subtitle")}>
-      <Flex wrap="wrap" gap={10} align="center" style={{ marginBottom: 12 }}>
-        <Input
-          allowClear
-          prefix={<SearchOutlined />}
-          placeholder={t("workers.searchPlaceholder")}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ flex: "1 1 240px", maxWidth: 360 }}
-        />
-        <Select
-          value={query.category ?? ""}
-          options={tradeOptions}
-          onChange={(v) =>
-            setQuery((q) => ({ ...q, category: v || undefined }))
-          }
-          style={{ flex: "1 1 180px", maxWidth: 240 }}
-        />
-        <Select
-          value={query.area ?? ""}
-          options={[
-            { value: "", label: t("workers.anyArea") },
-            ...AREAS.map((a) => ({ value: a, label: a })),
-          ]}
-          onChange={(v) => setQuery((q) => ({ ...q, area: v || undefined }))}
-          style={{ flex: "1 1 160px", maxWidth: 200 }}
-        />
-        <Select
-          value={query.sort}
-          options={(["trust", "jobs", "newest"] as const).map((s) => ({
-            value: s,
-            label: t(`workers.sort_${s}`),
-          }))}
-          onChange={(v) => setQuery((q) => ({ ...q, sort: v }))}
-          style={{ flex: "0 1 170px" }}
-        />
-      </Flex>
-      <Flex wrap="wrap" gap={20} align="center" style={{ marginBottom: 16 }}>
-        <Space size={8}>
-          <Switch
-            size="small"
-            checked={!!query.proven}
-            onChange={(v) =>
-              setQuery((q) => ({ ...q, proven: v || undefined }))
-            }
+      <Card className="isoko-filterbar" styles={{ body: { padding: 14 } }}>
+        <Flex wrap="wrap" gap={10} align="center">
+          <Input
+            allowClear
+            prefix={<SearchOutlined style={{ color: "var(--isoko-muted)" }} />}
+            placeholder={t("workers.searchPlaceholder")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ flex: "2 1 240px" }}
           />
-          <Typography.Text style={{ fontSize: 13 }}>
-            {t("workers.provenOnly")}
-          </Typography.Text>
-        </Space>
-        <Space size={8}>
-          <Switch
-            size="small"
-            checked={!!query.available}
+          <Select
+            value={query.category ?? ""}
+            options={tradeOptions}
             onChange={(v) =>
-              setQuery((q) => ({ ...q, available: v || undefined }))
+              setQuery((q) => ({ ...q, category: v || undefined }))
             }
+            style={{ flex: "1 1 180px" }}
           />
-          <Typography.Text style={{ fontSize: 13 }}>
-            {t("workers.availableOnly")}
-          </Typography.Text>
-        </Space>
-        {result && (
-          <Typography.Text
-            type="secondary"
-            style={{ fontSize: 13, marginLeft: "auto" }}
-          >
-            {t("workers.count", { count: result.total })}
-          </Typography.Text>
-        )}
-      </Flex>
+          <Select
+            value={query.area ?? ""}
+            options={[
+              { value: "", label: t("workers.anyArea") },
+              ...AREAS.map((a) => ({ value: a, label: a })),
+            ]}
+            onChange={(v) => setQuery((q) => ({ ...q, area: v || undefined }))}
+            style={{ flex: "1 1 150px" }}
+          />
+          <Select
+            value={query.sort}
+            prefix={
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                {t("workers.sortBy")}
+              </Typography.Text>
+            }
+            options={(["trust", "jobs", "newest"] as const).map((s) => ({
+              value: s,
+              label: t(`workers.sort_${s}`),
+            }))}
+            onChange={(v) => setQuery((q) => ({ ...q, sort: v }))}
+            style={{ flex: "1 1 190px" }}
+          />
+        </Flex>
+        <Flex wrap="wrap" gap={8} align="center" style={{ marginTop: 12 }}>
+          {(
+            [
+              ["available", t("workers.availableOnly"), <ThunderboltOutlined key="a" />],
+              ["proven", t("workers.provenOnly"), <SafetyCertificateOutlined key="p" />],
+            ] as const
+          ).map(([key, label, icon]) => {
+            const on = !!query[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={on}
+                className={`isoko-filter-chip${on ? " isoko-filter-chip--on" : ""}`}
+                onClick={() =>
+                  setQuery((q) => ({ ...q, [key]: on ? undefined : true }))
+                }
+              >
+                {on ? <CheckOutlined /> : icon}
+                {label}
+              </button>
+            );
+          })}
+          {filtered && (
+            <Button
+              type="link"
+              size="small"
+              icon={<CloseOutlined />}
+              onClick={clearFilters}
+              style={{ paddingInline: 4 }}
+            >
+              {t("workers.clearFilters")}
+            </Button>
+          )}
+          {result && (
+            <Typography.Text
+              type="secondary"
+              style={{ fontSize: 13, marginLeft: "auto" }}
+            >
+              {t("workers.count", { count: result.total })}
+            </Typography.Text>
+          )}
+        </Flex>
+      </Card>
 
       {!result ? (
-        <Skeleton active />
+        <Row gutter={[16, 16]}>
+          {[0, 1, 2].map((i) => (
+            <Col key={i} xs={24} md={12} xl={8}>
+              <Card>
+                <Skeleton avatar active paragraph={{ rows: 3 }} />
+              </Card>
+            </Col>
+          ))}
+        </Row>
       ) : result.workers.length === 0 ? (
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={t("workers.none")}
-        />
+        <Card>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={t("workers.none")}
+          >
+            {filtered && (
+              <Button onClick={clearFilters}>{t("workers.clearFilters")}</Button>
+            )}
+          </Empty>
+        </Card>
       ) : (
         <Row gutter={[16, 16]}>
           {result.workers.map((w) => (
@@ -168,6 +217,8 @@ const FindWorkersPage = () => {
               <WorkerCard
                 worker={w}
                 onOffer={role === "client" ? setOffering : undefined}
+                onTrade={(category) => pick({ category })}
+                onArea={(area) => pick({ area })}
               />
             </Col>
           ))}
