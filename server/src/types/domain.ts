@@ -43,7 +43,7 @@ export type GigStatus =
   | 'rejected';
 
 /** GigApplication.status */
-export type GigApplicationStatus = 'pending' | 'approved' | 'rejected';
+export type GigApplicationStatus = 'pending' | 'approved' | 'rejected' | 'expired' | 'withdrawn';
 
 /**
  * GigApplication.rejectionReason. `choseAnother` is also what every sibling

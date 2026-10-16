@@ -210,13 +210,12 @@
       "messageEmpty": "Nta butumwa buraboneka. Imenyekanishe.",
       "steps": {
         "applied": "Byasabwe",
-        "underReview": "Birimo gusuzumwa",
+        "underReview": "Biri ku mukiriya",
         "approved": "Byemejwe",
         "notAccepted": "Ntibyemewe"
       },
       "applicationApprovedNote": "Wemerewe aka kazi.",
       "applicationRejectedNote": "Ubu busabe ntibwemewe.",
-      "applicationPendingNote": "Ubusabe bwawe buri gusuzumwa.",
       "matchPercent": "Bihuye ku {{percent}}%",
       "appliedOn": "Yasabye {{date}}",
       "posted": "Byatanzwe {{when}}",
@@ -1236,7 +1235,9 @@
     "dismissed": "Byanzwe",
     "none": "Ntibyishyuwe",
     "paid": "Byishyuwe",
-    "awaiting_approval": "Bitegereje kwemezwa"
+    "awaiting_approval": "Bitegereje kwemezwa",
+    "expired": "Byarangiye",
+    "withdrawn": "Byakuweho"
   },
   "cover": {
     "covered": "Arinzwe na Job Cover",
@@ -1585,6 +1586,16 @@
     "by_admin": "byashyizweho n'umuyobozi",
     "invitedTitle": "Watumiwe kuri aka kazi",
     "invitedBody": "Isoko yaguhuje na ko. Emeza cyangwa wange ubutumire aho gusaba.",
-    "invitedLink": "Jya ku Akazi kawe"
+    "invitedLink": "Jya ku Akazi kawe",
+    "appliedToday": "Yasabye uyu munsi",
+    "waitingDays_one": "Ategereje umunsi {{count}}",
+    "waitingDays_other": "Ategereje iminsi {{count}}",
+    "expiresIn_one": "birangira mu munsi {{count}}",
+    "expiresIn_other": "birangira mu minsi {{count}}",
+    "expiresSoon": "birangira mu munsi umwe",
+    "pendingNote": "Umukiriya ni we uhitamo. Niba atarasubiza mu minsi 7, ubusabe bwawe burarangira ukabimenyeshwa.",
+    "expiredNote": "Umukiriya ntiyasubije mu minsi 7, bityo ubu busabe bwarangiye. Ubundi kazi karagutegereje.",
+    "withdrawnNote": "Umuyobozi wa Isoko yakuyeho ubu busabe. Reba ubutumwa bwawe urebe impamvu.",
+    "stepExpired": "Byarangiye"
   }
 }

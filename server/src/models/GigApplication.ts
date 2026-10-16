@@ -34,6 +34,10 @@ export class GigApplication extends Model<
   declare quoteNote: string | null;
   declare rejectionReason: RejectionReason | null;
   declare rejectionNote: string | null;
+  /** The client was reminded this application is waiting on them. */
+  declare remindedAt: CreationOptional<Date | null>;
+  /** It expired: the client did not answer in time. */
+  declare expiredAt: CreationOptional<Date | null>;
   /** Crew named by the applying worker, with agreed shares. Null for a solo application. */
   declare crew: CrewEntry[] | null;
   declare createdAt: CreationOptional<Date>;
@@ -68,7 +72,7 @@ export const initGigApplication = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'pending',
-        validate: { isIn: [['pending', 'approved', 'rejected']] },
+        validate: { isIn: [['pending', 'approved', 'rejected', 'expired', 'withdrawn']] },
       },
       rankScore: {
         type: DataTypes.FLOAT,
@@ -92,6 +96,8 @@ export const initGigApplication = (sequelize: Sequelize) => {
         validate: { isIn: [['skillLevel', 'distance', 'timing', 'choseAnother', 'other']] },
       },
       rejectionNote: { type: DataTypes.STRING(280), allowNull: true },
+      remindedAt: { type: DataTypes.DATE, allowNull: true },
+      expiredAt: { type: DataTypes.DATE, allowNull: true },
       crew: { type: DataTypes.JSONB, allowNull: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,

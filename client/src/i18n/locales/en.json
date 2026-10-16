@@ -210,13 +210,12 @@
       "messageEmpty": "No messages yet. Introduce yourself.",
       "steps": {
         "applied": "Applied",
-        "underReview": "Under review",
+        "underReview": "With the client",
         "approved": "Approved",
         "notAccepted": "Not accepted"
       },
       "applicationApprovedNote": "You're approved for this gig.",
       "applicationRejectedNote": "This application was not accepted.",
-      "applicationPendingNote": "Your application is with the reviewer.",
       "matchPercent": "{{percent}}% match",
       "appliedOn": "Applied {{date}}",
       "posted": "Posted {{when}}",
@@ -1236,7 +1235,9 @@
     "dismissed": "Dismissed",
     "none": "Not funded",
     "paid": "Paid",
-    "awaiting_approval": "Awaiting approval"
+    "awaiting_approval": "Awaiting approval",
+    "expired": "Expired",
+    "withdrawn": "Withdrawn"
   },
   "cover": {
     "covered": "Covered by Job Cover",
@@ -1585,6 +1586,16 @@
     "by_admin": "marked by an admin",
     "invitedTitle": "You have been invited to this gig",
     "invitedBody": "Isoko matched you to it. Confirm or decline the invitation instead of applying.",
-    "invitedLink": "Go to Your matches"
+    "invitedLink": "Go to Your matches",
+    "appliedToday": "Applied today",
+    "waitingDays_one": "Waiting {{count}} day",
+    "waitingDays_other": "Waiting {{count}} days",
+    "expiresIn_one": "expires in {{count}} day",
+    "expiresIn_other": "expires in {{count}} days",
+    "expiresSoon": "expires within a day",
+    "pendingNote": "The client will choose. If they have not answered in 7 days, your application expires and you are told.",
+    "expiredNote": "The client did not answer within 7 days, so this application expired. Other gigs are waiting for you.",
+    "withdrawnNote": "An Isoko admin withdrew this application. Check your notifications for the reason.",
+    "stepExpired": "Expired"
   }
 }

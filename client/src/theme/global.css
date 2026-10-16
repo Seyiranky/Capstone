@@ -799,3 +799,7 @@ a.isoko-setup-row:focus-visible { outline: 2px solid #2563eb; outline-offset: 1p
 .isoko-invited-note a { font-weight: 600; color: #1d4ed8 !important; }
 :root[data-theme='dark'] .isoko-invited-note { background: rgba(96, 165, 250, 0.1); color: #bfdbfe; }
 :root[data-theme='dark'] .isoko-invited-note a { color: #93c5fd !important; }
+
+.isoko-waiting { font-size: 12.5px; color: var(--isoko-muted); }
+.isoko-waiting--long { color: #b45309; font-weight: 500; }
+:root[data-theme='dark'] .isoko-waiting--long { color: #fcd34d; }

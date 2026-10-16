@@ -62,7 +62,12 @@ export const applyToGig = async (req: Request, res: Response): Promise<void> => 
 
   const existing = await GigApplication.findOne({ where: { gigId, workerId: caller.id } });
   if (existing) {
-    res.status(409).json({ message: 'You have already applied to this gig' });
+    res.status(409).json({
+      message:
+        existing.status === 'expired'
+          ? 'Your application to this gig expired without an answer from the client'
+          : 'You have already applied to this gig',
+    });
     return;
   }
 

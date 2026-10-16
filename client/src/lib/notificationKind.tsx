@@ -67,9 +67,9 @@ const RULES: [RegExp, NotificationKind][] = [
   [/review(?!er)|endorsed/i, 'review'],
   [/skill/i, 'skill'],
   [/crew|apprentice|team member/i, 'team'],
-  [/declined|cancelled|not selected|rejected|filled/i, 'declined'],
+  [/declined|cancelled|not selected|rejected|filled|expired|withdrawn/i, 'declined'],
   [/confirmed|approved|selected/i, 'done'],
-  [/gig|worker|match|application|asked for you/i, 'job'],
+  [/gig|worker|match|application|applicant|asked for you/i, 'job'],
 ];
 
 export const kindOf = (title: string): NotificationKind =>

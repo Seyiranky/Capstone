@@ -328,7 +328,11 @@ const GigDetail = () => {
                     ? t('marketplace.gigDetail.applicationApprovedNote')
                     : myApplication.status === 'rejected'
                       ? t('marketplace.gigDetail.applicationRejectedNote')
-                      : t('marketplace.gigDetail.applicationPendingNote')}
+                      : myApplication.status === 'expired'
+                        ? t('applyRules.expiredNote')
+                        : myApplication.status === 'withdrawn'
+                          ? t('applyRules.withdrawnNote')
+                          : t('applyRules.pendingNote')}
                 </Typography.Text>
               </Flex>
               <ApplicationProgress status={myApplication.status} />

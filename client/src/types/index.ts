@@ -148,13 +148,15 @@ export interface Gig {
   matches?: Match[];
 }
 
-export type GigApplicationStatus = 'pending' | 'approved' | 'rejected';
+export type GigApplicationStatus = 'pending' | 'approved' | 'rejected' | 'expired' | 'withdrawn';
 
 export interface GigApplication {
   id: string;
   gigId: string;
   workerId: string;
   status: GigApplicationStatus;
+  remindedAt?: string | null;
+  expiredAt?: string | null;
   rankScore?: number | null;
   scoreBreakdown?: MatchScoreBreakdown | null;
   /** DECIMAL columns arrive as strings. */

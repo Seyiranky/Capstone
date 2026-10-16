@@ -62,6 +62,21 @@ const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: Appl
               </div>
               <StatusTag status={a.status} />
             </Flex>
+            {a.status === 'pending' && canDecide && (() => {
+              // How long this person has waited, and when the application lapses if nobody answers.
+              const ageDays = Math.floor((Date.now() - new Date(a.createdAt).getTime()) / 86_400_000);
+              const left = Math.max(0, 7 - ageDays);
+              return (
+                <Typography.Text
+                  className={ageDays >= 2 ? 'isoko-waiting isoko-waiting--long' : 'isoko-waiting'}
+                  style={{ display: 'block', marginTop: 4, paddingInlineStart: 36 }}
+                >
+                  {ageDays < 1 ? t('applyRules.appliedToday') : t('applyRules.waitingDays', { count: ageDays })}
+                  {' · '}
+                  {left <= 1 ? t('applyRules.expiresSoon') : t('applyRules.expiresIn', { count: left })}
+                </Typography.Text>
+              );
+            })()}
 
             <Flex wrap="wrap" gap="4px 14px" style={{ marginTop: 8, paddingInlineStart: 36 }}>
               <Typography.Text type="secondary" style={{ fontSize: 13 }}>

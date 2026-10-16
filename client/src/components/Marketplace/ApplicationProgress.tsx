@@ -13,13 +13,18 @@ import type { GigApplicationStatus } from '../../types';
  */
 const ApplicationProgress = ({ status }: { status: GigApplicationStatus }) => {
   const { t } = useTranslation();
-  const rejected = status === 'rejected';
+  // Expired and withdrawn end the same way for the worker: not taken forward.
+  const rejected = status === 'rejected' || status === 'expired' || status === 'withdrawn';
   const reached = status === 'pending' ? 2 : 3;
 
   const steps = [
     t('marketplace.gigDetail.steps.applied'),
     t('marketplace.gigDetail.steps.underReview'),
-    rejected ? t('marketplace.gigDetail.steps.notAccepted') : t('marketplace.gigDetail.steps.approved'),
+    status === 'expired'
+      ? t('applyRules.stepExpired')
+      : rejected
+        ? t('marketplace.gigDetail.steps.notAccepted')
+        : t('marketplace.gigDetail.steps.approved'),
   ];
 
   return (

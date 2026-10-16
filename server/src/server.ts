@@ -5,6 +5,7 @@ import { assertRequiredEnv } from './config/env';
 import * as paymentService from './services/paymentService';
 import * as disputeService from './services/disputeService';
 import * as supportService from './services/supportService';
+import * as applicationFollowUp from './services/applicationFollowUp';
 import * as safeVisitService from './services/safeVisitService';
 
 // Fails here rather than at the first request that needs a secret. Without
@@ -33,6 +34,9 @@ setInterval(() => {
   });
   safeVisitService.flagOverdue({ app }).catch((error: unknown) => {
     console.error('Safe visit sweep failed', error);
+  });
+  applicationFollowUp.sweep({ app }).catch((error: unknown) => {
+    console.error('Application follow-up sweep failed', error);
   });
   supportService.autoClose().catch((error: unknown) => {
     console.error('Support auto-close sweep failed', error);
