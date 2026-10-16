@@ -27,7 +27,8 @@ import JobPhotos from "./JobPhotos";
 import TeamSection from "../Team/TeamSection";
 import SafeVisitBar from "../Safety/SafeVisitBar";
 import JobCoverCard from "../Cover/JobCoverCard";
-import { disputeApi } from "../../api/disputeApi";
+import { disputeApi, type DisputeEligibility } from "../../api/disputeApi";
+import OpenDisputeModal from "../Disputes/OpenDisputeModal";
 import type { Dispute, Match, MatchStatus } from "../../types";
 
 const ReviewModal = ({
@@ -109,9 +110,20 @@ const MatchList = () => {
   const [liveDisputes, setLiveDisputes] = useState<Map<string, Dispute>>(
     new Map(),
   );
+  // Which jobs the viewer may dispute, at which stage and for which reasons: the server decides.
+  const [disputable, setDisputable] = useState<Map<string, DisputeEligibility>>(
+    new Map(),
+  );
+  const [disputing, setDisputing] = useState<DisputeEligibility | null>(null);
 
-  const loadDisputes = () =>
+  const loadDisputes = () => {
     disputeApi
+      .eligible()
+      .then((all) =>
+        setDisputable(new Map(all.filter((e) => e.canOpen).map((e) => [e.matchId, e]))),
+      )
+      .catch(() => undefined);
+    return disputeApi
       .list()
       .then((all) =>
         setLiveDisputes(
@@ -127,6 +139,7 @@ const MatchList = () => {
         ),
       )
       .catch(() => undefined);
+  };
 
   useEffect(() => {
     dispatch(fetchMatches());
@@ -352,14 +365,36 @@ const MatchList = () => {
                   )}
                   {(match.status === "accepted" ||
                     match.status === "completed") && (
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={() => setToolsFor(match)}
-                      style={{ padding: 0, marginTop: 10 }}
-                    >
-                      {t("matches.moreForJob")}
-                    </Button>
+                    <Flex justify="space-between" align="center" gap={8} wrap="wrap" style={{ marginTop: 10 }}>
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={() => setToolsFor(match)}
+                        style={{ padding: 0 }}
+                      >
+                        {t("matches.moreForJob")}
+                      </Button>
+                      {liveDisputes.has(match.id) ? (
+                        // The payment panel already shows an open dispute on a job it covers.
+                        !(isLead && (match.status === "accepted" || match.transaction?.status !== "confirmed")) && (
+                        <Link to="/disputes" style={{ fontSize: 13 }}>
+                          {t("dispute.viewOpen")}
+                        </Link>
+                        )
+                      ) : (
+                        disputable.has(match.id) && (
+                          <Button
+                            type="link"
+                            size="small"
+                            danger
+                            style={{ padding: 0 }}
+                            onClick={() => setDisputing(disputable.get(match.id)!)}
+                          >
+                            {t("dispute.openLink")}
+                          </Button>
+                        )
+                      )}
+                    </Flex>
                   )}
                 </Card>
               </Col>
@@ -393,6 +428,13 @@ const MatchList = () => {
             );
           })()}
       </Drawer>
+      {disputing && (
+        <OpenDisputeModal
+          job={disputing}
+          onClose={() => setDisputing(null)}
+          onOpened={refresh}
+        />
+      )}
       {reviewMatch && (
         <ReviewModal
           match={reviewMatch}

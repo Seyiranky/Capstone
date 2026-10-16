@@ -14,6 +14,11 @@ export const openDispute = async (req: Request, res: Response): Promise<void> =>
   res.status(201).json(dispute);
 };
 
+/** The caller's jobs, each with whether it can be disputed, at which stage and for which reasons. */
+export const eligible = async (req: Request, res: Response): Promise<void> => {
+  res.json(await disputeService.eligibleFor(authed(req).id));
+};
+
 export const listDisputes = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
   res.json(await disputeService.listFor(caller.id, caller.role));

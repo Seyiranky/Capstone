@@ -8,7 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
-import type { DisputeDecider, DisputeOutcome, DisputeReason, DisputeStatus } from '../types/domain';
+import type { DisputeDecider, DisputeOutcome, DisputeReason, DisputeStage, DisputeStatus } from '../types/domain';
 import type { DisputeVote } from './DisputeVote';
 import type { Match } from './Match';
 import type { User } from './User';
@@ -33,6 +33,11 @@ export class Dispute extends Model<InferAttributes<Dispute>, InferCreationAttrib
   /** Recorded so the panel draw can be replayed and shown not to be steered. */
   declare panelSeed: string | null;
   declare panelPoolSize: number | null;
+  declare stage: CreationOptional<DisputeStage>;
+  /** On a paid job, what the decision says the worker owes back. */
+  declare refundDue: CreationOptional<number | string | null>;
+  /** The support request opened for an admin to arrange that return. */
+  declare supportTicketId: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -56,7 +61,7 @@ export const initDispute = (sequelize: Sequelize) => {
       reason: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: { isIn: [['notDone', 'poorQuality', 'noShow', 'notReleased', 'other']] },
+        validate: { isIn: [['notDone', 'poorQuality', 'noShow', 'notReleased', 'notPaid', 'other']] },
       },
       details: { type: DataTypes.TEXT, allowNull: false },
       response: { type: DataTypes.TEXT, allowNull: true },
@@ -67,6 +72,14 @@ export const initDispute = (sequelize: Sequelize) => {
         defaultValue: 'open',
         validate: { isIn: [['open', 'escalated', 'decided', 'settled']] },
       },
+      stage: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'in_progress',
+        validate: { isIn: [['in_progress', 'awaiting_payment', 'paid']] },
+      },
+      refundDue: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
+      supportTicketId: { type: DataTypes.UUID, allowNull: true },
       outcome: {
         type: DataTypes.STRING,
         allowNull: true,

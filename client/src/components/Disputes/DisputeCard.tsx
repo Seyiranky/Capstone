@@ -10,6 +10,10 @@ import type { Dispute, DisputeOutcome } from '../../types';
 
 const OUTCOMES: DisputeOutcome[] = ['release', 'split', 'refund'];
 
+/** What an outcome means depends on where the job stood: before payment it sets what is owed, after it what is paid back. */
+const meansKey = (dispute: Pick<Dispute, 'stage'>, outcome: DisputeOutcome) =>
+  !dispute.stage || dispute.stage === 'in_progress' ? `dispute.means_${outcome}` : `dispute.means_${dispute.stage}_${outcome}`;
+
 const STATUS_TONE: Record<Dispute['status'], string> = {
   open: 'info',
   escalated: 'warning',
@@ -46,7 +50,9 @@ const DisputeCard = ({ dispute, onChanged }: { dispute: Dispute; onChanged: () =
   const isOpener = dispute.openedById === me?.id;
   const mySeat = dispute.votes.find((v) => v.mediator?.id === me?.id);
   const voted = dispute.votes.filter((v) => v.voted).length;
-  const price = Number(match?.agreedAmount ?? match?.gig?.budget ?? 0).toLocaleString();
+  const priceValue = Number(match?.agreedAmount ?? match?.gig?.budget ?? 0);
+  const price = priceValue.toLocaleString();
+  const half = Math.round(priceValue / 2).toLocaleString();
   const date = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -174,7 +180,7 @@ const DisputeCard = ({ dispute, onChanged }: { dispute: Dispute; onChanged: () =
                   onClick={() => setChoice(o)}
                 >
                   <span className="isoko-dispute__choice-title">{t(`dispute.vote_${o}`)}</span>
-                  <span className="isoko-dispute__choice-body">{t(`dispute.means_${o}`, { amount: price })}</span>
+                  <span className="isoko-dispute__choice-body">{t(meansKey(dispute, o), { amount: price, half })}</span>
                 </button>
               </Col>
             ))}
@@ -208,8 +214,13 @@ const DisputeCard = ({ dispute, onChanged }: { dispute: Dispute; onChanged: () =
             {t('dispute.outcome')}: {t(`dispute.vote_${dispute.outcome}`)}
           </Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-            {t(`dispute.means_${dispute.outcome}`, { amount: price })}
+            {t(meansKey(dispute, dispute.outcome), { amount: price, half })}
           </Typography.Text>
+          {dispute.stage === 'paid' && dispute.supportTicketId && match?.gig?.clientId === me?.id && (
+            <Link to={`/support/${dispute.supportTicketId}`} style={{ display: 'inline-block', marginTop: 8, fontSize: 13 }}>
+              {t('dispute.refundRequest')}
+            </Link>
+          )}
           {dispute.adminNote && (
             <div style={{ marginTop: 10 }}>
               <Statement label={t('dispute.adminNote')}>{dispute.adminNote}</Statement>

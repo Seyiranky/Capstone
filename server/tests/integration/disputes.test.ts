@@ -53,11 +53,12 @@ const heldJob = async (budget = 40000) => {
   return { gig, matchId: match.id };
 };
 
-const openDispute = (matchId: string, who = 'client') =>
+// Each side has its own reasons: a client complains of the work, a worker of the client.
+const openDispute = (matchId: string, who = 'client', reason = who === 'worker' ? 'notReleased' : 'poorQuality') =>
   request(app)
     .post('/api/disputes')
     .set(as(who))
-    .send({ matchId, reason: 'poorQuality', details: 'The curtains were the wrong length.' });
+    .send({ matchId, reason, details: 'The curtains were the wrong length.' });
 
 const panelOf = async (disputeId: string) =>
   (await db.DisputeVote.findAll({ where: { disputeId } })).map((v) => v.mediatorId);
@@ -96,10 +97,19 @@ afterAll(async () => {
 });
 
 describe('opening a dispute', () => {
-  test('only a job in progress can be disputed, not one already done', async () => {
+  test('a job not yet accepted cannot be disputed', async () => {
+    const gig = await db.Gig.create({
+      clientId: users.client.id, skillId: skill.id, title: 'Pending fixture', description: 'Fixture',
+      budget: 10000, locationLat: -1.95, locationLng: 30.06, status: 'open',
+    });
+    const match = await db.Match.create({ gigId: gig.id, workerId: users.worker.id });
+    expect((await openDispute(match.id)).status).toBe(409);
+  });
+
+  test('each side may only give its own reasons', async () => {
     const { matchId } = await heldJob();
-    await request(app).put(`/api/matches/${matchId}/status`).set(as('client')).send({ status: 'completed' });
-    expect((await openDispute(matchId)).status).toBe(409);
+    expect((await openDispute(matchId, 'worker', 'poorQuality')).status).toBe(400);
+    expect((await openDispute(matchId, 'client', 'notPaid')).status).toBe(400);
   });
 
   test('only the two parties can open one', async () => {

@@ -11,7 +11,8 @@ import {
 } from './skillVerificationService';
 import notify from '../lib/notify';
 import { HttpError } from '../lib/httpError';
-import type { DisputeOutcome, DisputeReason } from '../types/domain';
+import type { DisputeOutcome, DisputeReason, DisputeStage } from '../types/domain';
+import * as supportService from './supportService';
 
 /**
  * Disputes about a job in progress, decided by three screened peers.
@@ -30,12 +31,87 @@ type MatchWithGig = Match & { gig?: Gig | null };
 export const PANEL_SIZE = 3;
 export const MAJORITY = 2;
 export const DECIDE_WITHIN_MS = 5 * 24 * 60 * 60 * 1000;
-export const DISPUTE_REASONS: DisputeReason[] = ['notDone', 'poorQuality', 'noShow', 'notReleased', 'other'];
+export const DISPUTE_REASONS: DisputeReason[] = ['notDone', 'poorQuality', 'noShow', 'notReleased', 'notPaid', 'other'];
+/** How long after a paid job is done it can still be disputed. */
+export const PAID_DISPUTE_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 export const OUTCOMES: DisputeOutcome[] = ['release', 'refund', 'split'];
 const DETAILS_MAX = 2000;
 
 const loadMatch = async (matchId: string): Promise<MatchWithGig | null> =>
   (await Match.findByPk(matchId, { include: [{ model: Gig, as: 'gig' }] })) as MatchWithGig | null;
+
+export interface Eligibility {
+  canOpen: boolean;
+  stage: DisputeStage | null;
+  reasons: DisputeReason[];
+  /** Why not, when it cannot be opened: a key the client words. */
+  blocked?: 'not_party' | 'not_started' | 'cancelled' | 'already_disputed' | 'window_passed';
+}
+
+/**
+ * Whether a person can open a dispute on a job, at which stage, and for which reasons.
+ *
+ * Under Mobile Money the client pays after marking the job done, so a job can
+ * be disputed while it is under way, while it waits to be paid, and for two
+ * weeks after it is paid. One dispute per job: whatever it decides is final.
+ */
+export const eligibility = async (match: MatchWithGig, userId: string): Promise<Eligibility> => {
+  const isWorker = match.workerId === userId;
+  const isClient = match.gig?.clientId === userId;
+  const no = (blocked: Eligibility['blocked']): Eligibility => ({ canOpen: false, stage: null, reasons: [], blocked });
+  if (!isWorker && !isClient) return no('not_party');
+  if (match.status === 'pending') return no('not_started');
+  if (match.status === 'cancelled') return no('cancelled');
+  if (await Dispute.count({ where: { matchId: match.id } })) return no('already_disputed');
+
+  if (match.status === 'accepted') {
+    return {
+      canOpen: true,
+      stage: 'in_progress',
+      reasons: isWorker ? ['noShow', 'notReleased', 'other'] : ['notDone', 'poorQuality', 'noShow', 'other'],
+    };
+  }
+  const paid = await Transaction.count({ where: { matchId: match.id, status: 'confirmed' } });
+  if (!paid) {
+    return {
+      canOpen: true,
+      stage: 'awaiting_payment',
+      reasons: isWorker ? ['notPaid', 'other'] : ['notDone', 'poorQuality', 'other'],
+    };
+  }
+  const doneAt = match.completedAt ?? match.updatedAt;
+  if (Date.now() - new Date(doneAt).getTime() > PAID_DISPUTE_WINDOW_MS) return no('window_passed');
+  return {
+    canOpen: true,
+    stage: 'paid',
+    reasons: isWorker ? ['other'] : ['notDone', 'poorQuality', 'other'],
+  };
+};
+
+/** Every job of the caller's, with whether and how it can be disputed, for the screens. */
+export const eligibleFor = async (userId: string) => {
+  const matches = (await Match.findAll({
+    where: { [Op.or]: [{ workerId: userId }, { '$gig.clientId$': userId }], status: ['accepted', 'completed'] },
+    include: [
+      { model: Gig, as: 'gig', include: [{ model: User, as: 'client', attributes: ['id', 'name'] }] },
+      { model: User, as: 'worker', attributes: ['id', 'name'] },
+    ],
+    order: [['updatedAt', 'DESC']],
+  })) as (MatchWithGig & { gig: Gig & { client?: User }; worker?: User })[];
+  const out = [];
+  for (const m of matches) {
+    const e = await eligibility(m, userId);
+    out.push({
+      matchId: m.id,
+      gigTitle: m.gig?.title ?? '',
+      otherParty: m.workerId === userId ? m.gig?.client?.name ?? '' : m.worker?.name ?? '',
+      asWorker: m.workerId === userId,
+      price: Math.round(Number(m.agreedAmount ?? m.gig?.budget ?? 0)),
+      ...e,
+    });
+  }
+  return out;
+};
 
 /** The deterministic order a seed puts candidates in, so a panel can be redrawn by an auditor. */
 const seededOrder = (ids: string[], seed: string): string[] =>
@@ -86,14 +162,23 @@ export const open = async (
   if (!match || !match.gig) throw new HttpError('Match not found', 404);
   const isParty = match.workerId === userId || match.gig.clientId === userId;
   if (!isParty) throw new HttpError('Only the worker or the client on this job may open a dispute', 403);
-  if (match.status !== 'accepted') throw new HttpError('Only a job in progress can be disputed', 409);
-  if (!DISPUTE_REASONS.includes(reason as DisputeReason)) throw new HttpError('Unknown reason', 400);
-  const text = String(details ?? '').trim();
-  if (text.length < 10) throw new HttpError('Explain what happened in a sentence or two', 400);
-
   if (await completionService.hasLiveDispute(matchId)) {
     throw new HttpError('A dispute is already open on this job', 409);
   }
+  const allowed = await eligibility(match, userId);
+  if (!allowed.canOpen || !allowed.stage) {
+    throw new HttpError(
+      allowed.blocked === 'already_disputed'
+        ? 'This job has already been through a dispute'
+        : allowed.blocked === 'window_passed'
+          ? 'A paid job can be disputed for 14 days after it is done'
+          : 'This job cannot be disputed',
+      409,
+    );
+  }
+  if (!allowed.reasons.includes(reason as DisputeReason)) throw new HttpError('Choose one of the reasons offered for this job', 400);
+  const text = String(details ?? '').trim();
+  if (text.length < 10) throw new HttpError('Explain what happened in a sentence or two', 400);
 
   const pool = await eligibleMediators(match.workerId, match.gig.clientId);
   const seed = crypto.randomUUID();
@@ -119,6 +204,7 @@ export const open = async (
         deadlineAt: new Date(Date.now() + DECIDE_WITHIN_MS),
         panelSeed: tooFew ? null : seed,
         panelPoolSize: pool.length,
+        stage: allowed.stage ?? undefined,
       },
       { transaction: t },
     );
@@ -135,7 +221,10 @@ export const open = async (
   await notify(ctx, {
     userId: other,
     title: 'Dispute opened',
-    body: `A dispute was opened on "${match.gig.title}". Payment is frozen. Add your side so the mediators hear both.`,
+    body:
+      allowed.stage === 'awaiting_payment'
+        ? `A dispute was opened on "${match.gig.title}". Payment waits until it is decided. Add your side so the mediators hear both.`
+        : `A dispute was opened on "${match.gig.title}". Add your side so the mediators hear both.`,
     category: 'critical',
   });
   if (tooFew) {
@@ -208,20 +297,61 @@ const decide = async (
 
   const match = await loadMatch(dispute.matchId);
   if (!match || !match.gig) return;
-  if (outcome === 'refund') {
+  const price = Math.round(Number(match.agreedAmount ?? match.gig.budget));
+  const half = Math.round(price * 0.5);
+  let summary: string;
+
+  if (dispute.stage === 'awaiting_payment') {
+    // The job is done and unpaid: the decision sets what the client owes.
+    if (outcome === 'refund') {
+      await match.update({ status: 'cancelled' });
+      await match.gig.update({ status: 'cancelled' });
+      // A payment request left waiting for approval is withdrawn.
+      await Transaction.update(
+        { status: 'failed', failureReason: 'Withdrawn: a dispute decided nothing is owed' },
+        { where: { matchId: match.id, status: 'initiated' } },
+      );
+      summary = 'the job is called off and nothing is owed';
+    } else if (outcome === 'split') {
+      await match.update({ agreedAmount: half });
+      summary = `the client pays half the price, ${half.toLocaleString('en-US')} RWF, with Mobile Money`;
+    } else {
+      summary = `the client pays the full price, ${price.toLocaleString('en-US')} RWF, with Mobile Money`;
+    }
+  } else if (dispute.stage === 'paid') {
+    // The money has already reached the worker; Mobile Money cannot be pulled
+    // back, so a decision against the worker becomes an amount owed, arranged
+    // by the team through a support request.
+    if (outcome === 'release') {
+      summary = 'the payment stands and nothing changes';
+    } else {
+      const owed = outcome === 'refund' ? price : half;
+      const ticket = await supportService.openOnBehalf(ctx, {
+        userId: match.gig.clientId,
+        category: 'payment',
+        subject: `Refund after dispute: ${match.gig.title}`,
+        systemKey: 'dispute_refund',
+        meta: { amount: owed.toLocaleString('en-US'), title: match.gig.title },
+        relatedType: 'match',
+        relatedId: match.id,
+        priority: 'high',
+      });
+      await dispute.update({ refundDue: owed, supportTicketId: ticket.id });
+      summary = `the worker returns ${owed.toLocaleString('en-US')} RWF to the client; the Isoko team will contact you both to arrange it`;
+    }
+  } else if (outcome === 'refund') {
     await match.update({ status: 'cancelled' });
     await completionService.settleLegacyHold(match.id, 'refunded');
     await match.gig.update({ status: 'cancelled' });
+    summary = 'the job is called off and nothing is owed';
   } else {
     await completionService.completeMatch(ctx, match, 'dispute', { share: outcome === 'split' ? 0.5 : 1 });
+    summary =
+      outcome === 'release'
+        ? 'the job counts as done and the client pays the full price with Mobile Money'
+        : 'the job counts as done and the client pays half the price with Mobile Money';
   }
 
-  const summary =
-    outcome === 'release'
-      ? 'the job counts as done and the client pays the full price with Mobile Money'
-      : outcome === 'refund'
-        ? 'the job is called off and nothing is owed'
-        : 'the job counts as done and the client pays half the price with Mobile Money';
   const decider = by.decidedBy === 'admin' ? 'An admin' : 'The mediators';
   for (const userId of [match.workerId, match.gig.clientId]) {
     await notify(ctx, {

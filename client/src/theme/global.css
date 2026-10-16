@@ -689,3 +689,13 @@ a.isoko-setup-row:focus-visible { outline: 2px solid #2563eb; outline-offset: 1p
 .isoko-hc-subtitle { font-size: 17px; font-weight: 600; margin: 0 0 12px; }
 .isoko-hc-requests-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
 .isoko-hc-empty { padding: 40px 0; border: 1px dashed var(--isoko-border); border-radius: 14px; }
+
+/* The stage a dispute is opened at, explained at the top of the form. */
+.isoko-dispute-stage { display: flex; flex-direction: column; gap: 2px; margin-bottom: 14px; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+.isoko-dispute-stage strong { font-size: 13.5px; }
+.isoko-dispute-stage--in_progress { background: #eff6ff; color: #1e3a8a; }
+.isoko-dispute-stage--awaiting_payment { background: #fffbeb; color: #78350f; }
+.isoko-dispute-stage--paid { background: #f0fdf4; color: #14532d; }
+:root[data-theme='dark'] .isoko-dispute-stage--in_progress { background: rgba(96, 165, 250, 0.1); color: #bfdbfe; }
+:root[data-theme='dark'] .isoko-dispute-stage--awaiting_payment { background: rgba(251, 191, 36, 0.1); color: #fde68a; }
+:root[data-theme='dark'] .isoko-dispute-stage--paid { background: rgba(74, 222, 128, 0.08); color: #bbf7d0; }

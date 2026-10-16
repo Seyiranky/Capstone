@@ -4,7 +4,7 @@ import { escrowStateOnFunding, escrowTimestampField, generateReceiptNumber } fro
 import * as payoutService from './payoutService';
 import simulatedAdapter from './payments/simulatedAdapter';
 import mtnMomoAdapter, { disbursementConfigured } from './payments/mtnMomoAdapter';
-import { priceOf } from './completionService';
+import { hasLiveDispute, priceOf } from './completionService';
 import { MAX_CONTRIBUTION } from './safetyNetService';
 import { toRwandanMsisdn } from '../lib/channels/sms';
 import type { PaymentAdapter, PaymentCallback } from './payments/adapter';
@@ -241,6 +241,8 @@ export const requestForMatch = async (
   if (!match || !match.gig) throw new HttpError('Job not found', 404);
   if (match.gig.clientId !== clientId) throw new HttpError('Only the client pays for this job', 403);
   if (match.status !== 'completed') throw new HttpError('Mark the job as done before paying', 409);
+  // What is owed is what the dispute decides; paying first would pre-empt it.
+  if (await hasLiveDispute(matchId)) throw new HttpError('A dispute is open on this job. Pay once it is decided.', 409);
 
   const payerMsisdn = toRwandanMsisdn(String(rawMsisdn ?? ''));
   if (!payerMsisdn) throw new HttpError('Enter your MTN MoMo number, for example 078 123 4567', 400);

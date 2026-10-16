@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card, Col, Empty, Flex, Row, Skeleton, Typography } from 'antd';
-import { AuditOutlined, CheckCircleOutlined, FlagOutlined } from '@ant-design/icons';
+import { Button, Card, Col, Empty, Flex, Modal, Row, Skeleton, Typography } from 'antd';
+import { AuditOutlined, CheckCircleOutlined, FlagOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import PageContainer from '../components/Layout/PageContainer';
 import DisputeCard from '../components/Disputes/DisputeCard';
-import { disputeApi } from '../api/disputeApi';
+import { disputeApi, type DisputeEligibility } from '../api/disputeApi';
+import OpenDisputeModal from '../components/Disputes/OpenDisputeModal';
 import { useAppSelector } from '../store/hooks';
 import type { Dispute } from '../types';
 
@@ -27,12 +28,18 @@ const DisputesPage = () => {
   const { t } = useTranslation();
   const me = useAppSelector((s) => s.auth.profile);
   const [disputes, setDisputes] = useState<Dispute[] | null>(null);
+  const [eligible, setEligible] = useState<DisputeEligibility[] | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [job, setJob] = useState<DisputeEligibility | null>(null);
+  const isParty = me?.role === 'worker' || me?.role === 'client';
 
-  const load = () =>
-    disputeApi
+  const load = () => {
+    if (isParty) disputeApi.eligible().then(setEligible).catch(() => setEligible([]));
+    return disputeApi
       .list()
       .then(setDisputes)
       .catch(() => setDisputes([]));
+  };
 
   useEffect(() => {
     load();
@@ -53,7 +60,17 @@ const DisputesPage = () => {
   const others = (disputes ?? []).filter((d) => !shown.has(d.id));
 
   return (
-    <PageContainer title={t('dispute.title')} subtitle={t('dispute.subtitle')}>
+    <PageContainer
+      title={t('dispute.title')}
+      subtitle={t('dispute.subtitle')}
+      extra={
+        isParty && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setPicking(true)}>
+            {t('dispute.openButton')}
+          </Button>
+        )
+      }
+    >
       <Card styles={{ body: { padding: '16px 20px' } }}>
         <Row gutter={[24, 16]}>
           {steps.map((s, i) => (
@@ -88,6 +105,45 @@ const DisputesPage = () => {
           <Section title={t('dispute.others')} items={others} onChanged={load} />
         </>
       )}
+      <Modal open={picking} onCancel={() => setPicking(false)} footer={null} title={t('dispute.pickTitle')} width={560}>
+        <Typography.Paragraph type="secondary" style={{ fontSize: 13 }}>
+          {t('dispute.pickIntro')}
+        </Typography.Paragraph>
+        {!eligible ? (
+          <Skeleton active />
+        ) : eligible.filter((e) => e.canOpen).length === 0 ? (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('dispute.pickNone')} />
+        ) : (
+          <div className="isoko-hc-list">
+            {eligible
+              .filter((e) => e.canOpen)
+              .map((e) => (
+                <button
+                  key={e.matchId}
+                  type="button"
+                  className="isoko-hc-list__item"
+                  onClick={() => {
+                    setPicking(false);
+                    setJob(e);
+                  }}
+                >
+                  <span>
+                    <strong>{e.gigTitle}</strong>
+                    <span>
+                      {e.asWorker ? t('dispute.pickForClient', { name: e.otherParty }) : t('dispute.pickForWorker', { name: e.otherParty })} ·{' '}
+                      {e.price.toLocaleString()} RWF
+                    </span>
+                  </span>
+                  <span className={`isoko-status isoko-status--${e.stage === 'paid' ? 'success' : e.stage === 'awaiting_payment' ? 'warning' : 'info'}`}>
+                    {t(`dispute.stage_${e.stage}`)}
+                  </span>
+                  <RightOutlined />
+                </button>
+              ))}
+          </div>
+        )}
+      </Modal>
+      {job && <OpenDisputeModal job={job} onClose={() => setJob(null)} onOpened={load} />}
     </PageContainer>
   );
 };

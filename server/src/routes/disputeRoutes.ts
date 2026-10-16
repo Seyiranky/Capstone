@@ -6,6 +6,7 @@ import { authorize } from '../middleware/roleMiddleware';
 const router = express.Router();
 
 router.get('/', verifyToken, disputeController.listDisputes);
+router.get('/eligible', verifyToken, disputeController.eligible);
 router.post('/', verifyToken, disputeController.openDispute);
 router.post('/:id/response', verifyToken, disputeController.respond);
 router.post('/:id/votes', verifyToken, disputeController.vote);

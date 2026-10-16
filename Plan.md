@@ -327,7 +327,7 @@ each article its own page with "Did this answer your question?"; a round chat bu
 contact form anywhere in the help centre. Routes: /support, /support/topics/:category,
 /support/topics/:category/:n, /support/requests, /support/:id.
 
-## Round 7 — Disputes after the job is done (16 Oct 2026)
+## Round 7 — Disputes after the job is done (done 16 Oct 2026)
 
 **Found.** Opening a dispute was allowed only while a job was in progress: a rule from escrow,
 when the money sat with Isoko during the job. With Mobile Money the client pays after marking the
@@ -347,6 +347,12 @@ stage, and for which reasons; the screens only show what it allows.
 One dispute per job. "Open a dispute" on every eligible job card and on the Disputes page, with the
 stage explained in the form. Tests cover each stage, the payment pause, the window and the
 refund-owed request.
+
+**Status: done.** `disputeService.eligibility` / `GET /api/disputes/eligible` decide; migration
+`20261016090000` adds the stage, refund owed and support request; `disputeStages.test.ts` (6 tests)
+plus updated `disputes.test.ts`. Checked in the browser with a throwaway job: the worker disputed a
+job done but unpaid, the client's payment waited, an admin decided split, and the client was asked
+for half. 511 server tests pass.
 
 ## Security review
 

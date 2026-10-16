@@ -470,7 +470,9 @@ export interface Receipt {
 
 export type DisputeStatus = 'open' | 'escalated' | 'decided' | 'settled';
 export type DisputeOutcome = 'release' | 'refund' | 'split';
-export type DisputeReason = 'notDone' | 'poorQuality' | 'noShow' | 'notReleased' | 'other';
+export type DisputeReason = 'notDone' | 'poorQuality' | 'noShow' | 'notReleased' | 'notPaid' | 'other';
+/** Where the job stood when the dispute was opened; it decides what each outcome means. */
+export type DisputeStage = 'in_progress' | 'awaiting_payment' | 'paid';
 
 export interface DisputeVoteView {
   id: string;
@@ -497,6 +499,9 @@ export interface Dispute {
   adminNote: string | null;
   deadlineAt: string;
   panelPoolSize: number | null;
+  stage: DisputeStage;
+  refundDue?: number | string | null;
+  supportTicketId?: string | null;
   createdAt: string;
   openedBy?: { id: string; name: string };
   match?: Match;

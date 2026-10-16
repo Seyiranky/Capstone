@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { App, Button, Flex, Input, Segmented, Spin, Typography } from 'antd';
 import { MedicineBoxOutlined, MobileOutlined, WarningOutlined } from '@ant-design/icons';
 import HelpLink from '../Support/HelpLink';
-import OpenDisputeModal from '../Disputes/OpenDisputeModal';
 import { matchApi } from '../../api/matchApi';
 import { transactionApi } from '../../api/transactionApi';
 import { coverApi, type CoverStatus } from '../../api/coverApi';
@@ -37,7 +36,6 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
   const { message, modal } = App.useApp();
   const myPhone = useAppSelector((s) => s.auth.profile?.phone);
   const [busy, setBusy] = useState<string | null>(null);
-  const [disputing, setDisputing] = useState(false);
   const [phone, setPhone] = useState(localNumber(myPhone));
   // Suggested 3% to the worker's safety net, as Alia suggests a small amount per job.
   const [netPercent, setNetPercent] = useState(3);
@@ -121,11 +119,6 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
       onChanged();
     }, t('pay.genericError'));
 
-  const disputeLink = match.status === 'accepted' && (
-    <Button type="link" size="small" danger style={{ paddingInline: 0, alignSelf: 'flex-start' }} onClick={() => setDisputing(true)}>
-      {t('dispute.open')}
-    </Button>
-  );
 
   const body = (() => {
     if (liveDispute) {
@@ -265,14 +258,10 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
     );
   })();
 
-  if (!body && !disputeLink) return null;
+  if (!body) return null;
   return (
     <Flex vertical gap={8}>
       {body}
-      {!liveDispute && disputeLink}
-      {disputing && (
-        <OpenDisputeModal match={match} isWorker={isWorker} onClose={() => setDisputing(false)} onOpened={onChanged} />
-      )}
     </Flex>
   );
 };

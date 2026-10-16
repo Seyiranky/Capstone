@@ -134,7 +134,9 @@ export type DisputeStatus = 'open' | 'escalated' | 'decided' | 'settled';
 /** What happens to the held money. */
 export type DisputeOutcome = 'release' | 'refund' | 'split';
 
-export type DisputeReason = 'notDone' | 'poorQuality' | 'noShow' | 'notReleased' | 'other';
+export type DisputeReason = 'notDone' | 'poorQuality' | 'noShow' | 'notReleased' | 'notPaid' | 'other';
+/** Where the job stood when the dispute was opened; decides what each outcome means. */
+export type DisputeStage = 'in_progress' | 'awaiting_payment' | 'paid';
 
 /** Who closed a dispute. */
 export type DisputeDecider = 'mediators' | 'admin' | 'parties';

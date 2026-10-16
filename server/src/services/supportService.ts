@@ -661,3 +661,36 @@ export const autoClose = async () => {
   }
   return stale.length;
 };
+
+/**
+ * A request the system opens for someone, e.g. to arrange a refund a dispute
+ * decided on a paid job. It starts in the team's queue, already explained.
+ */
+export const openOnBehalf = async (
+  ctx: Ctx,
+  input: {
+    userId: string;
+    category: SupportCategory;
+    subject: string;
+    systemKey: string;
+    meta: Record<string, unknown>;
+    relatedType?: SupportRelatedType;
+    relatedId?: string;
+    priority?: SupportPriority;
+  },
+) => {
+  const ticket = await SupportTicket.create({
+    number: newNumber(),
+    userId: input.userId,
+    category: input.category,
+    subject: input.subject.slice(0, SUBJECT_MAX),
+    priority: input.priority ?? PRIORITY_FOR[input.category],
+    relatedType: input.relatedType ?? null,
+    relatedId: input.relatedId ?? null,
+    lastMessageAt: new Date(),
+    userUnread: true,
+  });
+  await system(ticket.id, input.systemKey, { number: ticket.number, ...input.meta });
+  await tellAdmins(ctx, ticket, 'New support request', `Opened by Isoko: ${ticket.subject}`);
+  return ticket;
+};

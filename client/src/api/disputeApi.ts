@@ -1,8 +1,23 @@
 import axiosClient from './axiosClient';
-import type { Dispute, DisputeOutcome, DisputeReason } from '../types';
+import type { Dispute, DisputeOutcome, DisputeReason, DisputeStage } from '../types';
+
+/** Whether a job can be disputed by the viewer, at which stage and for which reasons. */
+export interface DisputeEligibility {
+  matchId: string;
+  gigTitle: string;
+  otherParty: string;
+  asWorker: boolean;
+  price: number;
+  canOpen: boolean;
+  stage: DisputeStage | null;
+  reasons: DisputeReason[];
+  blocked?: 'not_party' | 'not_started' | 'cancelled' | 'already_disputed' | 'window_passed';
+}
 
 export const disputeApi = {
   list: () => axiosClient.get<Dispute[]>('/disputes').then((res) => res.data),
+
+  eligible: () => axiosClient.get<DisputeEligibility[]>('/disputes/eligible').then((res) => res.data),
 
   open: (matchId: string, reason: DisputeReason, details: string) =>
     axiosClient.post<Dispute>('/disputes', { matchId, reason, details }).then((res) => res.data),
