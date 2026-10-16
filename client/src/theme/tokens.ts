@@ -47,9 +47,24 @@ const cardCfg = {
   paddingLG: 20,
 } as const;
 
+// Text and status colours are chosen for contrast, not taken from the defaults:
+// Ant Design's secondary text is 45% black (3.3:1 on white) and its red and
+// amber fall short of 4.5:1 as text. Info is a real blue, so an info box is a
+// pale blue with dark text rather than a dark grey built from the brand black.
 export const lightTheme: ThemeConfig = {
   token: {
     ...shared,
+    colorInfo: '#2563eb',
+    colorTextSecondary: '#5f5f6a',
+    colorTextTertiary: '#71717a',
+    colorTextDescription: '#5f5f6a',
+    colorTextPlaceholder: '#8a8a93',
+    colorError: '#dc2626',
+    colorErrorText: '#b91c1c',
+    colorWarning: '#d97706',
+    colorWarningText: '#b45309',
+    colorSuccess: '#16a34a',
+    colorSuccessText: '#15803d',
     colorBgLayout: BRAND.contentLight,
     colorBorder: BRAND.borderLight,
     colorBorderSecondary: BRAND.borderLight,
@@ -65,7 +80,7 @@ export const lightTheme: ThemeConfig = {
     Menu: {
       itemHeight: 40,
       itemBorderRadius: 4,
-      groupTitleColor: '#a1a1aa',
+      groupTitleColor: '#71717a',
       groupTitleFontSize: 11,
       itemSelectedBg: '#f4f4f5',
       itemSelectedColor: BRAND.ink,
@@ -94,7 +109,14 @@ export const darkTheme: ThemeConfig = {
   token: {
     ...shared,
     colorPrimary: '#fafafa',
-    colorInfo: '#fafafa',
+    colorInfo: '#60a5fa',
+    colorError: '#f87171',
+    colorErrorText: '#fca5a5',
+    colorWarning: '#fbbf24',
+    colorWarningText: '#fcd34d',
+    colorSuccess: '#4ade80',
+    colorSuccessText: '#86efac',
+    colorTextPlaceholder: '#8b8b93',
     colorLink: '#fafafa',
     colorLinkHover: '#d4d4d8',
     colorTextLightSolid: '#0f0f10',
@@ -105,6 +127,7 @@ export const darkTheme: ThemeConfig = {
     colorBorderSecondary: '#232326',
     colorText: '#f4f4f5',
     colorTextSecondary: '#a1a1aa',
+    colorTextDescription: '#a1a1aa',
     colorTextTertiary: '#8b8b93',
   },
   components: {
@@ -124,9 +147,9 @@ export const darkTheme: ThemeConfig = {
       // which is dark here so that white primary buttons stay readable.
       darkItemColor: 'rgba(255,255,255,0.72)',
       darkItemHoverColor: '#ffffff',
-      darkGroupTitleColor: '#71717a',
+      darkGroupTitleColor: '#8b8b93',
       darkItemHoverBg: 'rgba(255,255,255,0.06)',
-      groupTitleColor: '#71717a',
+      groupTitleColor: '#8b8b93',
       groupTitleFontSize: 11,
       itemHeight: 40,
       itemBorderRadius: 4,

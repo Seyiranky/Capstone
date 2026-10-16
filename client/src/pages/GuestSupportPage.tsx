@@ -13,7 +13,7 @@ const Frame = ({ children, wide }: { children: React.ReactNode; wide?: boolean }
   <div className="isoko-guest-support">
     <div className="isoko-guest-support__top">
       <Link to="/login">
-        <img src={logo} alt="Isoko" style={{ height: 44, display: 'block' }} />
+        <span className="isoko-logo-tile"><img src={logo} alt="Isoko" style={{ height: 44, display: 'block' }} /></span>
       </Link>
       <LanguageToggle />
     </div>

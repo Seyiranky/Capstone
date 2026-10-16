@@ -7,7 +7,7 @@
   --isoko-navy: #18181b;
   --isoko-navy-soft: #f4f4f5;
   --isoko-ink: #18181b;
-  --isoko-muted: #71717a;
+  --isoko-muted: #61616b;
   --isoko-surface: #ffffff;
   --isoko-border: #e4e4e7;
   --isoko-bubble-own: #18181b;
@@ -25,6 +25,8 @@
 body {
   background: var(--ant-color-bg-layout, #f5f5f6);
 }
+/* Pages outside the app layout (Fairwork, receipts, sign-in) sit on the body itself. */
+:root[data-theme='dark'] body { background: #0f0f10; color: #f4f4f5; }
 
 a {
   color: var(--ant-color-link, #18181b);
@@ -699,3 +701,33 @@ a.isoko-setup-row:focus-visible { outline: 2px solid #2563eb; outline-offset: 1p
 :root[data-theme='dark'] .isoko-dispute-stage--in_progress { background: rgba(96, 165, 250, 0.1); color: #bfdbfe; }
 :root[data-theme='dark'] .isoko-dispute-stage--awaiting_payment { background: rgba(251, 191, 36, 0.1); color: #fde68a; }
 :root[data-theme='dark'] .isoko-dispute-stage--paid { background: rgba(74, 222, 128, 0.08); color: #bbf7d0; }
+
+/* ── Readable text everywhere ─────────────────────────────────────────────── */
+/* Ant Design's preset tag colours are too pale as text in light mode. */
+:root:not([data-theme='dark']) .ant-tag.ant-tag-gold { color: #92400e !important; }
+:root:not([data-theme='dark']) .ant-tag.ant-tag-orange { color: #9a3412 !important; }
+:root:not([data-theme='dark']) .ant-tag.ant-tag-volcano { color: #9a3412 !important; }
+:root:not([data-theme='dark']) .ant-tag.ant-tag-green { color: #166534 !important; }
+:root:not([data-theme='dark']) .ant-tag.ant-tag-cyan { color: #155e75 !important; }
+:root:not([data-theme='dark']) .ant-tag.ant-tag-blue { color: #1e40af !important; }
+:root:not([data-theme='dark']) .ant-tag.ant-tag-red { color: #991b1b !important; }
+:root:not([data-theme='dark']) .ant-tag.ant-tag-purple { color: #6b21a8 !important; }
+.isoko-priority--urgent { color: #be123c; } .isoko-priority--urgent .isoko-priority__dot { background: #e11d48; }
+.isoko-priority--high { color: #b45309; } .isoko-priority--high .isoko-priority__dot { background: #f59e0b; }
+.isoko-priority--normal { color: #1d4ed8; } .isoko-priority--normal .isoko-priority__dot { background: #2563eb; }
+.isoko-priority--low { color: #52525b; } .isoko-priority--low .isoko-priority__dot { background: #a1a1aa; }
+:root[data-theme='dark'] .isoko-priority--urgent { color: #fda4af; }
+:root[data-theme='dark'] .isoko-priority--high { color: #fcd34d; }
+:root[data-theme='dark'] .isoko-priority--normal { color: #93c5fd; }
+:root[data-theme='dark'] .isoko-priority--low { color: #a1a1aa; }
+.isoko-worker-card__avail--available { color: #15803d; }
+.isoko-worker-card__avail--busy { color: #b45309; }
+:root[data-theme='dark'] .isoko-worker-card__avail--available { color: #4ade80; }
+:root[data-theme='dark'] .isoko-worker-card__avail--busy { color: #fbbf24; }
+.isoko-support-event__time { opacity: 1; color: var(--isoko-muted); }
+.isoko-support-event { color: #52525b; }
+:root[data-theme='dark'] .isoko-support-event { color: #a1a1aa; }
+
+/* The navy logo on a dark page sits on a white tile, as in the sidebar. */
+.isoko-logo-tile { display: inline-flex; border-radius: 8px; }
+:root[data-theme='dark'] .isoko-logo-tile { background: #ffffff; padding: 4px; }

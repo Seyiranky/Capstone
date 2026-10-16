@@ -12,7 +12,7 @@ const FairworkPage = () => {
     <div style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px 48px' }}>
       <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
         <Link to="/">
-          <img src={logo} alt="Isoko" style={{ height: 44, display: 'block' }} />
+          <span className="isoko-logo-tile"><img src={logo} alt="Isoko" style={{ height: 44, display: 'block' }} /></span>
         </Link>
         <LanguageToggle />
       </Flex>

@@ -52,7 +52,7 @@ const LoginForm = () => {
         </Button>
       </Form>
 
-      <Divider plain style={{ color: 'rgba(128,128,128,0.7)', margin: '14px 0', fontSize: 13 }}>
+      <Divider plain style={{ color: 'var(--isoko-muted)', margin: '14px 0', fontSize: 13 }}>
         {t('auth.login.or')}
       </Divider>
 

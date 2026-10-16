@@ -54,8 +54,8 @@ const PRIORITY_COLOR: Record<SupportPriority, string> = {
 export const priorityColor = (p: SupportPriority) => PRIORITY_COLOR[p];
 
 export const PriorityTag = ({ priority }: { priority: SupportPriority }) => (
-  <span className="isoko-priority" style={{ color: PRIORITY_COLOR[priority] }}>
-    <span className="isoko-priority__dot" style={{ background: PRIORITY_COLOR[priority] }} />
+  <span className={`isoko-priority isoko-priority--${priority}`}>
+    <span className="isoko-priority__dot" />
     {priority[0].toUpperCase() + priority.slice(1)}
   </span>
 );
