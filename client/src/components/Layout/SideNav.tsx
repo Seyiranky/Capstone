@@ -27,6 +27,7 @@ import {
   CustomerServiceOutlined,
 } from '@ant-design/icons';
 import { supportApi } from '../../api/supportApi';
+import { safeVisitApi } from '../../api/safeVisitApi';
 import { useAppSelector } from '../../store/hooks';
 import { activeNavKey, visibleNavEntries } from './navConfig';
 
@@ -62,14 +63,21 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
   const { role } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
-  // Requests with something new: replies from the team for people, waiting requests for admins.
-  const [supportUnread, setSupportUnread] = useState(0);
+  // Counts beside entries that need someone: support replies for people; for
+  // admins, waiting support requests and open safety alerts (checked often).
+  const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => {
     if (!role) return;
-    const load = () =>
-      (role === 'admin' ? supportApi.admin.unread() : supportApi.unread()).then(setSupportUnread).catch(() => undefined);
+    const load = () => {
+      if (role === 'admin') {
+        supportApi.admin.unread().then((n) => setCounts((c) => ({ ...c, '/admin/support': n }))).catch(() => undefined);
+        safeVisitApi.openCount().then((n) => setCounts((c) => ({ ...c, '/admin/safety': n }))).catch(() => undefined);
+      } else {
+        supportApi.unread().then((n) => setCounts((c) => ({ ...c, '/support': n }))).catch(() => undefined);
+      }
+    };
     load();
-    const poll = window.setInterval(load, 60000);
+    const poll = window.setInterval(load, role === 'admin' ? 20000 : 60000);
     return () => window.clearInterval(poll);
   }, [role, location.pathname]);
 
@@ -81,10 +89,10 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
       key: entry.key,
       icon: ICONS[entry.key],
       label:
-        (entry.key === '/support' || entry.key === '/admin/support') && supportUnread > 0 ? (
+        counts[entry.key] > 0 ? (
           <Flex justify="space-between" align="center" gap={8}>
             {t(entry.labelKey)}
-            <Badge count={supportUnread} size="small" />
+            <Badge count={counts[entry.key]} size="small" />
           </Flex>
         ) : (
           t(entry.labelKey)
@@ -101,7 +109,7 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
       group.children.push(item(entry));
     }
     return [...flat, ...groups];
-  }, [role, t, supportUnread]);
+  }, [role, t, counts]);
 
   const selected = activeNavKey(location.pathname);
 

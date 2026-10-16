@@ -251,6 +251,14 @@ const MatchList = () => {
                     )}
                   </div>
 
+                  {/* Safety first on the card: check in, check out and SOS for whoever is on site. */}
+                  {isWorker &&
+                    (isLead || myMembership?.status === "joined") &&
+                    (match.status === "accepted" ||
+                      (match.status === "completed" &&
+                        Date.now() - new Date(match.completedAt ?? match.updatedAt ?? 0).getTime() < 2 * 86_400_000)) && (
+                      <SafeVisitBar matchId={match.id} active={match.status === "accepted"} />
+                    )}
                   {match.origin === "ranked" && match.scoreBreakdown && (
                     <details style={{ marginBottom: 10 }}>
                       <summary
@@ -414,9 +422,6 @@ const MatchList = () => {
             const lead = !isWorker || m.workerId === profile.id;
             return (
               <Flex vertical gap={20}>
-                {m.status === "accepted" && isWorker && lead && (
-                  <SafeVisitBar matchId={m.id} />
-                )}
                 <JobCoverCard matchId={m.id} />
                 <TeamSection match={m} onChanged={refresh} />
                 <JobPhotos

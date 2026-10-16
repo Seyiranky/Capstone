@@ -17,6 +17,8 @@ router.get('/rejection-reasons', verifyToken, authorize('admin'), adminControlle
 router.get('/payments', verifyToken, authorize('admin'), adminController.payments);
 router.get('/rates', verifyToken, authorize('admin'), adminController.rates);
 router.get('/safety-alerts', verifyToken, authorize('admin'), adminController.safetyAlerts);
+router.get('/safety-alerts/open-count', verifyToken, authorize('admin'), adminController.openSafetyAlerts);
+router.put('/safety-alerts/:id/acknowledge', verifyToken, authorize('admin'), adminController.acknowledgeSafetyAlert);
 router.put('/safety-alerts/:id/resolve', verifyToken, authorize('admin'), adminController.resolveSafetyAlert);
 router.get('/cover-claims', verifyToken, authorize('admin'), coverController.listClaims);
 router.put('/cover-claims/:id', verifyToken, authorize('admin'), coverController.decide);

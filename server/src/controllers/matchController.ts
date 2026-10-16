@@ -294,5 +294,5 @@ export const checkOut = visitHandler(safeVisitService.checkOut);
 export const sos = visitHandler(safeVisitService.sos);
 
 export const visitStatus = async (req: Request, res: Response): Promise<void> => {
-  res.json(await safeVisitService.statusFor(pathParam(req, 'id')));
+  res.json(await safeVisitService.statusFor(pathParam(req, 'id'), authed(req).id));
 };

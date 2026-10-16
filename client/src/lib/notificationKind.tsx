@@ -61,7 +61,7 @@ const RULES: [RegExp, NotificationKind][] = [
   [/paid|payment/i, 'payment'],
   [/marked done/i, 'done'],
   [/dispute|mediate|appeal/i, 'dispute'],
-  [/sos|visit not checked|arrived/i, 'safety'],
+  [/sos|visit not checked|arrived|safety alert|checking on you/i, 'safety'],
   [/cover/i, 'cover'],
   [/report|suspended|reactivated/i, 'account'],
   [/review(?!er)|endorsed/i, 'review'],

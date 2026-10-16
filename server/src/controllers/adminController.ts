@@ -528,5 +528,13 @@ export const safetyAlerts = async (_req: Request, res: Response): Promise<void> 
 };
 
 export const resolveSafetyAlert = async (req: Request, res: Response): Promise<void> => {
-  res.json(await safeVisitService.resolve(pathParam(req, 'id'), authed(req).id));
+  res.json(await safeVisitService.resolve(req, pathParam(req, 'id'), authed(req).id, req.body?.note));
+};
+
+export const acknowledgeSafetyAlert = async (req: Request, res: Response): Promise<void> => {
+  res.json(await safeVisitService.acknowledge(req, pathParam(req, 'id'), authed(req).id));
+};
+
+export const openSafetyAlerts = async (_req: Request, res: Response): Promise<void> => {
+  res.json({ count: await safeVisitService.openCount() });
 };

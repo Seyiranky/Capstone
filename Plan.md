@@ -354,7 +354,7 @@ plus updated `disputes.test.ts`. Checked in the browser with a throwaway job: th
 job done but unpaid, the client's payment waited, an admin decided split, and the client was asked
 for half. 511 server tests pass.
 
-## Round 8 — SOS and safe visits, end to end (16 Oct 2026)
+## Round 8 — SOS and safe visits, end to end (done 16 Oct 2026)
 
 **Defects found**
 
@@ -384,6 +384,12 @@ after the job is closed while someone is checked in; crew members included, stat
 repeat SOS within 2 minutes joins the open one; admins see everyone's numbers and the job's
 place, acknowledge ("I'm on it", which tells the worker) and close with a note, with who and when
 shown; the page refreshes itself and the sidebar counts open alerts.
+
+**Status: done.** Migration `20261016120000` (acknowledged by/at, closing note); `safeVisit.test.ts`
+now 13 tests. Checked in the browser with a throwaway worker and client (SMS driver: log): bar on
+the card, check in, SOS with 112, admin sees all three numbers and the phone's location, "I'm on
+it" reaches the worker's card, close with a note, and check-out after the client marked the job
+done. 521 server tests pass.
 
 ## Security review
 

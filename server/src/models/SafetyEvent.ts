@@ -27,6 +27,11 @@ export class SafetyEvent extends Model<InferAttributes<SafetyEvent>, InferCreati
   /** For an SOS or overdue alert: when an admin marked it handled. */
   declare resolvedAt: Date | null;
   declare resolvedBy: string | null;
+  /** When an admin said they were on it; the worker is told. */
+  declare acknowledgedAt: CreationOptional<Date | null>;
+  declare acknowledgedBy: CreationOptional<string | null>;
+  /** What the admin did, written when the alert is closed. */
+  declare resolutionNote: CreationOptional<string | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -36,6 +41,8 @@ export class SafetyEvent extends Model<InferAttributes<SafetyEvent>, InferCreati
   static associate(models: Db) {
     SafetyEvent.belongsTo(models.Match, { foreignKey: 'matchId', as: 'match' });
     SafetyEvent.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+    SafetyEvent.belongsTo(models.User, { foreignKey: 'acknowledgedBy', as: 'acknowledger' });
+    SafetyEvent.belongsTo(models.User, { foreignKey: 'resolvedBy', as: 'resolver' });
   }
 }
 
@@ -51,6 +58,9 @@ export const initSafetyEvent = (sequelize: Sequelize) => {
       contactNotified: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
       resolvedAt: { type: DataTypes.DATE, allowNull: true },
       resolvedBy: { type: DataTypes.UUID, allowNull: true },
+      acknowledgedAt: { type: DataTypes.DATE, allowNull: true },
+      acknowledgedBy: { type: DataTypes.UUID, allowNull: true },
+      resolutionNote: { type: DataTypes.TEXT, allowNull: true },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },
