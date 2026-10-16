@@ -327,6 +327,27 @@ each article its own page with "Did this answer your question?"; a round chat bu
 contact form anywhere in the help centre. Routes: /support, /support/topics/:category,
 /support/topics/:category/:n, /support/requests, /support/:id.
 
+## Round 7 — Disputes after the job is done (16 Oct 2026)
+
+**Found.** Opening a dispute was allowed only while a job was in progress: a rule from escrow,
+when the money sat with Isoko during the job. With Mobile Money the client pays after marking the
+job done, so the arguments that matter come later and could not be raised: a worker whose client
+marked the job done and has not paid; a client who paid and then found the work faulty. The only
+way in was a link on an in-progress job card; the Disputes page had no "Open a dispute".
+
+**Change.** The server decides, per job and per person, whether a dispute can be opened, at which
+stage, and for which reasons; the screens only show what it allows.
+
+| Stage | When | Reasons | Outcome |
+|---|---|---|---|
+| In progress | accepted | as before | as before |
+| Awaiting payment | done, not paid | worker: not paid; client: not done, poor quality, other | release: full price due · split: half due · refund: called off, nothing due. Payment waits while it is open |
+| Paid | paid, within 14 days of done | not done, poor quality, other | release: nothing changes · split/refund: the worker owes that amount back; Isoko cannot reverse MoMo, so a support request is opened for an admin to arrange it |
+
+One dispute per job. "Open a dispute" on every eligible job card and on the Disputes page, with the
+stage explained in the form. Tests cover each stage, the payment pause, the window and the
+refund-owed request.
+
 ## Security review
 
 A review of authentication, access control, personal data and uploads before the defence.
