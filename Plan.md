@@ -391,6 +391,30 @@ the card, check in, SOS with 112, admin sees all three numbers and the phone's l
 it" reaches the worker's card, close with a note, and check-out after the client marked the job
 done. 521 server tests pass.
 
+## Round 9 — Who decides an application (16 Oct 2026)
+
+**Found.** Applications are decided by admins: `PUT /gig-applications/:id/review` is admin-only,
+every admin is notified of every application, and the gig page gives Approve/Reject only to
+admins. The client sees applicants but cannot choose. (An earlier answer in this session said
+the client decides; that was wrong.)
+
+**Decision.** Rules first, the client decides, admins act by exception — the model used by
+Upwork, TaskRabbit and Lynk. Built and verified one step at a time:
+
+1. **Client decides; eligibility rules.** The gig's owner approves or rejects its applicants;
+   admins can still step in. The client, not every admin, is told of each application. Applying
+   needs an active account, a confirmed contact and no open report against the worker. A gig can
+   be marked **sensitive** (children, working inside a home), by the client when posting, by
+   keywords Isoko recognises, or by the admin at gig approval; applying to one also needs a
+   reviewed skill in the trade, a confirmed phone, and a record (a paid job or a trust score of
+   4.0+). A worker who does not qualify is told why and what to do; the server enforces it.
+2. **Reminders and expiry.** An application unanswered for 48 hours reminds the client once; at
+   7 days it expires and the worker is told, so nobody waits for ever.
+3. **Admin Applications overview.** Only what needs a look: overdue, on sensitive gigs, and red
+   flags (an open report on either side, a burst of applications, a quote far below the trade's
+   usual rate). An admin can decide on the client's behalf, withdraw an application with a
+   reason, or message either person.
+
 ## Security review
 
 A review of authentication, access control, personal data and uploads before the defence.
