@@ -601,7 +601,13 @@
     "confidenceLabel": "Ni gute wizeye?",
     "confidenceHint": "Niba udahamya, bivuge. Undi musuzuma azazanwa aho kukubireka wenyine.",
     "levelLabel": "Urwego rw’ubumenyi wabonye",
-    "notesLabel": "Ibisobanuro ku mukozi (si ngombwa)"
+    "notesLabel": "Ibisobanuro ku mukozi (si ngombwa)",
+    "assignedTo": "Byahawe {{name}}",
+    "unassigned": "Nta usuzuma wahawe",
+    "adminDecides": "Icyemezo cyawe nk'umuyobozi kirabikemura kandi kirekura uwasuzumaga.",
+    "adminApproved": "Byemejwe. Ubuhanga ubu bugaragara nk'ubwemejwe.",
+    "adminRejected": "Byanzwe. Umukozi yabimenyeshejwe kandi ashobora kujurira.",
+    "decideFailed": "Ntibyashobotse kubika icyemezo. Ongera ugerageze."
   },
   "skills": {
     "categoryLabel": "Umwuga",

@@ -361,3 +361,56 @@ describe('collusion report replaces the stub', () => {
     expect(new Set(assignments.map((a) => a.reviewerId)).size).toBeGreaterThan(1);
   });
 });
+
+describe('an admin deciding directly', () => {
+  test('an admin who is not the assigned reviewer can settle a submission, and the record shows it', async () => {
+    const submit = await request(app)
+      .post('/api/skill-tasks')
+      .set('Authorization', `Bearer ${tokens.worker2}`)
+      .send({ skillId: skill.id, evidenceUrl: 'https://example.com/admin-decides' });
+    const taskId = submit.body.id;
+    const assignee = await openAssignee(taskId);
+    // Pick an admin who is not the one drawn.
+    const adminKey = ['admin1', 'admin2', 'admin3', 'admin4', 'admin5', 'admin6'].find((k) => users[k].id !== assignee)!;
+
+    // Through the peer route it is refused: that admin holds no assignment.
+    const viaPeer = await request(app)
+      .put(`/api/skill-tasks/${taskId}/review`)
+      .set('Authorization', `Bearer ${tokens[adminKey]}`)
+      .send({ decision: 'approved' });
+    expect(viaPeer.status).toBe(403);
+
+    const res = await request(app)
+      .put(`/api/skill-tasks/${taskId}/admin-decision`)
+      .set('Authorization', `Bearer ${tokens[adminKey]}`)
+      .send({ decision: 'approved', proficiencyLevel: 3, notes: 'Clear portfolio of finished sites.' });
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('approved');
+
+    const userSkill = must(await db.UserSkill.findOne({ where: { userId: users.worker2.id, skillId: skill.id } }), 'user skill');
+    expect(userSkill.verificationStatus).toBe('verified');
+    expect(userSkill.proficiencyLevel).toBe(3);
+
+    const seats = await db.SkillTaskAssignment.findAll({ where: { taskId } });
+    expect(seats.find((a) => a.reviewerId === users[adminKey].id)?.status).toBe('approved');
+    expect(seats.find((a) => a.reviewerId === assignee)?.status).toBe('expired');
+
+    const again = await request(app)
+      .put(`/api/skill-tasks/${taskId}/admin-decision`)
+      .set('Authorization', `Bearer ${tokens[adminKey]}`)
+      .send({ decision: 'rejected' });
+    expect(again.status).toBe(409);
+  });
+
+  test('only admins can use it', async () => {
+    const submit = await request(app)
+      .post('/api/skill-tasks')
+      .set('Authorization', `Bearer ${tokens.worker3}`)
+      .send({ skillId: skill.id, evidenceUrl: 'https://example.com/not-admin' });
+    const res = await request(app)
+      .put(`/api/skill-tasks/${submit.body.id}/admin-decision`)
+      .set('Authorization', `Bearer ${tokens.peer}`)
+      .send({ decision: 'approved' });
+    expect(res.status).toBe(403);
+  });
+});

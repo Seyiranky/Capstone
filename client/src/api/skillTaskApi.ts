@@ -64,6 +64,16 @@ export const skillTaskApi = {
       .put<SkillTask>(`/skill-tasks/${id}/review`, { decision, ...options })
       .then((res) => res.data),
 
+  /** An admin settles a submission directly, whoever it is assigned to. */
+  adminDecide: (
+    id: string,
+    decision: 'approved' | 'rejected',
+    options?: { notes?: string; proficiencyLevel?: number },
+  ) =>
+    axiosClient
+      .put<SkillTask>(`/skill-tasks/${id}/admin-decision`, { decision, ...options })
+      .then((res) => res.data),
+
   appealTask: (id: string, reason: string) =>
     axiosClient.post<{ task: SkillTask }>(`/skill-tasks/${id}/appeal`, { reason }).then((res) => res.data),
 };

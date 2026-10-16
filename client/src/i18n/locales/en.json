@@ -601,7 +601,13 @@
     "confidenceLabel": "How sure are you?",
     "confidenceHint": "If you are unsure, say so. A second reviewer will be brought in rather than leaving it to you alone.",
     "levelLabel": "Skill level you observed",
-    "notesLabel": "Notes for the worker (optional)"
+    "notesLabel": "Notes for the worker (optional)",
+    "assignedTo": "Assigned to {{name}}",
+    "unassigned": "No reviewer assigned",
+    "adminDecides": "Your decision as an admin settles it and releases the reviewer.",
+    "adminApproved": "Approved. The skill now shows as verified.",
+    "adminRejected": "Rejected. The worker has been told and can appeal.",
+    "decideFailed": "Could not save the decision. Try again."
   },
   "skills": {
     "categoryLabel": "Trade",

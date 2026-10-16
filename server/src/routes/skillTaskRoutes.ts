@@ -21,5 +21,7 @@ router.get('/my-skills', verifyToken, authorize('worker'), skillTaskController.l
 router.put('/:id/review', verifyToken, requireReviewer, skillTaskController.reviewTask);
 router.post('/:id/appeal', verifyToken, authorize('worker'), skillTaskController.appealTask);
 router.put('/:id/assign', verifyToken, authorize('admin'), skillTaskController.assignTask);
+// An admin settles a submission directly, recorded as the admin's own review.
+router.put('/:id/admin-decision', verifyToken, authorize('admin'), skillTaskController.adminDecide);
 
 export default router;

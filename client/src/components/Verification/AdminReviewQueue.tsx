@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Button, Empty, Flex, Input, List, Rate, Select, Space, Tooltip, Typography } from 'antd';
+import { App, Button, Empty, Flex, Input, List, Select, Space, Typography } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
+import { apiErrorMessage } from '../../utils/apiError';
 import { useTranslation } from 'react-i18next';
 import { skillTaskApi } from '../../api/skillTaskApi';
 import EvidenceViewer from './EvidenceViewer';
@@ -14,22 +16,25 @@ interface AdminReviewQueueProps {
 
 const AdminReviewQueue = ({ tasks, onReviewed }: AdminReviewQueueProps) => {
   const { t } = useTranslation();
+  const { message } = App.useApp();
   const [busyId, setBusyId] = useState<string | null>(null);
-  // Confidence drives quorum on the server: a reviewer who says they are
-  // unsure gets a second opinion rather than deciding alone.
-  const [confidence, setConfidence] = useState<Record<string, number>>({});
   const [level, setLevel] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
 
+  // An admin's decision settles the submission whoever it was assigned to; the
+  // assigned peer is released. (Through the peer route an admin without an
+  // assignment of their own was refused.)
   const decide = async (taskId: string, decision: 'approved' | 'rejected') => {
     setBusyId(taskId);
     try {
-      await skillTaskApi.reviewTask(taskId, decision, {
-        confidence: confidence[taskId],
+      await skillTaskApi.adminDecide(taskId, decision, {
         proficiencyLevel: decision === 'approved' ? level[taskId] : undefined,
         notes: notes[taskId] || undefined,
       });
+      message.success(decision === 'approved' ? t('review.adminApproved') : t('review.adminRejected'));
       onReviewed();
+    } catch (err) {
+      message.error(apiErrorMessage(err, t('review.decideFailed')));
     } finally {
       setBusyId(null);
     }
@@ -80,6 +85,19 @@ const AdminReviewQueue = ({ tasks, onReviewed }: AdminReviewQueueProps) => {
                     ) : null
                   }
                 />
+                {(() => {
+                  const open = task.assignments?.find((a) => a.status === 'pending');
+                  return (
+                    <Typography.Text type="secondary" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, marginBottom: 8 }}>
+                      <UserOutlined />
+                      {open?.reviewer
+                        ? t('review.assignedTo', { name: open.reviewer.name })
+                        : t('review.unassigned')}
+                      {' · '}
+                      {t('review.adminDecides')}
+                    </Typography.Text>
+                  );
+                })()}
                 <EvidenceViewer evidence={task.evidence} />
                 {task.notes && (
                   <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
@@ -88,18 +106,6 @@ const AdminReviewQueue = ({ tasks, onReviewed }: AdminReviewQueueProps) => {
                 )}
 
                 <Space direction="vertical" size={8} style={{ width: '100%', marginTop: 12 }}>
-                  <Flex align="center" gap={10} wrap>
-                    <Tooltip title={t('review.confidenceHint')}>
-                      <Typography.Text style={{ fontSize: 13 }}>
-                        {t('review.confidenceLabel')}
-                      </Typography.Text>
-                    </Tooltip>
-                    <Rate
-                      count={5}
-                      value={confidence[task.id] ?? 0}
-                      onChange={(v) => setConfidence((c) => ({ ...c, [task.id]: v }))}
-                    />
-                  </Flex>
                   <Flex align="center" gap={10} wrap>
                     <Typography.Text style={{ fontSize: 13 }}>
                       {t('review.levelLabel')}

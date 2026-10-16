@@ -268,6 +268,53 @@ export const assignTask = async (req: Request, res: Response): Promise<void> => 
   res.json(updated);
 };
 
+/**
+ * Closes a submission: marks it approved or rejected, and on approval makes
+ * the skill verified at the level the reviewer judged, then recalculates trust
+ * and competence and tells the worker. Shared by peer review and an admin's decision.
+ */
+const settleTask = async (req: Request, task: LoadedTask, finalStatus: SkillTaskStatus, proficiencyLevel?: number) => {
+  await task.update({ status: finalStatus, reviewedAt: new Date() });
+
+  if (finalStatus === 'approved') {
+    const [userSkill] = await UserSkill.findOrCreate({
+      where: { userId: task.workerId, skillId: task.skillId },
+      defaults: {
+        userId: task.workerId,
+        skillId: task.skillId,
+        proficiencyLevel: proficiencyLevel ?? 1,
+        verificationStatus: 'verified',
+      },
+    });
+    await userSkill.update({
+      verificationStatus: 'verified',
+      // Previously hardcoded to 1 forever; the reviewer who examined the
+      // evidence is the one who can judge the level.
+      ...(proficiencyLevel !== undefined ? { proficiencyLevel } : {}),
+    });
+
+    await trustScoreService.recalculate(task.workerId, { trigger: 'skill:verified' });
+    // Provenance moves with the kind of evidence approved: a sighted
+    // certificate and an approved demonstration are not the same claim.
+    await competenceService.recalculate(task.workerId, task.skillId, {
+      trigger: `task:${task.kind}:approved`,
+    });
+  }
+
+  await notify(req, {
+    userId: task.workerId,
+    title: finalStatus === 'approved' ? 'Skill verified' : 'Skill submission rejected',
+    body:
+      finalStatus === 'approved'
+        ? `Your submission for ${task.skill?.name} was approved. It now shows as a verified skill.`
+        : `Your submission for ${task.skill?.name} was rejected. You can appeal or submit new evidence.`,
+    // The verdict on evidence the worker submitted, often days earlier --
+    // the wait is exactly why this should not need the app to be open.
+    category: 'outcome',
+  });
+};
+
+
 export const reviewTask = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
   const { decision, notes, confidence, proficiencyLevel } = req.body ?? {};
@@ -336,46 +383,7 @@ export const reviewTask = async (req: Request, res: Response): Promise<void> => 
   const reviewedBy = assignments.map((a) => a.reviewerId);
   const roundsUsed = Math.max(...assignments.map((a) => a.round));
 
-  const settle = async (finalStatus: SkillTaskStatus) => {
-    await task.update({ status: finalStatus, reviewedAt: new Date() });
-
-    if (finalStatus === 'approved') {
-      const [userSkill] = await UserSkill.findOrCreate({
-        where: { userId: task.workerId, skillId: task.skillId },
-        defaults: {
-          userId: task.workerId,
-          skillId: task.skillId,
-          proficiencyLevel: proficiencyLevel ?? 1,
-          verificationStatus: 'verified',
-        },
-      });
-      await userSkill.update({
-        verificationStatus: 'verified',
-        // Previously hardcoded to 1 forever; the reviewer who examined the
-        // evidence is the one who can judge the level.
-        ...(proficiencyLevel !== undefined ? { proficiencyLevel } : {}),
-      });
-
-      await trustScoreService.recalculate(task.workerId, { trigger: 'skill:verified' });
-      // Provenance moves with the kind of evidence approved: a sighted
-      // certificate and an approved demonstration are not the same claim.
-      await competenceService.recalculate(task.workerId, task.skillId, {
-        trigger: `task:${task.kind}:approved`,
-      });
-    }
-
-    await notify(req, {
-      userId: task.workerId,
-      title: finalStatus === 'approved' ? 'Skill verified' : 'Skill submission rejected',
-      body:
-        finalStatus === 'approved'
-          ? `Your submission for ${task.skill?.name} was approved. It now shows as a verified skill.`
-          : `Your submission for ${task.skill?.name} was rejected. You can appeal or submit new evidence.`,
-      // The verdict on evidence the worker submitted, often days earlier --
-      // the wait is exactly why this should not need the app to be open.
-      category: 'outcome',
-    });
-  };
+  const settle = (finalStatus: SkillTaskStatus) => settleTask(req, task, finalStatus, proficiencyLevel);
 
   // Enough agreement to settle, in either direction.
   if (approvals >= requiredApprovals) {
@@ -413,6 +421,73 @@ export const reviewTask = async (req: Request, res: Response): Promise<void> => 
 
   const updated = await SkillTask.findByPk(task.id, { include: TASK_INCLUDES });
   res.json(updated);
+};
+
+/**
+ * An admin decides a submission directly, whoever it is assigned to.
+ *
+ * Peer review is the normal path; this is for an admin who has looked at the
+ * evidence and needs to settle it (a reviewer is away, or the queue is stuck).
+ * It is recorded as the admin's own review, with no draw behind it, and any
+ * peer still assigned is released and told, so the record shows who decided.
+ */
+export const adminDecide = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const { decision, notes, proficiencyLevel } = req.body ?? {};
+  if (!['approved', 'rejected'].includes(decision)) {
+    res.status(400).json({ message: "decision must be 'approved' or 'rejected'" });
+    return;
+  }
+  if (proficiencyLevel !== undefined && ![1, 2, 3, 4, 5].includes(proficiencyLevel)) {
+    res.status(400).json({ message: 'proficiencyLevel must be an integer from 1 to 5' });
+    return;
+  }
+  const task = (await SkillTask.findByPk(pathParam(req, 'id'), {
+    include: [
+      { model: Skill, as: 'skill' },
+      { model: SkillTaskAssignment, as: 'assignments' },
+    ],
+  })) as LoadedTask | null;
+  if (!task) {
+    res.status(404).json({ message: 'Skill task not found' });
+    return;
+  }
+  if (task.status !== 'pending') {
+    res.status(409).json({ message: 'This task has already been reviewed' });
+    return;
+  }
+
+  const assignments = task.assignments ?? [];
+  const now = new Date();
+  for (const open of assignments.filter((a) => a.status === 'pending' && a.reviewerId !== caller.id)) {
+    await open.update({ status: 'expired', notes: 'Closed: an admin decided this submission', decidedAt: now });
+    await notify(req, {
+      userId: open.reviewerId,
+      title: 'Review no longer needed',
+      body: `An admin decided the ${task.skill?.name ?? 'skill'} submission you were asked to review. Thank you.`,
+    });
+  }
+  const mine = assignments.find((a) => a.status === 'pending' && a.reviewerId === caller.id);
+  const text = typeof notes === 'string' && notes.trim() ? notes.trim().slice(0, 1000) : null;
+  if (mine) {
+    await mine.update({ status: decision, notes: text ?? mine.notes, decidedAt: now });
+  } else {
+    await SkillTaskAssignment.create({
+      taskId: task.id,
+      reviewerId: caller.id,
+      round: assignments.length ? Math.max(...assignments.map((a) => a.round)) + 1 : 1,
+      status: decision,
+      notes: text ? `Admin decision: ${text}` : 'Admin decision',
+      confidence: null,
+      // No draw: the admin chose to decide, so there is no seed or pool to audit.
+      assignmentSeed: null,
+      eligiblePoolSize: null,
+      assignedAt: now,
+      decidedAt: now,
+    });
+  }
+  await settleTask(req, task, decision, proficiencyLevel);
+  res.json(await SkillTask.findByPk(task.id, { include: TASK_INCLUDES }));
 };
 
 export const listTasks = async (req: Request, res: Response): Promise<void> => {
