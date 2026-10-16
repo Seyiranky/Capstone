@@ -354,6 +354,37 @@ plus updated `disputes.test.ts`. Checked in the browser with a throwaway job: th
 job done but unpaid, the client's payment waited, an admin decided split, and the client was asked
 for half. 511 server tests pass.
 
+## Round 8 — SOS and safe visits, end to end (16 Oct 2026)
+
+**Defects found**
+
+Worker side:
+1. The SOS button sat inside the job's "More" drawer: two taps away in an emergency.
+2. If the visit status failed to load (patchy data), the whole bar, SOS included, was not shown.
+3. An SOS texted the trusted contact first and waited for the SMS gateway (up to 10 s) before
+   saving the alert or telling the admins.
+4. Once the client marked the job done, check-out and SOS were refused: the worker stayed
+   "checked in" and admins got a false "not checked out" alert 12 hours later.
+5. Crew members on site could not check in or raise an SOS, and visit status was per job, not
+   per person, so two people on one job overwrote each other.
+6. After an SOS the worker saw a toast and nothing more: no sign it was seen, no 112 prompt; a
+   failed SOS said only "Something went wrong".
+7. Every tap made a new alert, burying the real one.
+
+Admin side:
+8. An alert showed a name and a job title: no worker phone, trusted contact phone, client, or
+   job location to act on.
+9. "Mark handled" kept no note and the list did not show who handled it.
+10. The page did not refresh and the sidebar showed no count of open alerts.
+11. The overdue notice named neither the worker nor the job.
+
+**Fixes.** Save and alert first, text in parallel; SOS on the job card, always shown, with a
+112 call button and a live state ("sent · seen by Isoko · handled"); check-out and SOS work
+after the job is closed while someone is checked in; crew members included, status per person;
+repeat SOS within 2 minutes joins the open one; admins see everyone's numbers and the job's
+place, acknowledge ("I'm on it", which tells the worker) and close with a note, with who and when
+shown; the page refreshes itself and the sidebar counts open alerts.
+
 ## Security review
 
 A review of authentication, access control, personal data and uploads before the defence.
