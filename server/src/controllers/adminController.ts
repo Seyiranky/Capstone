@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import { User, Gig, GigApplication, Skill, Match, Transaction, UserSkill, NotificationDelivery, Payout, Dispute, sequelize } from '../models';
 import * as rateService from '../services/rateService';
+import { canApply } from '../services/applicationEligibility';
 import * as safeVisitService from '../services/safeVisitService';
 import * as sms from '../lib/channels/sms';
 import notify from '../lib/notify';
@@ -123,6 +124,21 @@ export const pilotMetrics = async (req: Request, res: Response): Promise<void> =
   res.json(metrics);
 };
 
+/** An admin marks a live gig sensitive, or clears the mark, at any time. */
+export const setGigSensitive = async (req: Request, res: Response): Promise<void> => {
+  const gig = await Gig.findByPk(pathParam(req, 'id'));
+  if (!gig) {
+    res.status(404).json({ message: 'Gig not found' });
+    return;
+  }
+  if (typeof req.body?.sensitive !== 'boolean') {
+    res.status(400).json({ message: 'sensitive must be true or false' });
+    return;
+  }
+  await gig.update({ sensitive: req.body.sensitive, sensitiveBy: req.body.sensitive ? 'admin' : null });
+  res.json(gig);
+};
+
 export const reviewGig = async (req: Request, res: Response): Promise<void> => {
   const { decision, note } = req.body ?? {};
   if (!['approved', 'rejected'].includes(decision)) {
@@ -142,8 +158,13 @@ export const reviewGig = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  // The admin can mark a gig sensitive (or clear it) as they approve it.
+  const sensitive =
+    typeof req.body?.sensitive === 'boolean' && req.body.sensitive !== gig.sensitive
+      ? { sensitive: req.body.sensitive as boolean, sensitiveBy: req.body.sensitive ? ('admin' as const) : null }
+      : {};
   await gig.update(
-    decision === 'approved' ? { status: 'open', openedAt: new Date() } : { status: 'rejected' },
+    decision === 'approved' ? { status: 'open', openedAt: new Date(), ...sensitive } : { status: 'rejected' },
   );
 
   await notify(req, {
@@ -234,9 +255,18 @@ const inviteRankedCandidates = async (req: Request, gig: Gig): Promise<Match[]> 
   if (limit <= 0) return [];
 
   const candidates = await matchScoringService.rankCandidates({ gig });
-  const eligible = candidates.filter(
+  const fitting = candidates.filter(
     (candidate) => candidate.eligibleForInvite && candidate.workerId !== gig.clientId,
   );
+  // An invitation is an offer to apply on the worker's behalf, so it follows
+  // the same rules as applying: nobody is invited to a gig they could not apply to.
+  const people = await User.findAll({ where: { id: fitting.map((c) => c.workerId) } });
+  const byId = new Map(people.map((p) => [p.id, p]));
+  const eligible = [];
+  for (const candidate of fitting) {
+    const worker = byId.get(candidate.workerId);
+    if (worker && (await canApply(gig, worker)).eligible) eligible.push(candidate);
+  }
   const shortlist = buildShortlist(eligible, limit);
 
   const invitations: Match[] = [];

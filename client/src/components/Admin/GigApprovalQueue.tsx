@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { App, Empty, Flex, Tag, Typography } from 'antd';
-import { CheckOutlined, CloseOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { App, Empty, Flex, Switch, Tag, Typography } from 'antd';
+import { CheckOutlined, CloseOutlined, EnvironmentOutlined, SafetyOutlined } from '@ant-design/icons';
 import ActionMenu from '../common/ActionMenu';
 import { adminApi } from '../../api/adminApi';
 import IdentityLink from '../common/IdentityLink';
@@ -30,6 +30,18 @@ const GigApprovalQueue = ({ gigs, onReviewed, limit }: GigApprovalQueueProps) =>
   const { t } = useTranslation();
   const { message } = App.useApp();
   const [busyId, setBusyId] = useState<string | null>(null);
+  // Sensitivity is changed in place, before approving; kept here so the switch moves at once.
+  const [sensitive, setSensitive] = useState<Record<string, boolean>>({});
+  const toggleSensitive = async (gig: Gig, on: boolean) => {
+    setSensitive((s) => ({ ...s, [gig.id]: on }));
+    try {
+      await adminApi.setGigSensitive(gig.id, on);
+      message.success(on ? t('applyRules.markedSensitive') : t('applyRules.clearedSensitive'));
+    } catch {
+      setSensitive((s) => ({ ...s, [gig.id]: !on }));
+      message.error(t('applyRules.sensitiveFailed'));
+    }
+  };
 
   const decide = async (gig: Gig, decision: 'approved' | 'rejected', note?: string) => {
     setBusyId(gig.id);
@@ -108,6 +120,23 @@ const GigApprovalQueue = ({ gigs, onReviewed, limit }: GigApprovalQueueProps) =>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     {t('gigApproval.posted', { when: fromNow(gig.createdAt) })}
                   </Typography.Text>
+                </Flex>
+                <Flex align="center" gap={8} wrap="wrap" className="isoko-sensitive-row">
+                  <Switch
+                    size="small"
+                    checked={sensitive[gig.id] ?? Boolean(gig.sensitive)}
+                    onChange={(on) => toggleSensitive(gig, on)}
+                    aria-label={t('applyRules.sensitiveTag')}
+                  />
+                  <span>
+                    <SafetyOutlined /> {t('applyRules.sensitiveTag')}
+                    {(sensitive[gig.id] ?? gig.sensitive) && gig.sensitiveBy && sensitive[gig.id] === undefined && (
+                      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                        {' · '}
+                        {t(`applyRules.by_${gig.sensitiveBy}`)}
+                      </Typography.Text>
+                    )}
+                  </span>
                 </Flex>
                 <RateHint skillId={gig.skillId} amount={Number(gig.budget)} audience="admin" />
                 <Typography.Paragraph

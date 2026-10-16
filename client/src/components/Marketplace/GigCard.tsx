@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, Flex, Tooltip, Typography } from "antd";
-import { AudioOutlined, HeartFilled, HeartOutlined } from "@ant-design/icons";
+import { AudioOutlined, HeartFilled, HeartOutlined, SafetyOutlined } from "@ant-design/icons";
 import { formatClock } from "../../utils/formatClock";
 import { useSavedGigs } from "../../hooks/useSavedGigs";
 import GigCover from "../common/GigCover";
@@ -104,6 +104,12 @@ const GigCard = ({ gig, footNote, own = false }: GigCardProps) => {
         ellipsis
       >
         {gig.skill?.name}
+        {gig.sensitive && (
+          <span className="isoko-sensitive-inline">
+            {" · "}
+            <SafetyOutlined /> {t("applyRules.sensitiveTag")}
+          </span>
+        )}
       </Typography.Text>
 
       {/* Two lines for the title: one cut most titles mid-word on a laptop. */}

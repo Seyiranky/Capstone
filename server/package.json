@@ -18,7 +18,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
-    "sms:test": "tsx src/scripts/sendTestSms.ts"
+    "sms:test": "tsx src/scripts/sendTestSms.ts",
+    "backfill:sensitive": "tsx src/scripts/backfillSensitiveGigs.ts"
   },
   "engines": {
     "node": ">=24"

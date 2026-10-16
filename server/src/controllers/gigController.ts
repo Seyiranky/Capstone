@@ -8,6 +8,7 @@ import { authed } from '../lib/authed';
 import { pathParam, stringParam } from '../lib/query';
 import * as rateService from '../services/rateService';
 import { bareMime, checkVoiceNote, fieldFile } from '../middleware/upload';
+import { looksSensitive } from '../lib/sensitiveGig';
 
 const GIG_INCLUDES: Includeable[] = [
   { model: User, as: 'client' },
@@ -77,6 +78,14 @@ const checkGigFields = (
   return { values };
 };
 
+/** The client's tick, or Isoko's reading of the words; whichever says sensitive wins. */
+const sensitivity = (asked: unknown, title: string, description: string) => {
+  const byClient = asked === true || asked === 'true';
+  if (byClient) return { sensitive: true, sensitiveBy: 'client' as const };
+  if (looksSensitive(title, description)) return { sensitive: true, sensitiveBy: 'keywords' as const };
+  return { sensitive: false, sensitiveBy: null };
+};
+
 export const createGig = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
   const skillId = req.body?.skillId;
@@ -122,6 +131,7 @@ export const createGig = async (req: Request, res: Response): Promise<void> => {
     voiceNoteUrl: voice ? `/uploads/gigs/${voice.filename}` : null,
     voiceNoteMimeType: voice ? bareMime(voice.mimetype) : null,
     voiceNoteDurationSec: voiceCheck && 'durationSec' in voiceCheck ? voiceCheck.durationSec : null,
+    ...sensitivity(req.body?.sensitive, values.title as string, values.description as string),
   });
 
   res.status(201).json(gig);
@@ -257,7 +267,22 @@ export const updateGig = async (req: Request, res: Response): Promise<void> => {
   const reworded = ['title', 'description'].some(
     (k) => k in checked.values && checked.values[k] !== gig.get(k as 'title' | 'description'),
   );
-  await gig.update({ ...checked.values, ...(reworded && gig.status === 'open' ? { status: 'pending_review' } : {}) });
+  // A client can mark a gig sensitive, never unmark one an admin marked; new
+  // wording that reads as sensitive marks it too.
+  const title = (checked.values.title as string | undefined) ?? gig.title;
+  const description = (checked.values.description as string | undefined) ?? gig.description;
+  const next = sensitivity(body.sensitive, title, description);
+  const sensitiveChange =
+    next.sensitive && !gig.sensitive
+      ? next
+      : body.sensitive === false && gig.sensitive && gig.sensitiveBy === 'client' && !looksSensitive(title, description)
+        ? { sensitive: false, sensitiveBy: null }
+        : {};
+  await gig.update({
+    ...checked.values,
+    ...sensitiveChange,
+    ...(reworded && gig.status === 'open' ? { status: 'pending_review' } : {}),
+  });
   res.json(gig);
 };
 

@@ -8,6 +8,8 @@ export interface CreateGigPayload {
   skillId: string;
   /** Optional bar. Workers below it rank lower but are never hidden. */
   requiredLevel?: number | null;
+  /** Involves children or working inside a home. */
+  sensitive?: boolean;
   locationLat: number;
   locationLng: number;
 }
@@ -25,6 +27,7 @@ export const gigApi = {
     if (payload.requiredLevel != null) {
       formData.append('requiredLevel', String(payload.requiredLevel));
     }
+    if (payload.sensitive) formData.append('sensitive', 'true');
     formData.append('locationLat', String(payload.locationLat));
     formData.append('locationLng', String(payload.locationLng));
     if (imageFile) {

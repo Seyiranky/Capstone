@@ -8,6 +8,7 @@ import { pathParam, stringParam } from '../lib/query';
 import { QUOTE_MAX, QUOTE_MIN, QUOTE_NOTE_MAX } from '../services/escrowRules';
 import { REJECTION_REASONS, type RejectionReason } from '../types/domain';
 import * as teamService from '../services/teamService';
+import { canApply } from '../services/applicationEligibility';
 
 /** What the worker is told, with the next step where there is one. */
 const REASON_TEXT: Record<RejectionReason, string> = {
@@ -85,6 +86,16 @@ export const applyToGig = async (req: Request, res: Response): Promise<void> => 
     res.status(404).json({ message: 'User not found' });
     return;
   }
+  // The rules, the same for everyone; the client then chooses among those who qualify.
+  const eligibility = await canApply(gig, worker);
+  if (!eligibility.eligible) {
+    res.status(403).json({
+      message: 'You do not meet the requirements to apply to this gig yet',
+      code: 'NOT_ELIGIBLE',
+      missing: eligibility.missing,
+    });
+    return;
+  }
   const scored = await matchScoringService.scoreOne({ gig, worker });
 
   const now = new Date();
@@ -106,18 +117,15 @@ export const applyToGig = async (req: Request, res: Response): Promise<void> => 
     crew,
   });
 
-  const admins = await User.findAll({ where: { role: 'admin' } });
-  await Promise.all(
-    admins.map((admin) =>
-      notify(req, {
-        userId: admin.id,
-        title: 'New gig application',
-        body: quote
-          ? `${worker.name} applied to "${gig.title}", quoting ${quote.toLocaleString()} RWF.`
-          : `${worker.name} applied to "${gig.title}".`,
-      }),
-    ),
-  );
+  // The client chooses, so the client is told; admins see applications that need them on their overview.
+  await notify(req, {
+    userId: gig.clientId,
+    title: 'New gig application',
+    body: quote
+      ? `${worker.name} applied to "${gig.title}", quoting ${quote.toLocaleString()} RWF. Review applicants on the gig page.`
+      : `${worker.name} applied to "${gig.title}". Review applicants on the gig page.`,
+    category: 'outcome',
+  });
 
   res.status(201).json(application);
 };
@@ -161,7 +169,24 @@ export const listApplications = async (req: Request, res: Response): Promise<voi
   );
 };
 
+/** Whether the caller may apply to a gig, and every requirement they have not met yet. */
+export const eligibility = async (req: Request, res: Response): Promise<void> => {
+  const gig = await Gig.findByPk(stringParam(req, 'gigId') ?? '');
+  if (!gig) {
+    res.status(404).json({ message: 'Gig not found' });
+    return;
+  }
+  const worker = await User.findByPk(authed(req).id);
+  res.json(await canApply(gig, worker!));
+};
+
+/**
+ * The gig's client approves or rejects an applicant. An admin can step in and
+ * decide instead (a client who is away, or something flagged); the client is
+ * told when that happens.
+ */
 export const reviewApplication = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
   const { decision, reason, note } = req.body ?? {};
   if (!['approved', 'rejected'].includes(decision)) {
     res.status(400).json({ message: "decision must be 'approved' or 'rejected'" });
@@ -180,10 +205,20 @@ export const reviewApplication = async (req: Request, res: Response): Promise<vo
     res.status(404).json({ message: 'Application not found' });
     return;
   }
+  const isOwner = application.gig?.clientId === caller.id;
+  if (!isOwner && caller.role !== 'admin') {
+    res.status(403).json({ message: 'Only the client who posted this gig can decide its applications' });
+    return;
+  }
   if (application.status !== 'pending') {
     res.status(409).json({ message: 'This application has already been reviewed' });
     return;
   }
+  if (decision === 'approved' && application.gig?.status !== 'open') {
+    res.status(409).json({ message: 'This gig is no longer taking applications' });
+    return;
+  }
+  const byAdmin = !isOwner;
 
   if (decision === 'rejected') {
     const rejectionNote = typeof note === 'string' ? note.trim().slice(0, 280) || null : null;
@@ -195,6 +230,13 @@ export const reviewApplication = async (req: Request, res: Response): Promise<vo
       // The answer to something the worker applied for and is waiting on.
       category: 'outcome',
     });
+    if (byAdmin) {
+      await notify(req, {
+        userId: application.gig!.clientId,
+        title: 'An admin decided an application',
+        body: `An Isoko admin turned down an application for "${application.gig?.title}".`,
+      });
+    }
     res.json({ application });
     return;
   }
@@ -224,7 +266,9 @@ export const reviewApplication = async (req: Request, res: Response): Promise<vo
   await notify(req, {
     userId: application.gig?.clientId as string,
     title: 'Worker selected',
-    body: `A worker was selected for "${application.gig?.title}" and has been asked to confirm.`,
+    body: byAdmin
+      ? `An Isoko admin selected a worker for "${application.gig?.title}"; they have been asked to confirm.`
+      : `You selected a worker for "${application.gig?.title}"; they have been asked to confirm.`,
     // Left in-app: the client triggered this by approving the application, so
     // an email would report their own click back to them, and "Worker
     // confirmed" covers the same hiring event once it actually resolves.

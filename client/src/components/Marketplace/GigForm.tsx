@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, App, Button, Form, Input, InputNumber, Select, Upload } from 'antd';
+import { Alert, App, Button, Checkbox, Form, Input, InputNumber, Select, Upload } from 'antd';
 import { AudioOutlined, UploadOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
 import { clipFile, useVoiceRecorder } from '../../hooks/useVoiceRecorder';
@@ -14,6 +14,7 @@ import { locationName as lookupLocationName } from '../../utils/locationName';
 import type { Gig, Skill } from '../../types';
 import RateHint from './RateHint';
 import { apiErrorMessage } from '../../utils/apiError';
+import { looksSensitive } from '../../lib/sensitiveGig';
 
 interface GigFormProps {
   gig?: Gig;
@@ -27,6 +28,7 @@ interface GigFormValues {
   categoryId: string;
   specialisationId?: string;
   requiredLevel?: number | null;
+  sensitive?: boolean;
   locationName: string;
 }
 
@@ -46,6 +48,14 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
   const budget = Form.useWatch('budget', form) as number | undefined;
+  const title = Form.useWatch('title', form) as string | undefined;
+  const description = Form.useWatch('description', form) as string | undefined;
+  // What Isoko will decide from the words: shown as the client types.
+  const wordsSensitive = looksSensitive(title ?? '', description ?? '');
+  // The words decide it, so the box shows ticked (and cannot be unticked) while they do.
+  useEffect(() => {
+    if (wordsSensitive) form.setFieldValue('sensitive', true);
+  }, [wordsSensitive, form]);
 
   useEffect(() => {
     skillApi.listSkillTree().then(setSkills);
@@ -64,6 +74,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
             budget: Number(gig.budget),
             categoryId: gig.skillId,
             requiredLevel: gig.requiredLevel ?? undefined,
+            sensitive: gig.sensitive ?? false,
             locationName:
               lookupLocationName(gig.locationLat, gig.locationLng) ?? KIGALI_LOCATIONS[0].name,
           }
@@ -83,6 +94,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
           description: values.description,
           budget: Number(values.budget),
           requiredLevel: values.requiredLevel ?? null,
+          sensitive: Boolean(values.sensitive),
           locationLat: location.lat,
           locationLng: location.lng,
         });
@@ -99,6 +111,7 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
             // category, which still matches but with less resolution.
             skillId: values.specialisationId || values.categoryId,
             requiredLevel: values.requiredLevel ?? null,
+            sensitive: Boolean(values.sensitive),
             locationLat: location.lat,
             locationLng: location.lng,
           },
@@ -188,6 +201,15 @@ const GigForm = ({ gig, onPosted }: GigFormProps) => {
             label: t(`skills.levelName.${n}`),
           }))}
         />
+      </Form.Item>
+      <Form.Item
+        name="sensitive"
+        valuePropName="checked"
+        extra={wordsSensitive ? t('applyRules.formAuto') : t('applyRules.formHint')}
+      >
+        <Checkbox disabled={wordsSensitive}>
+          {t('applyRules.formLabel')}
+        </Checkbox>
       </Form.Item>
       <Form.Item name="locationName" label={t('marketplace.gigForm.locationLabel')}>
         <Select options={KIGALI_LOCATIONS.map((l) => ({ value: l.name, label: l.name }))} />

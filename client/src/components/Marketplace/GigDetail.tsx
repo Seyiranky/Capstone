@@ -19,6 +19,7 @@ import {
   Row,
   Skeleton,
   Tag,
+  Tooltip,
   Typography,
 } from 'antd';
 import {
@@ -29,6 +30,7 @@ import {
   EditOutlined,
   EnvironmentOutlined,
   HomeOutlined,
+  SafetyOutlined,
 } from '@ant-design/icons';
 import ActionMenu from '../common/ActionMenu';
 import ProtectionCard from './ProtectionCard';
@@ -36,12 +38,14 @@ import { fromNow } from '../../lib/time';
 import WorkerPicker from '../Team/WorkerPicker';
 import GigForm from './GigForm';
 import ApplicantList from './ApplicantList';
+import ApplyRequirements from './ApplyRequirements';
 import ApplicationProgress from './ApplicationProgress';
 import RejectionNotice from './RejectionNotice';
 import RateHint from './RateHint';
 import { useAppSelector } from '../../store/hooks';
 import { gigApi } from '../../api/gigApi';
-import { gigApplicationApi } from '../../api/gigApplicationApi';
+import { gigApplicationApi, type ApplyEligibility } from '../../api/gigApplicationApi';
+import { matchApi } from '../../api/matchApi';
 import { adminApi } from '../../api/adminApi';
 import IdentityLink from '../common/IdentityLink';
 import StatusTag from '../common/StatusTag';
@@ -73,6 +77,10 @@ const GigDetail = () => {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
   const [applyOpen, setApplyOpen] = useState(false);
+  // For a worker: whether they may apply, checked by the same rules the server enforces.
+  const [eligibility, setEligibility] = useState<ApplyEligibility | null>(null);
+  // A worker already invited to this gig confirms the invitation rather than applying.
+  const [invited, setInvited] = useState(false);
   const [quoteAmount, setQuoteAmount] = useState<number | null>(null);
   const [quoteNote, setQuoteNote] = useState('');
   const [crewOn, setCrewOn] = useState(false);
@@ -97,6 +105,15 @@ const GigDetail = () => {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    if (role !== 'worker' || !id) return;
+    gigApplicationApi.eligibility(id).then(setEligibility).catch(() => setEligibility(null));
+    matchApi
+      .listMatches()
+      .then((all) => setInvited(all.some((m) => m.gigId === id && m.status === 'pending' && m.workerId === profile?.id)))
+      .catch(() => setInvited(false));
+  }, [role, id]);
 
   if (loading) return <Skeleton active paragraph={{ rows: 8 }} />;
   if (!gig) return <Result status="404" title={t('marketplace.gigDetail.notFound')} />;
@@ -343,7 +360,7 @@ const GigDetail = () => {
                 <ApplicantList
                   applicants={sortedApplicants}
                   budget={Number(gig.budget)}
-                  canDecide={role === 'admin'}
+                  canDecide={isOwner || role === 'admin'}
                   busyId={busyId}
                   onDecide={handleApplicationDecision}
                 />
@@ -368,11 +385,26 @@ const GigDetail = () => {
 
               <MetaRow label={t('common.category')}>{gig.skill?.name}</MetaRow>
               <MetaRow label={t('common.location')}>{loc ?? '—'}</MetaRow>
+              {gig.sensitive && (
+                <Tooltip title={t('applyRules.sensitiveTip')}>
+                  <span className="isoko-sensitive-tag">
+                    <SafetyOutlined /> {t('applyRules.sensitiveTag')}
+                  </span>
+                </Tooltip>
+              )}
 
               {role === 'worker' && !myApplication && (
                 <>
                   <Divider style={{ margin: '14px 0' }} />
-                  {gig.status === 'open' ? (
+                  {gig.status === 'open' && invited ? (
+                    <div className="isoko-invited-note">
+                      <strong>{t('applyRules.invitedTitle')}</strong>
+                      <span>{t('applyRules.invitedBody')}</span>
+                      <Link to="/marketplace?tab=matches">{t('applyRules.invitedLink')}</Link>
+                    </div>
+                  ) : gig.status === 'open' && eligibility && !eligibility.eligible ? (
+                    <ApplyRequirements missing={eligibility.missing} sensitive={eligibility.sensitive} />
+                  ) : gig.status === 'open' ? (
                     <Button
                       type="primary"
                       size="large"

@@ -30,6 +30,10 @@ export const adminApi = {
   reviewGig: (id: string, decision: 'approved' | 'rejected', note?: string) =>
     axiosClient.put<Gig>(`/admin/gigs/${id}/review`, { decision, note }).then((res) => res.data),
 
+  /** Mark a gig sensitive (children, inside a home), or clear it. */
+  setGigSensitive: (id: string, sensitive: boolean) =>
+    axiosClient.put<Gig>(`/admin/gigs/${id}/sensitive`, { sensitive }).then((res) => res.data),
+
   moderateUser: (id: string, action: 'suspend' | 'activate') =>
     axiosClient.put<User>(`/admin/users/${id}/moderate`, { action }).then((res) => res.data),
 

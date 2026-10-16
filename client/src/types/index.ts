@@ -135,6 +135,9 @@ export interface Gig {
   status: GigStatus;
   /** Optional bar set by the client. Soft: below it ranks lower, never hidden. */
   requiredLevel?: number | null;
+  /** Involves children or working inside a home: applying needs a stronger record. */
+  sensitive?: boolean;
+  sensitiveBy?: 'client' | 'keywords' | 'admin' | null;
   imageUrl?: string | null;
   /** The client describing the job aloud. */
   voiceNoteUrl?: string | null;

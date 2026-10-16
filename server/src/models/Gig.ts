@@ -31,6 +31,10 @@ export class Gig extends Model<InferAttributes<Gig>, InferCreationAttributes<Gig
   declare voiceNoteDurationSec: CreationOptional<number | null>;
   declare openedAt: Date | null;
   declare requiredLevel: number | null;
+  /** Involves children or working inside a home: applying needs a stronger record. */
+  declare sensitive: CreationOptional<boolean>;
+  /** Who marked it: the client, Isoko's keyword check, or an admin. */
+  declare sensitiveBy: CreationOptional<'client' | 'keywords' | 'admin' | null>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
@@ -108,6 +112,8 @@ export const initGig = (sequelize: Sequelize) => {
         allowNull: true,
         validate: { min: 1, max: 5 },
       },
+      sensitive: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+      sensitiveBy: { type: DataTypes.STRING, allowNull: true, validate: { isIn: [['client', 'keywords', 'admin']] } },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE,
     },

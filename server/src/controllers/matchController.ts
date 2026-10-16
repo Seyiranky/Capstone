@@ -9,6 +9,7 @@ import * as safeVisitService from '../services/safeVisitService';
 import { MAX_JOB_PHOTOS } from '../middleware/upload';
 import * as trustScoreService from '../services/trustScoreService';
 import * as completionService from '../services/completionService';
+import { canApply } from '../services/applicationEligibility';
 import notify from '../lib/notify';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
@@ -102,6 +103,21 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
   if (status === 'accepted' && !isWorker) {
     res.status(403).json({ message: 'Only the matched worker may accept this match' });
     return;
+  }
+
+  // The rules for applying hold when accepting too: a gig marked sensitive
+  // after the invitation went out cannot be taken by someone who no longer qualifies.
+  if (status === 'accepted' && gig) {
+    const worker = await User.findByPk(caller.id);
+    const allowed = worker ? await canApply(gig, worker) : null;
+    if (allowed && !allowed.eligible) {
+      res.status(403).json({
+        message: 'You do not meet the requirements for this gig any more',
+        code: 'NOT_ELIGIBLE',
+        missing: allowed.missing,
+      });
+      return;
+    }
   }
 
   // A gig is done once. A stray invitation must not be accepted on a gig that

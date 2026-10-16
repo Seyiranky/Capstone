@@ -776,3 +776,26 @@ a.isoko-setup-row:focus-visible { outline: 2px solid #2563eb; outline-offset: 1p
 .isoko-alert__closed p { margin: 4px 0 0; color: var(--ant-color-text); }
 :root[data-theme='dark'] .isoko-alert__closed { background: rgba(74, 222, 128, 0.08); color: #bbf7d0; }
 .isoko-alert__actions { padding: 12px 18px; border-top: 1px solid var(--isoko-border); }
+
+/* Sensitive gigs (children, inside a home) and the requirements to apply. */
+.isoko-sensitive-tag { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 500; background: #f5f3ff; color: #5b21b6; cursor: help; }
+:root[data-theme='dark'] .isoko-sensitive-tag { background: rgba(167, 139, 250, 0.15); color: #c4b5fd; }
+.isoko-sensitive-inline { color: #6d28d9; text-transform: none; letter-spacing: 0; }
+:root[data-theme='dark'] .isoko-sensitive-inline { color: #c4b5fd; }
+.isoko-sensitive-row { margin-top: 8px; font-size: 13px; }
+.isoko-apply-req { padding: 12px 14px; border-radius: 10px; background: #f5f3ff; color: #2e1065; font-size: 13px; }
+.isoko-apply-req strong { display: flex; align-items: center; gap: 6px; font-size: 13.5px; }
+.isoko-apply-req p { margin: 6px 0 0; color: #4c1d95; }
+.isoko-apply-req ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.isoko-apply-req li { display: flex; gap: 8px; align-items: flex-start; }
+.isoko-apply-req li .anticon { color: #be123c; margin-top: 3px; }
+.isoko-apply-req a { font-weight: 600; color: #5b21b6 !important; text-decoration: underline; }
+:root[data-theme='dark'] .isoko-apply-req { background: rgba(167, 139, 250, 0.1); color: #ede9fe; }
+:root[data-theme='dark'] .isoko-apply-req p { color: #ddd6fe; }
+:root[data-theme='dark'] .isoko-apply-req a { color: #c4b5fd !important; }
+:root[data-theme='dark'] .isoko-apply-req li .anticon { color: #fda4af; }
+
+.isoko-invited-note { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 10px; background: #eff6ff; color: #1e3a8a; font-size: 13px; }
+.isoko-invited-note a { font-weight: 600; color: #1d4ed8 !important; }
+:root[data-theme='dark'] .isoko-invited-note { background: rgba(96, 165, 250, 0.1); color: #bfdbfe; }
+:root[data-theme='dark'] .isoko-invited-note a { color: #93c5fd !important; }
