@@ -157,6 +157,8 @@ export interface GigApplication {
   status: GigApplicationStatus;
   remindedAt?: string | null;
   expiredAt?: string | null;
+  /** For the client or an admin: requirements this applicant no longer meets. */
+  unmetRequirements?: string[];
   rankScore?: number | null;
   scoreBreakdown?: MatchScoreBreakdown | null;
   /** DECIMAL columns arrive as strings. */

@@ -163,9 +163,20 @@ export const listApplications = async (req: Request, res: Response): Promise<voi
     ? await User.findAll({ where: { id: crewIds }, attributes: ['id', 'name', 'trustScore', 'reviewCount'] })
     : [];
   const byId = new Map(people.map((p) => [p.id, p]));
+  // For whoever decides (the client or an admin): pending applicants who no longer meet the gig's rules.
+  const decider = caller.role !== 'worker';
+  const unmet = new Map<string, string[]>();
+  if (decider) {
+    for (const a of visible.filter((x) => x.status === 'pending' && x.gig)) {
+      const worker = await User.findByPk(a.workerId);
+      const allowed = worker ? await canApply(a.gig!, worker) : null;
+      if (allowed && !allowed.eligible) unmet.set(a.id, allowed.missing);
+    }
+  }
   res.json(
     visible.map((a) => ({
       ...a.toJSON(),
+      ...(decider ? { unmetRequirements: unmet.get(a.id) ?? [] } : {}),
       crew: a.crew?.map((c) => {
         const person = byId.get(c.userId);
         return { ...c, name: person?.name ?? null, trustScore: person?.trustScore ?? null, reviewCount: person?.reviewCount ?? 0 };
@@ -224,6 +235,21 @@ export const reviewApplication = async (req: Request, res: Response): Promise<vo
     return;
   }
   const byAdmin = !isOwner;
+  // Approving offers the job, so the worker must still meet the gig's rules: a gig
+  // marked sensitive after they applied, or a report since, would leave them
+  // approved for a job they could not accept.
+  if (decision === 'approved' && application.gig) {
+    const worker = await User.findByPk(application.workerId);
+    const allowed = worker ? await canApply(application.gig, worker) : null;
+    if (allowed && !allowed.eligible) {
+      res.status(409).json({
+        message: 'This worker no longer meets the requirements for this gig, so they cannot be approved. Turn the application down with a reason instead.',
+        code: 'NOT_ELIGIBLE',
+        missing: allowed.missing,
+      });
+      return;
+    }
+  }
 
   if (decision === 'rejected') {
     const rejectionNote = typeof note === 'string' ? note.trim().slice(0, 280) || null : null;

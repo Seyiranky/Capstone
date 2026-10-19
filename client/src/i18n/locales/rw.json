@@ -1597,6 +1597,7 @@
     "pendingNote": "Umukiriya ni we uhitamo. Niba atarasubiza mu minsi 7, ubusabe bwawe burarangira ukabimenyeshwa.",
     "expiredNote": "Umukiriya ntiyasubije mu minsi 7, bityo ubu busabe bwarangiye. Ubundi kazi karagutegereje.",
     "withdrawnNote": "Umuyobozi wa Isoko yakuyeho ubu busabe. Reba ubutumwa bwawe urebe impamvu.",
-    "stepExpired": "Byarangiye"
+    "stepExpired": "Byarangiye",
+    "unmet": "Ntacyujuje ibisabwa kuri aka kazi, bityo ntashobora kwemezwa:"
   }
 }

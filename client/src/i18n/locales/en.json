@@ -1597,6 +1597,7 @@
     "pendingNote": "The client will choose. If they have not answered in 7 days, your application expires and you are told.",
     "expiredNote": "The client did not answer within 7 days, so this application expired. Other gigs are waiting for you.",
     "withdrawnNote": "An Isoko admin withdrew this application. Check your notifications for the reason.",
-    "stepExpired": "Expired"
+    "stepExpired": "Expired",
+    "unmet": "No longer meets this gig’s requirements, so cannot be approved:"
   }
 }

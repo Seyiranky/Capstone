@@ -153,3 +153,16 @@ describe('invitations follow the same rules', () => {
     expect(res.body.code).toBe('NOT_ELIGIBLE');
   });
 });
+
+describe('approving checks the rules too', () => {
+  test('an applicant who no longer qualifies (the gig was marked sensitive after they applied) cannot be approved', async () => {
+    const gig = await postGig();
+    const application = (await apply(gig.id, 'newWorker')).body;
+    await request(app).put(`/api/admin/gigs/${gig.id}/sensitive`).set(as('admin')).send({ sensitive: true });
+    const res = await request(app).put(`/api/gig-applications/${application.id}/review`).set(as('client')).send({ decision: 'approved' });
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe('NOT_ELIGIBLE');
+    // Turning it down still works.
+    expect((await request(app).put(`/api/gig-applications/${application.id}/review`).set(as('client')).send({ decision: 'rejected', reason: 'skillLevel' })).status).toBe(200);
+  });
+});

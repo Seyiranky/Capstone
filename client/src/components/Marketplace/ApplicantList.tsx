@@ -62,6 +62,12 @@ const ApplicantList = ({ applicants, budget, canDecide, busyId, onDecide }: Appl
               </div>
               <StatusTag status={a.status} />
             </Flex>
+            {a.status === 'pending' && canDecide && (a.unmetRequirements?.length ?? 0) > 0 && (
+              <Typography.Text className="isoko-unmet" style={{ display: 'block', marginTop: 4, paddingInlineStart: 36 }}>
+                {t('applyRules.unmet')}{' '}
+                {a.unmetRequirements!.map((m) => t(`applyRules.${m}`)).join(' ')}
+              </Typography.Text>
+            )}
             {a.status === 'pending' && canDecide && (() => {
               // How long this person has waited, and when the application lapses if nobody answers.
               const ageDays = Math.floor((Date.now() - new Date(a.createdAt).getTime()) / 86_400_000);
