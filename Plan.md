@@ -425,6 +425,52 @@ Upwork, TaskRabbit and Lynk. Built and verified one step at a time:
    with a reason, message either person, sidebar count. `applicationOversight.test.ts`.
 543 server tests pass.
 
+## Round 10 — Submission readiness: gaps against the proposal and the rubric (found 19 Oct 2026)
+
+Audit of the repo against the approved proposal (FR-1..14, NFR-1..8, RQ1..4) and the "Final
+Version of the Product" brief (due Fri 23 Oct; attempt 2 is a ZIP). State at audit: 544/544 server
+tests, 13 client tests, lint and typecheck clean, i18n in step, CI green on `edfc451`.
+
+**Deliverables not started**
+1. Technical report, PDF, max 5 pages: scope table (planned / purpose / status / evidence),
+   functionality, two or more testing strategies with results and what changed, code quality, OOP, algorithms.
+2. Walkthrough video, linked from the README; `DEMO.md` (referenced by the README) does not exist.
+3. README rewrite: product named Isoko; technical requirements with versions (Node 24, Postgres 16+,
+   npm, browsers); links to video and report. Stale today: "simulated payments", "password reset
+   returns its token", "no reconciliation", `PAYMENT_PROVIDER` "simulated today", no `MOMO_*`
+   variables, missing root `.env.example`, admin@isoko.demo and david not listed.
+4. ZIP for attempt 2 from `git archive` (never the working folder: `server/.env` holds live keys),
+   plus report and video.
+
+**Scope: planned but missing or changed (each needs building or a written justification)**
+| Proposal | Built | Gap |
+|---|---|---|
+| Mentor role reviews skills (FR-2, FR-5, FR-6) | Peer reviewers (verified workers, `reviewerTier`) and admins, rotated, related reviewers excluded | Peers have **no review screen**: the Dashboard asks for the queue only for admins (`Dashboard.tsx:83`). Every review in the UI is done by an admin, which undercuts RQ1 |
+| Mentor discloses a relationship; blind second review (RQ1 method) | Automatic exclusion of prior ties, recusal, two approvals for a first verification, collusion audit | RQ1 evidence must be restated in the report around what was built |
+| Mentorship messaging (FR-12) | Messaging only worker↔client and worker↔admin | No mentor messaging; justify (a reviewer–worker channel is a collusion channel) or add a narrow one |
+| MTN **and Airtel** sandbox (FR-10) | MTN adapter, tested against a mocked MTN API | No Airtel; MTN sandbox never run live (no `MOMO_*` credentials configured; the app runs `simulated-momo`) |
+| SendGrid, Africa's Talking | SMTP/log email, Pindo SMS (live) | Justify the substitution |
+| CI builds and publishes images | CI tests and builds | No image publishing (minor) |
+| Pilot, 25–30 people, survey for RQ3 | Pilot metrics page | No pilot run yet; survey API removed, so the RQ3 survey needs an instrument |
+| Deployed pilot URL (budget) | Local and Docker only | Not deployed |
+
+**Defects found**
+- An admin's "Message the client" (Applications, Support person drawer) is refused: `ALLOWED_PAIRS`
+  in `messageController.ts` has no client↔admin pair.
+- Notifications (in-app, SMS, email) are English only; the server ignores `preferredLanguage` (NFR-1).
+- Client Dockerfile on Node 20 while the server and CI use 24.
+
+**Testing, performance and compatibility evidence missing**
+- No end-to-end tests in the repo (Playwright checks lived in a scratch folder); no cross-browser run.
+- NFR-2 (500 ms) never measured; no load test; no Lighthouse or low-end-device figures.
+- One 3.7 MB JavaScript bundle, no code splitting (`lazy()` unused).
+- Client unit tests cover only the offline queue.
+
+**Code quality**
+- Business logic in controllers against NFR-6: `skillTaskController.ts` (670 lines), `adminController.ts` (584).
+- `sensitiveGig.ts` duplicated in server and client; 52 server and 5 client lint warnings.
+- No account deletion (Law 058/2021 erasure) and no privacy page.
+
 ## Security review
 
 A review of authentication, access control, personal data and uploads before the defence.
