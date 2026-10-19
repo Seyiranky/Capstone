@@ -42,6 +42,7 @@ import SupportArticlePage from './pages/SupportArticlePage';
 import SupportRequestsPage from './pages/SupportRequestsPage';
 import { GuestContactPage, GuestTicketPage } from './pages/GuestSupportPage';
 import AdminSupport from './components/Admin/AdminSupport';
+import AdminApplications from './components/Admin/AdminApplications';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { fetchCurrentUser } from './store/slices/authSlice';
 
@@ -110,6 +111,7 @@ function App() {
             <Route path="/admin/safety" element={<AdminSafety />} />
             <Route path="/admin/reports" element={<AdminReports />} />
             <Route path="/admin/support" element={<AdminSupport />} />
+            <Route path="/admin/applications" element={<AdminApplications />} />
             <Route path="/admin/cover" element={<AdminCover />} />
             <Route path="/admin/audit" element={<AdminAuditPage />} />
           </Route>

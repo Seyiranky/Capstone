@@ -803,3 +803,22 @@ a.isoko-setup-row:focus-visible { outline: 2px solid #2563eb; outline-offset: 1p
 .isoko-waiting { font-size: 12.5px; color: var(--isoko-muted); }
 .isoko-waiting--long { color: #b45309; font-weight: 500; }
 :root[data-theme='dark'] .isoko-waiting--long { color: #fcd34d; }
+
+/* ── Admin applications overview ──────────────────────────────────────────── */
+.isoko-overseen { display: flex; gap: 12px; align-items: flex-start; padding: 14px 18px; }
+.isoko-overseen + .isoko-overseen { border-top: 1px solid var(--isoko-border); }
+.isoko-overseen__main { min-width: 0; flex: 1; }
+.isoko-overseen__line { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: baseline; font-size: 14px; }
+.isoko-overseen__muted { color: var(--isoko-muted); }
+.isoko-overseen__meta { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 4px; font-size: 12.5px; color: var(--isoko-muted); }
+.isoko-overseen__actions { flex-shrink: 0; }
+@media (max-width: 575px) { .isoko-overseen { flex-wrap: wrap; } .isoko-overseen__actions { width: 100%; justify-content: flex-end; } }
+.isoko-flag { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; font: inherit; font-size: 12.5px; font-weight: 500; border: 1px solid transparent; cursor: pointer; }
+.isoko-flag--static { cursor: help; height: 22px; font-size: 12px; }
+.isoko-flag--amber { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+.isoko-flag--violet { background: #f5f3ff; color: #5b21b6; border-color: #ddd6fe; }
+.isoko-flag--rose { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
+.isoko-flag--on { box-shadow: 0 0 0 2px var(--ant-color-text); }
+:root[data-theme='dark'] .isoko-flag--amber { background: rgba(251, 191, 36, 0.12); color: #fcd34d; border-color: rgba(251, 191, 36, 0.3); }
+:root[data-theme='dark'] .isoko-flag--violet { background: rgba(167, 139, 250, 0.12); color: #c4b5fd; border-color: rgba(167, 139, 250, 0.3); }
+:root[data-theme='dark'] .isoko-flag--rose { background: rgba(251, 113, 133, 0.12); color: #fda4af; border-color: rgba(251, 113, 133, 0.3); }

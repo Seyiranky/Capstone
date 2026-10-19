@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { User, Gig, GigApplication, Skill, Match, Transaction, UserSkill, NotificationDelivery, Payout, Dispute, sequelize } from '../models';
 import * as rateService from '../services/rateService';
 import { canApply } from '../services/applicationEligibility';
+import * as applicationOversight from '../services/applicationOversight';
 import * as safeVisitService from '../services/safeVisitService';
 import * as sms from '../lib/channels/sms';
 import notify from '../lib/notify';
@@ -125,6 +126,19 @@ export const pilotMetrics = async (req: Request, res: Response): Promise<void> =
 };
 
 /** An admin marks a live gig sensitive, or clears the mark, at any time. */
+/** Applications that need an admin's look: overdue, on sensitive gigs, or flagged. */
+export const applicationsOverview = async (req: Request, res: Response): Promise<void> => {
+  res.json(await applicationOversight.overview({ all: req.query.all === '1' }));
+};
+
+export const applicationsFlaggedCount = async (_req: Request, res: Response): Promise<void> => {
+  res.json({ count: await applicationOversight.flaggedCount() });
+};
+
+export const withdrawApplication = async (req: Request, res: Response): Promise<void> => {
+  res.json(await applicationOversight.withdraw(req, pathParam(req, 'id'), req.body?.reason));
+};
+
 export const setGigSensitive = async (req: Request, res: Response): Promise<void> => {
   const gig = await Gig.findByPk(pathParam(req, 'id'));
   if (!gig) {

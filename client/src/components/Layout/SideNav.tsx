@@ -25,9 +25,11 @@ import {
   FlagOutlined,
   MedicineBoxOutlined,
   CustomerServiceOutlined,
+  FileDoneOutlined,
 } from '@ant-design/icons';
 import { supportApi } from '../../api/supportApi';
 import { safeVisitApi } from '../../api/safeVisitApi';
+import { adminApi } from '../../api/adminApi';
 import { useAppSelector } from '../../store/hooks';
 import { activeNavKey, visibleNavEntries } from './navConfig';
 
@@ -41,6 +43,7 @@ const ICONS: Record<string, ReactNode> = {
   '/notifications': <BellOutlined />,
   '/settings': <SettingOutlined />,
   '/admin/gigs/pending': <CheckSquareOutlined />,
+  '/admin/applications': <FileDoneOutlined />,
   '/admin/reviews': <SafetyCertificateOutlined />,
   '/admin/jobs': <ToolOutlined />,
   '/admin/payments': <DollarOutlined />,
@@ -72,6 +75,7 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
       if (role === 'admin') {
         supportApi.admin.unread().then((n) => setCounts((c) => ({ ...c, '/admin/support': n }))).catch(() => undefined);
         safeVisitApi.openCount().then((n) => setCounts((c) => ({ ...c, '/admin/safety': n }))).catch(() => undefined);
+        adminApi.applicationsFlaggedCount().then((n) => setCounts((c) => ({ ...c, '/admin/applications': n }))).catch(() => undefined);
       } else {
         supportApi.unread().then((n) => setCounts((c) => ({ ...c, '/support': n }))).catch(() => undefined);
       }

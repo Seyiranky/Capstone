@@ -27,6 +27,9 @@ router.put('/reports/:id', verifyToken, authorize('admin'), reportController.res
 router.put('/users/:id/reviewer-tier', verifyToken, authorize('admin'), adminController.setReviewerTier);
 router.put('/gigs/:id/review', verifyToken, authorize('admin'), adminController.reviewGig);
 router.put('/gigs/:id/sensitive', verifyToken, authorize('admin'), adminController.setGigSensitive);
+router.get('/applications', verifyToken, authorize('admin'), adminController.applicationsOverview);
+router.get('/applications/flagged-count', verifyToken, authorize('admin'), adminController.applicationsFlaggedCount);
+router.put('/applications/:id/withdraw', verifyToken, authorize('admin'), adminController.withdrawApplication);
 router.put('/users/:id/moderate', verifyToken, authorize('admin'), adminController.moderateUser);
 router.delete('/users/:id', verifyToken, authorize('admin'), adminController.deleteUser);
 

@@ -391,7 +391,7 @@ the card, check in, SOS with 112, admin sees all three numbers and the phone's l
 it" reaches the worker's card, close with a note, and check-out after the client marked the job
 done. 521 server tests pass.
 
-## Round 9 — Who decides an application (16 Oct 2026)
+## Round 9 — Who decides an application (done 19 Oct 2026)
 
 **Found.** Applications are decided by admins: `PUT /gig-applications/:id/review` is admin-only,
 every admin is notified of every application, and the gig page gives Approve/Reject only to
@@ -414,6 +414,16 @@ Upwork, TaskRabbit and Lynk. Built and verified one step at a time:
    flags (an open report on either side, a burst of applications, a quote far below the trade's
    usual rate). An admin can decide on the client's behalf, withdraw an application with a
    reason, or message either person.
+
+**Status: done (17–19 Oct 2026), each step built, tested and checked in the browser before the next.**
+1. Commit `2bba17e`: client decides; eligibility rules (`applicationEligibility.ts`), sensitive gigs
+   (migration `20261016150000`, keyword check in English and Kinyarwanda, `npm run
+   backfill:sensitive`); invitations and accepting follow the same rules. `applicationRules.test.ts`.
+2. Commit after `2bba17e`: reminders at 48 h, expiry at 7 days (`applicationFollowUp.ts`, migration
+   `20261016170000`, server sweep); waiting time shown to the client. `applicationFollowUp.test.ts`.
+3. Admin Applications overview (`applicationOversight.ts`, `/admin/applications`), flags, withdraw
+   with a reason, message either person, sidebar count. `applicationOversight.test.ts`.
+543 server tests pass.
 
 ## Security review
 
