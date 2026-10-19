@@ -1,4 +1,5 @@
 import { Alert, Button, Divider, Form, Input, Typography } from 'antd';
+import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -34,7 +35,7 @@ const LoginForm = () => {
           rules={[{ required: true, type: 'email' }]}
           style={{ marginBottom: 12 }}
         >
-          <Input autoComplete="email" />
+          <Input autoComplete="email" prefix={<MailOutlined className="isoko-input-icon" />} />
         </Form.Item>
         <Form.Item
           name="password"
@@ -42,7 +43,7 @@ const LoginForm = () => {
           rules={[{ required: true }]}
           style={{ marginBottom: 4 }}
         >
-          <Input.Password autoComplete="current-password" />
+          <Input.Password autoComplete="current-password" prefix={<LockOutlined className="isoko-input-icon" />} />
         </Form.Item>
         <div style={{ textAlign: 'right', marginBottom: 14, fontSize: 13 }}>
           <Link to="/forgot-password">{t('auth.login.forgotPassword')}</Link>

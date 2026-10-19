@@ -825,3 +825,9 @@ a.isoko-setup-row:focus-visible { outline: 2px solid #2563eb; outline-offset: 1p
 
 .isoko-unmet { font-size: 12.5px; color: #9f1239; }
 :root[data-theme='dark'] .isoko-unmet { color: #fda4af; }
+
+/* Leading icon inside a form field (login email and password). */
+.isoko-input-icon {
+  color: var(--isoko-muted);
+  margin-inline-end: 4px;
+}
