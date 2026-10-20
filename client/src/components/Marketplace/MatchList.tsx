@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Button,
   Card,
@@ -9,11 +9,14 @@ import {
   Flex,
   Input,
   Modal,
+  Pagination,
   Rate,
   Row,
+  Select,
   Space,
   Typography,
 } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchMatches } from "../../store/slices/matchSlice";
@@ -30,6 +33,27 @@ import JobCoverCard from "../Cover/JobCoverCard";
 import { disputeApi, type DisputeEligibility } from "../../api/disputeApi";
 import OpenDisputeModal from "../Disputes/OpenDisputeModal";
 import type { Dispute, Match, MatchStatus } from "../../types";
+import {
+  MATCH_SORTS,
+  MATCH_STAGES,
+  actionFor,
+  matchesSearch,
+  sortMatches,
+  stageOf,
+  type MatchSort,
+  type MatchStage,
+} from "../../lib/matchStage";
+
+const PAGE_SIZE = 12;
+/** The card's tag uses the same words as the filter chips. */
+const STAGE_TAG: Record<MatchStage, string> = {
+  invited: "awaitingConfirmation",
+  in_progress: "inProgress",
+  awaiting_payment: "awaitingPayment",
+  paid: "paid",
+  closed: "cancelled",
+};
+type StatusFilter = "all" | "needs" | MatchStage;
 
 const ReviewModal = ({
   match,
@@ -92,12 +116,6 @@ const ReviewModal = ({
   );
 };
 
-const ORDER: Partial<Record<MatchStatus, number>> = {
-  pending: 0,
-  accepted: 1,
-  completed: 2,
-};
-
 const MatchList = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -115,6 +133,28 @@ const MatchList = () => {
     new Map(),
   );
   const [disputing, setDisputing] = useState<DisputeEligibility | null>(null);
+  // Filters live in the address, beside ?tab=matches, so a refresh or the back
+  // button keeps them and a link can point at "what needs me".
+  const [params, setParams] = useSearchParams();
+  const statusParam = params.get("status") as StatusFilter | null;
+  const status: StatusFilter =
+    statusParam && (["all", "needs", ...MATCH_STAGES] as string[]).includes(statusParam) ? statusParam : "all";
+  const sortParam = params.get("sort") as MatchSort | null;
+  const sort: MatchSort = sortParam && MATCH_SORTS.includes(sortParam) ? sortParam : "action";
+  const search = params.get("q") ?? "";
+  const [page, setPage] = useState(1);
+  const setFilter = (key: "status" | "sort" | "q", value: string, fallback: string) => {
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value && value !== fallback) next.set(key, value);
+        else next.delete(key);
+        return next;
+      },
+      { replace: true },
+    );
+    setPage(1);
+  };
 
   const loadDisputes = () => {
     disputeApi
@@ -193,6 +233,34 @@ const MatchList = () => {
     });
   };
 
+  const viewer = { id: profile?.id ?? "", role: profile?.role ?? null };
+  const actionOf = (m: Match) => actionFor(m, viewer, { liveDispute: liveDisputes.has(m.id) });
+
+  // Counts for the chips come from the searched list, so they say what a click will show.
+  const searched = useMemo(
+    () => matches.filter((m) => matchesSearch(m, search, profile?.role ?? null)),
+    [matches, search, profile?.role],
+  );
+  const counts = useMemo(() => {
+    const c: Record<StatusFilter, number> = { all: searched.length, needs: 0, invited: 0, in_progress: 0, awaiting_payment: 0, paid: 0, closed: 0 };
+    for (const m of searched) {
+      c[stageOf(m)] += 1;
+      if (actionOf(m)) c.needs += 1;
+    }
+    return c;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searched, liveDisputes, profile?.id]);
+  const visible = useMemo(
+    () =>
+      sortMatches(
+        searched.filter((m) => status === "all" || (status === "needs" ? Boolean(actionOf(m)) : stageOf(m) === status)),
+        sort,
+        (m) => Boolean(actionOf(m)),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [searched, status, sort, liveDisputes, profile?.id],
+  );
+
   if (!profile) return null;
   const isWorker = profile.role === "worker";
 
@@ -204,16 +272,89 @@ const MatchList = () => {
     );
   }
 
+  const chips: StatusFilter[] = ["all", "needs", ...MATCH_STAGES.filter((s) => counts[s] > 0 || status === s)];
+  const filtered = status !== "all" || search.trim() !== "";
+  const pageItems = visible.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div>
+      <Card className="isoko-filterbar" styles={{ body: { padding: 14 } }}>
+        <Flex wrap="wrap" gap={10} align="center">
+          <Input
+            allowClear
+            prefix={<SearchOutlined style={{ color: "var(--isoko-muted)" }} />}
+            placeholder={t(isWorker ? "matches.searchWorker" : "matches.searchClient")}
+            value={search}
+            onChange={(e) => setFilter("q", e.target.value, "")}
+            style={{ flex: "2 1 240px" }}
+            aria-label={t("matches.searchLabel")}
+          />
+          <Select
+            value={sort}
+            prefix={
+              <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                {t("workers.sortBy")}
+              </Typography.Text>
+            }
+            options={MATCH_SORTS.map((s) => ({ value: s, label: t(`matches.sort_${s}`) }))}
+            onChange={(v) => setFilter("sort", v, "action")}
+            style={{ flex: "1 1 220px" }}
+          />
+        </Flex>
+        <Flex wrap="wrap" gap={8} style={{ marginTop: 12 }} role="group" aria-label={t("matches.filterLabel")}>
+          {chips.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`isoko-filter-chip${status === s ? " isoko-filter-chip--on" : ""}${s === "needs" && counts.needs > 0 && status !== s ? " isoko-filter-chip--attention" : ""}`}
+              aria-pressed={status === s}
+              onClick={() => setFilter("status", s, "all")}
+            >
+              {t(`matches.stage_${s}`)}
+              <span className="isoko-filter-chip__count">{counts[s]}</span>
+            </button>
+          ))}
+        </Flex>
+      </Card>
+
+      <Flex justify="space-between" align="center" wrap="wrap" gap={8} style={{ margin: "0 2px 12px" }}>
+        <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+          {t("matches.showing", { shown: visible.length, total: matches.length })}
+        </Typography.Text>
+        {filtered && (
+          <Button
+            type="link"
+            size="small"
+            style={{ padding: 0 }}
+            onClick={() => {
+              setParams(
+                (prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.delete("status");
+                  next.delete("q");
+                  return next;
+                },
+                { replace: true },
+              );
+              setPage(1);
+            }}
+          >
+            {t("matches.clearFilters")}
+          </Button>
+        )}
+      </Flex>
+
+      {visible.length === 0 && (
+        <Card>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={status === "needs" && !search ? t("matches.nothingNeedsYou") : t("matches.noneMatch")}
+          />
+        </Card>
+      )}
+
       <Row gutter={[16, 16]}>
-        {[...matches]
-          // What needs an answer or is under way comes before finished work.
-          .sort(
-            (a, b) =>
-              (ORDER[a.status] ?? 3) - (ORDER[b.status] ?? 3) ||
-              (b.createdAt ?? "").localeCompare(a.createdAt ?? ""),
-          )
+        {pageItems
           .map((match) => {
             const alreadyReviewed = match.reviews?.some(
               (r) => r.authorId === profile.id,
@@ -224,9 +365,13 @@ const MatchList = () => {
               (m) => m.userId === profile.id,
             );
             const counterparty = isWorker ? match.gig?.client : match.worker;
+            const action = actionOf(match);
             return (
               <Col xs={24} sm={12} lg={8} key={match.id}>
-                <Card style={{ height: "100%" }}>
+                <Card style={{ height: "100%" }} className={action ? "isoko-match-card--yours" : undefined}>
+                  {action && (
+                    <span className="isoko-your-turn">{t("matches.yourTurn", { action: t(`matches.action_${action}`) })}</span>
+                  )}
                   <Flex justify="space-between" align="flex-start" gap={8}>
                     <Link
                       to={`/gigs/${match.gigId}`}
@@ -234,7 +379,7 @@ const MatchList = () => {
                     >
                       {match.gig?.title ?? "Gig"}
                     </Link>
-                    <StatusTag status={match.status} />
+                    <StatusTag status={STAGE_TAG[stageOf(match)]} />
                   </Flex>
                   <div style={{ margin: "10px 0" }}>
                     {counterparty ? (
@@ -339,7 +484,7 @@ const MatchList = () => {
                       style={{ width: "100%" }}
                     >
                       <Flex align="center" gap={8} wrap="wrap">
-                        <StatusTag status="paid" />
+                        {/* "Paid" is already the card's tag; this says how the job was closed. */}
                         {match.completedVia && (
                           <Typography.Text
                             type="secondary"
@@ -409,6 +554,20 @@ const MatchList = () => {
             );
           })}
       </Row>
+      {visible.length > PAGE_SIZE && (
+        <Flex justify="center" style={{ marginTop: 20 }}>
+          <Pagination
+            current={page}
+            pageSize={PAGE_SIZE}
+            total={visible.length}
+            onChange={(p) => {
+              setPage(p);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            showSizeChanger={false}
+          />
+        </Flex>
+      )}
       <Drawer
         open={Boolean(toolsFor)}
         onClose={() => setToolsFor(null)}
