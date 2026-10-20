@@ -122,6 +122,31 @@ Found:
 - After the phase: 553/553 server tests, 13/13 client tests, build passes, i18n and shared-copy
   checks pass.
 
+## Phase 1b — Job flow fixes (Tue, found 20 Oct)
+
+A walk through the job flow (worker chosen → accepted → done → paid → reviewed) against the code
+found seven gaps. Each is fixed with tests:
+
+1. **No way to call off a job in progress in the app.** The API allows `accepted → cancelled` but
+   the only cancel button is Decline on a pending match. Add "Call off this job" (either side, with
+   a reason, confirmed), refused while a dispute is open.
+2. **A call-off counts against both people.** `trustScoreService.jobCountsFor` counts every
+   cancelled-after-acceptance match against the worker and the client alike. Record `cancelledBy`
+   on the match and count it against that person only (older rows without it keep counting for both).
+3. **A payment settled in the background tells nobody.** The "You have been paid" notice is sent by
+   the client's polling screen and the webhook only; `refreshPending` (the 10-minute sweep) settles
+   silently, and crew and apprentices are never told. Announce every settlement from the payment
+   service, once, to everyone paid (and to the client when it fails).
+4. **A failed attempt is overwritten by the retry.** Keep each earlier attempt (MTN reference,
+   status, reason, number, time) in `Transactions.previousAttempts`, so RQ4 can count attempts.
+5. **The worker cannot say the work is finished.** Add "I've finished" for the worker
+   (`Matches.workerDoneAt`), which asks the client to mark it done and pay; remind the client once
+   after 48 hours; a worker's in-progress dispute reason "the client won't mark it done".
+6. **Reviews before payment.** The server accepts a review once the job is marked done; the app
+   offers it only after payment. Require a confirmed payment on the server too.
+7. **Escrow leftover.** "Money not released" is no longer a worker's in-progress dispute reason
+   (replaced by item 5's reason); kept only for old disputes.
+
 ## Phase 2 — MTN MoMo sandbox, live (Tue, needs the owner for 10 minutes) — done 20 Oct 2026
 
 **Yes, it is self-service and quick.**
