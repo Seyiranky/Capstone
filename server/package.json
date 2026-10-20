@@ -12,6 +12,7 @@
     "trust:backfill": "tsx src/scripts/backfillTrustScores.ts",
     "reviewers:enrol": "tsx src/scripts/enrolPeerReviewers.ts",
     "momo:sandbox-user": "tsx src/scripts/momoSandboxUser.ts",
+    "momo:smoke": "tsx src/scripts/momoSmoke.ts",
     "migrate:test": "cross-env NODE_ENV=test sequelize-cli db:migrate",
     "seed:test": "cross-env NODE_ENV=test sequelize-cli db:seed --seed 20260810160208-skill-categories.js",
     "test": "cross-env NODE_ENV=test jest --runInBand",

@@ -22,7 +22,7 @@ import type { TransactionStatus } from '../../types/domain';
  *   MOMO_TARGET_ENV               sandbox (default) or the production environment name, e.g. mtnrwanda
  *   MOMO_CURRENCY                 EUR in the sandbox (the only currency it accepts); RWF in production
  *   MOMO_COLLECTION_KEY           Collections subscription key (Ocp-Apim-Subscription-Key)
- *   MOMO_COLLECTION_USER          API user id (scripts/momo-sandbox-user.ts creates one in the sandbox)
+ *   MOMO_COLLECTION_USER          API user id (`npm run momo:sandbox-user` creates one in the sandbox)
  *   MOMO_COLLECTION_API_KEY       API key for that user
  *   MOMO_DISBURSEMENT_KEY / _USER / _API_KEY   the same three for Disbursements (optional)
  *   MOMO_CALLBACK_URL             public https URL of /api/webhooks/momo (optional; status is also polled)
