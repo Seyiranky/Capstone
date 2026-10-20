@@ -34,6 +34,7 @@ A throwaway client paid a throwaway worker 1,500 RWF for a finished job:
 | `app-approve.png` | The request is with MTN; the client approves on their phone |
 | `app-paid.png` | Confirmed by status polling; the worker is paid and a receipt issued |
 | `app-receipt.png` | The public receipt, with MTN's own transaction id |
+| `admin-payments.png` | Admin › Payments: the provider badge "MTN MoMo · sandbox", and MTN-paid jobs with their receipts (captured 21 Oct from a client's own MoMo test) |
 
 The transaction as stored:
 
@@ -48,3 +49,10 @@ The transaction as stored:
 | payouts / receipt | 1 / `ISK-Y8P6-EV08` |
 
 The throwaway accounts and their records were deleted afterwards.
+
+## 3. Re-checked (21 Oct 2026)
+
+`npm run momo:smoke` again confirmed a sandbox payment (MTN transaction id `2092810285`). Payouts to
+workers show "Not sent": sending money out needs MTN's Disbursements product, which is optional and
+not subscribed. The collection from the client, which FR-10 and RQ4 are about, is the part shown here.
+
