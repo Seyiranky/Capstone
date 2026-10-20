@@ -3,6 +3,8 @@ import type { Role } from '../types';
 const ALLOWED_PAIRS: [Role, Role][] = [
   ['worker', 'admin'],
   ['worker', 'client'],
+  // Admins answer clients too: about an application, a dispute or a support request.
+  ['client', 'admin'],
 ];
 
 export const canMessage = (roleA: Role | null, roleB: Role | null): boolean => {

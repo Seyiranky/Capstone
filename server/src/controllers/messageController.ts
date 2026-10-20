@@ -13,6 +13,8 @@ import type { Role } from '../types/domain';
 const ALLOWED_PAIRS: [Role, Role][] = [
   ['worker', 'admin'],
   ['worker', 'client'],
+  // Admins answer clients too: about an application, a dispute or a support request.
+  ['client', 'admin'],
 ];
 
 const BODY_MAX = 4000;
