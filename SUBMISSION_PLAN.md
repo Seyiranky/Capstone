@@ -122,7 +122,7 @@ Found:
 - After the phase: 553/553 server tests, 13/13 client tests, build passes, i18n and shared-copy
   checks pass.
 
-## Phase 2 — MTN MoMo sandbox, live (Tue, needs the owner for 10 minutes)
+## Phase 2 — MTN MoMo sandbox, live (Tue, needs the owner for 10 minutes) — done 20 Oct 2026
 
 **Yes, it is self-service and quick.**
 1. Sign up at momodeveloper.mtn.com and confirm the email.
@@ -146,6 +146,16 @@ Steps:
 6. Keep `simulated-momo` as the default for tests and CI. `momoPayments.test.ts` already mocks MTN.
 
 ---
+
+**Status: done (20 Oct).** Commits `4249cf9`, `68fe9e5`. The owner subscribed to Collections and
+ran `npm run momo:sandbox-user` (key at a hidden prompt, written to `server/.env`, never shown).
+`npm run momo:smoke` confirmed a real sandbox payment (MTN transaction id returned) and the failure
+path. In the app, with `PAYMENT_PROVIDER=mtn-momo`, a throwaway client paid a worker 1,500 RWF:
+request accepted by MTN, confirmed by polling, payout and receipt issued. Receipts now show MTN's
+`financialTransactionId` (NFR-8). Tests pinned to `simulated-momo` whatever `.env` says. Found: the
+sandbox takes EUR only, and `46733123460` now fails (older guides say it succeeds). Evidence and
+screenshots: `docs/evidence/momo/`. 554/554 server tests. Callbacks wait for a public URL (Phase 4);
+status polling covers them meanwhile.
 
 ## Phase 3 — Privacy and account deletion (Wed morning; NFR-7)
 
