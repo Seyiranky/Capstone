@@ -1376,6 +1376,8 @@
     "howItWorks": "Uzabona ubutumwa bwa MoMo kuri telefoni yawe. Andika PIN yawe ubyemeze.",
     "approveTitle": "Emeza ubwishyu kuri telefoni yawe",
     "approveBody": "Ubutumwa bwa MoMo bwoherejwe kuri {{number}}. Andika PIN yawe ubyemeze. Niba ntacyo ubonye, kanda *182*7*1# urebe ibitegereje kwemezwa.",
+    "approveSandbox": "Igerageza (MTN MoMo sandbox): nta butumwa bwoherezwa kuri telefoni nyayo kandi nta mafaranga yimuka. MTN yemeza ubwishyu bw'igerageza ubwayo mu masegonda make.",
+    "approveSandboxTitle": "Dutegereje ko MTN yemeza ubwishyu bw'igerageza",
     "approveSimulated": "Emeza (telefoni y'igerageza)",
     "paidToast": "Ubwishyu bwemejwe. {{name}} yishyuwe.",
     "failedToast": "Ubwishyu ntibwakunze. Ushobora kongera kugerageza.",

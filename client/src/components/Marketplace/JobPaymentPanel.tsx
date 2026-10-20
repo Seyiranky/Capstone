@@ -262,10 +262,12 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
             <Spin />
             <div>
               <Typography.Text strong style={{ display: 'block' }}>
-                {t('pay.approveTitle')}
+                {payment.provider === 'mtn-momo' && payment.testMode ? t('pay.approveSandboxTitle') : t('pay.approveTitle')}
               </Typography.Text>
               <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                {t('pay.approveBody', { number: localNumber(payment.payerMsisdn) })}
+                {payment.provider === 'mtn-momo' && payment.testMode
+                  ? t('pay.approveSandbox')
+                  : t('pay.approveBody', { number: localNumber(payment.payerMsisdn) })}
               </Typography.Text>
             </div>
           </Flex>

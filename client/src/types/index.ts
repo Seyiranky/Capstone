@@ -226,6 +226,8 @@ export interface Transaction {
   status: TransactionStatus;
   escrowStatus: EscrowStatus;
   heldAt?: string | null;
+  /** A test payment: the simulated provider or MTN's sandbox; no real phone is prompted. */
+  testMode?: boolean;
   releasedAt?: string | null;
   refundedAt?: string | null;
   receiptNumber?: string | null;

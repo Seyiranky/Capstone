@@ -27,6 +27,9 @@ export class Transaction extends Model<
   declare providerRawResponse: unknown;
   /** Earlier attempts on this job that failed, oldest first, kept when the client tries again. */
   declare previousAttempts: PaymentAttempt[] | null;
+  /** True for a test payment (the simulated provider, or MTN's sandbox): no real
+   *  phone is prompted and no real money moves. Computed, not stored. */
+  declare testMode: CreationOptional<boolean>;
   declare callbackReceivedAt: Date | null;
   declare failureReason: string | null;
   declare payerMsisdn: string | null;
@@ -93,6 +96,13 @@ export const initTransaction = (sequelize: Sequelize) => {
       providerStatus: { type: DataTypes.STRING, allowNull: true },
       providerRawResponse: { type: DataTypes.JSONB, allowNull: true },
       previousAttempts: { type: DataTypes.JSONB, allowNull: true },
+      testMode: {
+        type: DataTypes.VIRTUAL,
+        get(this: Transaction) {
+          if (this.getDataValue('provider') === 'mtn-momo') return (process.env.MOMO_TARGET_ENV || 'sandbox') === 'sandbox';
+          return this.getDataValue('provider') === 'simulated-momo';
+        },
+      },
       callbackReceivedAt: { type: DataTypes.DATE, allowNull: true },
       failureReason: { type: DataTypes.STRING, allowNull: true },
       payerMsisdn: { type: DataTypes.STRING, allowNull: true },

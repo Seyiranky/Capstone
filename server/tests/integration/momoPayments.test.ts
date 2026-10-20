@@ -167,6 +167,11 @@ describe('the MTN MoMo adapter', () => {
     const res = await pay(matchId);
     expect(res.status).toBe(201);
     expect(res.body.provider).toBe('mtn-momo');
+    // The sandbox prompts no real phone, and the screen must say so.
+    expect(res.body.testMode).toBe(true);
+    process.env.MOMO_TARGET_ENV = 'mtnrwanda';
+    expect(must(await db.Transaction.findByPk(res.body.id), 'tx').toJSON().testMode).toBe(false);
+    process.env.MOMO_TARGET_ENV = 'sandbox';
 
     const token = must(calls.find((c) => c.url.endsWith('/collection/token/')), 'token call');
     const tokenHeaders = token.init.headers as Record<string, string>;

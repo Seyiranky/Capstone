@@ -1376,6 +1376,8 @@
     "howItWorks": "You will get a MoMo prompt on your phone. Enter your PIN to approve it.",
     "approveTitle": "Approve the payment on your phone",
     "approveBody": "A MoMo prompt was sent to {{number}}. Enter your PIN to approve it. If nothing arrives, dial *182*7*1# to see pending approvals.",
+    "approveSandbox": "Test mode (MTN MoMo sandbox): no prompt is sent to a real phone and no money moves. MTN approves test payments by itself within a few seconds.",
+    "approveSandboxTitle": "Waiting for MTN to approve the test payment",
     "approveSimulated": "Approve (simulated phone)",
     "paidToast": "Payment confirmed. {{name}} has been paid.",
     "failedToast": "The payment did not go through. You can try again.",
