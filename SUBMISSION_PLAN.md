@@ -193,7 +193,7 @@ sandbox takes EUR only, and `46733123460` now fails (older guides say it succeed
 screenshots: `docs/evidence/momo/`. 554/554 server tests. Callbacks wait for a public URL (Phase 4);
 status polling covers them meanwhile.
 
-## Phase 3 — Privacy and account deletion (Wed morning; NFR-7)
+## Phase 3 — Privacy and account deletion (Wed morning; NFR-7) — done 21 Oct 2026
 
 - `DELETE /api/users/me` requires the current password and blocks deletion while a job is live, a payment is owed or a dispute is open. It then **anonymises** rather than hard-deletes:
   - name becomes "Deleted user";
@@ -214,6 +214,18 @@ status polling covers them meanwhile.
 - Tests: deletion anonymises, keeps the receipts, refuses while a payment is owed, and blocks login afterwards.
 
 ---
+
+**Status: done (21 Oct).** Commit `37b4b6b`. `services/accountDeletionService.ts` (`blockers`,
+`deleteAccount`); `GET /api/users/me/deletion-check`, `DELETE /api/users/me`; status `deleted`
+refused by every request, the socket and admin reactivation; deleted profiles 404; directory,
+ranking, reviewer and mediator pools already take active users only. Beyond the plan: blockers
+include crew and apprentice jobs and both sides of an unpaid job; pending invitations,
+applications and not-started gigs are closed and the other party told; Skill Passports revoked;
+the email is freed to sign up again. An account made with Google needs a password set first
+(a stolen session alone cannot erase someone). `/privacy` in EN and RW, linked from sign-in,
+sign-up and Settings. `accountDeletion.test.ts` (8 tests); 574/574 server tests. Checked in the
+browser: blocked list, wrong password, deletion, sign-in refused; throwaway data deleted. The
+Kinyarwanda is a draft for the owner to proofread.
 
 ## Phase 4 — Free deployment (Wed)
 
