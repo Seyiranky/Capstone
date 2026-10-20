@@ -122,7 +122,7 @@ Found:
 - After the phase: 553/553 server tests, 13/13 client tests, build passes, i18n and shared-copy
   checks pass.
 
-## Phase 1b — Job flow fixes (Tue, found 20 Oct)
+## Phase 1b — Job flow fixes (Tue, found 20 Oct) — done 20 Oct 2026
 
 A walk through the job flow (worker chosen → accepted → done → paid → reviewed) against the code
 found seven gaps. Each is fixed with tests:
@@ -146,6 +146,17 @@ found seven gaps. Each is fixed with tests:
    offers it only after payment. Require a confirmed payment on the server too.
 7. **Escrow leftover.** "Money not released" is no longer a worker's in-progress dispute reason
    (replaced by item 5's reason); kept only for old disputes.
+
+**Status: done (20 Oct).** Migration `20261020120000` (`Matches.cancelledVia`,
+`Matches.workDoneRemindedAt`, `Transactions.previousAttempts`; `Matches.workDoneAt` reused).
+`POST /matches/:id/work-done`; `completionService.reportWorkDone` and `remindWorkDone` (server
+sweep); `paymentService.announce` called by every settlement path; `paymentNotices` covers each
+payout and the client on failure. Job card: "I've finished" (worker), "Call off this job" (both),
+"X says the work is finished" (client). Found while testing: every call-off notified the client,
+even of their own; now the other person is told. Item 7 turned out to be a name only: the old
+reason's label already read "the client has not marked it done". `jobFlow.test.ts` (11 tests);
+565/565 server tests. Checked in the browser with throwaway accounts (deleted). The new
+Kinyarwanda strings are drafts for the owner to proofread.
 
 ## Phase 2 — MTN MoMo sandbox, live (Tue, needs the owner for 10 minutes) — done 20 Oct 2026
 
