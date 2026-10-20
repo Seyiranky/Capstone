@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import app from '../../src/app';
 import db from '../../src/models';
 import { must } from '../helpers/fixtures';
+import type { RankedPair, ScoreComponent } from '../../src/types/scoring';
 
 // The ranked arm: approving a gig invites a scored shortlist rather than
 // waiting for workers to find it themselves.
@@ -108,14 +109,14 @@ describe('ranked candidate listing', () => {
       .set('Authorization', `Bearer ${tokens.client}`);
     expect(res.status).toBe(200);
 
-    const ours = res.body.candidates.filter((c: any) =>
+    const ours = res.body.candidates.filter((c: RankedPair) =>
       [users.near.id, users.far.id, users.distant.id].includes(c.workerId),
     );
-    const near = must(ours.find((c: any) => c.workerId === users.near.id), 'near');
-    const far = must(ours.find((c: any) => c.workerId === users.far.id), 'far');
+    const near = must(ours.find((c: RankedPair) => c.workerId === users.near.id), 'near');
+    const far = must(ours.find((c: RankedPair) => c.workerId === users.far.id), 'far');
 
     expect(near.rank).toBeLessThan(far.rank);
-    expect(near.components.map((c: any) => c.key).sort()).toEqual(
+    expect(near.components.map((c: ScoreComponent) => c.key).sort()).toEqual(
       ['availability', 'credentials', 'distance', 'skillFit', 'trust'],
     );
     expect(near.reasons.length).toBeGreaterThan(0);
@@ -126,19 +127,19 @@ describe('ranked candidate listing', () => {
     const res = await request(app)
       .get(`/api/gigs/${gigId}/candidates`)
       .set('Authorization', `Bearer ${tokens.client}`);
-    const distant = must(res.body.candidates.find((c: any) => c.workerId === users.distant.id), 'distant');
+    const distant = must(res.body.candidates.find((c: RankedPair) => c.workerId === users.distant.id), 'distant');
     expect(distant.beyondRange).toBe(true);
     expect(distant.eligibleForInvite).toBe(false);
   });
 
   test('switching the weight profile re-ranks the same candidates (RQ2)', async () => {
-    const order = async (profile: any) => {
+    const order = async (profile: string) => {
       const res = await request(app)
         .get(`/api/gigs/${gigId}/candidates?profile=${profile}`)
         .set('Authorization', `Bearer ${tokens.client}`);
       return res.body.candidates
-        .filter((c: any) => [users.near.id, users.far.id].includes(c.workerId))
-        .map((c: any) => c.workerId);
+        .filter((c: RankedPair) => [users.near.id, users.far.id].includes(c.workerId))
+        .map((c: RankedPair) => c.workerId);
     };
 
     const proximity = await order('proximity_first');

@@ -21,7 +21,12 @@ module.exports = [
       globals: { ...globals.node, ...globals.jest },
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      // A leading underscore marks a value taken out on purpose, as in
+      // `const { passwordHash: _h, ...safe } = row`; the rest is what is used.
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
       // Express recognises an error handler by its four-argument arity, so the
       // unused `next` is load-bearing rather than dead.
       '@typescript-eslint/no-explicit-any': 'warn',

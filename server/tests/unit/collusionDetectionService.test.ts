@@ -2,6 +2,7 @@ import db from '../../src/models';
 import * as service from '../../src/services/collusionDetectionService';
 import { must } from '../helpers/fixtures';
 import type { AssignmentStatus, Role, SkillTaskStatus } from '../../src/types/domain';
+import type { CollusionFlag, CollusionFlagType, CollusionReport } from '../../src/services/collusionDetectionService';
 
 let skill: InstanceType<typeof db.Skill>;
 const createdUserIds: string[] = [];
@@ -62,9 +63,9 @@ const decided = async (
   return task;
 };
 
-const flagsFor = (report: any, type: any, { workerId, reviewerId }: { workerId?: string; reviewerId?: string } = {}) =>
+const flagsFor = (report: CollusionReport, type: CollusionFlagType, { workerId, reviewerId }: { workerId?: string; reviewerId?: string } = {}) =>
   report.flags.filter(
-    (f: any) =>
+    (f: CollusionFlag) =>
       f.type === type &&
       (workerId ? f.workerId === workerId : true) &&
       (reviewerId ? f.reviewerId === reviewerId : true),

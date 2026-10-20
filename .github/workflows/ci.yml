@@ -103,7 +103,7 @@ jobs:
       - run: npm run build
 
   i18n:
-    name: Translations stay in step
+    name: Translations and shared code stay in step
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -115,3 +115,8 @@ jobs:
         # not the other silently ships English to Kinyarwanda users, which no
         # other check would catch.
         run: node scripts/check-i18n-parity.mjs
+      - name: Check copied code stays identical
+        # The sensitive-gig keyword check is copied between server and client;
+        # the server decides, the client previews. A change to one alone would
+        # tell a client one thing and enforce another.
+        run: node scripts/check-shared-copies.mjs

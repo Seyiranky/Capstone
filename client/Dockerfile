@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# The same Node as the server image and CI, so all three run what was tested.
+FROM node:24-alpine
 
 WORKDIR /app
 

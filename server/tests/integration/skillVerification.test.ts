@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import app from '../../src/app';
 import db from '../../src/models';
 import { must } from '../helpers/fixtures';
+import type { ScoreComponent } from '../../src/types/scoring';
 
 const stamp = Date.now();
 const password = 'password123';
@@ -210,7 +211,7 @@ describe('quorum for a first verification', () => {
   test('verification raised the trust score', async () => {
     const worker = must(await db.User.findByPk(users.worker.id), 'worker');
     expect(worker.trustScore).toBeGreaterThan(0);
-    expect(worker.trustScoreBreakdown!.components.map!((c: any) => c.key)).toContain('verification');
+    expect(worker.trustScoreBreakdown!.components.map!((c: ScoreComponent) => c.key)).toContain('verification');
   });
 
   test('each round is recorded with its own assignment row for audit', async () => {

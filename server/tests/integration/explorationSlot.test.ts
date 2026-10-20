@@ -3,6 +3,10 @@ import bcrypt from 'bcrypt';
 import app from '../../src/app';
 import db from '../../src/models';
 import { must } from '../helpers/fixtures';
+import type { RankedPair } from '../../src/types/scoring';
+
+/** An invitation as the gig's match list returns it. */
+type Invitation = { workerId: string; invitationReason: string | null };
 
 // Three slots so there is room for two earned places and one reserved.
 process.env.RANKED_INVITE_LIMIT = '3';
@@ -132,7 +136,7 @@ describe('a reserved slot reaches workers ranking cannot', () => {
       .get(`/api/gigs/${gigId}/candidates`)
       .set('Authorization', `Bearer ${tokens.client}`);
 
-    const ranked = res.body.candidates.filter((c: any) => c.eligibleForInvite).map((c: any) => c.workerId);
+    const ranked = res.body.candidates.filter((c: RankedPair) => c.eligibleForInvite).map((c: RankedPair) => c.workerId);
     const position = ranked.indexOf(users.newcomer.id);
     expect(position).toBeGreaterThanOrEqual(3);
   });
@@ -170,8 +174,8 @@ describe('a reserved slot reaches workers ranking cannot', () => {
     process.env.EXPLORATION_SLOTS = '0';
     const pure = await approve(await postGig(`Exploration disabled ${stamp}`));
 
-    expect(pure.every((i: any) => i.invitationReason === 'ranked')).toBe(true);
-    expect(pure.map((i: any) => i.workerId)).not.toContain(users.newcomer.id);
+    expect(pure.every((i: Invitation) => i.invitationReason === 'ranked')).toBe(true);
+    expect(pure.map((i: Invitation) => i.workerId)).not.toContain(users.newcomer.id);
     process.env.EXPLORATION_SLOTS = '1';
   });
 });

@@ -2,7 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { RightOutlined } from '@ant-design/icons';
 import ContactFab from '../components/Support/ContactFab';
-import { CATEGORY_META } from '../components/Support/supportUi';
+import { CATEGORY_META } from '../components/Support/supportMeta';
 import { articlePath, articlesFor } from '../components/Support/helpContent';
 import { useContactSupport } from '../components/Support/useContactSupport';
 import { SUPPORT_CATEGORIES, type SupportCategory } from '../api/supportApi';

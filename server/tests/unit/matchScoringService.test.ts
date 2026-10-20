@@ -1,5 +1,9 @@
 import * as matchScoringService from '../../src/services/matchScoringService';
 import type { Provenance, VerificationStatus } from '../../src/types/domain';
+import type { ScorableWorker } from '../../src/services/matchScoringService';
+import type { ScoredPair } from '../../src/types/scoring';
+
+type ScoreInput = Parameters<typeof matchScoringService.scorePair>[0];
 
 // Kimironko, one of the two pilot sectors.
 const GIG = {
@@ -31,7 +35,7 @@ const TRUST_FIRST = {
   weights: { distance: 0.2, trust: 0.5, skillFit: 0.25, availability: 0.05 },
 };
 
-const worker = (overrides: any = {}) => ({
+const worker = (overrides: Partial<ScorableWorker> = {}) => ({
   id: 'worker-1',
   locationLat: GIG.locationLat,
   locationLng: GIG.locationLng,
@@ -70,7 +74,7 @@ const userSkill = (
 
 const verified = userSkill(GIG_SKILL);
 
-const score = (args: any) =>
+const score = (args: Partial<ScoreInput> & Pick<ScoreInput, 'worker'>) =>
   matchScoringService.scorePair({
     gig: GIG,
     gigSkill: GIG_SKILL,
@@ -80,8 +84,11 @@ const score = (args: any) =>
     ...args,
   });
 
-const componentValue = (result: any, key: any) =>
-  result.components.find((component: any) => component.key === key).value;
+const componentValue = (result: ScoredPair, key: string): number => {
+  const component = result.components.find((c) => c.key === key);
+  if (!component) throw new Error(`No ${key} component in the score`);
+  return component.value;
+};
 
 describe('distance scoring', () => {
   test('a worker at the gig location scores a perfect proximity value', () => {
@@ -124,7 +131,7 @@ describe('distance scoring', () => {
   });
 });
 
-const fitFor = (workerSkill: any, gigOverrides = {}) =>
+const fitFor = (workerSkill: ScoreInput['workerSkill'], gigOverrides = {}) =>
   componentValue(
     score({ worker: worker(), workerSkill, gig: { ...GIG, ...gigOverrides } }),
     'skillFit',
@@ -246,7 +253,7 @@ describe('weight profiles (RQ2)', () => {
     locationLat: GIG.locationLat + 8 / 111.32,
   });
 
-  const rank = (profile: any) => {
+  const rank = (profile: ScoreInput['profile']) => {
     const results = [near, far].map((w) =>
       matchScoringService.scorePair({
         worker: w,

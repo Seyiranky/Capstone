@@ -113,7 +113,7 @@ const GigDetail = () => {
       .listMatches()
       .then((all) => setInvited(all.some((m) => m.gigId === id && m.status === 'pending' && m.workerId === profile?.id)))
       .catch(() => setInvited(false));
-  }, [role, id]);
+  }, [role, id, profile?.id]);
 
   if (loading) return <Skeleton active paragraph={{ rows: 8 }} />;
   if (!gig) return <Result status="404" title={t('marketplace.gigDetail.notFound')} />;

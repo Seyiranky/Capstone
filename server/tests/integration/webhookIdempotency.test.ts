@@ -46,7 +46,10 @@ const paidMatch = async () => {
   return { match, transaction };
 };
 
-const callback = (transaction: any, body = {}) =>
+const callback = (
+  transaction: Pick<InstanceType<typeof db.Transaction>, 'provider' | 'providerReference'>,
+  body = {},
+) =>
   request(app)
     .post(`/api/webhooks/payments/${transaction.provider}`)
     .send({

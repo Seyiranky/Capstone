@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import app from '../../src/app';
 import db from '../../src/models';
 import { must } from '../helpers/fixtures';
+import type { ScoreComponent } from '../../src/types/scoring';
 
 // This narrative covers the manual arm: a worker applies and is approved.
 // Ranked invitations are exercised separately in rankedMatching.test.js, and
@@ -334,7 +335,7 @@ describe('reviews and trust score', () => {
     // out the scale, which is what stops a lone rating outranking a long record.
     expect(res.body.trustScore).toBeLessThan(5);
 
-    const rating = must(res.body.trustScoreBreakdown.components.find((c: any) => c.key === 'rating'), 'rating');
+    const rating = must(res.body.trustScoreBreakdown.components.find((c: ScoreComponent) => c.key === 'rating'), 'rating');
     expect(rating.detail.rawMean).toBe(5);
     expect(rating.detail.shrunkMean).toBeLessThan(5);
   });
@@ -344,11 +345,11 @@ describe('reviews and trust score', () => {
       .get(`/api/users/${workerId}`)
       .set('Authorization', `Bearer ${clientToken}`);
     expect(res.status).toBe(200);
-    expect(res.body.trustScoreBreakdown.components.map((c: any) => c.key)).toEqual(
+    expect(res.body.trustScoreBreakdown.components.map((c: ScoreComponent) => c.key)).toEqual(
       expect.arrayContaining(['rating', 'completion', 'verification']),
     );
     const summed = res.body.trustScoreBreakdown.components.reduce(
-      (total: any, c: any) => total + c.contribution,
+      (total: number, c: ScoreComponent) => total + c.contribution,
       0,
     );
     const { score, penalty } = res.body.trustScoreBreakdown;
@@ -466,9 +467,9 @@ describe('admin: gig visibility', () => {
   test("the completed gig's admin listing includes the worker who completed it and the payment status", async () => {
     const res = await request(app).get('/api/admin/gigs').set('Authorization', `Bearer ${adminToken}`);
     expect(res.status).toBe(200);
-    const gig = must(res.body.find((g: any) => g.id === gigId), 'gig');
+    const gig = must(res.body.find((g: { id: string }) => g.id === gigId), 'gig');
     expect(gig.status).toBe('completed');
-    const match = must(gig.matches.find((m: any) => m.id === matchId), 'match');
+    const match = must(gig.matches.find((m: { id: string }) => m.id === matchId), 'match');
     expect(match.status).toBe('completed');
     expect(match.worker.id).toBe(workerId);
     expect(match.transaction.status).toBe('confirmed');

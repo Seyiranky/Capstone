@@ -22,7 +22,7 @@ const makeUser = async (role: Role, overrides = {}) => {
 };
 
 /** Gives a worker a completed match plus a review of the given rating and age. */
-const giveReview = async (worker: any, { rating, ageDays = 0 }: { rating: number; ageDays?: number }) => {
+const giveReview = async (worker: InstanceType<typeof db.User>, { rating, ageDays = 0 }: { rating: number; ageDays?: number }) => {
   const gig = await db.Gig.create({
     clientId: client.id,
     skillId: skill.id,
@@ -52,7 +52,7 @@ const giveReview = async (worker: any, { rating, ageDays = 0 }: { rating: number
 };
 
 /** A match the worker accepted and then abandoned. */
-const abandonMatch = async (worker: any, { ageDays = 0 } = {}) => {
+const abandonMatch = async (worker: InstanceType<typeof db.User>, { ageDays = 0 } = {}) => {
   const gig = await db.Gig.create({
     clientId: client.id,
     skillId: skill.id,
@@ -90,7 +90,7 @@ describe('provisional scores', () => {
     const breakdown = must(await trustScoreService.recalculate(worker.id), 'breakdown');
 
     expect(breakdown.isProvisional).toBe(true);
-    const rating = must(breakdown.components.find((c: any) => c.key === 'rating'), 'rating');
+    const rating = must(breakdown.components.find((c) => c.key === 'rating'), 'rating');
     expect(rating.detail.reviewCount).toBe(0);
     // The prior, not zero: absence of evidence must not read as bad evidence.
     expect(rating.detail.shrunkMean).toBeCloseTo(trustScoreService.PRIOR_MEAN, 5);
@@ -152,7 +152,7 @@ describe('recency weighting', () => {
     const worker = await makeUser('worker');
     await giveReview(worker, { rating: 5, ageDays: 180 });
     const breakdown = must(await trustScoreService.recalculate(worker.id), 'breakdown');
-    const rating = must(breakdown.components.find((c: any) => c.key === 'rating'), 'rating');
+    const rating = must(breakdown.components.find((c) => c.key === 'rating'), 'rating');
     expect(rating.detail.effectiveReviewWeight).toBeCloseTo(0.5, 2);
   });
 });
@@ -247,7 +247,7 @@ describe('verification contribution', () => {
     const scoredClient = await makeUser('client');
     const breakdown = must(await trustScoreService.recalculate(scoredClient.id), 'breakdown');
 
-    const keys = breakdown.components.map((c: any) => c.key);
+    const keys = breakdown.components.map((c) => c.key);
     expect(keys).not.toContain('verification');
     // Weights are renormalised so the achievable maximum is still the full scale.
     const weightSum = breakdown.components.reduce((sum, c) => sum + c.weight, 0);

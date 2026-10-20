@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CloseOutlined, RightOutlined, SearchOutlined } from '@ant-design/icons';
 import { articlePath, searchArticles } from './helpContent';
-import { CATEGORY_META } from './supportUi';
+import { CATEGORY_META } from './supportMeta';
 
 /**
  * The help centre's search: results open in a panel over the page as you type.

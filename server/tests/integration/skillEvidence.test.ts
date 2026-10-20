@@ -183,7 +183,7 @@ describe('evidence reaches the reviewer', () => {
       .get('/api/skill-tasks')
       .set('Authorization', `Bearer ${tokens.admin1}`);
 
-    const task = must(listed.body.find((t: any) => t.id === submit.body.id), 'task');
+    const task = must(listed.body.find((t: { id: string }) => t.id === submit.body.id), 'task');
     expect(task.evidence).toHaveLength(1);
     expect(task.evidence[0].kind).toBe('photo');
   });

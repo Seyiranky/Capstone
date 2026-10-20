@@ -14,7 +14,7 @@ const makeClient = async () => {
   return user;
 };
 
-const resetList = async (size: number, seed: any) => {
+const resetList = async (size: number, seed: string) => {
   await db.ExperimentAllocation.destroy({ where: { experiment: service.EXPERIMENT } });
   const { rows } = service.generateSequence(size, seed);
   await db.ExperimentAllocation.bulkCreate(rows);
@@ -38,7 +38,7 @@ describe('sequence generation', () => {
     // The final block may be truncated by the requested length.
     const complete = Object.values(blocks).filter((_block, i, all) => i < all.length - 1);
     for (const block of complete) {
-      const provenance = (block as string[]).filter((a: any) => a === 'provenance').length;
+      const provenance = (block as string[]).filter((a) => a === 'provenance').length;
       expect(provenance).toBe((block as string[]).length / 2);
     }
   });
@@ -114,8 +114,8 @@ describe('claiming', () => {
       where: { experiment: service.EXPERIMENT, claimedByUserId: users.map((u) => u.id) },
     });
     expect(claimed).toHaveLength(4);
-    expect(new Set(claimed.map((c: any) => c.position)).size).toBe(4);
-    expect(new Set(claimed.map((c: any) => c.claimedByUserId)).size).toBe(4);
+    expect(new Set(claimed.map((c) => c.position)).size).toBe(4);
+    expect(new Set(claimed.map((c) => c.claimedByUserId)).size).toBe(4);
   });
 
   test('an exhausted list returns null rather than inventing an arm', async () => {

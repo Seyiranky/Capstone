@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import app from '../../src/app';
 import db from '../../src/models';
 import { must } from '../helpers/fixtures';
+import type { RankedPair, ScoreComponent, ScoreReason } from '../../src/types/scoring';
 
 // Rotation is what this suite is checking, so the pool must be big enough for
 // a placement to be a real choice rather than the only option.
@@ -243,10 +244,10 @@ describe('credentials reach the ranking', () => {
       .get(`/api/gigs/${gig.body.id}/candidates`)
       .set('Authorization', `Bearer ${tokens.client}`);
 
-    const ours = must(res.body.candidates.find((c: any) => c.workerId === users.worker.id), 'ours');
-    const credentials = must(ours.components.find((c: any) => c.key === 'credentials'), 'credentials');
+    const ours = must(res.body.candidates.find((c: RankedPair) => c.workerId === users.worker.id), 'ours');
+    const credentials = must(ours.components.find((c: ScoreComponent) => c.key === 'credentials'), 'credentials');
     expect(credentials.value).toBe(0.8);
-    expect(ours.reasons.map((r: any) => r.key)).toContain('match.reason.provenance.peer_reviewed');
+    expect(ours.reasons.map((r: ScoreReason) => r.key)).toContain('match.reason.provenance.peer_reviewed');
 
     // The client can see how much this component could move a ranking at all.
     expect(res.body.componentVariance.credentials).toBeTruthy();
@@ -263,6 +264,6 @@ describe('credentials reach the ranking', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.candidates[0].weightProfile.name).toBe('credential_first');
-    expect(res.body.candidates[0].components.map((c: any) => c.key)).toContain('credentials');
+    expect(res.body.candidates[0].components.map((c: ScoreComponent) => c.key)).toContain('credentials');
   });
 });

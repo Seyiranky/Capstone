@@ -2,6 +2,7 @@ import db from '../../src/models';
 import * as service from '../../src/services/competenceService';
 import { must } from '../helpers/fixtures';
 import type { Role } from '../../src/types/domain';
+import type { SkillTaskKind } from '../../src/types/domain';
 
 let skill: InstanceType<typeof db.Skill>;
 const createdUserIds: string[] = [];
@@ -29,7 +30,7 @@ const declare = (userId: string) =>
     selfDeclaredAt: new Date(),
   });
 
-const approvedTask = (workerId: string, kind: any) =>
+const approvedTask = (workerId: string, kind: SkillTaskKind) =>
   db.SkillTask.create({
     workerId,
     skillId: skill.id,
@@ -40,7 +41,7 @@ const approvedTask = (workerId: string, kind: any) =>
   });
 
 /** A completed job in this skill, optionally reviewed by the client. */
-const completedJob = async (workerId: string, clientId: any, { reviewed = true } = {}) => {
+const completedJob = async (workerId: string, clientId: string, { reviewed = true } = {}) => {
   const gig = await db.Gig.create({
     clientId,
     skillId: skill.id,

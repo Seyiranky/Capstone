@@ -36,7 +36,7 @@ const makePeerReviewer = async ({ trustScore = 4.5, skillId }: { trustScore?: nu
 };
 
 /** A decided task for `workerId` reviewed by `reviewerId`, `ageDays` old. */
-const pastTask = async (workerId: string, reviewerId: any, { ageDays = 0 } = {}) => {
+const pastTask = async (workerId: string, reviewerId: string, { ageDays = 0 } = {}) => {
   const at = new Date(Date.now() - ageDays * DAY_MS);
   const task = await db.SkillTask.create(
     {

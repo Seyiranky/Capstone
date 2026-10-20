@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Col, Empty, Flex, Modal, Row, Skeleton, Typography } from 'antd';
 import { AuditOutlined, CheckCircleOutlined, FlagOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
@@ -33,17 +33,17 @@ const DisputesPage = () => {
   const [job, setJob] = useState<DisputeEligibility | null>(null);
   const isParty = me?.role === 'worker' || me?.role === 'client';
 
-  const load = () => {
+  const load = useCallback(() => {
     if (isParty) disputeApi.eligible().then(setEligible).catch(() => setEligible([]));
     return disputeApi
       .list()
       .then(setDisputes)
       .catch(() => setDisputes([]));
-  };
+  }, [isParty]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const steps = [
     { icon: <FlagOutlined />, title: t('dispute.how1Title'), body: t('dispute.how1Body') },

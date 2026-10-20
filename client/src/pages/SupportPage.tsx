@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { CommentOutlined, InboxOutlined } from '@ant-design/icons';
 import HelpSearch from '../components/Support/HelpSearch';
 import ContactFab from '../components/Support/ContactFab';
-import { CATEGORY_META } from '../components/Support/supportUi';
+import { CATEGORY_META } from '../components/Support/supportMeta';
 import { articlesFor } from '../components/Support/helpContent';
 import { useContactSupport } from '../components/Support/useContactSupport';
 import { SUPPORT_CATEGORIES, supportApi, type SupportCategory, type SupportRelatedType } from '../api/supportApi';
