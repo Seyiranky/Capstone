@@ -17,12 +17,26 @@ const MarketplacePage = () => {
   const { t } = useTranslation();
   const role = useAppSelector((state) => state.auth.role);
   const { savedIds } = useSavedGigs();
-  // ?tab=matches (and the others) lets the Dashboard link straight to a tab.
-  const [params] = useSearchParams();
-  const initial = params.get('tab') as Tab | null;
-  const [tab, setTab] = useState<Tab>(
-    initial && ['gigs', 'saved', 'applications', 'matches'].includes(initial) ? initial : 'gigs',
-  );
+  // The tab lives in the address (?tab=matches), not only in state: the
+  // Dashboard can link straight to a tab, a refresh keeps it, and the browser's
+  // back button from a receipt or a gig returns to the tab it was opened from.
+  const [params, setParams] = useSearchParams();
+  const allowed: Tab[] = role === 'worker' ? ['gigs', 'saved', 'applications', 'matches'] : ['gigs', 'matches'];
+  const requested = params.get('tab') as Tab | null;
+  const tab: Tab = requested && allowed.includes(requested) ? requested : 'gigs';
+  const setTab = (next: Tab) =>
+    setParams(
+      (prev) => {
+        const q = new URLSearchParams(prev);
+        if (next === 'gigs') q.delete('tab');
+        else q.set('tab', next);
+        // The match list's own filters belong to that tab only.
+        if (next !== 'matches') ['status', 'sort', 'q'].forEach((k) => q.delete(k));
+        return q;
+      },
+      // Switching tabs replaces the entry, so "back" still leaves the page in one step.
+      { replace: true },
+    );
   // Clients open the post form from the Dashboard with ?post=1.
   const wantsPost = params.get('post') === '1';
   const [postingGig, setPostingGig] = useState(wantsPost);
