@@ -46,7 +46,7 @@ export const initSocket = (httpServer: HttpServer): IsokoServer => {
     }
 
     const user = await User.findByPk(decoded.id);
-    if (!user || !sessionStillValid(user, decoded)) {
+    if (!user || user.status === 'deleted' || !sessionStillValid(user, decoded)) {
       return next(new Error('Invalid or expired token'));
     }
     if (user.status === 'suspended') {

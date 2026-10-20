@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 const SUCCESS = new Set(['paid', 'completed', 'approved', 'confirmed', 'active', 'verified', 'released', 'decided', 'joined', 'endorsed', 'resolved']);
 const WARNING = new Set(['awaitingConfirmation', 'awaitingPayment', 'pending', 'initiated', 'pending_review', 'held', 'awaiting', 'invited', 'escalated']);
 const ERROR = new Set(['rejected', 'cancelled', 'failed', 'suspended', 'declined', 'withdrawn']);
-const NEUTRAL = new Set(['expired']);
+const NEUTRAL = new Set(['expired', 'deleted']);
 const INFO = new Set(['open', 'accepted', 'matched', 'inProgress']);
 
 const toneFor = (status: string): string => {

@@ -7,6 +7,7 @@ import {
   UserSkill,
   Skill,
 } from '../models';
+import * as accountDeletionService from '../services/accountDeletionService';
 import { authed } from '../lib/authed';
 import { AVATAR_DIR, looksLikeImage } from '../middleware/upload';
 import { pathParam } from '../lib/query';
@@ -135,7 +136,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
 
 export const getPublicProfile = async (req: Request, res: Response): Promise<void> => {
   const user = await User.findByPk(pathParam(req, 'id'));
-  if (!user) {
+  if (!user || user.status === 'deleted') {
     res.status(404).json({ message: 'User not found' });
     return;
   }
@@ -265,6 +266,32 @@ export const uploadAvatar = async (req: Request, res: Response): Promise<void> =
 };
 
 /** Removes the caller's profile picture; their initials show again. */
+/** What stands in the way of deleting the caller's account, so the screen can say so before asking. */
+export const deletionCheck = async (req: Request, res: Response): Promise<void> => {
+  const user = await User.findByPk(authed(req).id);
+  if (!user) {
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+  const blockers = await accountDeletionService.blockers(user);
+  res.json({ canDelete: blockers.length === 0, blockers });
+};
+
+/** Deletes the caller's account (Law 058/2021): needs their password and nothing left unfinished. */
+export const deleteMe = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const user = await User.findByPk(caller.id);
+  if (user) {
+    const blockers = await accountDeletionService.blockers(user);
+    if (blockers.length) {
+      res.status(409).json({ message: 'Finish or settle your open jobs before deleting your account', blockers });
+      return;
+    }
+  }
+  await accountDeletionService.deleteAccount(req, caller.id, req.body?.password);
+  res.status(204).end();
+};
+
 export const deleteAvatar = async (req: Request, res: Response): Promise<void> => {
   const caller = authed(req);
   const user = await User.findByPk(caller.id);

@@ -230,7 +230,7 @@ export const initUser = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'active',
-        validate: { isIn: [['active', 'suspended']] },
+        validate: { isIn: [['active', 'suspended', 'deleted']] },
       },
       bio: {
         type: DataTypes.TEXT,

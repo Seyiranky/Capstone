@@ -14,6 +14,8 @@ router.get('/me/export', verifyToken, userController.exportMyData);
 router.get('/me/export.pdf', verifyToken, userController.exportMyDataPdf);
 router.post('/me/avatar', verifyToken, uploadAvatar, userController.uploadAvatar);
 router.delete('/me/avatar', verifyToken, userController.deleteAvatar);
+router.get('/me/deletion-check', verifyToken, userController.deletionCheck);
+router.delete('/me', verifyToken, userController.deleteMe);
 // Before '/:id', which would otherwise take 'search' as an id.
 router.get('/search', verifyToken, userController.searchWorkers);
 router.get('/directory', verifyToken, authorize('client', 'admin'), workerDirectoryController.list);

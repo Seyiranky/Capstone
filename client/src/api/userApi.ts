@@ -19,6 +19,10 @@ export interface UpdateProfilePayload {
   trustedContactPhone?: string;
 }
 
+export type DeletionBlocker =
+  | { code: 'admin' }
+  | { code: 'job_in_progress' | 'payment_owed' | 'payment_due' | 'dispute_open'; gigId: string; title: string };
+
 export const userApi = {
   getProfile: () => axiosClient.get<User>('/users/me').then((res) => res.data),
 
@@ -44,6 +48,13 @@ export const userApi = {
   searchWorkers: (q: string) =>
     axiosClient.get<WorkerHit[]>('/users/search', { params: { q } }).then((res) => res.data),
 
+
+  /** What stands in the way of deleting the account, so the screen can say so first. */
+  deletionCheck: () =>
+    axiosClient.get<{ canDelete: boolean; blockers: DeletionBlocker[] }>('/users/me/deletion-check').then((res) => res.data),
+
+  /** Deletes the caller's account; needs their password. */
+  deleteMe: (password: string) => axiosClient.delete('/users/me', { data: { password } }).then(() => undefined),
 
   exportMyData: () => axiosClient.get<Record<string, unknown>>('/users/me/export').then((res) => res.data),
 

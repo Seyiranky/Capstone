@@ -1,6 +1,6 @@
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Card, Flex, Grid, Segmented, Space, Tabs, Typography } from 'antd';
+import { Card, Divider, Flex, Grid, Segmented, Space, Tabs, Typography } from 'antd';
 import {
   BellOutlined,
   BgColorsOutlined,
@@ -16,6 +16,7 @@ import PageContainer from '../Layout/PageContainer';
 import ProfileEditor from './ProfileEditor';
 import ProfilePictureField from './ProfilePictureField';
 import ExportDataButton from './ExportDataButton';
+import DeleteAccount from './DeleteAccount';
 import NotificationPreferences from './NotificationPreferences';
 import ChangePasswordForm from './ChangePasswordForm';
 import PassportPanel from '../Profile/PassportPanel';
@@ -137,6 +138,11 @@ const Settings = () => {
       children: (
         <Card title={t('settings.yourData')}>
           <ExportDataButton />
+          <Divider style={{ margin: '20px 0' }} />
+          <DeleteAccount />
+          <Typography.Paragraph type="secondary" style={{ fontSize: 12.5, margin: '16px 0 0' }}>
+            <Link to="/privacy">{t('privacy.link')}</Link>
+          </Typography.Paragraph>
         </Card>
       ),
     },

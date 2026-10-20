@@ -15,7 +15,8 @@
 export type Role = 'worker' | 'client' | 'admin';
 
 /** User.status */
-export type UserStatus = 'active' | 'suspended';
+/** 'deleted': the person deleted their account; their name and contact details are gone. */
+export type UserStatus = 'active' | 'suspended' | 'deleted';
 
 /** User.preferredLanguage — the two locales the interface ships in. */
 export type Language = 'en' | 'rw';

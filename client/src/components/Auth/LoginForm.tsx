@@ -64,6 +64,8 @@ const LoginForm = () => {
       </Typography.Paragraph>
       <Typography.Paragraph type="secondary" style={{ textAlign: 'center', marginTop: 6, marginBottom: 0, fontSize: 13 }}>
         {t('support.cantSignIn')} <Link to="/support/contact">{t('support.contactLink')}</Link>
+        {' · '}
+        <Link to="/privacy">{t('privacy.title')}</Link>
       </Typography.Paragraph>
     </div>
   );

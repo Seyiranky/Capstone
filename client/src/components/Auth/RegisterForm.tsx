@@ -65,6 +65,9 @@ const RegisterForm = () => {
         <Button type="primary" htmlType="submit" block loading={status === 'loading'}>
           {t('auth.register.submit')}
         </Button>
+        <Typography.Paragraph type="secondary" style={{ textAlign: 'center', fontSize: 12.5, margin: '10px 0 0' }}>
+          {t('auth.register.privacyNote')} <Link to="/privacy">{t('privacy.title')}</Link>
+        </Typography.Paragraph>
       </Form>
 
       <Typography.Paragraph style={{ textAlign: 'center', marginTop: 24, marginBottom: 0 }}>

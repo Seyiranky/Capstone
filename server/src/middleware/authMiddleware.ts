@@ -37,7 +37,7 @@ export const verifyToken = async (
   // Checked on every request (not just at login) so a suspension takes effect
   // immediately for a worker/client who is already mid-session with a valid token.
   const user = await User.findByPk(decoded.id);
-  if (!user || !sessionStillValid(user, decoded)) {
+  if (!user || user.status === 'deleted' || !sessionStillValid(user, decoded)) {
     res.status(401).json({ message: 'Invalid or expired token' });
     return;
   }
@@ -67,7 +67,7 @@ export const optionalAuth = async (req: Request, _res: Response, next: NextFunct
     try {
       const decoded = jwt.verify(header.split(' ')[1], jwtSecret(), { algorithms: ['HS256'] }) as jwt.JwtPayload;
       const user = await User.findByPk(decoded.id);
-      if (user && user.status !== 'suspended' && sessionStillValid(user, decoded)) {
+      if (user && user.status === 'active' && sessionStillValid(user, decoded)) {
         req.user = { ...decoded, role: user.role, reviewerTier: user.reviewerTier } as AuthUser;
       }
     } catch {

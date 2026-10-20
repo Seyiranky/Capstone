@@ -26,7 +26,8 @@
       "submit": "Iyandikishe",
       "submitting": "Gufungura konti...",
       "haveAccount": "Usanzwe ufite konti?",
-      "loginLink": "Injira"
+      "loginLink": "Injira",
+      "privacyNote": "Uko Isoko ikoresha amakuru yawe:"
     },
     "forgotPassword": {
       "title": "Hindura ijambo ry'ibanga",
@@ -1298,7 +1299,8 @@
     "withdrawn": "Byakuweho",
     "awaitingConfirmation": "Bitegereje kwemezwa",
     "inProgress": "Birakorwa",
-    "awaitingPayment": "Bitegereje kwishyurwa"
+    "awaitingPayment": "Bitegereje kwishyurwa",
+    "deleted": "Yasibwe"
   },
   "cover": {
     "covered": "Arinzwe na Job Cover",
@@ -1676,5 +1678,71 @@
     "withdrawnNote": "Umuyobozi wa Isoko yakuyeho ubu busabe. Reba ubutumwa bwawe urebe impamvu.",
     "stepExpired": "Byarangiye",
     "unmet": "Ntacyujuje ibisabwa kuri aka kazi, bityo ntashobora kwemezwa:"
+  },
+  "privacy": {
+    "link": "Uko Isoko ifata amakuru yawe",
+    "title": "Ibanga ry’amakuru",
+    "updated": "Byavuguruwe ku wa 21 Ukwakira 2026",
+    "intro": "Isoko ihuza abantu b’i Kigali bafite ubumenyi ngiro n’abakeneye akazi kabo. Iyi paji ivuga amakuru bwite Isoko ibika, impamvu, ababona, n’icyo wabikoraho, hakurikijwe Itegeko N° 058/2021 rirengera amakuru bwite n’ibanga ryayo mu Rwanda.",
+    "who": {
+      "title": "Abo turi bo",
+      "body": "Isoko ni umushinga w’igerageza w’umunyeshuri muri African Leadership University i Kigali. Mu gihe cy’igerageza, itsinda rya Isoko ni ryo rifata ibyemezo ku ikoreshwa ry’amakuru yawe kandi rirayabazwa. Wavugana n’itsinda ukoresheje Ubufasha mu porogaramu, cyangwa ifishi yo kutwandikira iri hasi kuri iyi paji."
+    },
+    "collect": {
+      "title": "Ibyo tubika",
+      "body": "Konti yawe: izina, aderesi ya imeyili, ijambo ry’ibanga (ribikwa mu buryo budashobora gusomwa), niba uri umukozi cyangwa umukiriya, n’ururimi.\nAmakuru yo kukugeraho wongeyeho: nimero ya telefoni, umaze kuyemeza, n’umuntu wizewe ku gusura akazi.\nUmwirondoro wawe: ibyo wiyandikaho, uburambe, ubumenyi n’uko bwemejwe, ibimenyetso wohereje, ifoto, n’agace ukoreramo niba wakashyizeho.\nIbyo ukorera kuri Isoko: akazi, gusaba akazi, ubutumwa n’amafoto wohereje, isuzuma, amakimbirane n’ubusabe bw’ubufasha.\nUbwishyu: nimero ya Mobile Money yakoreshejwe, amafaranga, nimero z’ubwishyu za MTN n’inyemezabwishyu Isoko itanga.\nUmutekano: kwinjira, gusohoka n’ubutabazi (SOS), hamwe n’aho uri gusa niba ubisangije."
+    },
+    "why": {
+      "title": "Impamvu tubibika",
+      "body": "Gukoresha isoko: kwerekana umwirondoro wawe, guhuza abakozi n’akazi, kugenzura ubumenyi, kwakira ubwishyu no gutanga inyemezabwishyu. Kurinda umutekano: gusura akazi mu mutekano, ubutabazi na raporo. Kubaka icyizere: amanota n’igipimo cy’icyizere. Kugusubiza igihe usabye ubufasha. N’ubushakashatsi bw’igerageza: Isoko ipima nk’inshuro akazi kemerwa n’igihe ubwishyu bufata, ibarwa ku bantu bose nta n’umwe uvuzwe izina."
+    },
+    "share": {
+      "title": "Ababibona",
+      "body": "Abandi bakoresha babona umwirondoro wawe rusange: izina, ifoto, ubumenyi n’uko bwemejwe, amanota n’agace ukoreramo. Ntibabona nimero yawe ya telefoni cyangwa imeyili keretse ubibohereje ubwawe.\nZimwe mu sosiyete zitunganyiriza Isoko amakuru, ku murimo zitanga gusa: MTN Mobile Money (ubwishyu), Pindo (ubutumwa bugufi, niba wahisemo SMS), serivisi ya imeyili (niba wahisemo imeyili), Google (niba winjira ukoresheje Google), n’ubika ububiko bw’amakuru n’amadosiye.\nIsoko ntigurisha amakuru yawe kandi nta matangazo yamamaza yerekana."
+    },
+    "keep": {
+      "title": "Igihe tubibika",
+      "body": "Igihe cyose konti yawe ifunguye. Iyo usibye konti yawe, izina, amakuru yo kukugeraho, umwirondoro, ifoto n’uburyo bwo kwinjira bivanwaho burundu. Inyandiko z’ubwishyu, amafaranga yishyuwe abakozi, inyemezabwishyu n’isuzuma bisigara byanditseho “Konti yasibwe”, kuko inyemezabwishyu z’abandi n’igenzura ry’ubwishyu bibikeneye. Ubutumwa busigara mu kiganiro cy’undi muntu."
+    },
+    "rights": {
+      "title": "Uburenganzira bwawe",
+      "body": "Kureba amakuru yawe: Igenamiterere › Amakuru yawe › manura kopi nka raporo ya PDF cyangwa nk’amakuru (JSON).\nKuyakosora: Igenamiterere › Umwirondoro.\nGusiba konti yawe: Igenamiterere › Amakuru yawe › Siba konti yanjye. Niba hari akazi kakorwa, amafaranga atarishyurwa cyangwa amakimbirane afunguye, uzerekwa ibyo ugomba kubanza kurangiza.\nKubaza ikibazo cyangwa kwanga uko amakuru yawe akoreshwa: vugana n’itsinda ukoresheje Ubufasha."
+    },
+    "security": {
+      "title": "Uko tubirinda",
+      "body": "Amagambo y’ibanga abikwa mu buryo budashobora gusomwa. Amadosiye bwite, nk’amafoto yo mu biganiro n’ibimenyetso by’ubumenyi, afungurwa gusa n’imiyoboro irangira. Buri wese abona inyandiko ze gusa, kandi buri gikorwa kigenzurwa kuri seriveri. Iyo Isoko iri kuri interineti, amakuru yose anyuzwamo arinzwe (HTTPS)."
+    },
+    "age": {
+      "title": "Imyaka",
+      "body": "Isoko ni iy’abantu bafite imyaka 18 kuzamura."
+    },
+    "changes": {
+      "title": "Impinduka kuri iyi paji",
+      "body": "Niba iyi paji ihindutse mu buryo bufite agaciro, Isoko izabikumenyesha muri porogaramu mbere y’uko impinduka zitangira."
+    },
+    "contact": "Ufite ibibazo ku makuru yawe?",
+    "contactLink": "Vugana n’itsinda rya Isoko"
+  },
+  "deleteAccount": {
+    "title": "Siba konti yanjye",
+    "intro": "Vana burundu konti yawe n’amakuru yawe bwite kuri Isoko.",
+    "button": "Siba konti yanjye",
+    "confirm": "Siba konti yanjye",
+    "admin": "Konti z’abayobozi zisibwa n’undi muyobozi, si hano.",
+    "blocked": "Banza urangize cyangwa ukemure ibi, kugira ngo hatagira usigara ategereje konti itakiriho:",
+    "blocker_job_in_progress": "akazi karakorwa",
+    "blocker_payment_owed": "ntiwari wakishyura",
+    "blocker_payment_due": "ntiwari wakishyurwa",
+    "blocker_dispute_open": "hari amakimbirane afunguye",
+    "goesTitle": "Bivanwaho burundu",
+    "goes": "Izina ryawe, aderesi ya imeyili, nimero ya telefoni, umuntu wizewe, umwirondoro, ifoto, ubumenyi bwerekwa abandi, n’uburyo bwo kwinjira. Ntuzongera kugaragara mu ishakisha no mu guhuzwa n’akazi. Akazi n’ubusabe bitaratangira bivanwaho, kandi ababitegereje babimenyeshwa.",
+    "staysTitle": "Bisigara byanditseho “Konti yasibwe”",
+    "stays": "Ubwishyu, amafaranga yishyuwe, inyemezabwishyu n’isuzuma, kuko inyandiko z’abandi zibikeneye. Ubutumwa busigara mu kiganiro cy’undi muntu.",
+    "exportFirst": "Ibi ntibisubizwa inyuma. Banza umanure kopi y’amakuru yawe niba uyikeneye.",
+    "password": "Ijambo ryawe ry’ibanga",
+    "googleHint": "Wiyandikishije ukoresheje Google? Banza ushyireho ijambo ry’ibanga ukoresheje “Wibagiwe ijambo ry’ibanga” ku ipaji yo kwinjira.",
+    "understand": "Ndumva ko konti yanjye itazagaruka.",
+    "done": "Konti yawe yasibwe.",
+    "failed": "Ntibyashobotse gusiba konti. Ongera ugerageze."
   }
 }

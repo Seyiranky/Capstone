@@ -327,6 +327,11 @@ export const moderateUser = async (req: Request, res: Response): Promise<void> =
     res.status(403).json({ message: 'You cannot moderate your own account' });
     return;
   }
+  // The person deleted it; their details are gone and it cannot be brought back.
+  if (user.status === 'deleted') {
+    res.status(409).json({ message: 'This account was deleted by its owner' });
+    return;
+  }
 
   await user.update({ status: action === 'suspend' ? 'suspended' : 'active' });
 

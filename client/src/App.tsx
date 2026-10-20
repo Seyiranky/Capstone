@@ -27,6 +27,7 @@ import PassportPage from './pages/PassportPage';
 import ReceiptPage from './pages/ReceiptPage';
 import DisputesPage from './pages/DisputesPage';
 import FairworkPage from './pages/FairworkPage';
+import PrivacyPage from './pages/PrivacyPage';
 import AdminFairwork from './components/Admin/AdminFairwork';
 import AdminSafety from './components/Admin/AdminSafety';
 import AdminReports from './components/Admin/AdminReports';
@@ -70,6 +71,7 @@ function App() {
       <Route path="/p/:token" element={<PassportPage />} />
       <Route path="/r/:number" element={<ReceiptPage />} />
       <Route path="/fairwork" element={<FairworkPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
       {/* Support for people who cannot sign in, and the private link they are emailed. */}
       <Route path="/support/contact" element={<GuestContactPage />} />
       <Route path="/support/t/:token" element={<GuestTicketPage />} />
