@@ -7,6 +7,9 @@ const DESCRIPTION_MAX = 2000;
 
 type MatchWithGig = Match & { gig?: Gig & { skill?: Skill | null } };
 
+/** A job whose money already arrived (paid in advance under escrow) has no later payment to bill a premium to. */
+const alreadyPaid = (matchId: string) => Transaction.count({ where: { matchId, status: 'confirmed' } }).then(Boolean);
+
 const loadMatch = async (matchId: string) => {
   const match = (await Match.findByPk(matchId, {
     include: [{ model: Gig, as: 'gig', include: [{ model: Skill, as: 'skill' }] }],
@@ -32,6 +35,9 @@ export const buy = async (matchId: string, clientId: string) => {
   if (!isOnSite(match.gig?.skill?.category)) throw new HttpError('Job Cover is for work done on site', 400);
   if (match.status !== 'accepted') throw new HttpError('Cover can be added while the job is in progress', 409);
   if (match.coverPolicyNumber) return match;
+  if (await alreadyPaid(match.id)) {
+    throw new HttpError('This job was paid in advance, so there is no payment to add Job Cover to', 409);
+  }
   const price = Number(match.agreedAmount ?? match.gig?.budget ?? 0);
   return match.update({ coverPremium: premiumFor(price), coverPolicyNumber: policyNumber(), coverStartedAt: new Date() });
 };
@@ -53,7 +59,7 @@ export const status = async (matchId: string, viewer: { id: string; role: string
   return {
     eligible,
     covered: Boolean(match.coverPolicyNumber),
-    canBuy: eligible && isClient && match.status === 'accepted' && !match.coverPolicyNumber,
+    canBuy: eligible && isClient && match.status === 'accepted' && !match.coverPolicyNumber && !(await alreadyPaid(match.id)),
     policyNumber: match.coverPolicyNumber ?? null,
     premium: match.coverPremium != null ? Number(match.coverPremium) : premiumFor(price),
     limit: COVER_LIMIT,

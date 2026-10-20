@@ -50,6 +50,10 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
   const workerName = match.worker?.name ?? '';
   const clientName = match.gig?.client?.name ?? '';
   const waiting = payment?.status === 'initiated';
+  // Paid before Isoko stopped holding money (escrow): marking the job done
+  // releases it to the worker, and there is nothing more to pay.
+  const paidInAdvance = payment?.status === 'confirmed' && payment.escrowStatus === 'held';
+  const paidOn = payment?.heldAt ? new Date(payment.heldAt).toLocaleDateString() : '';
 
   useEffect(() => {
     if (!isWorker && match.status === 'accepted') coverApi.status(match.id).then(setCover).catch(() => setCover(null));
@@ -91,7 +95,9 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
   const markDone = () =>
     modal.confirm({
       title: t('pay.markDoneTitle'),
-      content: t('pay.markDoneBody', { name: workerName, amount: rwf(price) }),
+      content: paidInAdvance
+        ? t('pay.markDoneAdvanceBody', { name: workerName, amount: rwf(Number(payment?.amount ?? price)) })
+        : t('pay.markDoneBody', { name: workerName, amount: rwf(price) }),
       okText: t('pay.markDone'),
       onOk: () => run('done', async () => {
         await matchApi.updateMatchStatus(match.id, 'completed');
@@ -187,9 +193,13 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
             {t('pay.inProgress')}
           </Typography.Text>
           <Typography.Paragraph type="secondary" style={{ fontSize: 13, margin: '4px 0 12px' }}>
-            {isWorker
-              ? t('pay.inProgressWorker', { name: clientName, amount: rwf(price) })
-              : t('pay.inProgressClient', { name: workerName, amount: rwf(price) })}
+            {paidInAdvance
+              ? isWorker
+                ? t('pay.advanceWorker', { name: clientName, amount: rwf(Number(payment?.amount ?? price)), date: paidOn })
+                : t('pay.advanceClient', { name: workerName, amount: rwf(Number(payment?.amount ?? price)), date: paidOn })
+              : isWorker
+                ? t('pay.inProgressWorker', { name: clientName, amount: rwf(price) })
+                : t('pay.inProgressClient', { name: workerName, amount: rwf(price) })}
           </Typography.Paragraph>
           {!isWorker && cover?.canBuy && (
             <Flex className="isoko-paybox__offer" align="center" gap={10} wrap="wrap">

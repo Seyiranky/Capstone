@@ -70,6 +70,16 @@ describe('buying cover', () => {
     expect((await request(app).get(`/api/matches/${matchId}/cover`).set(as('client'))).body.premium).toBe(300);
   });
 
+  test('a job paid in advance (under escrow) cannot take cover: there is no payment to bill it to', async () => {
+    const { matchId } = await acceptedJob('tailoring', 30000);
+    await db.Transaction.create({
+      matchId, amount: 30000, currency: 'RWF', status: 'confirmed', provider: 'simulated-momo',
+      reference: `ISK-advance-${Math.random().toString(36).slice(2)}`, escrowStatus: 'held', heldAt: new Date(),
+    });
+    expect((await request(app).get(`/api/matches/${matchId}/cover`).set(as('client'))).body.canBuy).toBe(false);
+    expect((await addCover(matchId)).status).toBe(409);
+  });
+
   test('digital work done from the worker’s own desk cannot be covered', async () => {
     const { matchId } = await acceptedJob('digital_web');
     expect((await addCover(matchId)).status).toBe(400);
