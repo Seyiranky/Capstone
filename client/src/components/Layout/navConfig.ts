@@ -9,6 +9,8 @@ export interface NavEntry {
   roles?: Role[];
   /** Section heading (i18n key) the entry sits under. Admins' sidebar is grouped. */
   group?: string;
+  /** Only for workers enrolled as peer reviewers (a capability, not a role). */
+  peerReviewers?: boolean;
 }
 
 /**
@@ -23,6 +25,7 @@ export const NAV_ENTRIES: NavEntry[] = [
   { key: '/dashboard', labelKey: 'sidebar.dashboard' },
   { key: '/marketplace', labelKey: 'sidebar.marketplace', roles: ['worker', 'client'] },
   { key: '/workers', labelKey: 'sidebar.workers', roles: ['client'] },
+  { key: '/reviews', labelKey: 'sidebar.reviews', roles: ['worker'], peerReviewers: true },
   { key: '/wallet', labelKey: 'sidebar.wallet', roles: ['worker', 'client'] },
   { key: '/disputes', labelKey: 'sidebar.disputes', roles: ['worker', 'client'] },
   { key: '/notifications', labelKey: 'sidebar.notifications', roles: ['worker', 'client'] },
@@ -56,8 +59,12 @@ export const NAV_ENTRIES: NavEntry[] = [
   { key: '/settings', labelKey: 'sidebar.settings', roles: ['admin'], group: 'adminNav.account' },
 ];
 
-export const visibleNavEntries = (role: Role | null): NavEntry[] =>
-  NAV_ENTRIES.filter((e) => !e.roles || (role != null && e.roles.includes(role)));
+export const visibleNavEntries = (role: Role | null, reviewerTier?: string | null): NavEntry[] =>
+  NAV_ENTRIES.filter(
+    (e) =>
+      (!e.roles || (role != null && e.roles.includes(role))) &&
+      (!e.peerReviewers || reviewerTier === 'peer'),
+  );
 
 /** Longest matching nav key for a pathname, e.g. /admin/users -> /admin/users, not /admin. */
 export const activeNavKey = (pathname: string): string | undefined => {

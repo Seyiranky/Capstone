@@ -106,6 +106,7 @@ export type SkillTaskKind = 'demonstration' | 'certificate';
 
 /** SkillTaskAssignment.status */
 export type AssignmentStatus = 'pending' | 'approved' | 'rejected' | 'recused' | 'expired';
+export type RecusalReason = 'knowsWorker' | 'conflict' | 'notQualified';
 
 /** SkillTaskAppeal.status */
 export type AppealStatus = 'open' | 'upheld' | 'dismissed';

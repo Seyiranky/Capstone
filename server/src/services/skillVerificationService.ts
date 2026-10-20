@@ -28,6 +28,7 @@ export type RejectionRule =
   | 'recentPairing'
   | 'pairingLimit'
   | 'priorGigRelationship'
+  | 'disclosedRelationship'
   | 'notCategoryCompetent'
   | 'peerTrustTooLow'
   | 'peerNoTrackRecord';
@@ -136,6 +137,23 @@ export const pastCollaborators = async (workerId: string): Promise<Set<string>> 
   return new Set([...clientIds, ...workersTheyHired.map((m) => m.workerId)]);
 };
 
+/**
+ * Reviewers who stepped aside from one of this worker's submissions because
+ * they know the worker or have another conflict.
+ *
+ * A disclosure is about the pair, not the one submission, so it keeps that
+ * reviewer away from the worker's later submissions too. "Not qualified" is
+ * about the skill and is not counted here.
+ */
+export const disclosedRelationships = async (workerId: string): Promise<Set<string>> => {
+  const rows = await SkillTaskAssignment.findAll({
+    where: { recusalReason: { [Op.in]: ['knowsWorker', 'conflict'] } },
+    include: [{ model: SkillTask, as: 'task', where: { workerId }, attributes: [] }],
+    attributes: ['reviewerId'],
+  });
+  return new Set(rows.map((r) => r.reviewerId));
+};
+
 /** Peer reviewers must be verified in the category they are judging. */
 const categoryCompetentPeers = async (
   peerIds: string[],
@@ -187,9 +205,10 @@ export const assignReviewer = async (
     attributes: ['id', 'name', 'reviewerTier', 'trustScore', 'role', 'reviewCount'],
   });
 
-  const [{ recent, overused }, collaborators] = await Promise.all([
+  const [{ recent, overused }, collaborators, disclosed] = await Promise.all([
     overusedReviewers(workerId),
     pastCollaborators(workerId),
+    disclosedRelationships(workerId),
   ]);
 
   const peerIds = candidates.filter((c) => c.reviewerTier === 'peer').map((c) => c.id);
@@ -207,6 +226,7 @@ export const assignReviewer = async (
     if (recent.has(candidate.id)) return reject('recentPairing');
     if (!relaxPairingLimit && overused.has(candidate.id)) return reject('pairingLimit');
     if (collaborators.has(candidate.id)) return reject('priorGigRelationship');
+    if (disclosed.has(candidate.id)) return reject('disclosedRelationship');
     if (candidate.reviewerTier === 'peer') {
       if (!competentPeers.has(candidate.id)) return reject('notCategoryCompetent');
       if (candidate.trustScore < PEER_MIN_TRUST_SCORE) return reject('peerTrustTooLow');

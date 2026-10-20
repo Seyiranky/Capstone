@@ -186,6 +186,29 @@ const CollusionReport = () => {
         </Col>
       </Row>
 
+      {report.summary.recusals && (
+        <Card size="small" title="Reviewers who stepped aside">
+          <Typography.Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 8 }}>
+            A reviewer who knows the worker says so and is replaced; they are never drawn for that worker again. These
+            disclosures are the record RQ1 compares against the automatic exclusions.
+          </Typography.Paragraph>
+          <Space size={24} wrap>
+            <span>
+              <strong>{report.summary.recusals.total}</strong> in total
+            </span>
+            <span>
+              <strong>{report.summary.recusals.byReason.knowsWorker ?? 0}</strong> knew the worker
+            </span>
+            <span>
+              <strong>{report.summary.recusals.byReason.conflict ?? 0}</strong> other conflict
+            </span>
+            <span>
+              <strong>{report.summary.recusals.byReason.notQualified ?? 0}</strong> not qualified
+            </span>
+          </Space>
+        </Card>
+      )}
+
       <Card
         title="Reviewer assignment distribution"
         extra={

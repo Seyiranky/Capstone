@@ -8,7 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
-import type { AssignmentStatus } from '../types/domain';
+import type { AssignmentStatus, RecusalReason } from '../types/domain';
 import type { SkillTask } from './SkillTask';
 import type { User } from './User';
 
@@ -24,6 +24,9 @@ export class SkillTaskAssignment extends Model<
   /** 1–5, self-reported by the reviewer. A low score escalates to a quorum. */
   declare confidence: number | null;
   declare notes: string | null;
+  /** Set when the reviewer stepped aside: they disclosed a relationship or a
+   *  conflict, or did not feel qualified. Counted by the RQ1 audit. */
+  declare recusalReason: RecusalReason | null;
   /** The seed the draw was made with, stored so any allocation in the pilot
    *  can be reproduced and defended. */
   declare assignmentSeed: string | null;
@@ -77,6 +80,11 @@ export const initSkillTaskAssignment = (sequelize: Sequelize) => {
       notes: {
         type: DataTypes.TEXT,
         allowNull: true,
+      },
+      recusalReason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: { isIn: [['knowsWorker', 'conflict', 'notQualified']] },
       },
       assignmentSeed: {
         type: DataTypes.STRING,

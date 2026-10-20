@@ -67,7 +67,8 @@
     "disputes": "Ibirego",
     "growth": "Iterambere",
     "workers": "Shaka abakozi",
-    "support": "Ubufasha"
+    "support": "Ubufasha",
+    "reviews": "Isuzuma"
   },
   "dashboard": {
     "welcome": "Murakaza neza, {{name}}",
@@ -607,6 +608,35 @@
     "adminApproved": "Byemejwe. Ubuhanga ubu bugaragara nk'ubwemejwe.",
     "adminRejected": "Byanzwe. Umukozi yabimenyeshejwe kandi ashobora kujurira.",
     "decideFailed": "Ntibyashobotse kubika icyemezo. Ongera ugerageze."
+  },
+  "peerReview": {
+    "title": "Isuzuma",
+    "subtitle": "Ibyo abakozi batanze ngo ubuhanga bwabo bwemezwe, wahawe ngo ubisuzume. Ubona ibimenyetso, ntubona ibyo abandi basuzumyi bafashe.",
+    "waiting": "Hari {{count}} igitegereje ko ugisuzuma.",
+    "waiting_other": "Hari {{count}} bitegereje ko ubisuzuma.",
+    "open": "Fungura isuzuma ryawe",
+    "choose": "Hitamo",
+    "confidence": {
+      "1": "1: Simbizi neza",
+      "2": "2: Mbizi gake",
+      "3": "3: Mbizi ku rugero",
+      "4": "4: Ndabyizeye",
+      "5": "5: Ndabyizeye cyane"
+    },
+    "approved": "Byemejwe. Murakoze ku isuzuma ryanyu.",
+    "rejected": "Byanzwe. Umukozi arabimenyeshwa kandi ashobora kujurira.",
+    "stepAside": "Sinagombye gusuzuma ibi",
+    "stepAsideTitle": "Kwivana muri iri suzuma",
+    "stepAsideHelp": "Niba uzi uyu mukozi cyangwa udashobora gusuzuma mu butabera, bivuge. Bizahabwa undi musuzumyi. Niba umuzi, ntuzongera gusabwa gusuzuma ibye.",
+    "stepAsideConfirm": "Kwivanamo",
+    "stepAsideNote": "Icyo wakongeraho (si ngombwa, kibonwa n'abayobozi ba Isoko gusa)",
+    "reason": {
+      "knowsWorker": "Ndamuzi (umuryango, inshuti, umuturanyi cyangwa mugenzi wanjye)",
+      "conflict": "Indi mpamvu ishobora gutuma mbogama",
+      "notQualified": "Nta bushobozi mfite bwo gusuzuma ubu buhanga"
+    },
+    "recusedReassigned": "Byakozwe. Undi musuzumyi azabisuzuma.",
+    "recusedToAdmin": "Byakozwe. Umuyobozi azashaka undi musuzumyi."
   },
   "skills": {
     "categoryLabel": "Umwuga",

@@ -79,9 +79,20 @@ const Dashboard = () => {
     dispatch(fetchMatches());
   }, [dispatch]);
 
+  const isPeerReviewer = role === 'worker' && profile?.reviewerTier === 'peer';
+  const [peerQueue, setPeerQueue] = useState(0);
   const refreshTasks = () => {
     skillTaskApi.listTasks(role === 'admin' ? { assignedToMe: true } : undefined).then(setTasks);
   };
+  // A peer reviewer is a worker: their own submissions above, and separately
+  // the submissions drawn for them to judge.
+  useEffect(() => {
+    if (!isPeerReviewer) return;
+    skillTaskApi
+      .listTasks({ assignedToMe: true })
+      .then((queue) => setPeerQueue(queue.filter((x) => x.status === 'pending').length))
+      .catch(() => undefined);
+  }, [isPeerReviewer]);
   const refreshGigs = () => {
     adminApi.listGigs().then(setGigs);
   };
@@ -365,6 +376,15 @@ const Dashboard = () => {
         <Col xs={24} xl={8}>
           <Flex vertical gap={20}>
             {isEarner && <OnboardingChecklist items={checklist} />}
+
+            {isPeerReviewer && (
+              <Card title={t('peerReview.title')}>
+                <Typography.Paragraph type="secondary" style={{ marginBottom: 10 }}>
+                  {peerQueue > 0 ? t('peerReview.waiting', { count: peerQueue }) : t('review.nothingToReview')}
+                </Typography.Paragraph>
+                <Link to="/reviews">{t('peerReview.open')} →</Link>
+              </Card>
+            )}
 
             {role === 'worker' && (
               <Card

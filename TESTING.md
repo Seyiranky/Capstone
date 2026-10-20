@@ -138,21 +138,28 @@ Log in as **`grace@isoko.demo`**.
 5. When the worker accepts → **Pay with MoMo** puts the agreed price in escrow → hand the
    worker the 4-digit completion code shown on the match card → review. (See section 7.)
 
-### 3. Peer reviewer — **currently API-only, see the gap below**
+### 3. Peer reviewer — review, or step aside
 
-Log in as **`claudine@isoko.demo`** or **`eric@isoko.demo`**.
+Log in as a peer reviewer: **`claudine@isoko.demo`**, **`eric@isoko.demo`**, **`aline@isoko.demo`**
+or **`jeanbosco@isoko.demo`** (all `password123`). A peer sees **Reviews** in the sidebar, with a
+count, and a Reviews card on the Dashboard, only when a submission has been drawn for them.
 
-The server side works. With a token:
+1. As a worker, submit a skill for verification (Dashboard › Skills › Add). The draw picks a
+   reviewer; to put it on a particular peer, keep submitting from workers they have no ties to.
+2. As the peer, open **Reviews**. Each submission shows the evidence, the worker's name and notes,
+   and nothing about what other reviewers decided (they review blind).
+3. Choose how sure you are and the level you saw, then **Approve** or **Reject**. A first
+   verification needs two approvals, so an approval brings in a second reviewer; an unsure verdict
+   (1 or 2) does too.
+4. On another submission, choose **I should not review this** and a reason (*I know this worker*,
+   *another conflict*, *not qualified*). It goes straight to another eligible reviewer, or to the
+   admins if nobody is left. A peer who said they know the worker is never drawn for that worker
+   again.
+5. As an admin, **People & trust › Integrity audit** shows the recusals by reason under
+   *Reviewers who stepped aside*.
 
-```bash
-curl "http://localhost:4000/api/skill-tasks?assignedToMe=true" -H "Authorization: Bearer $TOKEN"
-curl -X PUT "http://localhost:4000/api/skill-tasks/$TASK_ID/review" \
-  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"decision":"approved","confidence":"high","notes":"Work matches the claim."}'
-```
-
-Confirm afterwards that the worker's `provenance` moves up a tier, that
-`credentialStrength` rises, and that their ranking on a matching gig improves.
+Confirm afterwards that the worker's `provenance` moves up a tier once approved, and that their
+ranking on a matching gig improves.
 
 ### 4. Admin — approvals, rotation, metrics
 
@@ -287,26 +294,3 @@ Each step names the account to use. All money is simulated.
 8. **Photos in messages** — two browsers, **`grace`** and **`eric`**. Grace sends a photo from
    **Notifications → Messages**; Eric, on any other page, gets a pop-up that opens the
    conversation. Grace's side then shows *Seen*.
-
----
-
-## Known gap: peer reviewers have no review UI
-
-The API supports peer reviewers fully — `requireReviewer` gates on
-`reviewerTier`, not on `role`, and `listTasks` has a working
-`assignedToMe=true` branch for them. The **client never asks for it**:
-
-- `client/src/components/Dashboard/Dashboard.tsx:57` sends
-  `assignedToMe: true` only when `role === 'admin'`. A peer reviewer is a
-  `worker`, so the server falls through to the `else` branch and returns *their
-  own submissions* instead of their review queue.
-- `client/src/components/Dashboard/Dashboard.tsx:265` renders the review card
-  only when `role === 'admin'`.
-
-Verified live: `claudine` with `assignedToMe=true` gets her queue; the request
-the UI actually makes returns her own approved task instead.
-
-This matters beyond convenience. RQ1's collusion-resistance claim rests on
-review being done by *rotated peers* rather than by staff, and today every
-review in the UI must be done by an admin — which is the single reviewer pool
-the rotation exists to avoid.

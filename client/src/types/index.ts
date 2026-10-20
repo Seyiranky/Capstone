@@ -400,6 +400,7 @@ export interface CollusionReport {
     decided: number;
     flagged: number;
     byType: Record<string, number>;
+    recusals?: { total: number; byReason: Record<string, number> };
   };
   reviewerLoad: {
     reviewerId: string;

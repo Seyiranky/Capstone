@@ -33,6 +33,7 @@ import AdminReports from './components/Admin/AdminReports';
 import AdminCover from './components/Admin/AdminCover';
 import FindWorkersPage from './components/Workers/FindWorkersPage';
 import WalletPage from './pages/WalletPage';
+import PeerReviewsPage from './pages/PeerReviewsPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import SupportPage from './pages/SupportPage';
@@ -95,6 +96,9 @@ function App() {
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['client', 'admin']} />}>
             <Route path="/workers" element={<FindWorkersPage />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={['worker']} />}>
+            <Route path="/reviews" element={<PeerReviewsPage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<AdminPage />} />

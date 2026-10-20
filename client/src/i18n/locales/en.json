@@ -67,7 +67,8 @@
     "disputes": "Disputes",
     "growth": "Growth",
     "workers": "Find workers",
-    "support": "Help & support"
+    "support": "Help & support",
+    "reviews": "Reviews"
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}",
@@ -607,6 +608,35 @@
     "adminApproved": "Approved. The skill now shows as verified.",
     "adminRejected": "Rejected. The worker has been told and can appeal.",
     "decideFailed": "Could not save the decision. Try again."
+  },
+  "peerReview": {
+    "title": "Reviews",
+    "subtitle": "Skill submissions drawn for you to judge. You see the evidence, not what other reviewers decided.",
+    "waiting": "{{count}} submission is waiting for your review.",
+    "waiting_other": "{{count}} submissions are waiting for your review.",
+    "open": "Open your reviews",
+    "choose": "Choose",
+    "confidence": {
+      "1": "1: Not sure",
+      "2": "2: A little sure",
+      "3": "3: Fairly sure",
+      "4": "4: Sure",
+      "5": "5: Very sure"
+    },
+    "approved": "Approved. Thank you for your review.",
+    "rejected": "Rejected. The worker is told and can appeal.",
+    "stepAside": "I should not review this",
+    "stepAsideTitle": "Step aside from this review",
+    "stepAsideHelp": "If you know this worker or cannot judge fairly, say so. The submission goes to another reviewer. If you know them, you will not be asked to review their work again.",
+    "stepAsideConfirm": "Step aside",
+    "stepAsideNote": "Anything to add (optional, seen only by Isoko's admins)",
+    "reason": {
+      "knowsWorker": "I know this worker (family, friend, neighbour or colleague)",
+      "conflict": "Another reason I might not be fair",
+      "notQualified": "I am not qualified to judge this skill"
+    },
+    "recusedReassigned": "Done. Another reviewer will look at it.",
+    "recusedToAdmin": "Done. An admin will find another reviewer."
   },
   "skills": {
     "categoryLabel": "Trade",

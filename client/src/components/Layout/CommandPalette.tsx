@@ -29,7 +29,8 @@ const CommandPalette = ({ open, onClose }: CommandPaletteProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { role } = useAppSelector((s) => s.auth);
+  const { role, profile } = useAppSelector((s) => s.auth);
+  const reviewerTier = profile?.reviewerTier ?? null;
   const gigs = useAppSelector((s) => s.gigs.items);
   const [query, setQuery] = useState('');
   const [cursor, setCursor] = useState(0);
@@ -45,7 +46,7 @@ const CommandPalette = ({ open, onClose }: CommandPaletteProps) => {
   }, [open, dispatch, gigs.length]);
 
   const items = useMemo<Item[]>(() => {
-    const pages: Item[] = visibleNavEntries(role).map((e) => ({
+    const pages: Item[] = visibleNavEntries(role, reviewerTier).map((e) => ({
       key: `p:${e.key}`,
       label: t(e.labelKey),
       to: e.key,
@@ -62,7 +63,7 @@ const CommandPalette = ({ open, onClose }: CommandPaletteProps) => {
         kind: 'gig',
       }));
     return [...pages, ...gigItems];
-  }, [role, gigs, t]);
+  }, [role, reviewerTier, gigs, t]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

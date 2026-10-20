@@ -28,6 +28,7 @@ import {
   FileDoneOutlined,
 } from '@ant-design/icons';
 import { supportApi } from '../../api/supportApi';
+import { skillTaskApi } from '../../api/skillTaskApi';
 import { safeVisitApi } from '../../api/safeVisitApi';
 import { adminApi } from '../../api/adminApi';
 import { useAppSelector } from '../../store/hooks';
@@ -58,12 +59,14 @@ const ICONS: Record<string, ReactNode> = {
   '/admin/safety': <AlertOutlined />,
   '/admin/reports': <FlagOutlined />,
   '/support': <CustomerServiceOutlined />,
+  '/reviews': <SafetyCertificateOutlined />,
   '/admin/support': <CustomerServiceOutlined />,
 };
 
 const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void }) => {
   const { t } = useTranslation();
-  const { role } = useAppSelector((state) => state.auth);
+  const { role, profile } = useAppSelector((state) => state.auth);
+  const reviewerTier = profile?.reviewerTier ?? null;
   const navigate = useNavigate();
   const location = useLocation();
   // Counts beside entries that need someone: support replies for people; for
@@ -78,17 +81,23 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
         adminApi.applicationsFlaggedCount().then((n) => setCounts((c) => ({ ...c, '/admin/applications': n }))).catch(() => undefined);
       } else {
         supportApi.unread().then((n) => setCounts((c) => ({ ...c, '/support': n }))).catch(() => undefined);
+        if (reviewerTier === 'peer') {
+          skillTaskApi
+            .listTasks({ assignedToMe: true })
+            .then((tasks) => setCounts((c) => ({ ...c, '/reviews': tasks.filter((x) => x.status === 'pending').length })))
+            .catch(() => undefined);
+        }
       }
     };
     load();
     const poll = window.setInterval(load, role === 'admin' ? 20000 : 60000);
     return () => window.clearInterval(poll);
-  }, [role, location.pathname]);
+  }, [role, reviewerTier, location.pathname]);
 
   // Entries without a group come first, flat; grouped ones sit under a heading.
   // A collapsed sider hides the headings (antd shows a divider instead).
   const items = useMemo(() => {
-    const entries = visibleNavEntries(role);
+    const entries = visibleNavEntries(role, reviewerTier);
     const item = (entry: (typeof entries)[number]) => ({
       key: entry.key,
       icon: ICONS[entry.key],
@@ -113,7 +122,7 @@ const SideNav = ({ dark, onNavigate }: { dark: boolean; onNavigate?: () => void 
       group.children.push(item(entry));
     }
     return [...flat, ...groups];
-  }, [role, t, counts]);
+  }, [role, reviewerTier, t, counts]);
 
   const selected = activeNavKey(location.pathname);
 

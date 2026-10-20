@@ -235,6 +235,9 @@ export interface CollusionReport {
     timedAssignments: number;
     flagged: number;
     byType: Record<string, number>;
+    /** Reviewers stepping aside: a disclosed relationship or conflict, or
+     *  not feeling qualified. Disclosures are the FR-5 record RQ1 reads. */
+    recusals: { total: number; byReason: Record<string, number> };
   };
   reviewerLoad: {
     reviewerId: string;
@@ -295,6 +298,16 @@ export const report = async (): Promise<CollusionReport> => {
         counts[f.type] = (counts[f.type] || 0) + 1;
         return counts;
       }, {}),
+      recusals: {
+        total: assignments.filter((a) => a.status === 'recused').length,
+        byReason: assignments
+          .filter((a) => a.status === 'recused' && a.recusalReason)
+          .reduce<Record<string, number>>((counts, a) => {
+            const key = a.recusalReason as string;
+            counts[key] = (counts[key] || 0) + 1;
+            return counts;
+          }, {}),
+      },
     },
     // The assignment distribution the evaluation plan calls for auditing.
     reviewerLoad: [...reviewerCounts.entries()]

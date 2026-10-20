@@ -19,6 +19,8 @@ export interface SubmitTaskPayload {
   evidenceKinds?: string[];
 }
 
+export type RecusalReason = 'knowsWorker' | 'conflict' | 'notQualified';
+
 export const skillTaskApi = {
   submitTask: ({
     skillId,
@@ -62,6 +64,12 @@ export const skillTaskApi = {
   ) =>
     axiosClient
       .put<SkillTask>(`/skill-tasks/${id}/review`, { decision, ...options })
+      .then((res) => res.data),
+
+  /** A reviewer steps aside: they know the worker, have a conflict, or are not qualified. */
+  recuse: (id: string, reason: RecusalReason, notes?: string) =>
+    axiosClient
+      .put<{ recused: boolean; reassigned: boolean }>(`/skill-tasks/${id}/recuse`, { reason, notes })
       .then((res) => res.data),
 
   /** An admin settles a submission directly, whoever it is assigned to. */

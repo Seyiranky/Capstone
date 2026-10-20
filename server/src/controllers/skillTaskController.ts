@@ -20,7 +20,7 @@ import * as trustScoreService from '../services/trustScoreService';
 import * as competenceService from '../services/competenceService';
 import { authed } from '../lib/authed';
 import { pathParam, stringParam } from '../lib/query';
-import type { EvidenceKind, SkillTaskKind, SkillTaskStatus } from '../types/domain';
+import type { EvidenceKind, RecusalReason, SkillTaskKind, SkillTaskStatus } from '../types/domain';
 import type { SkillTaskClaim } from '../models/SkillTask';
 
 const TASK_INCLUDES: Includeable[] = [
@@ -423,6 +423,76 @@ export const reviewTask = async (req: Request, res: Response): Promise<void> => 
   res.json(updated);
 };
 
+const RECUSAL_REASONS: RecusalReason[] = ['knowsWorker', 'conflict', 'notQualified'];
+
+/**
+ * A reviewer steps aside from a submission they should not judge.
+ *
+ * This is how a reviewer discloses a relationship with the worker (FR-5): the
+ * reason is kept on the assignment for the RQ1 audit, and a reviewer who knows
+ * the worker is never drawn for them again (`disclosedRelationship`). The task
+ * goes straight to another eligible reviewer through the same draw; if nobody
+ * is left, the admins are asked to place it, as on submission.
+ */
+export const recuseTask = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const { reason, notes } = req.body ?? {};
+  if (!RECUSAL_REASONS.includes(reason)) {
+    res.status(400).json({ message: `reason must be one of ${RECUSAL_REASONS.join(', ')}` });
+    return;
+  }
+
+  const task = (await SkillTask.findByPk(pathParam(req, 'id'), {
+    include: [
+      { model: Skill, as: 'skill' },
+      { model: SkillTaskAssignment, as: 'assignments' },
+    ],
+  })) as LoadedTask | null;
+  if (!task) {
+    res.status(404).json({ message: 'Skill task not found' });
+    return;
+  }
+  if (task.status !== 'pending') {
+    res.status(409).json({ message: 'This task has already been reviewed' });
+    return;
+  }
+  const assignments = task.assignments ?? [];
+  const mine = assignments.find((a) => a.reviewerId === caller.id && a.status === 'pending');
+  if (!mine) {
+    res.status(403).json({ message: 'You do not have an open assignment for this task' });
+    return;
+  }
+
+  const text = typeof notes === 'string' && notes.trim() ? notes.trim().slice(0, 500) : null;
+  await mine.update({ status: 'recused', recusalReason: reason, notes: text, decidedAt: new Date() });
+
+  const { reviewer } = await openRound(req, {
+    task,
+    skill: task.skill,
+    round: Math.max(...assignments.map((a) => a.round)) + 1,
+    exclude: assignments.map((a) => a.reviewerId),
+    reason: 'recusal',
+  });
+
+  if (reviewer) {
+    await task.update({ reviewerId: reviewer.id });
+  } else {
+    await task.update({ reviewerId: null });
+    const admins = await User.findAll({ where: { role: 'admin' }, attributes: ['id'] });
+    await Promise.all(
+      admins.map((admin) =>
+        notify(req, {
+          userId: admin.id,
+          title: 'Skill submission needs manual assignment',
+          body: `A reviewer stepped aside from a ${task.skill?.name ?? 'skill'} submission and no one else is eligible. Assign one from the review queue.`,
+        }),
+      ),
+    );
+  }
+
+  res.json({ recused: true, reassigned: Boolean(reviewer) });
+};
+
 /**
  * An admin decides a submission directly, whoever it is assigned to.
  *
@@ -511,6 +581,21 @@ export const listTasks = async (req: Request, res: Response): Promise<void> => {
     include: TASK_INCLUDES,
     order: [['createdAt', 'DESC']],
   });
+  if (caller.reviewerTier === 'peer' && assignedToMe) {
+    // A peer judges blind to the other reviewers: their own assignment
+    // only, so an earlier verdict cannot anchor the next one.
+    res.json(
+      tasks.map((task) => {
+        const json = task.toJSON() as Record<string, unknown> & { assignments?: { reviewerId: string }[] };
+        return {
+          ...json,
+          reviewer: undefined,
+          assignments: (json.assignments ?? []).filter((a) => a.reviewerId === caller.id),
+        };
+      }),
+    );
+    return;
+  }
   res.json(tasks);
 };
 
