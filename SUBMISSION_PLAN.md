@@ -58,7 +58,7 @@ owner to edit, own and record; hosting is Render + Supabase (free); the MTN sand
 obtained by the owner. Throughout: SMS stays on the `log` driver, secrets are never printed or
 committed, and each phase is committed on its own and marked done here.
 
-## Phase 1 — Core defects (Tue)
+## Phase 1 — Core defects (Tue) — done 20 Oct 2026
 
 ### 1.1 Peer reviewers get a review screen, and can recuse (FR-5, FR-6, RQ1)
 
@@ -106,6 +106,21 @@ Found:
 - **Duplicated `sensitiveGig.ts`:** keep the two copies (server and client), but add `scripts/check-shared-copies.mjs`. It fails if they differ, mirroring `check-i18n-parity.mjs`, and runs in the CI i18n job. That's cheaper and safer than a shared package across two build systems.
 
 ---
+
+**Status: done (20 Oct).** Commits `cb2b110`, `22664bf`, `4740343`.
+- 1.2: admin↔client messaging allowed on server and client; `messageRoles.test.ts` (2 tests).
+- 1.1: `/reviews` page for peers (sidebar entry and count, Dashboard card), blind to other
+  reviewers' verdicts; `PUT /skill-tasks/:id/recuse` with a reason, stored in
+  `SkillTaskAssignments.recusalReason` (migration `20261020090000`); reassignment through the
+  normal draw; a reviewer who discloses knowing the worker is excluded for that worker from then
+  on (`disclosedRelationship` rule); recusals by reason in the integrity audit.
+  `reviewerRecusal.test.ts` (7 tests). Checked in the browser with a throwaway peer and worker:
+  approve, step aside, reassignment to another peer; throwaway data deleted. TESTING.md updated.
+  The Kinyarwanda strings for the page are a draft for the owner to proofread.
+- 1.3: lint warnings 52 → 0 (server) and 5 → 0 (client); `scripts/check-shared-copies.mjs` in CI;
+  client image on `node:24-alpine` (not built locally: Docker was not running).
+- After the phase: 553/553 server tests, 13/13 client tests, build passes, i18n and shared-copy
+  checks pass.
 
 ## Phase 2 — MTN MoMo sandbox, live (Tue, needs the owner for 10 minutes)
 
