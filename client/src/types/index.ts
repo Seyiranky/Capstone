@@ -467,6 +467,8 @@ export interface Receipt {
   releasedAt: string;
   paymentReference: string;
   provider: string;
+  /** The provider's own transaction id (MTN's financialTransactionId), when it gave one. */
+  providerTransactionId?: string | null;
   completedVia: 'code' | 'client' | 'auto' | 'dispute' | null;
   gig: string | null;
   skill: string | null;

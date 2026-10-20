@@ -1,8 +1,13 @@
 /**
  * One real request-to-pay against the MTN MoMo sandbox, followed to its end.
  *
- *   npm run momo:smoke                 # a payer the sandbox approves
- *   npm run momo:smoke -- 46733123450  # a sandbox number that fails, to see the failure path
+ *   npm run momo:smoke                 # a Rwandan payer; the sandbox approves it
+ *   npm run momo:smoke -- 46733123460  # a reserved sandbox number that fails
+ *   npm run momo:smoke -- 46733123453  # a reserved sandbox number that stays pending
+ *
+ * The sandbox approves ordinary numbers and reserves a few 46733123xxx numbers
+ * to simulate outcomes (checked 20 Oct 2026: ...460 fails, ...453 stays
+ * pending). Currency is EUR in the sandbox; RWF is refused there.
  *
  * Goes through the same adapter the app uses (token, requesttopay, status
  * polling), so a pass here means the app's MoMo payments will work with these
@@ -13,7 +18,8 @@ import 'dotenv/config';
 import crypto from 'crypto';
 import adapter from '../services/payments/mtnMomoAdapter';
 
-const DEFAULT_PAYER = '46733123460';
+// The shape a client's MoMo number has in Isoko: 2507XXXXXXXX.
+const DEFAULT_PAYER = '250788123456';
 
 const main = async () => {
   const payer = process.argv[2] ?? DEFAULT_PAYER;
@@ -29,11 +35,17 @@ const main = async () => {
   console.log(`MTN accepted it. MTN reference: ${providerReference}`);
 
   for (let attempt = 0; attempt < 20; attempt += 1) {
-    const { status, failureReason } = await adapter.checkStatus!(providerReference);
+    const { status, failureReason, raw } = await adapter.checkStatus!(providerReference);
     const ours = adapter.normaliseStatus(status);
     console.log(`  ${((Date.now() - started) / 1000).toFixed(1)}s  MTN: ${status}  Isoko: ${ours}${failureReason ? `  (${failureReason})` : ''}`);
     if (ours !== 'initiated') {
-      console.log(ours === 'confirmed' ? 'Sandbox payment confirmed.' : 'Sandbox payment failed, as a failing number should.');
+      const mtnId = (raw as { financialTransactionId?: string } | undefined)?.financialTransactionId;
+      console.log(
+        ours === 'confirmed'
+          ? `Sandbox payment confirmed. MTN transaction id: ${mtnId ?? 'none given'}`
+          : `Sandbox payment failed: ${failureReason ?? status}.`,
+      );
+      if (ours !== 'confirmed') process.exitCode = 1;
       return;
     }
     await new Promise((r) => setTimeout(r, 1500));

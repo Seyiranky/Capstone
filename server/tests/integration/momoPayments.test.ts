@@ -146,7 +146,11 @@ describe('the MTN MoMo adapter', () => {
       calls.push({ url, init: init ?? {} });
       if (url.endsWith('/token/')) return new Response(JSON.stringify({ access_token: 'tok', expires_in: 3600 }), { status: 200 });
       if (url.endsWith('/collection/v1_0/requesttopay')) return new Response(null, { status: 202 });
-      if (url.includes('/collection/v1_0/requesttopay/')) return new Response(JSON.stringify({ status: mtnStatus }), { status: 200 });
+      if (url.includes('/collection/v1_0/requesttopay/'))
+        return new Response(
+          JSON.stringify({ status: mtnStatus, ...(mtnStatus === 'SUCCESSFUL' ? { financialTransactionId: '1141306052' } : {}) }),
+          { status: 200 },
+        );
       if (url.endsWith('/disbursement/v1_0/transfer')) return new Response(null, { status: 202 });
       return new Response('not found', { status: 404 });
     });
@@ -200,6 +204,19 @@ describe('the MTN MoMo adapter', () => {
       amount: '12000',
       payee: { partyIdType: 'MSISDN', partyId: users.worker.phone!.replace('+', '') },
     });
+  });
+
+  test("the receipt carries MTN's own transaction id, so it can be checked with MTN", async () => {
+    const matchId = await jobInProgress(9000);
+    await markDone(matchId);
+    const requested = await pay(matchId);
+    mtnStatus = 'SUCCESSFUL';
+    await request(app).get(`/api/transactions/${requested.body.id}`).set(as('client'));
+    const payout = must(await db.Payout.findOne({ where: { matchId } }), 'payout');
+    const receipt = await request(app).get(`/api/receipts/${payout.receiptNumber}`);
+    expect(receipt.status).toBe(200);
+    expect(receipt.body.provider).toBe('mtn-momo');
+    expect(receipt.body.providerTransactionId).toBe('1141306052');
   });
 
   test('a callback is not trusted: the status is read from MTN', async () => {

@@ -738,6 +738,7 @@
     "worker": "Paid to",
     "client": "Paid by",
     "reference": "Payment reference",
+    "providerTransactionId": "MTN MoMo transaction ID",
     "method": "How the job was completed",
     "print": "Print",
     "scanHint": "Scan to check this receipt against Isoko's records.",

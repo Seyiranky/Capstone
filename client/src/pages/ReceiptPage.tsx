@@ -106,6 +106,11 @@ const ReceiptPage = () => {
         {receipt.completedVia && (
           <Row label={t('receipt.method')}>{t(`pay.completedVia_${receipt.completedVia}`)}</Row>
         )}
+        {receipt.providerTransactionId && (
+          <Row label={t('receipt.providerTransactionId')}>
+            <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{receipt.providerTransactionId}</span>
+          </Row>
+        )}
         {/* Long provider references read better on their own line than squeezed right. */}
         <div style={{ padding: '7px 0' }}>
           <Typography.Text type="secondary" style={{ fontSize: 13, display: 'block' }}>

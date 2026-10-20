@@ -738,6 +738,7 @@
     "worker": "Yishyuwe",
     "client": "Yishyuwe na",
     "reference": "Nimero y'ubwishyu",
+    "providerTransactionId": "Nomero y'igikorwa cya MTN MoMo",
     "method": "Uko akazi kemejwe ko karangiye",
     "print": "Capa",
     "scanHint": "Sikana ugenzure iyi nyemezabwishyu mu nyandiko za Isoko.",

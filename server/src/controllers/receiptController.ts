@@ -54,6 +54,11 @@ export const getReceipt = async (req: Request, res: Response): Promise<void> => 
     role: payout.role,
     paymentReference: payout.transaction.reference,
     provider: payout.transaction.provider,
+    // MTN's own id for the money movement, the one on the payer's MoMo
+    // confirmation: anyone can check this payment against MTN's records (NFR-8).
+    providerTransactionId:
+      (payout.transaction.providerRawResponse as { financialTransactionId?: string } | null)?.financialTransactionId ??
+      null,
     completedVia: payout.match?.completedVia ?? null,
     gig: payout.match?.gig?.title ?? null,
     skill: payout.match?.gig?.skill?.name ?? null,
