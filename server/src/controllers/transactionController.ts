@@ -1,7 +1,5 @@
 import type { Request, Response } from 'express';
 import { Match, Gig, Transaction, User } from '../models';
-import notify from '../lib/notify';
-import { paymentNotice } from '../lib/paymentNotice';
 import * as paymentService from '../services/paymentService';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
@@ -43,12 +41,8 @@ export const getTransaction = async (req: Request, res: Response): Promise<void>
     res.status(404).json({ message: 'Payment not found' });
     return;
   }
-  const before = transaction.status;
-  const current = await paymentService.refreshStatus(transaction);
-  if (before === 'initiated' && current.status !== 'initiated' && transaction.match) {
-    await notify(req, paymentNotice(current, transaction.match));
-  }
-  res.json(current);
+  // Settling here also tells everyone concerned (paymentService.announce).
+  res.json(await paymentService.refreshStatus(transaction, req));
 };
 
 /**
@@ -73,9 +67,7 @@ export const confirmTransaction = async (req: Request, res: Response): Promise<v
     res.status(409).json({ message: 'Approve this payment on your phone; it confirms itself.' });
     return;
   }
-  const confirmed = await paymentService.confirm(transaction.id);
-  if (transaction.match) await notify(req, paymentNotice(confirmed, transaction.match));
-  res.json(confirmed);
+  res.json(await paymentService.confirm(transaction.id, req));
 };
 
 /**

@@ -55,6 +55,21 @@ export const REJECTION_REASONS: RejectionReason[] = ['skillLevel', 'distance', '
 /** Match.status */
 export type MatchStatus = 'pending' | 'accepted' | 'completed' | 'cancelled';
 
+/** Who called off a job that had been accepted. */
+export type CancelledVia = 'worker' | 'client' | 'dispute';
+
+/** A Mobile Money attempt that failed, kept when the client tries again (RQ4 counts attempts). */
+export interface PaymentAttempt {
+  provider: string;
+  providerReference: string | null;
+  providerStatus: string | null;
+  failureReason: string | null;
+  payerMsisdn: string | null;
+  amount: number;
+  requestedAt: string;
+  settledAt: string | null;
+}
+
 /** Match.origin — which path produced the match, and the RQ2 comparison axis. */
 /** manual: an approved application; ranked: invited from the shortlist; direct: a client invited this worker. */
 export type MatchOrigin = 'manual' | 'ranked' | 'direct';
@@ -135,7 +150,7 @@ export type DisputeStatus = 'open' | 'escalated' | 'decided' | 'settled';
 /** What happens to the held money. */
 export type DisputeOutcome = 'release' | 'refund' | 'split';
 
-export type DisputeReason = 'notDone' | 'poorQuality' | 'noShow' | 'notReleased' | 'notPaid' | 'other';
+export type DisputeReason = 'notDone' | 'poorQuality' | 'noShow' | 'notReleased' | 'notPaid' | 'notMarkedDone' | 'other';
 /** Where the job stood when the dispute was opened; decides what each outcome means. */
 export type DisputeStage = 'in_progress' | 'awaiting_payment' | 'paid';
 

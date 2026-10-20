@@ -1,33 +1,59 @@
-import type { Gig, Match, Transaction } from '../models';
+import type { Gig, Match, Payout, Transaction } from '../models';
 import type { NotificationCategory } from '../types/domain';
 
+interface Notice {
+  userId: string;
+  title: string;
+  body: string;
+  category: NotificationCategory;
+}
+
 /**
- * What to tell the worker when a Mobile Money payment settles.
+ * Who is told what when a Mobile Money payment settles.
  *
- * The provider's callback, the status check and the in-app confirmation all
- * describe it through here, so they cannot say different things about the
- * same money.
+ * Every settlement path (the client's screen, the provider's callback, the
+ * background status check, a simulated approval) announces through here, once,
+ * so they cannot say different things about the same money.
+ *
+ * Paid: everyone with a payout is told their own share (the lead, and any crew
+ * or apprentice). Failed: the worker, and the client, who may have closed the
+ * page and needs to try again.
  */
-export const paymentNotice = (
+export const paymentNotices = (
   tx: Transaction,
   match: Match & { gig?: Gig | null },
-): { userId: string; title: string; body: string; category: NotificationCategory } => {
+  payouts: Pick<Payout, 'userId' | 'amount' | 'currency'>[] = [],
+): Notice[] => {
   const title = match.gig?.title ?? 'your job';
-  const amount = `${Number(tx.releasedAmount ?? tx.amount).toLocaleString()} ${tx.currency}`;
 
   if (tx.status !== 'confirmed') {
-    return {
-      userId: match.workerId,
-      title: 'Payment not completed',
-      body: `The client's Mobile Money payment for "${title}" did not go through. They have been asked to try again.`,
-      category: 'critical',
-    };
+    const notices: Notice[] = [
+      {
+        userId: match.workerId,
+        title: 'Payment not completed',
+        body: `The client's Mobile Money payment for "${title}" did not go through. They have been asked to try again.`,
+        category: 'critical',
+      },
+    ];
+    if (match.gig?.clientId) {
+      notices.push({
+        userId: match.gig.clientId,
+        title: 'Payment did not go through',
+        body: `Your Mobile Money payment for "${title}" did not go through${tx.failureReason ? ` (${tx.failureReason})` : ''}. Open the job to try again.`,
+        category: 'critical',
+      });
+    }
+    return notices;
   }
-  return {
-    userId: match.workerId,
+
+  const shares = payouts.length
+    ? payouts
+    : [{ userId: match.workerId, amount: tx.releasedAmount ?? tx.amount, currency: tx.currency }];
+  return shares.map((share) => ({
+    userId: share.userId,
     title: 'You have been paid',
-    body: `The client paid ${amount} for "${title}" with Mobile Money. Your receipt is in your wallet.`,
+    body: `The client paid ${Number(share.amount).toLocaleString()} ${share.currency ?? tx.currency} for "${title}" with Mobile Money. Your receipt is in your wallet.`,
     // Money. The one notice a worker should never have to open the app to find.
     category: 'critical',
-  };
+  }));
 };

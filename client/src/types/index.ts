@@ -194,6 +194,10 @@ export interface Match {
   respondedAt?: string | null;
   acceptedAt?: string | null;
   declineReason?: string | null;
+  /** When the worker said the work is finished. */
+  workDoneAt?: string | null;
+  /** Who called the job off after it was accepted. */
+  cancelledVia?: 'worker' | 'client' | 'dispute' | null;
   scoreBreakdown?: MatchScoreBreakdown | null;
   /** Only ever present for the client, and only while the job is in progress. */
   completedAt?: string | null;

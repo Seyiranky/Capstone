@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { Review, Match, Gig, User } from '../models';
+import { Review, Match, Gig, Transaction, User } from '../models';
 import notify from '../lib/notify';
 import * as trustScoreService from '../services/trustScoreService';
 import * as competenceService from '../services/competenceService';
@@ -25,6 +25,12 @@ export const createReview = async (req: Request, res: Response): Promise<void> =
   }
   if (match.status !== 'completed') {
     res.status(409).json({ message: 'Reviews can only be left for a completed match' });
+    return;
+  }
+  // A review closes the job, so it waits for the money: otherwise a client
+  // could rate the work and never pay for it. The app offers it only then too.
+  if (!(await Transaction.count({ where: { matchId: match.id, status: 'confirmed' } }))) {
+    res.status(409).json({ message: 'Reviews open once the job has been paid' });
     return;
   }
 

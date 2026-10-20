@@ -9,6 +9,8 @@ export const matchApi = {
       .put<Match>(`/matches/${id}/status`, { status, declineReason })
       .then((res) => res.data),
 
+  /** The worker says the work is finished; the client is asked to mark it done and pay. */
+  reportWorkDone: (id: string) => axiosClient.post<Match>(`/matches/${id}/work-done`).then((res) => res.data),
 
   addPhotos: (id: string, files: File[]) => {
     const form = new FormData();

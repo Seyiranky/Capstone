@@ -8,7 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
-import type { EscrowStatus, TransactionStatus } from '../types/domain';
+import type { PaymentAttempt, EscrowStatus, TransactionStatus } from '../types/domain';
 import type { Match } from './Match';
 
 export class Transaction extends Model<
@@ -25,6 +25,8 @@ export class Transaction extends Model<
   /** Whatever the adapter was handed. Genuinely unknown: its shape is the
    *  provider's, not ours, and it is kept for reconciliation rather than read. */
   declare providerRawResponse: unknown;
+  /** Earlier attempts on this job that failed, oldest first, kept when the client tries again. */
+  declare previousAttempts: PaymentAttempt[] | null;
   declare callbackReceivedAt: Date | null;
   declare failureReason: string | null;
   declare payerMsisdn: string | null;
@@ -90,6 +92,7 @@ export const initTransaction = (sequelize: Sequelize) => {
       providerReference: { type: DataTypes.STRING, allowNull: true },
       providerStatus: { type: DataTypes.STRING, allowNull: true },
       providerRawResponse: { type: DataTypes.JSONB, allowNull: true },
+      previousAttempts: { type: DataTypes.JSONB, allowNull: true },
       callbackReceivedAt: { type: DataTypes.DATE, allowNull: true },
       failureReason: { type: DataTypes.STRING, allowNull: true },
       payerMsisdn: { type: DataTypes.STRING, allowNull: true },

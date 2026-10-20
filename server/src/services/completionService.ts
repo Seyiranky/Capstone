@@ -1,9 +1,11 @@
 import type { Request } from 'express';
+import { Op } from 'sequelize';
 import { Dispute, Gig, Match, Transaction, sequelize } from '../models';
 import * as payoutService from './payoutService';
 import * as trustScoreService from './trustScoreService';
 import * as competenceService from './competenceService';
 import notify from '../lib/notify';
+import { HttpError } from '../lib/httpError';
 import { amountToCollect, generateReceiptNumber } from './escrowRules';
 import type { CompletionMethod, DisputeOutcome } from '../types/domain';
 
@@ -106,4 +108,60 @@ export const completeMatch = async (
   if (gig) await trustScoreService.recalculate(gig.clientId, { trigger: 'match:completed' });
   await competenceService.recalculateAllFor(match.workerId, { trigger: 'match:completed' });
   return true;
+};
+
+export const WORK_DONE_REMINDER_MS = 48 * 60 * 60 * 1000;
+
+/**
+ * The worker says the work is finished.
+ *
+ * Only the client can mark a job done (it is their word the work was delivered,
+ * and it asks them to pay), so the worker's side is to tell them. Saying it
+ * twice changes nothing; the client is told once.
+ */
+export const reportWorkDone = async (ctx: AppContext, match: MatchWithGig, workerId: string) => {
+  if (match.workerId !== workerId) throw new HttpError('Only the worker on this job can say the work is finished', 403);
+  if (match.status !== 'accepted') throw new HttpError('Only a job in progress can be reported finished', 409);
+  if (match.workDoneAt) return match;
+  await match.update({ workDoneAt: new Date() });
+  const gig = match.gig ?? (await Gig.findByPk(match.gigId));
+  if (gig) {
+    await notify(ctx, {
+      userId: gig.clientId,
+      title: 'Work finished',
+      body: `The worker says "${gig.title}" is finished. Check it, then mark the job as done and pay with Mobile Money.`,
+      category: 'outcome',
+    });
+  }
+  return match;
+};
+
+/**
+ * Reminds a client, once, when the worker said the work was finished 48 hours
+ * ago and the job is still not marked done. Run by the server's sweep.
+ */
+export const remindWorkDone = async (ctx: AppContext, now = new Date()): Promise<number> => {
+  const due = (await Match.findAll({
+    where: {
+      status: 'accepted',
+      workDoneAt: { [Op.lte]: new Date(now.getTime() - WORK_DONE_REMINDER_MS) },
+      workDoneRemindedAt: null,
+    },
+    include: [{ model: Gig, as: 'gig' }],
+  })) as MatchWithGig[];
+  for (const match of due) {
+    // Claim the reminder first, so two sweeps cannot both send it.
+    const [claimed] = await Match.update(
+      { workDoneRemindedAt: now },
+      { where: { id: match.id, workDoneRemindedAt: null } },
+    );
+    if (!claimed || !match.gig) continue;
+    await notify(ctx, {
+      userId: match.gig.clientId,
+      title: 'Waiting for you to mark the job done',
+      body: `The worker finished "${match.gig.title}" two days ago. Mark it done and pay, or open a dispute if something is wrong.`,
+      category: 'outcome',
+    });
+  }
+  return due.length;
 };

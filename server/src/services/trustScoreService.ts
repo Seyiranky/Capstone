@@ -109,7 +109,11 @@ const verificationComponent = (verifiedSkills: number): RawComponent<Verificatio
 /**
  * Counts a user's concluded commitments.
  *
- * Only abandonment *after* accepting counts against them. Declining while the
+ * Only abandonment *after* accepting counts against them, and only by the
+ * person who called the job off: a client cancelling must not lower the
+ * worker's rate, nor the reverse. A job a dispute called off counts against
+ * neither; the decision is its own record. Rows from before the caller was
+ * recorded (cancelledVia null) still count for both. Declining while the
  * match is still pending is legitimate — a worker saying "I'm not free that
  * week" is the honest answer, and penalising it would both punish good
  * behaviour and bias the acceptance-rate measure the pilot depends on.
@@ -122,11 +126,14 @@ const jobCountsFor = async (user: User) => {
 
   const matches = await Match.findAll({
     ...scope,
-    attributes: ['id', 'status', 'acceptedAt', 'updatedAt'],
+    attributes: ['id', 'status', 'acceptedAt', 'updatedAt', 'cancelledVia'],
   });
+  const mine = user.role === 'client' ? 'client' : 'worker';
 
   const completed = matches.filter((m) => m.status === 'completed').length;
-  const abandonedMatches = matches.filter((m) => m.status === 'cancelled' && m.acceptedAt);
+  const abandonedMatches = matches.filter(
+    (m) => m.status === 'cancelled' && m.acceptedAt && (m.cancelledVia == null || m.cancelledVia === mine),
+  );
   const cutoff = new Date(Date.now() - RECENT_ABANDONMENT_WINDOW_DAYS * DAY_MS);
   const recentAbandoned = abandonedMatches.filter((m) => m.updatedAt >= cutoff).length;
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { App, Button, Flex, Input, Segmented, Spin, Typography } from 'antd';
-import { MedicineBoxOutlined, MobileOutlined, WarningOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, MedicineBoxOutlined, MobileOutlined, WarningOutlined } from '@ant-design/icons';
 import HelpLink from '../Support/HelpLink';
 import { matchApi } from '../../api/matchApi';
 import { transactionApi } from '../../api/transactionApi';
@@ -99,6 +99,50 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
       }, t('pay.genericError')),
     });
 
+  // The worker cannot mark the job done (that is the client's word), but they
+  // can say it is finished, which asks the client to check and pay.
+  const reportFinished = () =>
+    modal.confirm({
+      title: t('pay.finishedTitle'),
+      content: t('pay.finishedBody', { name: clientName }),
+      okText: t('pay.finished'),
+      onOk: () => run('finished', async () => {
+        await matchApi.reportWorkDone(match.id);
+        message.success(t('pay.finishedToast', { name: clientName }));
+        onChanged();
+      }, t('pay.genericError')),
+    });
+
+  // Either side can call off a job under way; it counts against whoever does.
+  const callOff = () => {
+    let reason = '';
+    modal.confirm({
+      title: t('pay.callOffTitle'),
+      okText: t('pay.callOff'),
+      okButtonProps: { danger: true },
+      content: (
+        <Flex vertical gap={8}>
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+            {t(isWorker ? 'pay.callOffBodyWorker' : 'pay.callOffBodyClient', { name: isWorker ? clientName : workerName })}
+          </Typography.Text>
+          <Input.TextArea
+            rows={2}
+            maxLength={280}
+            placeholder={t('pay.callOffReason')}
+            onChange={(e) => {
+              reason = e.target.value;
+            }}
+          />
+        </Flex>
+      ),
+      onOk: () => run('calloff', async () => {
+        await matchApi.updateMatchStatus(match.id, 'cancelled', reason.trim() || undefined);
+        message.success(t('pay.calledOff'));
+        onChanged();
+      }, t('pay.genericError')),
+    });
+  };
+
   const addCover = () =>
     run('cover', async () => {
       setCover(await coverApi.buy(match.id));
@@ -158,11 +202,29 @@ const JobPaymentPanel = ({ match, isWorker, liveDispute, onChanged }: JobPayment
               </Button>
             </Flex>
           )}
+          {match.workDoneAt && (
+            <Flex align="center" gap={8} className="isoko-paybox__note">
+              <CheckCircleOutlined />
+              <Typography.Text style={{ fontSize: 13 }}>
+                {isWorker
+                  ? t('pay.finishedToldClient', { name: clientName, date: new Date(match.workDoneAt).toLocaleDateString() })
+                  : t('pay.workerSaysFinished', { name: workerName })}
+              </Typography.Text>
+            </Flex>
+          )}
           {!isWorker && (
             <Button type="primary" block loading={busy === 'done'} onClick={markDone} style={{ marginTop: 12 }}>
               {t('pay.markDone')}
             </Button>
           )}
+          {isWorker && !match.workDoneAt && (
+            <Button type="primary" block loading={busy === 'finished'} onClick={reportFinished} style={{ marginTop: 12 }}>
+              {t('pay.finished')}
+            </Button>
+          )}
+          <Button type="link" danger size="small" loading={busy === 'calloff'} onClick={callOff} style={{ padding: 0, marginTop: 8 }}>
+            {t('pay.callOff')}
+          </Button>
         </div>
       );
     }

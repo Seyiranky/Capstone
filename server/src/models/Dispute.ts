@@ -61,7 +61,7 @@ export const initDispute = (sequelize: Sequelize) => {
       reason: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: { isIn: [['notDone', 'poorQuality', 'noShow', 'notReleased', 'notPaid', 'other']] },
+        validate: { isIn: [['notDone', 'poorQuality', 'noShow', 'notReleased', 'notPaid', 'notMarkedDone', 'other']] },
       },
       details: { type: DataTypes.TEXT, allowNull: false },
       response: { type: DataTypes.TEXT, allowNull: true },

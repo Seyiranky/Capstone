@@ -60,6 +60,7 @@ const RULES: [RegExp, NotificationKind][] = [
   [/support/i, 'support'],
   [/paid|payment/i, 'payment'],
   [/marked done/i, 'done'],
+  [/work finished|mark the job done/i, 'job'],
   [/dispute|mediate|appeal/i, 'dispute'],
   [/sos|visit not checked|arrived|safety alert|checking on you/i, 'safety'],
   [/cover/i, 'cover'],
@@ -67,7 +68,7 @@ const RULES: [RegExp, NotificationKind][] = [
   [/review(?!er)|endorsed/i, 'review'],
   [/skill/i, 'skill'],
   [/crew|apprentice|team member/i, 'team'],
-  [/declined|cancelled|not selected|rejected|filled|expired|withdrawn/i, 'declined'],
+  [/declined|cancelled|called off|not selected|rejected|filled|expired|withdrawn/i, 'declined'],
   [/confirmed|approved|selected/i, 'done'],
   [/gig|worker|match|application|applicant|asked for you/i, 'job'],
 ];

@@ -253,6 +253,8 @@ a:hover {
 .isoko-paybox--warning { border-color: #fcd34d; background: #fffbeb; }
 :root[data-theme='dark'] .isoko-paybox--warning { border-color: rgba(217, 160, 50, 0.4); background: rgba(217, 160, 50, 0.1); }
 .isoko-paybox__offer { padding: 10px 12px; border-radius: 8px; background: var(--ant-color-bg-container); border: 1px dashed var(--isoko-border); }
+/* "The worker says it is finished": a quiet confirmation, not an alert. */
+.isoko-paybox__note { margin-top: 10px; padding: 8px 12px; border-radius: 8px; background: var(--ant-color-success-bg); color: var(--ant-color-success-text); }
 .isoko-paybox__lines { display: flex; flex-direction: column; gap: 4px; font-size: 13px; padding: 10px 12px; border-radius: 8px; background: var(--ant-color-bg-container); }
 .isoko-paybox__lines span:last-child { font-variant-numeric: tabular-nums; }
 .isoko-paybox__total { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--isoko-border); font-weight: 600; }

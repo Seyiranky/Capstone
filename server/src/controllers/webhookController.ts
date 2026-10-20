@@ -1,8 +1,6 @@
 import type { Request, Response } from 'express';
-import { Transaction, Match, Gig, User } from '../models';
+import { Transaction } from '../models';
 import * as paymentService from '../services/paymentService';
-import notify from '../lib/notify';
-import { paymentNotice } from '../lib/paymentNotice';
 import { pathParam } from '../lib/query';
 import { secretMatches } from '../lib/secrets';
 
@@ -58,12 +56,7 @@ export const paymentCallback = async (req: Request, res: Response): Promise<void
 
   // Only a first-time settlement notifies, so a retried webhook cannot tell a
   // worker twice that they have been paid.
-  const match = (await Match.findByPk(result.transaction.matchId, {
-    include: [{ model: Gig, as: 'gig', include: [{ model: User, as: 'client' }] }],
-  })) as (Match & { gig?: Gig | null }) | null;
-  if (match) {
-    await notify(req, paymentNotice(result.transaction, match));
-  }
+  await paymentService.announce(req, result.transaction);
 
   res.status(200).json({
     received: true,
@@ -93,12 +86,6 @@ export const momoCallback = async (req: Request, res: Response): Promise<void> =
     return;
   }
   const before = transaction.status;
-  const current = await paymentService.refreshStatus(transaction);
-  if (before === 'initiated' && current.status !== 'initiated') {
-    const match = (await Match.findByPk(current.matchId, { include: [{ model: Gig, as: 'gig' }] })) as
-      | (Match & { gig?: Gig | null })
-      | null;
-    if (match) await notify(req, paymentNotice(current, match));
-  }
+  const current = await paymentService.refreshStatus(transaction, req);
   res.status(200).json({ received: true, applied: before !== current.status, status: current.status });
 };

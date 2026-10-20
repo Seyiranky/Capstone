@@ -31,7 +31,9 @@ type MatchWithGig = Match & { gig?: Gig | null };
 export const PANEL_SIZE = 3;
 export const MAJORITY = 2;
 export const DECIDE_WITHIN_MS = 5 * 24 * 60 * 60 * 1000;
-export const DISPUTE_REASONS: DisputeReason[] = ['notDone', 'poorQuality', 'noShow', 'notReleased', 'notPaid', 'other'];
+// 'notReleased' (money held in escrow not released) is kept only so disputes
+// opened under escrow still validate; it is no longer offered.
+export const DISPUTE_REASONS: DisputeReason[] = ['notDone', 'poorQuality', 'noShow', 'notReleased', 'notPaid', 'notMarkedDone', 'other'];
 /** How long after a paid job is done it can still be disputed. */
 export const PAID_DISPUTE_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 export const OUTCOMES: DisputeOutcome[] = ['release', 'refund', 'split'];
@@ -68,7 +70,8 @@ export const eligibility = async (match: MatchWithGig, userId: string): Promise<
     return {
       canOpen: true,
       stage: 'in_progress',
-      reasons: isWorker ? ['noShow', 'notReleased', 'other'] : ['notDone', 'poorQuality', 'noShow', 'other'],
+      // A worker who finished and is waiting on the client can say so.
+      reasons: isWorker ? ['noShow', 'notMarkedDone', 'other'] : ['notDone', 'poorQuality', 'noShow', 'other'],
     };
   }
   const paid = await Transaction.count({ where: { matchId: match.id, status: 'confirmed' } });
@@ -304,7 +307,7 @@ const decide = async (
   if (dispute.stage === 'awaiting_payment') {
     // The job is done and unpaid: the decision sets what the client owes.
     if (outcome === 'refund') {
-      await match.update({ status: 'cancelled' });
+      await match.update({ status: 'cancelled', cancelledVia: 'dispute' });
       await match.gig.update({ status: 'cancelled' });
       // A payment request left waiting for approval is withdrawn.
       await Transaction.update(
@@ -340,7 +343,7 @@ const decide = async (
       summary = `the worker returns ${owed.toLocaleString('en-US')} RWF to the client; the Isoko team will contact you both to arrange it`;
     }
   } else if (outcome === 'refund') {
-    await match.update({ status: 'cancelled' });
+    await match.update({ status: 'cancelled', cancelledVia: 'dispute' });
     await completionService.settleLegacyHold(match.id, 'refunded');
     await match.gig.update({ status: 'cancelled' });
     summary = 'the job is called off and nothing is owed';

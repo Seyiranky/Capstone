@@ -7,6 +7,7 @@ import * as disputeService from './services/disputeService';
 import * as supportService from './services/supportService';
 import * as applicationFollowUp from './services/applicationFollowUp';
 import * as safeVisitService from './services/safeVisitService';
+import * as completionService from './services/completionService';
 
 // Fails here rather than at the first request that needs a secret. Without
 // this the server boots happily with no JWT_SECRET and only falls over when
@@ -26,7 +27,7 @@ app.set('io', io);
 // unref() so it never holds the process open on shutdown.
 const SWEEP_EVERY_MS = 10 * 60 * 1000;
 setInterval(() => {
-  paymentService.refreshPending().catch((error: unknown) => {
+  paymentService.refreshPending({ app }).catch((error: unknown) => {
     console.error('Payment status sweep failed', error);
   });
   disputeService.escalateOverdue({ app }).catch((error: unknown) => {
@@ -37,6 +38,9 @@ setInterval(() => {
   });
   applicationFollowUp.sweep({ app }).catch((error: unknown) => {
     console.error('Application follow-up sweep failed', error);
+  });
+  completionService.remindWorkDone({ app }).catch((error: unknown) => {
+    console.error('Work-done reminder sweep failed', error);
   });
   supportService.autoClose().catch((error: unknown) => {
     console.error('Support auto-close sweep failed', error);

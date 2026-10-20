@@ -8,8 +8,36 @@ import { hasLiveDispute, priceOf } from './completionService';
 import { MAX_CONTRIBUTION } from './safetyNetService';
 import { toRwandanMsisdn } from '../lib/channels/sms';
 import type { PaymentAdapter, PaymentCallback } from './payments/adapter';
-import type { TransactionStatus } from '../types/domain';
+import type { PaymentAttempt, TransactionStatus } from '../types/domain';
 import { HttpError } from '../lib/httpError';
+import notify from '../lib/notify';
+import { paymentNotices } from '../lib/paymentNotice';
+import type { Request } from 'express';
+
+/** Where notices are sent from: a request, or the server's own sweep. */
+type AppContext = Pick<Request, 'app'> | undefined;
+
+/**
+ * Tells everyone concerned that a payment settled, either way.
+ *
+ * Called by every path that settles a payment (the client's screen, a
+ * provider's callback, the background status check, a simulated approval),
+ * and only on the first settlement, so a retried callback cannot tell anyone
+ * twice.
+ */
+export const announce = async (ctx: AppContext, transaction: Transaction): Promise<void> => {
+  const match = (await Match.findByPk(transaction.matchId, { include: [{ model: Gig, as: 'gig' }] })) as
+    | (Match & { gig?: Gig | null })
+    | null;
+  if (!match) return;
+  const payouts =
+    transaction.status === 'confirmed'
+      ? await Payout.findAll({ where: { transactionId: transaction.id }, attributes: ['userId', 'amount', 'currency'] })
+      : [];
+  for (const notice of paymentNotices(transaction, match, payouts)) {
+    await notify(ctx, notice);
+  }
+};
 
 /**
  * Provider-agnostic payment handling.
@@ -190,7 +218,7 @@ const openTransaction = async (transactionId: string, verb: string): Promise<Tra
  * simulated flow exercises the real code rather than a shortcut that only
  * exists in simulation and is therefore never tested.
  */
-export const confirm = async (transactionId: string): Promise<Transaction> => {
+export const confirm = async (transactionId: string, ctx?: AppContext): Promise<Transaction> => {
   const transaction = await openTransaction(transactionId, 'confirm');
 
   const adapter = ADAPTERS[transaction.provider] ?? simulatedAdapter;
@@ -199,10 +227,11 @@ export const confirm = async (transactionId: string): Promise<Transaction> => {
     status: 'SUCCESSFUL',
   });
   const result = await applyCallback(callback);
+  if (result.ok && !result.duplicate) await announce(ctx, result.transaction);
   return result.transaction ?? transaction;
 };
 
-export const fail = async (transactionId: string, reason?: string): Promise<Transaction> => {
+export const fail = async (transactionId: string, reason?: string, ctx?: AppContext): Promise<Transaction> => {
   const transaction = await openTransaction(transactionId, 'fail');
 
   const adapter = ADAPTERS[transaction.provider] ?? simulatedAdapter;
@@ -212,6 +241,7 @@ export const fail = async (transactionId: string, reason?: string): Promise<Tran
     failureReason: reason,
   });
   const result = await applyCallback(callback);
+  if (result.ok && !result.duplicate) await announce(ctx, result.transaction);
   return result.transaction ?? transaction;
 };
 
@@ -285,8 +315,20 @@ export const requestForMatch = async (
     coverPremium: premium || null,
     coverPolicyNumber: match.coverPolicyNumber ?? null,
   };
-  // A failed attempt is replaced by the new request rather than kept beside it.
-  return existing ? existing.update(fields) : Transaction.create({ matchId, ...fields });
+  if (!existing) return Transaction.create({ matchId, ...fields });
+  // The new request takes the row (the job has one payment), and the failed
+  // attempt is kept in its history: RQ4 counts attempts, not only successes.
+  const attempt: PaymentAttempt = {
+    provider: existing.provider,
+    providerReference: existing.providerReference,
+    providerStatus: existing.providerStatus,
+    failureReason: existing.failureReason,
+    payerMsisdn: existing.payerMsisdn,
+    amount: Number(existing.amount),
+    requestedAt: existing.createdAt.toISOString(),
+    settledAt: existing.callbackReceivedAt ? existing.callbackReceivedAt.toISOString() : null,
+  };
+  return existing.update({ ...fields, previousAttempts: [...(existing.previousAttempts ?? []), attempt] });
 };
 
 /**
@@ -294,15 +336,16 @@ export const requestForMatch = async (
  * Used by the client's screen while they approve on their phone, and to
  * verify a callback instead of trusting what it says.
  */
-export const refreshStatus = async (transaction: Transaction): Promise<Transaction> => {
+export const refreshStatus = async (transaction: Transaction, ctx?: AppContext): Promise<Transaction> => {
   if (transaction.status !== 'initiated' || !transaction.providerReference) return transaction;
   const adapter = ADAPTERS[transaction.provider];
   if (!adapter?.checkStatus) return transaction;
   const { status, failureReason, raw } = await adapter.checkStatus(transaction.providerReference);
   if (adapter.normaliseStatus(status) === 'initiated') return transaction;
   const result = await applyCallback({ provider: adapter.name, providerReference: transaction.providerReference, status, failureReason, raw });
-  if (result.ok && result.transaction && result.transaction.status === 'confirmed' && !result.duplicate) {
-    await sendPayouts(result.transaction);
+  if (result.ok && result.transaction && !result.duplicate) {
+    if (result.transaction.status === 'confirmed') await sendPayouts(result.transaction);
+    await announce(ctx, result.transaction);
   }
   return result.transaction ?? transaction;
 };
@@ -343,12 +386,12 @@ export const sendPayouts = async (transaction: Transaction): Promise<void> => {
 };
 
 /** Checks every payment still waiting on the provider (the sweep in server.ts). */
-export const refreshPending = async (): Promise<number> => {
+export const refreshPending = async (ctx?: AppContext): Promise<number> => {
   const pending = await Transaction.findAll({ where: { status: 'initiated' } });
   let settled = 0;
   for (const tx of pending) {
     try {
-      if ((await refreshStatus(tx)).status !== 'initiated') settled += 1;
+      if ((await refreshStatus(tx, ctx)).status !== 'initiated') settled += 1;
     } catch (err) {
       console.error(`Could not check payment ${tx.id}`, (err as Error).message);
     }

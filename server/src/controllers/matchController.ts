@@ -130,6 +130,13 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
     return;
   }
 
+  // Calling off a job under way while a dispute is open would pre-empt the
+  // mediators, who decide what happens to it.
+  if (status === 'cancelled' && match.status === 'accepted' && (await completionService.hasLiveDispute(match.id))) {
+    res.status(409).json({ message: 'A dispute is open on this job. The mediators decide what happens to it.' });
+    return;
+  }
+
   // Marking the job done is the client's word that the work was delivered, and
   // it is what asks them to pay, so only the client may do it.
   if (status === 'completed' && !isClient) {
@@ -172,6 +179,9 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
       : {}),
     ...(status === 'accepted' ? { acceptedAt: now } : {}),
     ...(status === 'cancelled' && declineReason ? { declineReason } : {}),
+    // Who called off a job already under way: the completion rate counts it
+    // against them, not against the other person.
+    ...(status === 'cancelled' && !wasPending ? { cancelledVia: isWorker ? ('worker' as const) : ('client' as const) } : {}),
   });
 
   if (status === 'accepted' && gig) {
@@ -219,13 +229,25 @@ export const updateMatchStatus = async (req: Request, res: Response): Promise<vo
   if (status === 'cancelled' && gig?.status === 'matched') {
     // Siblings are still pending, so the gig goes back on the market intact.
     await gig.update({ status: 'open' });
-    await notify(req, {
-      userId: gig.clientId,
-      title: wasPending ? 'Worker declined' : 'Match cancelled',
-      body: `"${gig.title}" is open again${declineReason ? `: ${declineReason}` : '.'}`,
-      // The client's gig just lost its worker and needs attention.
-      category: 'outcome',
-    });
+    // The other person is told, never the one who acted.
+    if (isWorker) {
+      await notify(req, {
+        userId: gig.clientId,
+        title: wasPending ? 'Worker declined' : 'Match cancelled',
+        body: `"${gig.title}" is open again${declineReason ? `: ${declineReason}` : '.'}`,
+        // The client's gig just lost its worker and needs attention.
+        category: 'outcome',
+      });
+    } else {
+      await notify(req, {
+        userId: match.workerId,
+        title: wasPending ? 'Invitation withdrawn' : 'Job called off',
+        body: wasPending
+          ? `The client withdrew the invitation to "${gig.title}".`
+          : `The client called off "${gig.title}". Nothing is owed${declineReason ? `: ${declineReason}` : '.'}`,
+        category: 'outcome',
+      });
+    }
   }
 
   if (status === 'cancelled' && !wasPending) {
@@ -305,6 +327,20 @@ const visitHandler =
   };
 
 /** Safe visit: arrive, leave, or ask for help on an on-site job. */
+/** The worker says the work is finished; the client is asked to mark it done and pay. */
+export const reportWorkDone = async (req: Request, res: Response): Promise<void> => {
+  const caller = authed(req);
+  const match = (await Match.findByPk(pathParam(req, 'id'), { include: [{ model: Gig, as: 'gig' }] })) as
+    | (Match & { gig?: Gig | null })
+    | null;
+  if (!match) {
+    res.status(404).json({ message: 'Match not found' });
+    return;
+  }
+  await completionService.reportWorkDone(req, match, caller.id);
+  res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
+};
+
 export const checkIn = visitHandler(safeVisitService.checkIn);
 export const checkOut = visitHandler(safeVisitService.checkOut);
 export const sos = visitHandler(safeVisitService.sos);

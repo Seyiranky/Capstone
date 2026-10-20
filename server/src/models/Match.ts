@@ -8,7 +8,7 @@ import {
   type Sequelize,
 } from 'sequelize';
 import type { Db } from './index';
-import type { CompletionMethod, InvitationReason, MatchOrigin, MatchStatus } from '../types/domain';
+import type { CancelledVia, CompletionMethod, InvitationReason, MatchOrigin, MatchStatus } from '../types/domain';
 import type { ScoredPair } from '../types/scoring';
 import type { Gig } from './Gig';
 import type { Review } from './Review';
@@ -40,7 +40,12 @@ export class Match extends Model<InferAttributes<Match>, InferCreationAttributes
    *  worker it is meant to be collected from. */
   declare completionCode: string | null;
   declare completionCodeAttempts: CreationOptional<number>;
+  /** When the worker said the work is finished; the client then marks it done and pays. */
   declare workDoneAt: Date | null;
+  /** The client was reminded, once, that the worker says the work is finished. */
+  declare workDoneRemindedAt: Date | null;
+  /** Who called the job off after it was accepted: the worker, the client, or a dispute. */
+  declare cancelledVia: CancelledVia | null;
   declare completedVia: CompletionMethod | null;
   declare completedAt: CreationOptional<Date | null>;
   /** Job Cover, added by the client while the job is under way; billed in the MoMo payment. */
@@ -144,6 +149,12 @@ export const initMatch = (sequelize: Sequelize) => {
       coverStartedAt: { type: DataTypes.DATE, allowNull: true },
       completionCodeAttempts: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       workDoneAt: { type: DataTypes.DATE, allowNull: true },
+      workDoneRemindedAt: { type: DataTypes.DATE, allowNull: true },
+      cancelledVia: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: { isIn: [['worker', 'client', 'dispute']] },
+      },
       completedVia: {
         type: DataTypes.STRING,
         allowNull: true,

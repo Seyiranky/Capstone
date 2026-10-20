@@ -54,7 +54,7 @@ const heldJob = async (budget = 40000) => {
 };
 
 // Each side has its own reasons: a client complains of the work, a worker of the client.
-const openDispute = (matchId: string, who = 'client', reason = who === 'worker' ? 'notReleased' : 'poorQuality') =>
+const openDispute = (matchId: string, who = 'client', reason = who === 'worker' ? 'notMarkedDone' : 'poorQuality') =>
   request(app)
     .post('/api/disputes')
     .set(as(who))
