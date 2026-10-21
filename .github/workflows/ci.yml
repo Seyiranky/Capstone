@@ -69,7 +69,10 @@ jobs:
         # unseeded database fails in a way that looks like broken code.
         run: npm run seed:test
 
-      - run: npm test
+      - name: Tests
+        # The github-actions reporter turns each failure into an annotation on
+        # the run: test name and message, readable without opening the log.
+        run: npm test -- --reporters=default --reporters=github-actions
 
       - name: Build
         # Proves the artifact `npm start` runs actually compiles, which the
