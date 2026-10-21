@@ -105,12 +105,14 @@ One service awake all month is about 744 hours, inside Render's 750 free hours.
   moves and no phone is prompted.
 - **Text messages**: the `log` driver; printed in Render's logs, not sent. New sign-ups cannot
   confirm a phone number.
-- **Email**: real, through Brevo's SMTP relay (free, 300 emails a day). Set on `isoko-api` ›
-  Environment: `SMTP_USER` and `SMTP_PASS` (Brevo › SMTP & API › SMTP), and `EMAIL_FROM`, e.g.
-  `Isoko <you@gmail.com>`, which must be a sender verified in Brevo (Senders, Domains & Dedicated
-  IPs › Senders). Sign-up confirmation, password reset and email notices then arrive for real.
-  The demo accounts' addresses (`@isoko.demo`) are not real inboxes: to see an email arrive, sign
-  up on the live site with your own address.
+- **Email**: real, through **Brevo's HTTPS API** (free, 300 emails a day). Not Brevo's SMTP relay:
+  Render's free tier blocks outbound SMTP (ports 25, 465, 587) since September 2025, and the
+  connection just times out. On `isoko-api` › Environment set `EMAIL_DRIVER=brevo`,
+  `BREVO_API_KEY` (Brevo › SMTP & API › **API Keys** › Generate a new API key; this is not the
+  SMTP key), and `EMAIL_FROM`, e.g. `Isoko <you@gmail.com>`, a sender verified in Brevo
+  (Senders, Domains & Dedicated IPs › Senders). A person asks for a confirmation email in
+  **Settings › Notifications** by choosing email; password resets and email notices follow.
+  The demo accounts' addresses (`@isoko.demo`) are not real inboxes: test with your own.
 - **Demo data** is loaded only into an empty database. To start empty instead, set
   `SEED_DEMO_DATA=false` on the API before the first deploy.
 - **First request after a long idle**: if the ping stops, the first visitor waits about a minute

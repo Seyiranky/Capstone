@@ -59,20 +59,14 @@ services:
       # Text messages print to the log: the pilot sends no real SMS.
       - key: SMS_DRIVER
         value: log
-      # Email goes out through Brevo's SMTP relay (free, 300 a day, no domain
-      # needed). The login and the sender are personal, so they are set in
-      # Render's dashboard, never in git.
+      # Email goes out through Brevo's HTTPS API: Render's free tier blocks
+      # outbound SMTP (ports 25, 465, 587) since September 2025, so the SMTP
+      # relay times out from here. The key and the sender are personal, so they
+      # are set in Render's dashboard, never in git.
       - key: EMAIL_DRIVER
-        value: smtp
-      - key: SMTP_HOST
-        value: smtp-relay.brevo.com
-      - key: SMTP_PORT
-        value: '587'
-      - key: SMTP_USER
+        value: brevo
+      - key: BREVO_API_KEY
         sync: false
-      - key: SMTP_PASS
-        sync: false
-      # e.g. Isoko <your-verified-sender@example.com>; must be a sender verified in Brevo.
       - key: EMAIL_FROM
         sync: false
       - key: GOOGLE_CLIENT_ID

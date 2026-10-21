@@ -21,6 +21,7 @@ describe('email channel', () => {
     delete process.env.SMTP_USER;
     delete process.env.SMTP_PASS;
     delete process.env.APP_URL;
+    delete process.env.BREVO_API_KEY;
 
     sendMail = jest.fn().mockResolvedValue({ messageId: '<abc@isoko>' });
     mockedNodemailer.createTransport.mockReturnValue({ sendMail } as never);
@@ -49,7 +50,7 @@ describe('email channel', () => {
     it('names the drivers it has when asked for one it does not', async () => {
       process.env.EMAIL_DRIVER = 'nope';
       await expect(email.send(message)).rejects.toThrow(
-        "Unknown EMAIL_DRIVER 'nope'. Available: log, smtp",
+        "Unknown EMAIL_DRIVER 'nope'. Available: log, smtp, brevo",
       );
     });
 
@@ -131,6 +132,64 @@ describe('email channel', () => {
         providerMessageId: null,
       });
     });
+  });
+
+  describe('brevo driver (HTTPS, for hosts that block SMTP)', () => {
+    let fetchSpy: jest.SpyInstance;
+    afterEach(() => fetchSpy?.mockRestore());
+
+    it('sends through Brevo\'s API with the sender split into name and address', async () => {
+      process.env.EMAIL_DRIVER = 'brevo';
+      process.env.BREVO_API_KEY = 'xkeysib-test';
+      process.env.EMAIL_FROM = 'Isoko <hello@example.com>';
+      fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({ messageId: '<brevo-1@smtp-relay>' }), { status: 201 }),
+      );
+
+      const result = await email.send(message);
+
+      expect(result).toEqual({ provider: 'brevo', providerMessageId: '<brevo-1@smtp-relay>' });
+      const [url, init] = fetchSpy.mock.calls[0];
+      expect(url).toBe('https://api.brevo.com/v3/smtp/email');
+      expect((init.headers as Record<string, string>)['api-key']).toBe('xkeysib-test');
+      expect(JSON.parse(init.body)).toEqual({
+        sender: { name: 'Isoko', email: 'hello@example.com' },
+        to: [{ email: 'worker@example.com' }],
+        subject: 'Payment confirmed',
+        textContent: 'body',
+        htmlContent: '<p>body</p>',
+      });
+      expect(mockedNodemailer.createTransport).not.toHaveBeenCalled();
+    });
+
+    it('passes on Brevo\'s reason when it refuses, such as an unverified sender', async () => {
+      process.env.EMAIL_DRIVER = 'brevo';
+      process.env.BREVO_API_KEY = 'xkeysib-test';
+      fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({ code: 'invalid_parameter', message: 'Sender is not valid' }), { status: 400 }),
+      );
+      await expect(email.send(message)).rejects.toThrow('Brevo refused the email (400): Sender is not valid');
+    });
+
+    it('refuses to run without its key', async () => {
+      process.env.EMAIL_DRIVER = 'brevo';
+      await expect(email.send(message)).rejects.toThrow('BREVO_API_KEY is not set');
+    });
+
+    it('reads a sender with or without a display name', () => {
+      expect(email.parseAddress('Isoko <a@b.co>')).toEqual({ name: 'Isoko', email: 'a@b.co' });
+      expect(email.parseAddress('"Isoko Team" <a@b.co>')).toEqual({ name: 'Isoko Team', email: 'a@b.co' });
+      expect(email.parseAddress('a@b.co')).toEqual({ email: 'a@b.co' });
+    });
+  });
+
+  it('smtp gives up on a blocked connection within seconds, not minutes', async () => {
+    process.env.EMAIL_DRIVER = 'smtp';
+    process.env.SMTP_HOST = 'smtp.example.com';
+    await email.send(message);
+    expect(mockedNodemailer.createTransport).toHaveBeenCalledWith(
+      expect.objectContaining({ connectionTimeout: 15_000, greetingTimeout: 10_000, socketTimeout: 20_000 }),
+    );
   });
 
   describe('render', () => {

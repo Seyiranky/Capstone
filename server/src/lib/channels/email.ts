@@ -95,11 +95,49 @@ const drivers: Record<string, EmailDriver> = {
       // this follows the port rather than needing a fifth variable.
       secure: port === 465,
       auth: user && pass ? { user, pass } : undefined,
+      // A host that blocks SMTP (Render's free tier does, since September 2025)
+      // drops the connection silently; fail in seconds with a reason instead of
+      // holding the request open for minutes.
+      connectionTimeout: 15_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     });
 
     const info = await transport.sendMail({ from: fromAddress(), to, subject, text, html });
     return { provider: `smtp:${host}`, providerMessageId: info.messageId ?? null };
   },
+
+  /**
+   * Brevo's HTTPS API (port 443), for hosts that block outbound SMTP: Render's
+   * free tier blocks ports 25, 465 and 587. The same Brevo account and verified
+   * sender as SMTP; only the key differs (Brevo › SMTP & API › API Keys).
+   */
+  brevo: async ({ to, subject, text, html }) => {
+    const apiKey = process.env.BREVO_API_KEY;
+    if (!apiKey) {
+      throw new Error('BREVO_API_KEY is not set');
+    }
+    const sender = parseAddress(fromAddress());
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': apiKey, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text, htmlContent: html }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    const body = (await res.json().catch(() => ({}))) as { messageId?: string; message?: string; code?: string };
+    if (!res.ok) {
+      // Brevo explains itself (an unverified sender, a bad key); pass that on.
+      throw new Error(`Brevo refused the email (${res.status}): ${body.message ?? body.code ?? 'no reason given'}`);
+    }
+    return { provider: 'brevo', providerMessageId: body.messageId ?? null };
+  },
+};
+
+/** "Isoko <hello@example.com>" -> { name: "Isoko", email: "hello@example.com" }; a bare address has no name. */
+export const parseAddress = (value: string): { name?: string; email: string } => {
+  const match = value.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/);
+  if (!match) return { email: value.trim() };
+  return match[1] ? { name: match[1].trim(), email: match[2].trim() } : { email: match[2].trim() };
 };
 
 /**
