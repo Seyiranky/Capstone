@@ -21,7 +21,8 @@ next to each other, so the API reaches its database quickly.
 ## 1. Supabase: database and file storage (about 5 minutes)
 
 1. Go to **supabase.com** › **Start your project** › sign in with GitHub.
-2. **New project**: name `isoko`, choose a **database password** (keep it; you need it in step 5),
+2. **New project**: name `isoko`, choose a **database password of letters and numbers only** (symbols such
+   as `@ # / ? $ )` break the database address unless encoded); keep it, you need it in step 5,
    region **Central EU (Frankfurt)**, plan **Free**. Wait about a minute while it starts.
 3. **Storage** (left menu) › **New bucket**: name `uploads`, leave **Public bucket off** (private).
    Isoko's server is the only thing that reads it, after checking each request's signed link.
@@ -35,6 +36,8 @@ next to each other, so the API reaches its database quickly.
    Replace `[YOUR-PASSWORD]` with the password from step 2.
    Use the **session pooler**, not the direct connection: the direct host is IPv6-only, and Render
    connects over IPv4.
+   The API checks this address before it starts and stops with a plain explanation (never the
+   address itself) if the password is still a placeholder, breaks the address, or it is the direct host.
 
 ## 2. Render: API and web app (about 5 minutes, then about 10 minutes of building)
 

@@ -4,6 +4,10 @@
 # free host offers none; a single instance means no two starts race.
 set -e
 
+# Stops with a plain explanation, without printing the address, if DATABASE_URL
+# is malformed or is not one this host can reach.
+node dist/scripts/checkDatabaseUrl.js
+
 for attempt in $(seq 1 15); do
   if npx sequelize-cli db:migrate; then
     break
