@@ -56,11 +56,25 @@ services:
       # e.g. https://isoko-api.onrender.com/api/webhooks/momo (status is also polled).
       - key: MOMO_CALLBACK_URL
         sync: false
-      # Text messages and email print to the log: the pilot sends nothing real.
+      # Text messages print to the log: the pilot sends no real SMS.
       - key: SMS_DRIVER
         value: log
+      # Email goes out through Brevo's SMTP relay (free, 300 a day, no domain
+      # needed). The login and the sender are personal, so they are set in
+      # Render's dashboard, never in git.
       - key: EMAIL_DRIVER
-        value: log
+        value: smtp
+      - key: SMTP_HOST
+        value: smtp-relay.brevo.com
+      - key: SMTP_PORT
+        value: '587'
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      # e.g. Isoko <your-verified-sender@example.com>; must be a sender verified in Brevo.
+      - key: EMAIL_FROM
+        sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
 

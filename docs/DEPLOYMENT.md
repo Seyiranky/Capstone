@@ -103,9 +103,14 @@ One service awake all month is about 744 hours, inside Render's 750 free hours.
 
 - **Payments**: MTN MoMo **sandbox**; requests and confirmations are real API calls, no real money
   moves and no phone is prompted.
-- **Text messages and email**: `log` drivers; they are printed in Render's logs, not sent. New
-  sign-ups cannot confirm a phone or an email, so use the demo accounts. To send real email, set
-  `EMAIL_DRIVER=smtp` with an SMTP account (see `server/.env.example`).
+- **Text messages**: the `log` driver; printed in Render's logs, not sent. New sign-ups cannot
+  confirm a phone number.
+- **Email**: real, through Brevo's SMTP relay (free, 300 emails a day). Set on `isoko-api` ›
+  Environment: `SMTP_USER` and `SMTP_PASS` (Brevo › SMTP & API › SMTP), and `EMAIL_FROM`, e.g.
+  `Isoko <you@gmail.com>`, which must be a sender verified in Brevo (Senders, Domains & Dedicated
+  IPs › Senders). Sign-up confirmation, password reset and email notices then arrive for real.
+  The demo accounts' addresses (`@isoko.demo`) are not real inboxes: to see an email arrive, sign
+  up on the live site with your own address.
 - **Demo data** is loaded only into an empty database. To start empty instead, set
   `SEED_DEMO_DATA=false` on the API before the first deploy.
 - **First request after a long idle**: if the ping stops, the first visitor waits about a minute
