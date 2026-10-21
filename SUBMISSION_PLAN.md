@@ -227,7 +227,7 @@ sign-up and Settings. `accountDeletion.test.ts` (8 tests); 574/574 server tests.
 browser: blocked list, wrong password, deletion, sign-in refused; throwaway data deleted. The
 Kinyarwanda is a draft for the owner to proofread.
 
-## Phase 4 — Free deployment (Wed)
+## Phase 4 — Free deployment (Wed) — done 22 Oct 2026
 
 **What the project needs:**
 - A **long-lived Node process**: Socket.IO, plus a 10-minute background sweep in `server.ts` for payments, disputes, safe visits, application follow-ups and support.
@@ -271,6 +271,20 @@ The steps:
 7. **CI:** add a job that builds `Dockerfile.prod` and pushes it to GHCR on `main`. This is the proposal's "builds and publishes container images".
 
 ---
+
+**Status: done (22 Oct).** Live at https://isoko-web.onrender.com (web) and
+https://isoko-api.onrender.com (API), Render Frankfurt + Supabase Central EU. Commits `6289146`
+(storage driver, `Dockerfile.prod`, `render.yaml`, GHCR publishing, `docs/DEPLOYMENT.md`),
+`708777d` (lowercase image owner), `c249160` (DATABASE_URL check), `a5b90fa` (CI failure
+annotations), `595db92` (email through Brevo SMTP). Verified from here: API health in about 0.5 s,
+web app built against the live API, deep links, CORS limited to the web origin, demo sign-in for
+admin, client and worker, Socket.IO over websocket, CI green including the published image.
+Confirmed by the owner: the rest of the checklist. Found on the way: a password with `) / $ ?` broke
+the database address and Node printed it, password included (now checked before start, never
+printed; the owner reset the password); Supabase's direct host is IPv6-only, so the session pooler
+is required. One CI failure (`c249160`) could not be reproduced with CI's exact database, settings
+and Postgres 16; failures are now annotated publicly. Email on the live site switched from `log`
+to Brevo; it needs `SMTP_USER`, `SMTP_PASS` and `EMAIL_FROM` set on Render.
 
 ## Phase 5 — Performance (Wed afternoon)
 
