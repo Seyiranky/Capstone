@@ -1,0 +1,92 @@
+# Render Blueprint: the pilot deployment (SUBMISSION_PLAN Phase 4).
+#
+#   isoko-api  the API, from server/Dockerfile.prod (migrates on start, loads
+#              the demo data into an empty database, then serves)
+#   isoko-web  the web app, built by Vite and served from Render's CDN
+#
+# Database and file storage are Supabase (free): Render's own free Postgres is
+# deleted after 30 days, and a free Render service's disk is wiped on every
+# redeploy. Values marked `sync: false` are secrets or come from other accounts;
+# Render asks for them when the Blueprint is applied. Nothing secret is in git.
+# Step by step: docs/DEPLOYMENT.md.
+
+services:
+  - type: web
+    name: isoko-api
+    runtime: docker
+    plan: free
+    region: frankfurt # the closest Render region to Kigali
+    dockerContext: ./server
+    dockerfilePath: ./server/Dockerfile.prod
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Supabase › Connect › "Session pooler" URI (IPv4; the direct host is IPv6-only).
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PASSPORT_SIGNING_SECRET
+        generateValue: true
+      - key: PAYMENT_WEBHOOK_SECRET
+        generateValue: true
+      - key: SMS_WEBHOOK_SECRET
+        generateValue: true
+      # The web app's address, e.g. https://isoko-web.onrender.com (CORS, sockets, links in emails).
+      - key: APP_URL
+        sync: false
+      - key: STORAGE_DRIVER
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: uploads
+      - key: PAYMENT_PROVIDER
+        value: mtn-momo
+      - key: MOMO_TARGET_ENV
+        value: sandbox
+      - key: MOMO_COLLECTION_KEY
+        sync: false
+      - key: MOMO_COLLECTION_USER
+        sync: false
+      - key: MOMO_COLLECTION_API_KEY
+        sync: false
+      # e.g. https://isoko-api.onrender.com/api/webhooks/momo (status is also polled).
+      - key: MOMO_CALLBACK_URL
+        sync: false
+      # Text messages and email print to the log: the pilot sends nothing real.
+      - key: SMS_DRIVER
+        value: log
+      - key: EMAIL_DRIVER
+        value: log
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+  - type: web
+    name: isoko-web
+    runtime: static
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    pullRequestPreviewsEnabled: false
+    routes:
+      # A single-page app: every path is index.html, the router takes it from there.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    envVars:
+      # The same Node as the API image and CI.
+      - key: NODE_VERSION
+        value: '24'
+      # The API's address plus /api, e.g. https://isoko-api.onrender.com/api
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false

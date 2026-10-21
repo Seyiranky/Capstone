@@ -27,6 +27,7 @@ import supportRoutes from './routes/supportRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { notFound, errorHandler } from './middleware/errorMiddleware';
 import { corsOptions, securityHeaders } from './middleware/security';
+import { keepUploads, serveKeptUploads } from './lib/storage';
 import { protectPrivateUploads } from './lib/signedUploads';
 
 const app = express();
@@ -46,7 +47,16 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 // whether this file runs from src/ under tsx or from dist/ after a build.
 // Chat media and skill evidence are private: served only with a signed,
 // expiring link that the API hands to the people allowed to see them.
-app.use('/uploads', protectPrivateUploads, express.static(path.join(__dirname, '..', 'uploads'), { dotfiles: 'deny', index: false }));
+// After the static files: a file not on this disk (a free host's disk is wiped
+// on redeploy) is fetched from lasting storage (lib/storage).
+app.use(
+  '/uploads',
+  protectPrivateUploads,
+  express.static(path.join(__dirname, '..', 'uploads'), { dotfiles: 'deny', index: false }),
+  serveKeptUploads,
+);
+// Every accepted upload is copied to lasting storage once its request succeeds.
+app.use(keepUploads);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

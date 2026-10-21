@@ -11,7 +11,9 @@
 process.env.SMS_DRIVER = 'log';
 process.env.EMAIL_DRIVER = 'log';
 process.env.PAYMENT_PROVIDER = 'simulated-momo';
+// Uploads stay on disk; the Supabase driver's tests fake its API themselves.
+process.env.STORAGE_DRIVER = 'local';
 // Blank, not deleted: dotenv would fill a deleted one from server/.env.
-for (const name of ['MOMO_COLLECTION_KEY', 'MOMO_COLLECTION_USER', 'MOMO_COLLECTION_API_KEY', 'MOMO_DISBURSEMENT_KEY', 'MOMO_DISBURSEMENT_USER', 'MOMO_DISBURSEMENT_API_KEY', 'MOMO_CALLBACK_URL']) {
+for (const name of ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'MOMO_COLLECTION_KEY', 'MOMO_COLLECTION_USER', 'MOMO_COLLECTION_API_KEY', 'MOMO_DISBURSEMENT_KEY', 'MOMO_DISBURSEMENT_USER', 'MOMO_DISBURSEMENT_API_KEY', 'MOMO_CALLBACK_URL']) {
   process.env[name] = '';
 }

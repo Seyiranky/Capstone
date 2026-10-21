@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import { Op } from 'sequelize';
 import type { Request, Response } from 'express';
 import {
@@ -7,9 +6,10 @@ import {
   UserSkill,
   Skill,
 } from '../models';
+import { removeUpload } from '../lib/storage';
 import * as accountDeletionService from '../services/accountDeletionService';
 import { authed } from '../lib/authed';
-import { AVATAR_DIR, looksLikeImage } from '../middleware/upload';
+import { looksLikeImage } from '../middleware/upload';
 import { pathParam } from '../lib/query';
 import * as workHistoryService from '../services/workHistoryService';
 import * as levelService from '../services/levelService';
@@ -235,9 +235,8 @@ export const searchWorkers = async (req: Request, res: Response): Promise<void> 
 
 
 const removeAvatarFile = (url: string | null) => {
-  // Only ever a file in the avatars folder, named by the server.
-  const name = url?.startsWith('/uploads/avatars/') ? path.basename(url) : null;
-  if (name) fs.rm(path.join(AVATAR_DIR, name), { force: true }, () => undefined);
+  // Only ever a file in the avatars folder, named by the server; the kept copy goes too.
+  if (url?.startsWith('/uploads/avatars/')) removeUpload(url);
 };
 
 /** Sets the caller's profile picture: a square image cropped in the browser. */

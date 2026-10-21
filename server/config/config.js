@@ -21,11 +21,19 @@ module.exports = {
   production: {
     use_env_variable: 'DATABASE_URL',
     dialect: 'postgres',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
-    },
+    logging: false,
+    // A free hosted database allows few connections; one API instance needs few.
+    pool: { max: 5, min: 0, idle: 10000, acquire: 30000 },
+    // SSL is required by every managed Postgres; DATABASE_SSL=false is only for
+    // trying the production image against a local database.
+    dialectOptions:
+      process.env.DATABASE_SSL === 'false'
+        ? {}
+        : {
+            ssl: {
+              require: true,
+              rejectUnauthorized: false,
+            },
+          },
   },
 };

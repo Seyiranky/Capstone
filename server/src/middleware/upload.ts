@@ -5,7 +5,7 @@ import multer from 'multer';
 import type { Request } from 'express';
 import type { EvidenceKind } from '../types/domain';
 
-const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+import { UPLOAD_ROOT } from '../lib/storage';
 const GIG_IMAGE_DIR = path.join(UPLOAD_ROOT, 'gigs');
 const EVIDENCE_DIR = path.join(UPLOAD_ROOT, 'evidence');
 const JOB_PHOTO_DIR = path.join(UPLOAD_ROOT, 'jobs');

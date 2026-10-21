@@ -1,6 +1,4 @@
 import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
 import bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 import type { Request } from 'express';
@@ -17,7 +15,7 @@ import {
   sequelize,
 } from '../models';
 import { userWithPassword } from '../models/User';
-import { AVATAR_DIR } from '../middleware/upload';
+import { removeUpload } from '../lib/storage';
 import { HttpError } from '../lib/httpError';
 import notify from '../lib/notify';
 
@@ -77,8 +75,7 @@ export const blockers = async (user: User): Promise<DeletionBlocker[]> => {
 };
 
 const removeAvatarFile = (url: string | null) => {
-  const name = url?.startsWith('/uploads/avatars/') ? path.basename(url) : null;
-  if (name) fs.rm(path.join(AVATAR_DIR, name), { force: true }, () => undefined);
+  if (url?.startsWith('/uploads/avatars/')) removeUpload(url);
 };
 
 /**
