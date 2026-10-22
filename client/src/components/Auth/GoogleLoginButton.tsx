@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,18 @@ const GoogleLoginButton = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { status, error } = useAppSelector((state) => state.auth);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [buttonWidth, setButtonWidth] = useState(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setButtonWidth(Math.min(400, Math.floor(entry.contentRect.width)));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const finishLogin = async (credential: string, chosenRole?: Role) => {
     const result = await dispatch(googleLogin({ credential, role: chosenRole }));
@@ -36,8 +48,12 @@ const GoogleLoginButton = () => {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <GoogleLogin onSuccess={handleSuccess} onError={() => undefined} width="320" />
+      {/* Google draws its button at a fixed pixel width, so it is measured to
+          match the form's full-width fields and buttons (Google caps it at 400). */}
+      <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', minHeight: 40 }}>
+        {buttonWidth > 0 && (
+          <GoogleLogin onSuccess={handleSuccess} onError={() => undefined} width={String(buttonWidth)} />
+        )}
       </div>
       {/* A failed sign-in is shown once, by the form above (LoginForm), which
           shares this error; the role dialog below shows its own, as it covers the form. */}
