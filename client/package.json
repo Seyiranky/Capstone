@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:chromium": "playwright test --project=chromium"
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.7",

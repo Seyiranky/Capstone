@@ -39,9 +39,8 @@ const GoogleLoginButton = () => {
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <GoogleLogin onSuccess={handleSuccess} onError={() => undefined} width="320" />
       </div>
-      {error && !pendingCredential && (
-        <Alert type="error" showIcon message={error} style={{ marginTop: 12 }} />
-      )}
+      {/* A failed sign-in is shown once, by the form above (LoginForm), which
+          shares this error; the role dialog below shows its own, as it covers the form. */}
 
       <Modal
         open={!!pendingCredential}

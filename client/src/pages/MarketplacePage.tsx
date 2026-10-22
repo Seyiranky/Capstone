@@ -75,12 +75,11 @@ const MarketplacePage = () => {
         )
       }
     >
-      <Segmented
-        value={tab}
-        onChange={(v) => setTab(v as Tab)}
-        style={{ marginBottom: 20 }}
-        options={options}
-      />
+      {/* A worker has four tabs, wider than a phone (390 px): the row scrolls on
+          its own instead of pushing the whole page sideways. */}
+      <div className="isoko-tabs-scroll" style={{ marginBottom: 20 }}>
+        <Segmented value={tab} onChange={(v) => setTab(v as Tab)} options={options} />
+      </div>
 
       {tab === 'gigs' && <GigFeed />}
       {tab === 'saved' && <GigFeed savedOnly />}
