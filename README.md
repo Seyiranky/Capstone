@@ -7,7 +7,7 @@ get matched to nearby paid jobs, and are paid by MTN Mobile Money with a receipt
 Clients post jobs and choose from ranked, explained candidates. Admins moderate the marketplace and
 watch for unfair practice.
 
-BSc Software Engineering capstone, African Leadership University, 2026. Author: Seyi Adebayo.
+BSc Software Engineering capstone, African Leadership University. Author: Seyi Adebayo.
 
 | | |
 |---|---|
