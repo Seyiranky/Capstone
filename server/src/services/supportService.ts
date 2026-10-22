@@ -316,6 +316,9 @@ const safeJson = (s: string) => {
   }
 };
 
+/** Help requests one email address may send in 24 hours without signing in. Read per call, so tests and hosts can change it. */
+export const guestDailyLimit = () => Math.max(1, Number(process.env.SUPPORT_GUEST_DAILY_LIMIT) || 10);
+
 /** Someone who cannot sign in asks for help; they follow it by a private link sent by email. */
 export const createGuest = async (
   ctx: Ctx,
@@ -329,7 +332,10 @@ export const createGuest = async (
   const today = await SupportTicket.count({
     where: { guestEmail: address, createdAt: { [Op.gte]: new Date(Date.now() - 86_400_000) } },
   });
-  if (today >= 3) throw new HttpError('We already have requests from this address today. We will reply by email.', 429);
+  // An open form, so a ceiling per address; SUPPORT_GUEST_DAILY_LIMIT (default 10) sets it.
+  if (today >= guestDailyLimit()) {
+    throw new HttpError('We already have requests from this address today. We will reply by email.', 429);
+  }
 
   const ticket = await SupportTicket.create({
     number: newNumber(),

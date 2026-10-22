@@ -85,10 +85,10 @@ export const smsCodeLimiter = limiter({
   message: 'Too many codes requested. Try again in an hour.',
 });
 
-/** Help requests from people who are not signed in: 5 per address an hour. */
+/** Help requests from people who are not signed in: per connection an hour; SUPPORT_GUEST_HOURLY_LIMIT, default 20. */
 export const supportGuestLimiter = limiter({
   windowMs: 60 * MINUTE,
-  limit: 5,
+  limit: () => Math.max(1, Number(process.env.SUPPORT_GUEST_HOURLY_LIMIT) || 20),
   keyGenerator: ip,
   message: 'Too many requests from this connection. Try again in an hour.',
 });

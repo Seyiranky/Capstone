@@ -247,6 +247,29 @@ describe('people who cannot sign in', () => {
     expect(replied.status).toBe(201);
   });
 
+  test('one address may send only so many in a day (SUPPORT_GUEST_DAILY_LIMIT)', async () => {
+    const address = `support-guest-limit-${stamp}@example.com`;
+    const send = () =>
+      request(app).post('/api/support/guest').send({
+        name: 'Limit Check', email: address, category: 'account', subject: 'Cannot sign in', body: 'Trying again, sorry.',
+      });
+    process.env.SUPPORT_GUEST_DAILY_LIMIT = '2';
+    try {
+      expect((await send()).status).toBe(201);
+      expect((await send()).status).toBe(201);
+      const third = await send();
+      expect(third.status).toBe(429);
+      expect(third.body.message).toMatch(/already have requests from this address/);
+      // The default allows ten.
+      delete process.env.SUPPORT_GUEST_DAILY_LIMIT;
+      expect(supportService.guestDailyLimit()).toBe(10);
+      expect((await send()).status).toBe(201);
+    } finally {
+      delete process.env.SUPPORT_GUEST_DAILY_LIMIT;
+      await db.SupportTicket.destroy({ where: { guestEmail: address } });
+    }
+  });
+
   test('a link that was tampered with does not open anything', async () => {
     const ticket = must(await db.SupportTicket.findOne({ where: { guestEmail } }), 'guest ticket');
     expect((await request(app).get(`/api/support/guest/${ticket.id}.forged`)).status).toBe(404);
