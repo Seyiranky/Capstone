@@ -1,4 +1,4 @@
-# Testing evidence (22 Oct 2026)
+# Testing evidence 
 
 Isoko is tested at four levels. Every push runs the first three in CI (GitHub Actions); failures
 are posted as annotations on the run.
