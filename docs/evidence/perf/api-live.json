@@ -1,0 +1,139 @@
+{
+  "base": "https://isoko-api.onrender.com/api",
+  "requests": 50,
+  "at": "2026-10-22T07:01:41.232Z",
+  "results": [
+    {
+      "endpoint": "GET /gigs",
+      "concurrency": 1,
+      "requests": 50,
+      "errors": 0,
+      "p50": 312,
+      "p95": 405,
+      "p99": 595,
+      "max": 595,
+      "perSecond": 3
+    },
+    {
+      "endpoint": "GET /users/me",
+      "concurrency": 1,
+      "requests": 50,
+      "errors": 0,
+      "p50": 292,
+      "p95": 310,
+      "p99": 602,
+      "max": 602,
+      "perSecond": 3
+    },
+    {
+      "endpoint": "GET /notifications",
+      "concurrency": 1,
+      "requests": 50,
+      "errors": 0,
+      "p50": 296,
+      "p95": 310,
+      "p99": 440,
+      "max": 440,
+      "perSecond": 3
+    },
+    {
+      "endpoint": "GET /matches",
+      "concurrency": 1,
+      "requests": 50,
+      "errors": 0,
+      "p50": 341,
+      "p95": 702,
+      "p99": 1101,
+      "max": 1101,
+      "perSecond": 3
+    },
+    {
+      "endpoint": "GET /gig-applications",
+      "concurrency": 1,
+      "requests": 50,
+      "errors": 0,
+      "p50": 298,
+      "p95": 339,
+      "p99": 444,
+      "max": 444,
+      "perSecond": 3
+    },
+    {
+      "endpoint": "GET /users/directory",
+      "concurrency": 1,
+      "requests": 50,
+      "errors": 0,
+      "p50": 398,
+      "p95": 695,
+      "p99": 812,
+      "max": 812,
+      "perSecond": 2
+    },
+    {
+      "endpoint": "GET /gigs",
+      "concurrency": 5,
+      "requests": 50,
+      "errors": 0,
+      "p50": 483,
+      "p95": 893,
+      "p99": 984,
+      "max": 984,
+      "perSecond": 9
+    },
+    {
+      "endpoint": "GET /users/me",
+      "concurrency": 5,
+      "requests": 50,
+      "errors": 0,
+      "p50": 300,
+      "p95": 391,
+      "p99": 658,
+      "max": 658,
+      "perSecond": 14
+    },
+    {
+      "endpoint": "GET /notifications",
+      "concurrency": 5,
+      "requests": 50,
+      "errors": 0,
+      "p50": 292,
+      "p95": 348,
+      "p99": 354,
+      "max": 354,
+      "perSecond": 16
+    },
+    {
+      "endpoint": "GET /matches",
+      "concurrency": 5,
+      "requests": 50,
+      "errors": 0,
+      "p50": 537,
+      "p95": 896,
+      "p99": 918,
+      "max": 918,
+      "perSecond": 8
+    },
+    {
+      "endpoint": "GET /gig-applications",
+      "concurrency": 5,
+      "requests": 50,
+      "errors": 0,
+      "p50": 301,
+      "p95": 611,
+      "p99": 787,
+      "max": 787,
+      "perSecond": 13
+    },
+    {
+      "endpoint": "GET /users/directory",
+      "concurrency": 5,
+      "requests": 50,
+      "errors": 0,
+      "p50": 638,
+      "p95": 1205,
+      "p99": 1226,
+      "max": 1226,
+      "perSecond": 7
+    }
+  ]
+}

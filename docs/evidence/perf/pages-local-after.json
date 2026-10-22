@@ -1,0 +1,55 @@
+{
+  "web": "http://localhost:4173",
+  "runs": 3,
+  "at": "2026-10-22T07:10:59.730Z",
+  "rows": [
+    {
+      "profile": "desktop",
+      "page": "Sign-in page",
+      "fcp": 132,
+      "lcp": 196,
+      "domReady": 51,
+      "load": 51,
+      "jsKB": 708,
+      "totalKB": 3620,
+      "requests": 17,
+      "heapMB": 7.5
+    },
+    {
+      "profile": "desktop",
+      "page": "Dashboard (client)",
+      "fcp": 160,
+      "lcp": 296,
+      "domReady": 50,
+      "load": 50,
+      "jsKB": 1111,
+      "totalKB": 1348,
+      "requests": 48,
+      "heapMB": 25.5
+    },
+    {
+      "profile": "low-end phone",
+      "page": "Sign-in page",
+      "fcp": 3492,
+      "lcp": 3492,
+      "domReady": 3228,
+      "load": 3229,
+      "jsKB": 708,
+      "totalKB": 865,
+      "requests": 16,
+      "heapMB": 7.4
+    },
+    {
+      "profile": "low-end phone",
+      "page": "Dashboard (client)",
+      "fcp": 3712,
+      "lcp": 4388,
+      "domReady": 3230,
+      "load": 3230,
+      "jsKB": 1111,
+      "totalKB": 1269,
+      "requests": 45,
+      "heapMB": 17.7
+    }
+  ]
+}

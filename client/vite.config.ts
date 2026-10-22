@@ -104,4 +104,25 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // The libraries every page needs (React, Ant Design, translations) in
+        // files of their own, cached apart from Isoko's code, so a change to the
+        // app does not make anyone download them again. The charts and the map
+        // are left to the build: only pages loaded on demand import them, so
+        // they arrive with those pages alone. Naming them here too made Rollup
+        // move helpers they share with Ant Design into the charts file, and the
+        // first page then pulled in all 1.4 MB of charts for a helper.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return 'react'
+          // Not @ant-design/charts or plots: those stay with the pages that draw charts.
+          if (/[\\/]node_modules[\\/](antd|@ant-design[\\/](icons|icons-svg|cssinjs|colors|fast-color|react-slick)|rc-[^/\\]+|@rc-component)[\\/]/.test(id)) return 'antd'
+          if (/[\\/]node_modules[\\/](i18next|react-i18next|i18next-browser-languagedetector)[\\/]/.test(id)) return 'i18n'
+          return undefined
+        },
+      },
+    },
+  },
 })

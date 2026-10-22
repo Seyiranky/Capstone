@@ -1,0 +1,425 @@
+{
+  "firstDownload": [
+    "index-ClxhQDei.js",
+    "react-ClsyrekE.js",
+    "antd-DaxssBDt.js",
+    "i18n-CA1IgWZV.js"
+  ],
+  "files": [
+    {
+      "file": "index-DKCKDBfr.js",
+      "kb": 1442.9,
+      "gzipKB": 425.5
+    },
+    {
+      "file": "antd-DaxssBDt.js",
+      "kb": 1160.6,
+      "gzipKB": 369.2
+    },
+    {
+      "file": "index-ClxhQDei.js",
+      "kb": 329.7,
+      "gzipKB": 112.4
+    },
+    {
+      "file": "MarketplacePage-CcLy7ca9.js",
+      "kb": 189.9,
+      "gzipKB": 56.4
+    },
+    {
+      "file": "react-ClsyrekE.js",
+      "kb": 177.1,
+      "gzipKB": 58
+    },
+    {
+      "file": "i18n-CA1IgWZV.js",
+      "kb": 56.9,
+      "gzipKB": 18.7
+    },
+    {
+      "file": "SettingsPage-C8qatLmO.js",
+      "kb": 28.4,
+      "gzipKB": 8.3
+    },
+    {
+      "file": "DashboardPage-DGedjdhh.js",
+      "kb": 19.1,
+      "gzipKB": 6
+    },
+    {
+      "file": "GigDetailPage-DRfX68MS.js",
+      "kb": 18.8,
+      "gzipKB": 6.2
+    },
+    {
+      "file": "AdminSupport-BWV3ud_K.js",
+      "kb": 17.8,
+      "gzipKB": 6
+    },
+    {
+      "file": "index-CsKVOdUB.js",
+      "kb": 16.3,
+      "gzipKB": 6.1
+    },
+    {
+      "file": "DisputesPage-BwYhXBlH.js",
+      "kb": 9.9,
+      "gzipKB": 3.4
+    },
+    {
+      "file": "RejectionNotice-EOzUbfIn.js",
+      "kb": 9.3,
+      "gzipKB": 3.6
+    },
+    {
+      "file": "WalletPage-DMpoRUHn.js",
+      "kb": 9,
+      "gzipKB": 3.1
+    },
+    {
+      "file": "ProfilePage-DlQIxwgA.js",
+      "kb": 7.3,
+      "gzipKB": 2.9
+    },
+    {
+      "file": "ChatThread-BvJW4GN6.js",
+      "kb": 7.2,
+      "gzipKB": 2.9
+    },
+    {
+      "file": "AdminPayments-CVf75FQh.js",
+      "kb": 7,
+      "gzipKB": 2.5
+    },
+    {
+      "file": "FindWorkersPage-DJmTqmjK.js",
+      "kb": 6.7,
+      "gzipKB": 2.6
+    },
+    {
+      "file": "AdminAuditPage-BH0TqoDO.js",
+      "kb": 5.9,
+      "gzipKB": 2.3
+    },
+    {
+      "file": "AdminApplications-etg7-7HV.js",
+      "kb": 5.6,
+      "gzipKB": 2.5
+    },
+    {
+      "file": "NotificationsPage-QCIWdZNS.js",
+      "kb": 5.3,
+      "gzipKB": 2.3
+    },
+    {
+      "file": "AdminMetrics-zq7jH1RY.js",
+      "kb": 5.1,
+      "gzipKB": 1.9
+    },
+    {
+      "file": "AdminSafety-uh1KqYGS.js",
+      "kb": 5,
+      "gzipKB": 2.1
+    },
+    {
+      "file": "useContactSupport-lPLhKCwY.js",
+      "kb": 4.5,
+      "gzipKB": 2
+    },
+    {
+      "file": "SupportPage-yMA3GSDP.js",
+      "kb": 4.3,
+      "gzipKB": 1.5
+    },
+    {
+      "file": "PeerReviewsPage-DY42I9u6.js",
+      "kb": 4.1,
+      "gzipKB": 1.7
+    },
+    {
+      "file": "VoiceNotePlayer-p_lehQlq.js",
+      "kb": 4,
+      "gzipKB": 1.9
+    },
+    {
+      "file": "GigApprovalQueue-BYm7sExf.js",
+      "kb": 3.9,
+      "gzipKB": 1.8
+    },
+    {
+      "file": "PassportPage-B5DgGJsN.js",
+      "kb": 3.8,
+      "gzipKB": 1.4
+    },
+    {
+      "file": "ReceiptPage-PzPOmKiB.js",
+      "kb": 3.7,
+      "gzipKB": 1.4
+    },
+    {
+      "file": "GuestSupportPage-C2tN9wwK.js",
+      "kb": 3.5,
+      "gzipKB": 1.5
+    },
+    {
+      "file": "RateHint-CEzcS79X.js",
+      "kb": 3.5,
+      "gzipKB": 1.3
+    },
+    {
+      "file": "AdminSkillReviews-D0YuOmD2.js",
+      "kb": 3.4,
+      "gzipKB": 1.5
+    },
+    {
+      "file": "AdminUsersPage-_2bPj7RT.js",
+      "kb": 3.2,
+      "gzipKB": 1.5
+    },
+    {
+      "file": "SupportComposer-DFvtTKIz.js",
+      "kb": 3,
+      "gzipKB": 1.5
+    },
+    {
+      "file": "AdminPage-y3RyO3Ay.js",
+      "kb": 3,
+      "gzipKB": 1.3
+    },
+    {
+      "file": "AdminReports-By84KsAY.js",
+      "kb": 3,
+      "gzipKB": 1.3
+    },
+    {
+      "file": "RequesterTicketView-DYdSkPe5.js",
+      "kb": 2.9,
+      "gzipKB": 1.1
+    },
+    {
+      "file": "FairworkView-DPuI0dgt.js",
+      "kb": 2.6,
+      "gzipKB": 1.2
+    },
+    {
+      "file": "EvidenceCapture-BX3vL-Nw.js",
+      "kb": 2.5,
+      "gzipKB": 1.3
+    },
+    {
+      "file": "AdminCover-Dg4BYwb5.js",
+      "kb": 2.5,
+      "gzipKB": 1.2
+    },
+    {
+      "file": "SupportThread-2FhluM7w.js",
+      "kb": 2.3,
+      "gzipKB": 0.9
+    },
+    {
+      "file": "AdminJobs-DCQSPm9f.js",
+      "kb": 2.2,
+      "gzipKB": 1.1
+    },
+    {
+      "file": "SupportArticlePage-BuLMyx4g.js",
+      "kb": 2.2,
+      "gzipKB": 0.9
+    },
+    {
+      "file": "OpenDisputeModal-CADJttJ4.js",
+      "kb": 2.2,
+      "gzipKB": 1
+    },
+    {
+      "file": "AdminMarket-D7yG59qy.js",
+      "kb": 1.9,
+      "gzipKB": 1
+    },
+    {
+      "file": "ResetPasswordPage-CVL3iSHy.js",
+      "kb": 1.9,
+      "gzipKB": 0.8
+    },
+    {
+      "file": "AdminReviewers-B2mDWgSu.js",
+      "kb": 1.8,
+      "gzipKB": 1
+    },
+    {
+      "file": "SupportTopicPage-C0VY38z0.js",
+      "kb": 1.7,
+      "gzipKB": 0.7
+    },
+    {
+      "file": "SupportRequestsPage-CCCx36p4.js",
+      "kb": 1.7,
+      "gzipKB": 0.8
+    },
+    {
+      "file": "AdminSystem-CYcqgQin.js",
+      "kb": 1.7,
+      "gzipKB": 0.8
+    },
+    {
+      "file": "OfferGigModal-B3M83QhM.js",
+      "kb": 1.6,
+      "gzipKB": 0.9
+    },
+    {
+      "file": "ActionMenu-Caj8kU1m.js",
+      "kb": 1.5,
+      "gzipKB": 0.8
+    },
+    {
+      "file": "ForgotPasswordPage-TsBUHUEZ.js",
+      "kb": 1.5,
+      "gzipKB": 0.7
+    },
+    {
+      "file": "TrustReceipt-DqT7uX2o.js",
+      "kb": 1.4,
+      "gzipKB": 0.7
+    },
+    {
+      "file": "ReportUserButton-BIUsYUhb.js",
+      "kb": 1.4,
+      "gzipKB": 0.8
+    },
+    {
+      "file": "PrivacyPage-DkI8Pryl.js",
+      "kb": 1.4,
+      "gzipKB": 0.7
+    },
+    {
+      "file": "EvidenceViewer-DvUfAFXK.js",
+      "kb": 1.3,
+      "gzipKB": 0.6
+    },
+    {
+      "file": "SupportTicketPage-BWscOn1G.js",
+      "kb": 1.2,
+      "gzipKB": 0.7
+    },
+    {
+      "file": "helpContent-CPWLHsWc.js",
+      "kb": 1.1,
+      "gzipKB": 0.6
+    },
+    {
+      "file": "VerifyEmailPage-Bf1cSH56.js",
+      "kb": 1.1,
+      "gzipKB": 0.5
+    },
+    {
+      "file": "AdminPendingGigsPage-CS47OYr3.js",
+      "kb": 0.9,
+      "gzipKB": 0.5
+    },
+    {
+      "file": "StatTile-CK30Mn6o.js",
+      "kb": 0.8,
+      "gzipKB": 0.5
+    },
+    {
+      "file": "FairworkPage-BBQnwpa1.js",
+      "kb": 0.8,
+      "gzipKB": 0.5
+    },
+    {
+      "file": "StatusTag-EhOhL4h3.js",
+      "kb": 0.8,
+      "gzipKB": 0.5
+    },
+    {
+      "file": "VerificationBadges-BdtVhqkr.js",
+      "kb": 0.7,
+      "gzipKB": 0.4
+    },
+    {
+      "file": "money-lrVn1Ywu.js",
+      "kb": 0.5,
+      "gzipKB": 0.3
+    },
+    {
+      "file": "locations-3Z-2M5We.js",
+      "kb": 0.5,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "PageContainer-CHKm_Joh.js",
+      "kb": 0.5,
+      "gzipKB": 0.3
+    },
+    {
+      "file": "passportApi-CVuafWNT.js",
+      "kb": 0.5,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "AdminFairwork-BxOaQucF.js",
+      "kb": 0.5,
+      "gzipKB": 0.3
+    },
+    {
+      "file": "ProvenanceTag-Bo66V5Kt.js",
+      "kb": 0.4,
+      "gzipKB": 0.3
+    },
+    {
+      "file": "HelpLink-C7868PdQ.js",
+      "kb": 0.4,
+      "gzipKB": 0.3
+    },
+    {
+      "file": "gigApplicationApi-CvvE4QWT.js",
+      "kb": 0.4,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "IdentityLink-COBhxM_3.js",
+      "kb": 0.4,
+      "gzipKB": 0.3
+    },
+    {
+      "file": "coverApi-DPaFo8ka.js",
+      "kb": 0.4,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "NotFoundPage-BbEwnOzQ.js",
+      "kb": 0.3,
+      "gzipKB": 0.3
+    },
+    {
+      "file": "reportApi-BaLyg1pT.js",
+      "kb": 0.3,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "transactionApi-DBIl1lNB.js",
+      "kb": 0.3,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "locationName-CQLs3BYB.js",
+      "kb": 0.3,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "skillApi-C4tazvUF.js",
+      "kb": 0.2,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "reviewApi-41IHmS2i.js",
+      "kb": 0.2,
+      "gzipKB": 0.2
+    },
+    {
+      "file": "apiError-DNj6kRIZ.js",
+      "kb": 0.2,
+      "gzipKB": 0.2
+    }
+  ]
+}

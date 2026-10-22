@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import path from 'path';
+import compression from 'compression';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -38,6 +39,11 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use(securityHeaders);
 app.use(cors(corsOptions));
+// JSON shrinks to about a fifth; on slow mobile data that is most of the wait
+// for a list like /gigs (54 KB). Small replies are left alone: compressing them
+// costs CPU and saves nothing. Images and video are already compressed and the
+// middleware skips them by type.
+app.use(compression({ threshold: 1024 }));
 app.use(express.json({ limit: '100kb' }));
 app.use(morgan('dev'));
 

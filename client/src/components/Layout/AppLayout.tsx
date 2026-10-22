@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import OfflineBanner from '../common/OfflineBanner';
+import PageLoading from '../common/PageLoading';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Drawer, Grid, Layout } from 'antd';
 import SideNav from './SideNav';
@@ -160,7 +161,10 @@ const AppLayout = () => {
         <OfflineBanner />
         <Content style={{ padding: screens.md ? 28 : 16 }}>
           <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-            <Outlet />
+            {/* Pages load on first use; the sidebar and header stay while one arrives. */}
+            <Suspense fallback={<PageLoading />}>
+              <Outlet />
+            </Suspense>
           </div>
         </Content>
       </Layout>

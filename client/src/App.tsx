@@ -1,52 +1,58 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/Layout/ProtectedRoute';
 import AppLayout from './components/Layout/AppLayout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import VerifyEmailPage from './pages/VerifyEmailPage';
-import DashboardPage from './pages/DashboardPage';
-import MarketplacePage from './pages/MarketplacePage';
-import GigDetailPage from './pages/GigDetailPage';
-import NotificationsPage from './pages/NotificationsPage';
-import ProfilePage from './pages/ProfilePage';
-import AdminPage from './pages/AdminPage';
-import AdminUsersPage from './pages/AdminUsersPage';
-import AdminPendingGigsPage from './pages/AdminPendingGigsPage';
-import AdminJobs from './components/Admin/AdminJobs';
-import AdminPayments from './components/Admin/AdminPayments';
-import AdminSkillReviews from './components/Admin/AdminSkillReviews';
-import AdminReviewers from './components/Admin/AdminReviewers';
-import AdminMetrics from './components/Admin/AdminMetrics';
-import AdminMarket from './components/Admin/AdminMarket';
-import AdminSystem from './components/Admin/AdminSystem';
-import AdminAuditPage from './pages/AdminAuditPage';
-import PassportPage from './pages/PassportPage';
-import ReceiptPage from './pages/ReceiptPage';
-import DisputesPage from './pages/DisputesPage';
-import FairworkPage from './pages/FairworkPage';
-import PrivacyPage from './pages/PrivacyPage';
-import AdminFairwork from './components/Admin/AdminFairwork';
-import AdminSafety from './components/Admin/AdminSafety';
-import AdminReports from './components/Admin/AdminReports';
-import AdminCover from './components/Admin/AdminCover';
-import FindWorkersPage from './components/Workers/FindWorkersPage';
-import WalletPage from './pages/WalletPage';
-import PeerReviewsPage from './pages/PeerReviewsPage';
-import SettingsPage from './pages/SettingsPage';
-import NotFoundPage from './pages/NotFoundPage';
-import SupportPage from './pages/SupportPage';
-import SupportTicketPage from './pages/SupportTicketPage';
-import SupportTopicPage from './pages/SupportTopicPage';
-import SupportArticlePage from './pages/SupportArticlePage';
-import SupportRequestsPage from './pages/SupportRequestsPage';
-import { GuestContactPage, GuestTicketPage } from './pages/GuestSupportPage';
-import AdminSupport from './components/Admin/AdminSupport';
-import AdminApplications from './components/Admin/AdminApplications';
+// Every page but sign-in and sign-up is loaded when it is first opened, so a
+// visitor downloads the sign-in screen, not the whole app with its charts and
+// map. On a low-end phone over slow 4G the single 3.6 MB bundle took about
+// 7 s to show anything (docs/evidence/perf).
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const MarketplacePage = lazy(() => import('./pages/MarketplacePage'));
+const GigDetailPage = lazy(() => import('./pages/GigDetailPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'));
+const AdminPendingGigsPage = lazy(() => import('./pages/AdminPendingGigsPage'));
+const AdminJobs = lazy(() => import('./components/Admin/AdminJobs'));
+const AdminPayments = lazy(() => import('./components/Admin/AdminPayments'));
+const AdminSkillReviews = lazy(() => import('./components/Admin/AdminSkillReviews'));
+const AdminReviewers = lazy(() => import('./components/Admin/AdminReviewers'));
+const AdminMetrics = lazy(() => import('./components/Admin/AdminMetrics'));
+const AdminMarket = lazy(() => import('./components/Admin/AdminMarket'));
+const AdminSystem = lazy(() => import('./components/Admin/AdminSystem'));
+const AdminAuditPage = lazy(() => import('./pages/AdminAuditPage'));
+const PassportPage = lazy(() => import('./pages/PassportPage'));
+const ReceiptPage = lazy(() => import('./pages/ReceiptPage'));
+const DisputesPage = lazy(() => import('./pages/DisputesPage'));
+const FairworkPage = lazy(() => import('./pages/FairworkPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const AdminFairwork = lazy(() => import('./components/Admin/AdminFairwork'));
+const AdminSafety = lazy(() => import('./components/Admin/AdminSafety'));
+const AdminReports = lazy(() => import('./components/Admin/AdminReports'));
+const AdminCover = lazy(() => import('./components/Admin/AdminCover'));
+const FindWorkersPage = lazy(() => import('./components/Workers/FindWorkersPage'));
+const WalletPage = lazy(() => import('./pages/WalletPage'));
+const PeerReviewsPage = lazy(() => import('./pages/PeerReviewsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const SupportPage = lazy(() => import('./pages/SupportPage'));
+const SupportTicketPage = lazy(() => import('./pages/SupportTicketPage'));
+const SupportTopicPage = lazy(() => import('./pages/SupportTopicPage'));
+const SupportArticlePage = lazy(() => import('./pages/SupportArticlePage'));
+const SupportRequestsPage = lazy(() => import('./pages/SupportRequestsPage'));
+const GuestContactPage = lazy(() => import('./pages/GuestSupportPage').then((m) => ({ default: m.GuestContactPage })));
+const GuestTicketPage = lazy(() => import('./pages/GuestSupportPage').then((m) => ({ default: m.GuestTicketPage })));
+const AdminSupport = lazy(() => import('./components/Admin/AdminSupport'));
+const AdminApplications = lazy(() => import('./components/Admin/AdminApplications'));
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { fetchCurrentUser } from './store/slices/authSlice';
+import PageLoading from './components/common/PageLoading';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -59,6 +65,7 @@ function App() {
   }, [token, profile, dispatch]);
 
   return (
+    <Suspense fallback={<PageLoading />}>
     <Routes>
       <Route path="/" element={<Navigate to={token ? '/dashboard' : '/login'} replace />} />
       <Route path="/login" element={<LoginPage />} />
@@ -126,6 +133,7 @@ function App() {
         </Route>
       </Route>
     </Routes>
+    </Suspense>
   );
 }
 

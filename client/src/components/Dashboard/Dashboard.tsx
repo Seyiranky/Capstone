@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, Card, Col, Empty, Flex, Modal, Row, Typography } from 'antd';
+import { Alert, Button, Card, Col, Empty, Flex, Modal, Row, Skeleton, Typography } from 'antd';
 import {
   AuditOutlined,
   ClockCircleOutlined,
@@ -28,7 +28,8 @@ import ProvenanceTag from '../common/ProvenanceTag';
 import ActivityFeed from './ActivityFeed';
 import AttentionList from './AttentionList';
 import GigsForYou from './GigsForYou';
-import EarningsByMonth from './EarningsByMonth';
+// The chart library is large; the dashboard shows first and the chart follows.
+const EarningsByMonth = lazy(() => import('./EarningsByMonth'));
 import OnboardingChecklist, { type ChecklistItem } from './OnboardingChecklist';
 import SkillVerificationForm from '../Verification/SkillVerificationForm';
 import GigApprovalQueue from '../Admin/GigApprovalQueue';
@@ -361,7 +362,11 @@ const Dashboard = () => {
                 )}
               </Card>
             )}
-            {isEarner && <EarningsByMonth transactions={transactions} role={role} />}
+            {isEarner && (
+              <Suspense fallback={<Card><Skeleton active paragraph={{ rows: 5 }} /></Card>}>
+                <EarningsByMonth transactions={transactions} role={role} />
+              </Suspense>
+            )}
             {role === 'admin' && (
               <Card
                 title={`${t('dashboard.gigApprovals')} (${pendingGigs.length})`}
