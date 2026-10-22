@@ -14,7 +14,7 @@ BSc Software Engineering capstone, African Leadership University. Author: Seyi A
 | **Live web app** | https://isoko-web.onrender.com |
 | **Live API** | https://isoko-api.onrender.com (health check: [`/health`](https://isoko-api.onrender.com/health)) |
 | **Walkthrough video** | _VIDEO LINK: to be added_ |
-| **Technical report** | [docs/report/report.pdf](docs/report/report.pdf) (5 pages; source `report.html`) |
+| **Technical report** | _REPORT LINK: to be added_ |
 | **Repository** | https://github.com/Seyiranky/Capstone |
 
 > The live site runs on Render's free tier. A pinger keeps it awake. If it has slept anyway, the
@@ -636,4 +636,4 @@ Isoko follows Rwanda's Law 058/2021 on the protection of personal data:
 | [docs/evidence/perf/README.md](docs/evidence/perf/README.md) | Performance before and after, with raw data |
 | [docs/evidence/momo/README.md](docs/evidence/momo/README.md) | A real MTN MoMo sandbox payment, with screenshots |
 | Walkthrough video | _VIDEO LINK: to be added_ |
-| [docs/report/report.pdf](docs/report/report.pdf) | Technical report: scope alignment, functionality, testing, performance, code quality |
+| Technical report | _REPORT LINK: to be added_ |
