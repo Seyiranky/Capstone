@@ -1,4 +1,4 @@
-# Performance and compatibility evidence (22 Oct 2026)
+# Performance and compatibility evidence 
 
 Two measurements, each taken before and after the changes, with the tools in `client/perf/`:
 
