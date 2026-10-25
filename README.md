@@ -14,7 +14,7 @@ BSc Software Engineering capstone, African Leadership University. Author: Seyi A
 | **Live web app** | https://isoko-web.onrender.com |
 | **Live API** | https://isoko-api.onrender.com (health check: [`/health`](https://isoko-api.onrender.com/health)) |
 | **Walkthrough video** | https://youtu.be/4guOrz2tztE |
-| **Technical report** | _REPORT LINK: to be added_ |
+| **Technical report** |https://drive.google.com/file/d/1GDCFkKC2tCKbdGJDdgkCVskNetKJVDq9/view?usp=drive_link|
 | **Repository** | https://github.com/Seyiranky/Capstone |
 
 > The live site runs on Render's free tier. A pinger keeps it awake. If it has slept anyway, the
