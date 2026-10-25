@@ -1,4 +1,4 @@
-# Isoko Talents — End-to-end manual test guide
+# Isoko — End-to-end manual test guide
 
 Every login below was verified against a running server on 2026-09-13. The
 password is the same for all fifteen seeded accounts:
