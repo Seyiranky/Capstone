@@ -108,7 +108,7 @@ Isoko answers each of these:
 ## 3. Try it: demo accounts
 
 All demo accounts use the password **`password123`**. They exist on the live site and in any fresh
-local install, and their email and phone are already confirmed.
+local install, and their email addresses are already confirmed (phone numbers are not, so SMS stays off until a user confirms one in Settings).
 
 | Role | Email | What to look at |
 |---|---|---|
@@ -629,6 +629,7 @@ Isoko follows Rwanda's Law 058/2021 on the protection of personal data:
 
 | Document | Contents |
 |---|---|
+| [DEMO.md](DEMO.md) | Script for the walkthrough video, by brief section |
 | [SCHEMA.md](SCHEMA.md) | Every table and relationship, with the reasons for each design choice |
 | [TESTING.md](TESTING.md) | Manual test guide by role, with the seeded accounts |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deployment to Render and Supabase |
