@@ -6,7 +6,7 @@ are posted as annotations on the run.
 | Approach | Tool | What it covers | Size | Result |
 |---|---|---|---|---|
 | **Unit** | Jest (server), Vitest (client) | Pure logic with no database: match scoring and haversine distance, trust score, reviewer draw and collusion rules, rate guidance, PDF writer, storage keys, email and SMS drivers; on the client, job stages and next actions, offline queue | 155 server + 23 client | all pass |
-| **Integration** | Jest + Supertest, real PostgreSQL | Every API route through Express, middleware and the database: auth, roles, eligibility, the job flow, payments (MTN mocked), disputes, support, account deletion, uploads, security rules | 440 server tests in 45 files | 594 of 595 pass; one intermittent test, see below |
+| **Integration** | Jest + Supertest, real PostgreSQL | Every API route through Express, middleware and the database: auth, roles, eligibility, the job flow, payments (MTN mocked), disputes, support, account deletion, uploads, security rules | 441 server tests in 45 files | all 596 server tests pass; one test has been intermittent, see below |
 | **End-to-end** | Playwright | The production web build against the real API and a fresh database of demo data, in real browser engines | 16 tests x 5 browser setups | 64 of 64 run here pass (Firefox: see below) |
 | **Performance** | `client/perf/` scripts | API response times (NFR-2) and page load on a desktop and a throttled low-end phone | see `perf/README.md` | first paint on a low-end phone 6.6 s to 3.5 s |
 

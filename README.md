@@ -13,7 +13,7 @@ BSc Software Engineering capstone, African Leadership University. Author: Seyi A
 |---|---|
 | **Live web app** | https://isoko-web.onrender.com |
 | **Live API** | https://isoko-api.onrender.com (health check: [`/health`](https://isoko-api.onrender.com/health)) |
-| **Walkthrough video** | _VIDEO LINK: to be added_ |
+| **Walkthrough video** | https://youtu.be/4guOrz2tztE |
 | **Technical report** | _REPORT LINK: to be added_ |
 | **Repository** | https://github.com/Seyiranky/Capstone |
 
@@ -350,7 +350,7 @@ Isoko is tested at four levels. The first three run on every push in CI.
 | Level | Tool | Size | Result |
 |---|---|---|---|
 | Unit (server) | Jest | 155 tests, 15 files | all pass |
-| Integration (server) | Jest + Supertest against a real PostgreSQL | 440 tests, 45 files: every route, middleware and rule | 594 of 595 pass; one known intermittent test |
+| Integration (server) | Jest + Supertest against a real PostgreSQL | 441 tests, 45 files: every route, middleware and rule | all 596 server tests pass; one test has been intermittent in the past |
 | Unit (web) | Vitest | 23 tests: job stages and next actions, offline queue | all pass |
 | **End-to-end** | Playwright: the production build, the real API, a fresh database | 16 tests × 4 browser set-ups (Chrome, Safari, Android Pixel 7, iPhone 14) | **64 of 64 pass** |
 | Performance | `client/perf/` scripts | API latency at 1, 10 and 25 concurrent requests; page loads on a throttled low-end phone | see [section 9](#9-performance) |
@@ -371,7 +371,7 @@ createdb isoko_talents_test
 cd server
 npm run migrate:test
 npm run seed:test
-npm test                         # all 595
+npm test                         # all 596
 npx jest tests/unit              # unit tests only, no database needed
 npx jest tests/integration/payments   # one area
 ```
@@ -636,5 +636,5 @@ Isoko follows Rwanda's Law 058/2021 on the protection of personal data:
 | [docs/evidence/testing.md](docs/evidence/testing.md) | Test strategies, results, browser and device matrix |
 | [docs/evidence/perf/README.md](docs/evidence/perf/README.md) | Performance before and after, with raw data |
 | [docs/evidence/momo/README.md](docs/evidence/momo/README.md) | A real MTN MoMo sandbox payment, with screenshots |
-| Walkthrough video | _VIDEO LINK: to be added_ |
+| [Walkthrough video](https://youtu.be/4guOrz2tztE) | The product, its code, testing and performance, in 13 minutes |
 | Technical report | _REPORT LINK: to be added_ |
