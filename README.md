@@ -637,4 +637,4 @@ Isoko follows Rwanda's Law 058/2021 on the protection of personal data:
 | [docs/evidence/perf/README.md](docs/evidence/perf/README.md) | Performance before and after, with raw data |
 | [docs/evidence/momo/README.md](docs/evidence/momo/README.md) | A real MTN MoMo sandbox payment, with screenshots |
 | [Walkthrough video](https://youtu.be/4guOrz2tztE) | The product, its code, testing and performance, in 13 minutes |
-| Technical report | _REPORT LINK: to be added_ |
+| Technical report | https://drive.google.com/file/d/1GDCFkKC2tCKbdGJDdgkCVskNetKJVDq9/view?usp=drive_link |
