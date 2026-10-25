@@ -55,7 +55,7 @@ next to each other, so the API reaches its database quickly.
    | `SUPABASE_URL` | Project URL from Supabase step 4 |
    | `SUPABASE_SERVICE_KEY` | the secret key from Supabase step 4 |
    | `MOMO_COLLECTION_KEY`, `MOMO_COLLECTION_USER`, `MOMO_COLLECTION_API_KEY` | copy each from `server/.env` on your Mac (open it in the editor) |
-   | `MOMO_CALLBACK_URL` | `https://isoko-api.onrender.com/api/webhooks/momo` |
+   | `MOMO_CALLBACK_URL` | `https://isoko-api.onrender.com/api/webhooks/momo`, **only if** the sandbox API user was created with that host (`MOMO_CALLBACK_HOST=isoko-api.onrender.com npm run momo:sandbox-user`). MTN refuses every payment request whose callback host differs from the user's (`INVALID_CALLBACK_URL_HOST`); a user created with the default host `localhost` must leave this unset. Payments are still confirmed without it, by status polling |
    | `GOOGLE_CLIENT_ID` | the same value as in `server/.env` |
 
    **isoko-web**
