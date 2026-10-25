@@ -23,13 +23,6 @@ const FALLBACK_PROFILE: WeightProfileShape = {
   maxDistanceKm: 15,
 };
 
-// Verified beats claimed beats absent. A worker with no record of the skill is
-// still allowed to apply — they simply score zero here and are told why — but
-// they are never proactively invited.
-//
-// This status factor moves out of skillFit and into a credentials component in
-// the next phase, so that "does this worker do this work" and "how well
-// established is the claim" stop being conflated.
 const SKILL_FIT_BY_STATUS: Record<VerificationStatus, number> = {
   verified: 1,
   pending: 0.6,
@@ -39,18 +32,11 @@ const SKILL_FIT_ABSENT = 0;
 
 /**
  * The status factor, defaulting when the column holds something unexpected.
- *
- * The constant above is exhaustive over VerificationStatus, so a new status
- * added to the union fails to compile until it is given a factor. The fallback
- * covers the other direction: the column is a STRING with an isIn validator, so
- * a row written before that validator existed could still carry anything.
  */
 const skillFitFor = (status: string): number =>
   SKILL_FIT_BY_STATUS[status as VerificationStatus] ?? SKILL_FIT_ABSENT;
 
 // How closely the worker's skill matches what the gig asked for. A sibling
-// specialisation still scores well: a tailor who does school uniforms can
-// plausibly hem curtains, and excluding them would be a filter by another name.
 const SPECIFICITY = {
   exact: 1,
   sibling: 0.7,
@@ -63,8 +49,6 @@ type GigSkillRef = Pick<Skill, 'id' | 'parentId'> & Partial<Pick<Skill, 'name'>>
 /**
  * A worker's skill as the scorer reads it: the claim, how well established it
  * is, and enough of the Skill to judge specificity. Structural for the same
- * reason ScorableWorker is — the eagerly-loaded row satisfies it, and so does
- * a fixture.
  */
 type WorkerSkill = Pick<UserSkill, 'skillId' | 'verificationStatus' | 'proficiencyLevel'> & {
   // Both are read with a fallback, so a caller may legitimately omit them.
@@ -81,10 +65,6 @@ const toRad = (deg: number) => (deg * Math.PI) / 180;
 
 /**
  * How well a worker's proficiency meets what the gig asked for.
- *
- * With no stated requirement, level still matters a little — a level-5 and a
- * level-1 worker should not rank identically, which they did until now. With a
- * requirement, the shortfall is proportional and never hard-excludes.
  */
 const levelFit = (effectiveLevel: number, requiredLevel: number | null | undefined) => {
   if (!requiredLevel) return clamp(0.7 + 0.06 * effectiveLevel, 0, 1);
@@ -93,11 +73,6 @@ const levelFit = (effectiveLevel: number, requiredLevel: number | null | undefin
 
 /**
  * The level a client's stated requirement is measured against.
- *
- * Only a reviewer-set level counts. A worker who self-declares a skill can
- * claim any level they like, and if that cleared a client's bar the field would
- * mean nothing within a week — reviewer-set is the only reason `proficiencyLevel`
- * carries information.
  */
 const effectiveLevelFor = (workerSkill: WorkerSkill | null | undefined) =>
   workerSkill?.verificationStatus === 'verified' ? (workerSkill.proficiencyLevel ?? 1) : 1;
@@ -133,12 +108,6 @@ const haversineKm = (aLat: number, aLng: number, bLat: number, bLng: number) => 
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
 };
 
-/**
- * Proximity decays geometrically rather than linearly: the cost that matters to
- * a worker is the moto fare and travel time, where the first kilometre matters
- * far more than the tenth. With a 3km half-life, 0km scores 1.0, 3km scores
- * 0.5, 6km scores 0.25.
- */
 const distanceScore = (km: number | null, halfLifeKm: number) =>
   km === null ? null : clamp(Math.pow(0.5, km / halfLifeKm), 0, 1);
 
@@ -155,14 +124,6 @@ export const resolveProfile = async (name?: string): Promise<WeightProfileShape>
   return profile || FALLBACK_PROFILE;
 };
 
-/**
- * Only the fields scorePair actually reads.
- *
- * Declared structurally rather than as the full model, because scoring is a
- * pure function of these five values — saying so lets a caller (and a unit
- * test) supply the inputs without constructing a database row, and stops the
- * signature implying a dependency on thirty columns it never touches.
- */
 export type ScorableWorker = Pick<
   User,
   'id' | 'locationLat' | 'locationLng' | 'trustScore' | 'reviewCount'
@@ -180,15 +141,8 @@ interface ScorePairInput {
   activeMatches: number;
   gigSkill?: GigSkillRef | null;
 }
+// Scores one (worker, gig) pair.
 
-/**
- * Scores one (worker, gig) pair.
- *
- * Returns the total alongside every component and a set of i18n reason keys.
- * Reasons are keys plus parameters, never rendered sentences, so the client can
- * show the explanation in the viewer's own language — a worker reading
- * Kinyarwanda must get the same account of the ranking as one reading English.
- */
 export const scorePair = ({
   worker,
   gig,
@@ -212,21 +166,15 @@ export const scorePair = ({
   const fit = specificity === null ? SKILL_FIT_ABSENT : specificity * level * status;
 
   const raw: Record<string, number> = {
-    // No saved location is scored as neutral rather than zero, so a worker who
-    // has not set a location is not silently buried.
+   
     distance: km === null ? 0.5 : (distanceScore(km, profile.distanceHalfLifeKm) as number),
     trust: clamp(worker.trustScore / 5, 0, 1),
     skillFit: fit,
-    // How well established the claim is, as opposed to how well it fits. Kept
-    // separate from skillFit so verification is not counted twice, and so both
-    // components keep variance of their own.
+ 
     credentials: specificity === null ? 0 : clamp(workerSkill?.credentialStrength ?? 0.15, 0, 1),
     availability: availabilityScore(activeMatches),
   };
 
-  // Only weights with a matching signal become components. A profile carrying a
-  // key this version does not compute would otherwise contribute NaN and
-  // silently poison every total.
   const components: ScoreComponent[] = Object.entries(weights)
     .filter(([key]) => raw[key] !== undefined)
     .map(([key, weight]) => ({
@@ -272,10 +220,7 @@ export const scorePair = ({
     reasons.push({ key: 'match.reason.categoryOnly', params: {} });
   }
 
-  // A client who set a bar is told when someone falls under it, rather than the
-  // worker quietly sinking down the list. Only meaningful for someone who has
-  // the skill at all: telling a client an electrician is "below level 5" for a
-  // tailoring job buries the actual reason.
+
   if (gig.requiredLevel && specificity !== null) {
     reasons.push({
       key:
@@ -322,10 +267,6 @@ const activeMatchCounts = async (workerIds: string[]): Promise<Map<string, numbe
 
 /**
  * The gig's skill plus everything adjacent to it.
- *
- * A worker whose specialisation sits beside the one requested is a real
- * candidate, so the lookup has to span the family rather than demand an exact
- * id — otherwise sibling scoring could never fire.
  */
 const skillFamily = async (gigSkill: GigSkillRef | null | undefined): Promise<string[]> => {
   if (!gigSkill) return [];
@@ -399,11 +340,6 @@ export const scoreWorkers = async ({
 
 /**
  * Spread of each component across a candidate set.
- *
- * A weight only has ranking influence in proportion to how much its input
- * actually varies. If trust ranges 0.2 while distance ranges 0.7, then equal
- * weights do not mean equal influence — so any comparison of weight profiles
- * (RQ2) has to be read against these figures rather than the weights alone.
  */
 export const componentVariance = (scored: ScoredPair[]): Record<string, ComponentVariance> => {
   if (scored.length === 0) return {};
@@ -441,12 +377,6 @@ interface RankCandidatesInput {
 
 /**
  * Ranks every active worker as a candidate for a gig.
- *
- * Candidates who cannot be invited — no relevant skill, or beyond the service
- * radius — sort below those who can, regardless of score. A weighted sum will
- * happily put a nearby, well-reviewed electrician above the only qualified
- * tailor, and showing that at the top of a client's list is misleading. They
- * stay listed with their explanation rather than being filtered out.
  */
 export const rankCandidates = async ({
   gig,
