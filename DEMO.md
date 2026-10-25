@@ -1,386 +1,266 @@
-# Walkthrough video script
+# Walkthrough video script (13 minutes)
 
-A recording plan for the Final Version of the Product video, about **15 minutes**. It follows the
-brief's Section 2:
+A recording plan for the Final Version of the Product video. It covers every part of the brief's
+Section 2, and shows the Section 3 code briefly so the assessor knows where to look.
 
-| Brief section | What it asks | Where it is covered |
+| Time | Part | Brief section |
 |---|---|---|
-| A. Core functionalities | Each major feature: what it does, how it works, the logic behind it | Parts 2–5 |
-| B. Technical requirements | Front end and back end working together, data handling, logic | Parts 2–5 (code and Network tab), Part 6 |
-| C. Testing with different inputs | Expected behaviour, error handling, system responses | Marked **[C]** throughout, summed up in Part 7 |
-| D. Testing strategies | At least two approaches: why chosen, how done, results, what changed | Part 8 |
-| E. Performance and compatibility | Browsers, operating systems, low-end and high-end devices, metrics | Part 9 |
+| 0:00 | 1. Introduction | |
+| 0:30 | 2. Signing in, roles, language | A, **C** |
+| 1:30 | 3. The job, from gig to receipt | A, B, **C** |
+| 5:15 | 4. Skill verification by a peer reviewer | A, B |
+| 6:45 | 5. Rules, safety and privacy | A, **C** |
+| 7:45 | 6. How it fits together | B |
+| 8:15 | 7. Testing strategies | **D** |
+| 10:45 | 8. Performance and compatibility | **E** |
+| 12:15 | 9. Code quality | Section 3 |
+| 12:45 | 10. Close (ends 13:00) | |
 
-Section 3 (code quality, OOP, algorithms) is assessed from the repository, but showing it briefly
-(Part 10) helps the assessor find it.
+- **[C]** marks a different-inputs moment: an error or edge case shown on screen.
+- Lines in *italics* are what to say. Use your own words, but keep the points: the script is timed
+  at a normal speaking pace (about 140 words a minute).
+- **Running long?** Cut, in this order:
+  1. the Network-tab view in 3.3;
+  2. the step-aside view in Part 4;
+  3. the DevTools device view in Part 8.
 
-Lines in *italics* are what to say. Change the wording to your own; keep the points.
+  Never cut parts 7 and 8: testing and performance are marked on their own.
 
 ---
 
-## 0. Before you record (about 20 minutes)
+## 0. Before you record (about 20 minutes; not in the video)
 
-**Wake the live site.** The free host sleeps when idle. Open
-https://isoko-api.onrender.com/health until it shows `{"status":"ok"}`, then load
-https://isoko-web.onrender.com once.
+**Wake the live site.** Open https://isoko-api.onrender.com/health until it shows
+`{"status":"ok"}`, then load https://isoko-web.onrender.com once. The free host sleeps when idle.
 
-**Push first** (`git push`), so the GitHub pages you show match the code.
+**Push first** (`git push`), so GitHub matches the code you show.
 
-**Sign-ins.** The client and the worker are two different people, so use separate browser sessions:
+**Sign-ins** (password `password123` for all). Put windows 1 and 2 side by side.
 
-| Window | Browser | Sign in as | Role |
+| Window | Browser | Account | Role |
 |---|---|---|---|
-| 1 | Chrome, normal window | `grace@isoko.demo` | Client |
-| 2 | Chrome, incognito window | `eric@isoko.demo` | Worker (also a peer reviewer) |
-| 3 | Safari (shows a second browser engine too) | `admin@isoko.demo` | Admin |
+| 1 | Chrome | `grace@isoko.demo` | Client |
+| 2 | Chrome incognito | `eric@isoko.demo` | Worker |
+| 3 | Safari | `admin@isoko.demo` | Admin |
 
-The password is `password123` for every account. Put windows 1 and 2 side by side for the job flow.
+**Prepare Part 3's sensitive gig in advance** to save time later. As Grace, post
+`Maths tutoring for my daughter at home` (Academic Tutoring), then approve it as admin.
 
-**VS Code**, with these files open in tabs, in this order:
+**VS Code tabs**, in this order:
+1. `server/src/services/matchScoringService.ts`: `haversineKm` (line 102) and `scorePair` (146)
+2. `server/src/services/rankedInvitationService.ts`: `buildShortlist` (38)
+3. `server/src/services/payments/adapter.ts`: `interface PaymentAdapter` (13)
+4. `server/src/services/paymentService.ts`: `applyCallback` (124–132) and `refreshPending` (389)
+5. `server/src/services/skillVerificationService.ts`: `seededPick` (64) and `assignReviewer` (194)
+6. `server/src/services/skillTaskService.ts`: the quorum rules (332)
 
-| File | Show |
-|---|---|
-| `server/src/services/rankedInvitationService.ts` | `buildShortlist` (line 38) |
-| `server/src/services/matchScoringService.ts` | `haversineKm` (line 102), `scorePair` (line 146) |
-| `server/src/services/applicationEligibility.ts` | `canApply` (line 32) |
-| `server/src/services/payments/adapter.ts` | `interface PaymentAdapter` (line 13) |
-| `server/src/services/payments/mtnMomoAdapter.ts` | `requestPayment` (line 89) |
-| `server/src/services/paymentService.ts` | `applyCallback` and its idempotency comment (lines 124–132), `refreshPending` (line 389) |
-| `server/src/services/skillVerificationService.ts` | `seededPick` (line 64), `assignReviewer` (line 194) |
-| `server/src/services/skillTaskService.ts` | `review` (line 296), the quorum rules (line 332) |
-| `server/src/services/trustScoreService.ts` | `PRIOR_MEAN` (line 20), the shrinkage line (75) |
+**Terminal results, run in advance** (they take minutes):
+1. `cd server && npm test 2>&1 | tail -5`: keep the "595 passed" summary on screen.
+2. `cd client && npm run e2e:chromium`, then `npx playwright show-report`: keep the report open.
+3. Ready to run live: `cd server && npx jest tests/unit` (about 10 s).
 
-**Terminal**, in the repository folder, with three things ready:
-1. **The full server suite, run in advance:**
-   ```bash
-   cd server && npm test 2>&1 | tail -5
-   ```
-   It takes a few minutes, so keep the result on screen; don't run it live.
-2. **The end-to-end tests, run in advance:**
-   ```bash
-   cd client && npm run e2e:chromium
-   ```
-   Leave the HTML report ready with `npx playwright show-report`.
-3. **The unit tests, to run live:**
-   ```bash
-   cd server && npx jest tests/unit
-   ```
-   This takes about 10 seconds.
+**Browser tabs:**
+- the green run at https://github.com/Seyiranky/Capstone/actions;
+- `docs/evidence/testing.md` and `docs/evidence/perf/README.md` on GitHub;
+- README section 10 (Architecture).
 
-**Browser tabs** to have open:
-- https://github.com/Seyiranky/Capstone/actions, with a green CI run;
-- `docs/evidence/perf/README.md` and `docs/evidence/testing.md` on GitHub.
+**Your phone**, with https://isoko-web.onrender.com open (Part 8).
 
-**Your phone**, with https://isoko-web.onrender.com open: a real device for Part 9.
-
-**Screen recording:** 1080p, the system cursor visible, notifications off.
+**Recording:** 1080p, cursor visible, notifications off.
 
 ---
 
-## 1. Introduction (0:00 to 0:45)
+## 1. Introduction (0:00 to 0:30)
 
 **Show:** the live sign-in page.
 
-*"This is Isoko, a skills-to-income marketplace for young people in Kigali. Workers often have real
-skills, such as tailoring, phone repair, tutoring or web work, but no way to prove them to a stranger.
-Isoko lets a worker prove a skill to an independent peer reviewer. It matches them to nearby jobs by
-distance, trust and skill. And it pays them through MTN Mobile Money with a receipt anyone can check."*
-
-*"It's a React and TypeScript web app talking to an Express and TypeScript API with a PostgreSQL
-database. It's deployed on Render, with the database and files on Supabase, and this is the live
-version. I'll walk through the main features as a client, a worker and an admin, then the testing,
-performance and code."*
+*"This is Isoko, a skills-to-income marketplace for young people in Kigali. Workers have real skills
+but no way to prove them to a stranger. Here a worker proves a skill to an independent peer
+reviewer, gets matched to nearby jobs, and is paid through MTN Mobile Money. This is the live
+version: React in front, an Express API and PostgreSQL behind."*
 
 ---
 
-## 2. Signing in, roles and language (0:45 to 2:00)
+## 2. Signing in, roles and language (0:30 to 1:30)
 
-**[C] Wrong password.** In window 1, enter `grace@isoko.demo` with the password `wrongpass`, then **Log in**.
-- **Shows:** "Invalid email or password". You stay on the sign-in page.
-- *"The API answers 401 and the form shows one clear message. My end-to-end tests caught this message
-  appearing twice, under the form and under the Google button, and I fixed it."*
-
-**[C] Empty form.** Clear both fields and press **Log in**.
-- **Shows:** each required field is marked, and nothing is sent.
-
-**Sign in properly** as Grace with `password123`.
-- **Shows:** the client dashboard. Point at the menu: Marketplace, Find workers, Wallet, Disputes.
-- *"Each role gets its own navigation. The API checks the role on every request too, not just the menu."*
-
-**Language.** Switch to **RW** in the header.
-- **Shows:** the interface in Kinyarwanda. Reload the page; it stays in Kinyarwanda. Switch back to **EN**.
-- *"The interface is fully bilingual. CI fails if the English and Kinyarwanda files ever have
-  different keys."*
-
-**Optional:** Google sign-in is on the same page. Mention it, but there's no need to sign in with it.
+1. **[C] Wrong password.** In window 1, enter `grace@isoko.demo` with `wrongpass`, then **Log in**.
+   - **Shows:** "Invalid email or password". You stay on the sign-in page.
+   - *"The API refuses it with a 401, and the form shows one clear message."*
+2. **[C] Empty form.** Clear the fields and press **Log in**.
+   - **Shows:** the required fields are marked, and nothing is sent.
+3. **Sign in** as Grace with `password123`. Point at the client menu.
+   - *"Each role gets its own menu, and the API checks the role on every request, not just the menu."*
+4. **Language.** Switch to **RW**, reload (it stays in Kinyarwanda), then switch back to **EN**.
+   - *"The interface is fully bilingual, and CI fails if the two language files ever differ."*
 
 ---
 
-## 3. The job, from gig to receipt (2:00 to 7:30)
+## 3. The job, from gig to receipt (1:30 to 5:15)
 
-### 3.1 The client posts a gig (2:00 to 3:00)
+### 3.1 The client posts a gig (1:30 to 2:10)
 
-In window 1 (Grace), go to **Marketplace › Post a gig**.
+1. In window 1, go to **Marketplace › Post a gig**.
+2. **[C]** Submit it empty. **Shows:** the required fields are marked.
+3. Fill in:
+   - **Title:** `Update three pages of my salon website`
+   - **Skill:** Digital & Web Services
+   - **Budget:** `2000`
+4. **[C]** Point at "This is below what most similar jobs pay…".
+   - *"Open marketplaces reward the lowest bid. Isoko shows what similar jobs actually paid here."*
+5. Raise the budget to `15000`, set the map location, and submit.
+   - *"An admin reviews every gig before workers see it."*
 
-**[C] Empty form.** Press submit with nothing filled in.
-- **Shows:** the required fields are marked.
+### 3.2 The admin approves, and the ranking runs (2:10 to 2:55)
 
-**Fill it in:**
-- **Title:** `Update three pages of my salon website`
-- **Skill:** Digital & Web Services
-- **Budget:** a low figure first, for example `2000`.
+1. In window 3, go to **Gig approvals › Approve**.
+   - *"Approving opens the gig and invites the best-ranked workers at once."*
+2. **VS Code**, `scorePair` and `haversineKm`:
+   - *"Each worker is scored on distance, trust, skill fit and availability. Distance uses the
+     haversine formula and its score halves every 3 kilometres. The score comes back with its reasons."*
+3. **VS Code**, `buildShortlist`:
+   - *"The top three are invited, but one place is kept for a newcomer, so new workers can build a
+     record too."*
 
-**[C] Rate guidance.** Point at the message "This is below what most similar jobs pay…" and the usual range.
-- *"Open marketplaces reward the lowest bid. Here the client sees what jobs like this actually
-  paid on Isoko: the 25th percentile, median and 75th percentile of real payments."*
+### 3.3 The worker sees why, and applies (2:55 to 3:25)
 
-**Finish posting:** raise the budget into the range (for example `15000`), set the location on the map, and submit.
-- **Shows:** the gig waits for an admin's review.
-- *"Gigs are reviewed by an admin before workers see them. That's how it stays safe."*
+1. In window 2 (Eric), open the gig. Point at **Why this ranking**.
+   - *"Workers see exactly why they rank where they do."*
+2. Press **Apply to this gig › Send application**. **Shows:** "Application sent."
+3. **Optional (B):** with DevTools › Network open, show the `POST` to `/api/...` and its JSON.
 
-### 3.2 The admin approves it, and the ranking runs (3:00 to 4:15)
+### 3.4 Choose, confirm, finish (3:25 to 3:55)
 
-In window 3 (Safari, admin), go to **Gig approvals**, find the gig and **Approve** it.
+1. **Window 1 (Grace):** on the applicant, **⋯ › Approve**.
+2. **Window 2 (Eric):** **Your matches › Confirm**, then **I've finished**.
+   - *"Updates arrive live over a WebSocket. Each job card shows its stage and the one next step."*
 
-*"Approving does two things. It opens the gig, and it invites the best-ranked workers straight away."*
+### 3.5 Mark done, pay with MTN Mobile Money, receipt (3:55 to 5:15)
 
-**Switch to VS Code:**
-
-1. `matchScoringService.ts`, `haversineKm` and `scorePair`:
-   - *"Each worker is scored for the gig on four components: distance, trust, skill fit and availability."*
-   - *"Distance uses the haversine formula, the distance over the earth's surface. Its score halves every 3 km and stops at 15."*
-   - *"Skill fit is 1 for a verified skill, 0.6 for one under review and 0.4 for a self-declared one."*
-   - *"The weights come from a stored profile, so they can be changed for the research question about distance against trust. The score comes back with its reasons."*
-2. `rankedInvitationService.ts`, `buildShortlist`:
-   - *"The top three are invited, but the last place is kept for a newcomer. Otherwise the same established workers would get every invitation, and new workers could never build a record."*
-
-### 3.3 The worker sees why, and applies (4:15 to 5:00)
-
-In window 2 (incognito, Eric), open **Marketplace** and the new gig.
-
-**Show "Why this ranking"**, the breakdown of the score.
-- *"Workers can see why they rank where they do. There's no hidden algorithm."*
-
-**Apply:** press **Apply to this gig**, then **Send application**.
-- **Shows:** "Application sent."
-
-**Optional, B:** open DevTools › Network before pressing **Send application** to show the `POST` request to `/api/...` and its JSON response.
-- *"Every action is a JSON request to the API, which checks it, saves it and answers."*
-
-### 3.4 The client chooses, the worker confirms and finishes (5:00 to 5:45)
-
-**Client chooses.** In window 1 (Grace), open the gig, then the applicant's **More actions (⋯) › Approve**, and confirm.
-- *"Grace is notified live over a WebSocket; there's no need to refresh."*
-
-**Worker confirms and finishes.** In window 2 (Eric), go to **Marketplace › Your matches**. On the job, press **Confirm**, then **I've finished**, and confirm.
-- *"'Your matches' sorts every job by stage, and each card shows the one next step."*
-
-### 3.5 Mark done, pay with MTN Mobile Money, receipt (5:45 to 7:30)
-
-**Mark done.** In window 1 (Grace), go to **Your matches**.
-- **Shows:** "says the work is finished". Press **Mark job as done** and confirm.
-
-**Pay.** Enter `0788123456` and press **Pay**.
-- *"This calls MTN's real MoMo API, in its sandbox. The sandbox only accepts test money in euros
-  and sends no prompt to a phone; it approves by itself."*
-- Wait a few seconds. **Shows:** "Payment confirmed", and the job shows **Paid**.
-
-**Receipt.** Press **View receipt**.
-- **Shows:** the public receipt with MTN's own transaction ID.
-- *"Every transaction keeps MTN's reference, so any payment can be checked against MTN's records.
-  Anyone can verify the receipt from its link, without an account."*
-
-**Switch to VS Code:**
-
-1. `adapter.ts`, `interface PaymentAdapter`:
-   - *"All payment providers sit behind this interface. The simulated provider used in tests and the
-     real MTN one both implement it, and the payment service never knows which one it has. Adding
-     Airtel would be one new class. That's abstraction and polymorphism."*
-2. `mtnMomoAdapter.ts`, `requestPayment`:
-   - *"The request-to-pay call, with our own reference as the ID."*
-3. `paymentService.ts`, `applyCallback` and `refreshPending`:
-   - *"MTN confirms by callback, and a background job every 10 minutes also asks MTN for any
-     payment still pending, in case a callback is lost. Confirming is idempotent: a payment already
-     settled is never changed again, so a duplicate callback can't pay twice."*
-
-**Back to the admin**, in window 3: **Payments**.
-- **Shows:** the badge "MTN MoMo · sandbox", the paid job, the receipt number and the masked payer number.
+1. **Window 1:** **Your matches**. Point at "says the work is finished", then **Mark job as done**.
+2. Enter `0788123456` and press **Pay**.
+   - *"This calls MTN's real MoMo API in its sandbox, which uses test euros and approves by itself."*
+   - **Shows:** "Payment confirmed" and **Paid**.
+3. Press **View receipt**. **Shows:** MTN's own transaction ID.
+   - *"Every payment keeps MTN's reference, so it can be checked against MTN's records."*
+4. **VS Code**, `interface PaymentAdapter`:
+   - *"All providers sit behind one interface. The simulated one used in tests and the real MTN one
+     both implement it, so adding Airtel is one new class."*
+5. **VS Code**, `applyCallback` and `refreshPending`:
+   - *"MTN confirms by callback, and a background job re-checks pending payments in case one is lost.
+     Confirming is idempotent, so a duplicate callback can never pay twice."*
 
 ---
 
-## 4. Skill verification by a peer reviewer (7:30 to 9:30)
+## 4. Skill verification by a peer reviewer (5:15 to 6:45)
 
-**The worker submits evidence.** In window 2, sign out and sign in as `seyi@isoko.demo`. On the **Dashboard**, find the skill form:
-- **Skill category:** Phone & Electronics Repair
-- **Evidence:** attach a photo of a repaired phone, or paste a link, and add a short note.
-- Press **Submit for review**.
-
-*"The worker can't choose their reviewer. The system draws one."*
-
-**Switch to VS Code**, `skillVerificationService.ts`, `assignReviewer` and `seededPick`:
-- *"First it removes anyone who shouldn't review this worker: the worker themselves, past
-  collaborators, anyone who said they know them, anyone who already saw the task, and anyone paired
-  with them too often. Of those left, it keeps the least busy. Then it picks one using a SHA-256 seed."*
-- *"The seed and every exclusion are saved, so an auditor can replay the draw exactly. That's the
-  evidence for my research question about collusion."*
-
-**See who was drawn.** In window 3 (admin), go to **Skill reviews**.
-- **Shows:** the submission and its assigned reviewer, most likely Jean Bosco (`jeanbosco@isoko.demo`), the peer reviewer in phone repair.
-- If it says it's awaiting a reviewer, say so: *"In a small pool nobody may be eligible; the
-  submission is kept and the admin is asked to place it."* Then press assign, or decide it as admin.
-
-**The reviewer decides.** In window 2, sign out and sign in as the reviewer shown. Open **Reviews** in the menu.
-- **Shows:** the evidence. The reviewer never sees other reviewers' verdicts.
-- Approve, with a **confidence** (1–5) and a **level**.
-- **Optional:** on another submission, show **I should not review this** and its reasons ("I know this worker"…).
-- *"Stepping aside records the reason and sends the task to someone else."*
-
-**Switch to VS Code**, `skillTaskService.ts`, `review` (line 332):
-- *"A first verification can need two approvals. A low-confidence verdict raises the requirement to
-  two. A split decision brings in a tiebreaker, and after three rounds the majority decides."*
-- *"When it's approved, the skill becomes verified and the trust score is recalculated."*
-
-**Optional:** open `trustScoreService.ts` at line 75.
-- *"The trust score pulls a worker's average toward 3.5 until they have a few reviews, and a review
-  loses half its weight every six months. One five-star review can't beat twenty 4.8s."*
-
-**Admin integrity.** In window 3, open **Integrity audit**.
-- **Shows:** the flags for reviewers whose approval rates are statistical outliers, decisions taken in under 60 seconds, repeated pairings, and step-asides.
+1. **Window 2:** sign in as `seyi@isoko.demo`. On the **Dashboard** skill form:
+   - choose **Phone & Electronics Repair**;
+   - attach a photo or paste a link;
+   - press **Submit for review**.
+   - *"The worker can't choose their reviewer; the system draws one."*
+2. **VS Code**, `assignReviewer` and `seededPick`:
+   - *"It removes anyone who shouldn't judge this worker: past collaborators, anyone who said they
+     know them, earlier reviewers. It keeps the least busy, then picks with a SHA-256 seed. The
+     seed and exclusions are saved, so the draw can be replayed. That's my evidence against collusion."*
+3. **Window 3:** **Skill reviews** shows who was drawn, most likely `jeanbosco@isoko.demo`.
+   - If none was eligible, say *"in a small pool the admin places it"* and assign it there.
+4. **Window 2:** sign in as that reviewer and open **Reviews**. Approve, with a confidence and a level.
+   - *"Reviewers never see each other's verdicts."*
+   - **Optional:** point at **I should not review this**: stepping aside records why, then redraws.
+5. **VS Code**, the quorum rules:
+   - *"A low-confidence verdict needs a second reviewer, and a split decision brings in a
+     tiebreaker. Approval verifies the skill and recalculates the trust score."*
 
 ---
 
-## 5. Rules, safety and privacy (9:30 to 10:45)
+## 5. Rules, safety and privacy (6:45 to 7:45)
 
-**[C] Sensitive gig.** In window 1 (Grace), post a gig titled `Maths tutoring for my daughter at home`.
-- **Shows:** the form ticks "This job involves children or working inside a home" by itself.
-- Approve it as admin in window 3.
-
-**The refusal.** In window 2, sign in as `eric@isoko.demo` and open that gig.
-- **Shows:** "This job needs a stronger record", with each missing item ("A confirmed phone number.") and a link to fix it. There's no Apply button.
-- *"The same rule is enforced on the server. If someone sends the request directly, the API refuses
-  it. The rule file is shared by the API and the web app, and CI checks the two copies are identical."*
-
-**Safety.** On a job card, point at **Check in** and the SOS button. Don't send an SOS.
-- *"On on-site jobs the worker checks in and out. An SOS texts their trusted contact and alerts every
-  admin with their location."*
-
-**Privacy.** Open **Settings**.
-- Show **Download PDF / Download JSON** for data export, and the delete-account section. Don't confirm a deletion.
-- Then open the public `/privacy` page.
-- *"This follows Rwanda's data-protection law. Deleting an account anonymises it, but keeps receipts
-  as financial records. It's refused while a job is live or money is owed."*
-
-**Optional:** the **Fairwork scorecard**, `/fairwork`.
-- *"Isoko scores itself live against the Oxford Fairwork principles, from its own records."*
+1. **[C] Sensitive gig.** **Window 2:** sign in as `eric@isoko.demo` and open the tutoring gig you prepared.
+   - **Shows:** "This job needs a stronger record", "A confirmed phone number.", a fix link, and no Apply button.
+   - *"The form marked this sensitive by itself because it mentions a child and a home. The server
+     enforces the same rule, so a direct request is refused too."*
+2. **Safety:** on a job card, point at **Check in** and SOS. Don't send one.
+   - *"An SOS texts the worker's trusted contact and alerts every admin."*
+3. **Privacy:** in **Settings**, show the data export (**Download PDF / JSON**) and account deletion. Don't confirm it.
+   - *"Under Rwanda's data law, deleting anonymises the account but keeps receipts as financial
+     records. It's refused while money is owed."*
+4. **Wrap up [C]:**
+   - *"So wrong and incomplete input is refused with a clear message, and the tests cover the cases a
+     screen can't show: duplicate callbacks and failed payments."*
 
 ---
 
-## 6. How it fits together (10:45 to 11:30)
+## 6. How it fits together (7:45 to 8:15)
 
-**Show:** README section 10, the architecture diagram, on GitHub.
+**Show:** README section 10, the architecture diagram.
 
-*"The browser talks to the API over JSON, and over a WebSocket for live messages and notices.
-The API layers are routes, then middleware for login and roles, then controllers, services and the
-database models."*
-
-*"The controllers only read the request and send the answer. The rules are in 34 services, one per
-area. The database is PostgreSQL, with 72 migrations. Payments, SMS, email and file storage are each
-drivers chosen by configuration, which is why tests run on simulated payments while the live site
-uses MTN."*
+*"The browser talks to the API over JSON, plus a WebSocket for live updates. Inside the API, a
+request passes through routes, middleware for login and roles, a thin controller, then one of 34
+services holding the rules, and the PostgreSQL models. Payments, SMS, email and file storage are
+drivers chosen by configuration: tests use simulated payments, and the live site uses MTN."*
 
 ---
 
-## 7. Different inputs: summary (11:30 to 11:50)
+## 7. Testing strategies (8:15 to 10:45)
 
-*"Along the way you've seen how the system handles wrong and incomplete input:"*
-- a wrong password;
-- empty forms;
-- a price below the usual range;
-- a worker who doesn't meet a sensitive job's rules;
-- a reviewer stepping aside.
+*"I used four kinds of testing, and every push runs the first three automatically."*
 
-*"Each is refused or warned about with a clear message, and the same checks run on the server.
-The tests also cover what the screen can't show easily: duplicate payment callbacks, a failed MTN
-payment, and deleting an account while money is owed."*
-
----
-
-## 8. Testing strategies (11:50 to 14:00)
-
-*"I used four kinds of testing. Every push runs the first three automatically."*
-
-**Unit tests:** run live:
-```bash
-cd server && npx jest tests/unit
-```
-- **Shows:** 155 passing.
-- *"These pin the algorithms exactly: the scoring, the trust maths, the reviewer draw and the
-  collusion thresholds. For example, a past collaborator must never be drawn."*
-
-**Integration tests:** show the result you prepared: 595 passing across 60 files.
-- *"These send real HTTP requests through Express to a real PostgreSQL database: roles,
-  eligibility, payments with MTN mocked, idempotency, disputes and account deletion. They made it
-  safe to restructure the code. I moved the logic of two large controllers into services and
-  re-ran all 595 after every move."*
-
-**End-to-end tests:** show the Playwright HTML report.
-- *"Playwright drives the real production build against the real API in real browser engines. The
-  key test is the whole job journey, run as two people at once, from applying to the receipt. It
-  ran on Chrome, Safari, an Android phone and an iPhone: 64 out of 64."*
-- *"These tests found two real bugs. The wrong password showed its error twice. And on an
-  iPhone-sized screen the Marketplace tabs were 22 pixels too wide, so the page scrolled sideways.
-  Both are fixed, and the tests now guard against them."*
-- Show the two fixes in `docs/evidence/testing.md`.
-
-**CI:** show the green GitHub Actions run.
-- *"Every push runs lint, typecheck, the tests, the end-to-end tests and the production build, and
-  publishes the server image only if the tests pass."*
+1. **Unit tests**, run live: `cd server && npx jest tests/unit`. **Shows:** 155 passed.
+   - *"Why: the algorithms decide who gets work and who is trusted, so their edge cases must be
+     exact. For example: a past collaborator is never drawn, and one 5-star review can't beat
+     twenty 4.8s."*
+2. **Integration tests:** show your prepared result, 595 passed.
+   - *"These send real HTTP requests through the API to a real PostgreSQL database: roles,
+     eligibility, payments with MTN mocked, idempotency and disputes."*
+   - *"They made it safe to improve the code: I moved the logic of two large controllers into
+     services and re-ran all 595 after each move."*
+3. **End-to-end tests:** show the Playwright report.
+   - *"Playwright drives the production build in real browser engines. The key test runs the whole
+     job as two people at once, from applying to the receipt: 64 of 64 across Chrome, Safari, an
+     Android phone and an iPhone."*
+   - *"They found two real bugs. A wrong password showed its error twice. And on an iPhone the
+     Marketplace tabs were 22 pixels too wide, so the page scrolled sideways. Both are fixed, and
+     the tests now guard against them."*
+   - Show the fixes table in `docs/evidence/testing.md`.
+4. **CI:** show the green GitHub Actions run.
+   - *"Every push runs lint, typecheck, all the tests and the build, and publishes the server image
+     only when they pass."*
 
 ---
 
-## 9. Performance and compatibility (14:00 to 15:15)
+## 8. Performance and compatibility (10:45 to 12:15)
 
-**Show:** `docs/evidence/perf/README.md`, the results tables.
-
-*"Users here are on low-end Android phones and paid mobile data, so I measured on a throttled
-low-end phone profile: a 4× slower CPU and slow 4G."*
-
-*"Before, the whole app was one 3.6 MB file. The sign-in page took 6.6 seconds to show anything.
-I split it so each page loads when it's first opened, moved the big libraries into separately
-cached files, and compressed the API's responses. Now the first download is half the size,
-558 KB, and the sign-in page shows in 3.5 seconds. The gigs list went from 68 KB to under 6 KB."*
-
-*"The API target was 500 ms. Locally, the slowest endpoint at 25 requests at once is 156 ms. On
-the live site most of the time is the 286 ms round trip to Frankfurt, not the server, which answers
-in 6 to 112 ms."*
-
-**Compatibility.** Show the browser table in `docs/evidence/testing.md`: Chromium and WebKit, desktop and phone.
-- Then **hold up your phone** with the live site, or mirror it, and sign in and scroll the marketplace.
-- *"Here it is on a real phone."*
-- Optionally show Chrome DevTools' device toolbar at iPhone width.
+1. **Show:** the tables in `docs/evidence/perf/README.md`.
+   - *"My users are on low-end Android phones and paid data, so I measured on a throttled low-end
+     phone: a 4× slower CPU and slow 4G."*
+   - *"Before, the app was one 3.6 MB file, and the sign-in page took 6.6 seconds to appear. I
+     split it so pages load when opened, cached the big libraries separately, and compressed the
+     API's responses. Now the first download is half the size, and it appears in 3.5 seconds."*
+   - *"The API target was 500 milliseconds. The slowest endpoint takes 156 at 25 requests at once.
+     Live, most of the time is the round trip to Frankfurt; the server itself answers in 6 to 112."*
+2. **Show:** the browser table in `docs/evidence/testing.md`.
+   - *"It's tested on Chromium and WebKit, on desktop and on emulated phones."*
+3. **Hold up your phone** on the live site. Sign in and scroll the marketplace.
+   - *"And here it is on a real phone."*
+4. **Optional:** Chrome DevTools' device toolbar at iPhone width.
 
 ---
 
-## 10. Code quality (15:15 to 16:00)
+## 9. Code quality (12:15 to 12:45)
 
-**Show:** the repository tree on GitHub (`server/src/`: routes, middleware, controllers, services, models, lib).
+**Show:** the `server/src/` folders on GitHub.
 
-*"The code follows the layered design from the proposal, in strict TypeScript, with no lint
-warnings. The object-oriented core is the payment adapter interface, with the same pattern for
-SMS, email and storage. The models inherit from Sequelize's Model class. A small PDF class hides
-the PDF format behind simple methods to produce receipts. One error class carries HTTP statuses
-from the services."*
-
-*"The README lists every algorithm with its file and its cost."*
+*"The code is layered as the proposal planned, in strict TypeScript with no lint warnings. The
+payment interface and the drivers show abstraction and polymorphism. The models inherit from
+Sequelize's Model class. A small PDF class encapsulates the receipt format. The README lists every
+algorithm with its file and its cost."*
 
 ---
 
-## 11. Close (16:00 to 16:20)
+## 10. Close (12:45 to 13:00)
 
-*"To sum up: a skill can be proven to an independent reviewer, jobs are matched on distance and
-trust with the reasons shown, and workers are paid through MTN Mobile Money with a receipt.
-It's tested at four levels and deployed. The next step is the pilot with 25 to 30 people in
-Kimironko and Nyamirambo, to answer the research questions with real users. Thank you."*
+*"Isoko lets workers prove skills fairly, find work and get paid by Mobile Money. It's tested and
+deployed; next is the pilot in Kimironko and Nyamirambo. Thank you."*
 
 ---
 
@@ -388,10 +268,9 @@ Kimironko and Nyamirambo, to answer the research questions with real users. Than
 
 | Problem | What to do |
 |---|---|
-| The live site is slow on the first request | It was asleep. Wait, or pause the recording and reload |
-| The MoMo payment stays pending | The sandbox can be slow. Wait 10–20 s, or reload "Your matches": the background check confirms it |
-| No reviewer was drawn | Explain it (the pool is small), then assign it, or decide as admin from **Skill reviews** |
-| You make a mistake | Pause, go back to the start of that part, and cut it in editing |
+| The live site is slow on the first request | It was asleep. Pause the recording, reload, then continue |
+| The MoMo payment stays pending | Wait 10–20 s, or reload **Your matches**; the background check confirms it |
+| No reviewer was drawn | Say why (a small pool), then assign it, or decide as admin in **Skill reviews** |
+| A mistake | Pause, restart that part, and cut it in editing |
 
-Test data you create (gigs, jobs, submissions) stays on the live site. That's fine for a demo; it
-shows up as normal activity.
+The gigs and jobs you create stay on the live site as normal activity.
