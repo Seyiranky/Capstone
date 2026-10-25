@@ -83,3 +83,9 @@ export const forSkill = async (skillId: string): Promise<RateGuide | null> => {
   const skill = await Skill.findByPk(skillId, { attributes: ['category'] });
   return skill ? forCategory(skill.category) : null;
 };
+
+/** The usual price range for every trade, for the market view. */
+export const forAllTrades = async () => {
+  const categories = await Skill.findAll({ where: { parentId: null }, attributes: ['name', 'category'] });
+  return Promise.all(categories.map(async (c) => ({ name: c.name, ...(await forCategory(c.category)) })));
+};
