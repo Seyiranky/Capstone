@@ -291,13 +291,22 @@ export const requestForMatch = async (
 
   const adapter = activeAdapter();
   const reference = `ISK-${crypto.randomUUID()}`;
-  const result = await adapter.requestPayment({
-    amount: total,
-    currency: 'RWF',
-    payerMsisdn,
-    reference,
-    note: `Isoko: ${match.gig.title}`.slice(0, 160),
-  });
+  let result: Awaited<ReturnType<typeof adapter.requestPayment>>;
+  try {
+    result = await adapter.requestPayment({
+      amount: total,
+      currency: 'RWF',
+      payerMsisdn,
+      reference,
+      note: `Isoko: ${match.gig.title}`.slice(0, 160),
+    });
+  } catch (error) {
+    // The provider could not take the request (unreachable, refused, or its
+    // credentials are wrong). Nothing was collected and nothing is recorded, so
+    // the client can simply try again; the reason goes to the log, not to them.
+    console.error(`Payment request to ${adapter.name} failed for job ${matchId}:`, (error as Error).message);
+    throw new HttpError('Mobile Money is not available right now, so nothing was charged. Please try again in a few minutes.', 502);
+  }
   const fields = {
     amount: price,
     currency: 'RWF',

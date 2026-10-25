@@ -1,6 +1,6 @@
 import multer from 'multer';
 import type { NextFunction, Request, Response } from 'express';
-import { hasStatus } from '../lib/httpError';
+import { HttpError, hasStatus } from '../lib/httpError';
 
 export const notFound = (req: Request, res: Response): void => {
   res.status(404).json({ message: `Route not found: ${req.originalUrl}` });
@@ -32,7 +32,9 @@ export const errorHandler = (
   }
 
   const status = hasStatus(err) ? err.status : 500;
-  if (status >= 500) {
+  // An HttpError's message is written for the user, whatever its status (a 502
+  // says a provider is down). Any other server error is unexpected.
+  if (status >= 500 && !(err instanceof HttpError)) {
     console.error(err);
     // An unexpected failure's message can carry SQL, file paths or library
     // internals; it goes to the log, and the caller gets a plain apology.

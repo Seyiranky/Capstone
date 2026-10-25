@@ -192,6 +192,27 @@ describe('the MTN MoMo adapter', () => {
     });
   });
 
+  test('when MTN cannot take the request, the client is told so and nothing is recorded', async () => {
+    const matchId = await jobInProgress(9000);
+    await markDone(matchId);
+    mtn.resetTokens();
+    const savedUser = process.env.MOMO_COLLECTION_USER;
+    process.env.MOMO_COLLECTION_USER = '';
+    const quiet = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const res = await pay(matchId);
+      expect(res.status).toBe(502);
+      expect(res.body.message).toMatch(/Mobile Money is not available right now/);
+      expect(await db.Transaction.findOne({ where: { matchId } })).toBeNull();
+      expect(quiet).toHaveBeenCalledWith(expect.stringContaining('Payment request to mtn-momo failed'), expect.stringContaining('MOMO_COLLECTION_USER'));
+    } finally {
+      quiet.mockRestore();
+      process.env.MOMO_COLLECTION_USER = savedUser;
+    }
+    // Once MTN is reachable again the same job can be paid.
+    expect((await pay(matchId)).status).toBe(201);
+  });
+
   test('settles when MTN says SUCCESSFUL, and sends the worker their share', async () => {
     const matchId = await jobInProgress(12000);
     await markDone(matchId);
