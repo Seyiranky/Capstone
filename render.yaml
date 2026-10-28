@@ -1,4 +1,4 @@
-# Render Blueprint: the pilot deployment (SUBMISSION_PLAN Phase 4).
+# Render Blueprint: the pilot deployment .
 #
 #   isoko-api  the API, from server/Dockerfile.prod (migrates on start, loads
 #              the demo data into an empty database, then serves)
