@@ -62,6 +62,15 @@ Isoko answers each of these:
 | Safety on site | Check-in, check-out and **SOS** for on-site jobs, with a trusted contact reached by SMS. |
 | Exclusion by language and data cost | Fully **bilingual (English and Kinyarwanda)**, installable as a **PWA**, works offline for key actions, and loads in half the data it once needed. |
 
+### Scope: the research questions and where each is answered
+
+| Research question | What was built for it | Tests | Status and evidence |
+|---|---|---|---|
+| **RQ1:** Can peer skill verification resist collusion? | Reviewer draw with exclusion rules and a recorded seed (`services/skillVerificationService.ts`), recusal, two approvals for a first verification, collusion report (`services/collusionDetectionService.ts`) | `integration/skillVerificationService`, `skillVerification`, `reviewerRecusal`, `collusionDetectionService` | Design tested in software; field data waits for the pilot |
+| **RQ2:** How should distance and trust be weighted in matching? | Explained five-part score (`services/matchScoringService.ts`), ranked invitations, a newcomer place on every shortlist, block randomisation of weight profiles (`services/allocationService.ts`) | `unit/matchScoringService`, `integration/rankedMatching`, `explorationSlot`, `allocationService` | Measurable now; acceptance and completion data wait for the pilot |
+| **RQ3:** Are clients more willing to hire a verified worker? | Verified badges and shareable skill passports (`services/passportService.ts`) | `integration/passport` | Not answered: it needs clients' survey responses, collected in the pilot |
+| **RQ4:** Can a mobile-money payment leave a complete, verifiable work record? | MTN MoMo collection with every attempt stored (`services/paymentService.ts`), a public receipt per payment (`/r/:number`), a signed income statement (`services/incomeStatementService.ts`), idempotent callbacks | `integration/momoPayments`, `webhookIdempotency`, `paymentService`, `quotesAndReceipts` | **Tested:** 30 of 30 sandbox payments complete and matching MTN's API, and 90 duplicate callbacks changed nothing (technical report, Table 4.2); a live sandbox run with screenshots is in [docs/evidence/momo](docs/evidence/momo/README.md) |
+
 ---
 
 ## 2. Features by role
@@ -349,8 +358,8 @@ Isoko is tested at four levels. The first three run on every push in CI.
 
 | Level | Tool | Size | Result |
 |---|---|---|---|
-| Unit (server) | Jest | 155 tests, 15 files | all pass |
-| Integration (server) | Jest + Supertest against a real PostgreSQL | 441 tests, 45 files: every route, middleware and rule | all 596 server tests pass; one test has been intermittent in the past |
+| Unit (server) | Jest | 100 tests, 10 files, no database (they pass with PostgreSQL switched off) | all pass |
+| Integration (server) | Jest + Supertest against a real PostgreSQL | 499 tests, 51 files: every route, middleware and rule, plus the services that read and write the database | all 599 server tests pass; one test has been intermittent in the past |
 | Unit (web) | Vitest | 23 tests: job stages and next actions, offline queue | all pass |
 | **End-to-end** | Playwright: the production build, the real API, a fresh database | 16 tests × 4 browser set-ups (Chrome, Safari, Android Pixel 7, iPhone 14) | **64 of 64 pass** |
 | Performance | `client/perf/` scripts | API latency at 1, 10 and 25 concurrent requests; page loads on a throttled low-end phone | see [section 9](#9-performance) |
@@ -371,7 +380,7 @@ createdb isoko_talents_test
 cd server
 npm run migrate:test
 npm run seed:test
-npm test                         # all 596
+npm test                         # all 599
 npx jest tests/unit              # unit tests only, no database needed
 npx jest tests/integration/payments   # one area
 ```
@@ -557,8 +566,8 @@ Capstone/
 │   │   ├── lib/              channels (sms, email), storage, pdf, notify, httpError…
 │   │   └── scripts/          operational scripts (MoMo sandbox, seeding, backfills)
 │   └── tests/
-│       ├── unit/             15 files, no database
-│       ├── integration/      45 files, real PostgreSQL
+│       ├── unit/             10 files, no database
+│       ├── integration/      51 files, real PostgreSQL
 │       └── helpers/
 └── client/                   React web app (TypeScript)
     ├── src/                  pages, components, store, api, lib, i18n, theme
@@ -629,7 +638,6 @@ Isoko follows Rwanda's Law 058/2021 on the protection of personal data:
 
 | Document | Contents |
 |---|---|
-| [DEMO.md](DEMO.md) | Script for the walkthrough video, by brief section |
 | [SCHEMA.md](SCHEMA.md) | Every table and relationship, with the reasons for each design choice |
 | [TESTING.md](TESTING.md) | Manual test guide by role, with the seeded accounts |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deployment to Render and Supabase |
@@ -637,4 +645,4 @@ Isoko follows Rwanda's Law 058/2021 on the protection of personal data:
 | [docs/evidence/perf/README.md](docs/evidence/perf/README.md) | Performance before and after, with raw data |
 | [docs/evidence/momo/README.md](docs/evidence/momo/README.md) | A real MTN MoMo sandbox payment, with screenshots |
 | [Walkthrough video](https://youtu.be/4guOrz2tztE) | The product, its code, testing and performance, in 13 minutes |
-| [Technical report](https://drive.google.com/file/d/1GDCFkKC2tCKbdGJDdgkCVskNetKJVDq9/view?usp=drive_link) | REPORT LINK |
+| [Technical report](https://drive.google.com/file/d/1GDCFkKC2tCKbdGJDdgkCVskNetKJVDq9/view?usp=drive_link) | The final capstone report (PDF): problem, literature, design, results and the research questions |

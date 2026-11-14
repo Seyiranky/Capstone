@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import request from 'supertest';
 import bcrypt from 'bcrypt';
 import app from '../../src/app';
@@ -178,9 +179,15 @@ describe('SOS, end to end', () => {
     const matchId = await acceptedJob();
     await request(app).post(`/api/matches/${matchId}/check-in`).set(as('worker'));
     await safeVisitService.flagOverdue(undefined, new Date(Date.now() + safeVisitService.OVERDUE_AFTER_MS + 60_000));
-    const notice = await db.Notification.findOne({ where: { userId: users.admin.id, title: 'Visit not checked out' }, order: [['createdAt', 'DESC']] });
+    // flagOverdue sweeps every overdue visit in the database, including other
+    // suites' leftovers, so find the notice about this job rather than the newest one.
+    const match = must(await db.Match.findByPk(matchId, { include: [{ model: db.Gig, as: 'gig' }] }), 'match') as InstanceType<typeof db.Match> & { gig?: InstanceType<typeof db.Gig> };
+    const title = must(match.gig, 'gig').title;
+    const notice = await db.Notification.findOne({
+      where: { userId: users.admin.id, title: 'Visit not checked out', body: { [Op.like]: `%${title}%` } },
+    });
     expect(notice?.body).toContain('Visit Worker');
-    expect(notice?.body).toContain('Visit fixture');
+    expect(notice?.body).toContain(title);
   });
 
   test('only admins see and close alerts', async () => {

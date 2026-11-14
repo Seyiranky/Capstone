@@ -3,17 +3,13 @@ import type { Request, Response } from 'express';
 import type { Includeable } from 'sequelize';
 import fs from 'fs';
 import crypto from 'crypto';
-import { Match, MatchMember, Gig, User, Transaction, Review, GigApplication, JobPhoto } from '../models';
-import * as teamService from '../services/teamService';
+import { Match, MatchMember, Gig, User, Transaction, Review, JobPhoto } from '../models';
 import * as safeVisitService from '../services/safeVisitService';
 import { MAX_JOB_PHOTOS } from '../middleware/upload';
-import * as trustScoreService from '../services/trustScoreService';
 import * as completionService from '../services/completionService';
-import { canApply } from '../services/applicationEligibility';
-import notify from '../lib/notify';
+import * as matchStatusService from '../services/matchStatusService';
 import { authed } from '../lib/authed';
 import { pathParam } from '../lib/query';
-import type { MatchStatus } from '../types/domain';
 
 const MATCH_INCLUDES: Includeable[] = [
   { model: Gig, as: 'gig', include: [{ model: User, as: 'client' }] },
@@ -53,221 +49,13 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
   res.json(matches);
 };
 
-const ALLOWED_TRANSITIONS: Record<MatchStatus, MatchStatus[]> = {
-  pending: ['accepted', 'cancelled'],
-  accepted: ['completed', 'cancelled'],
-  completed: [],
-  cancelled: [],
-};
-
 /**
- * Whether a state change is permitted.
- *
- * The table is exhaustive over MatchStatus, so a new state fails to compile
- * until its transitions are declared. `status` arrives from the request body
- * and is not yet narrowed, which is what the original `?.` allowed for.
+ * Accept, decline or call off a match. The rules and the single transaction
+ * they run in live in matchStatusService; this only maps HTTP to it.
  */
-const canTransition = (from: string, to: unknown): to is MatchStatus =>
-  ALLOWED_TRANSITIONS[from as MatchStatus]?.includes(to as MatchStatus) ?? false;
-
 export const updateMatchStatus = async (req: Request, res: Response): Promise<void> => {
-  const caller = authed(req);
-  const { status, declineReason, occurredAt, queuedOffline } = req.body ?? {};
-  const match = (await Match.findByPk(pathParam(req, 'id'), {
-    include: [{ model: Gig, as: 'gig' }],
-  })) as (Match & { gig?: Gig | null }) | null;
-  if (!match) {
-    res.status(404).json({ message: 'Match not found' });
-    return;
-  }
-
-  const gig = match.gig;
-  const isWorker = match.workerId === caller.id;
-  const isClient = gig?.clientId === caller.id;
-  if (!isWorker && !isClient) {
-    res
-      .status(403)
-      .json({ message: 'Only the matched worker or the posting client may update this match' });
-    return;
-  }
-
-  if (!canTransition(match.status, status)) {
-    res.status(409).json({
-      message: `Cannot transition match from '${match.status}' to '${status}'`,
-    });
-    return;
-  }
-
-  // Acceptance is the worker's own signal; a client accepting on their behalf
-  // would make the acceptance rate meaningless as a measure.
-  if (status === 'accepted' && !isWorker) {
-    res.status(403).json({ message: 'Only the matched worker may accept this match' });
-    return;
-  }
-
-  // The rules for applying hold when accepting too: a gig marked sensitive
-  // after the invitation went out cannot be taken by someone who no longer qualifies.
-  if (status === 'accepted' && gig) {
-    const worker = await User.findByPk(caller.id);
-    const allowed = worker ? await canApply(gig, worker) : null;
-    if (allowed && !allowed.eligible) {
-      res.status(403).json({
-        message: 'You do not meet the requirements for this gig any more',
-        code: 'NOT_ELIGIBLE',
-        missing: allowed.missing,
-      });
-      return;
-    }
-  }
-
-  // A gig is done once. A stray invitation must not be accepted on a gig that
-  // someone else has already taken, or the client would pay for it twice.
-  if (
-    status === 'accepted' &&
-    (await Match.count({ where: { gigId: match.gigId, id: { [Op.ne]: match.id }, status: ['accepted', 'completed'] } }))
-  ) {
-    res.status(409).json({ message: 'This gig has already been taken by another worker' });
-    return;
-  }
-
-  // Calling off a job under way while a dispute is open would pre-empt the
-  // mediators, who decide what happens to it.
-  if (status === 'cancelled' && match.status === 'accepted' && (await completionService.hasLiveDispute(match.id))) {
-    res.status(409).json({ message: 'A dispute is open on this job. The mediators decide what happens to it.' });
-    return;
-  }
-
-  // Marking the job done is the client's word that the work was delivered, and
-  // it is what asks them to pay, so only the client may do it.
-  if (status === 'completed' && !isClient) {
-    res.status(403).json({ message: 'Only the client may mark this job as done' });
-    return;
-  }
-
-  if (status === 'completed') {
-    // The client marks the job done; they then pay the worker with Mobile Money.
-    await completionService.completeMatch(req, Object.assign(match, { gig }), 'client');
-    res.json(await Match.findByPk(match.id, { include: MATCH_INCLUDES }));
-    return;
-  }
-
-  const wasPending = match.status === 'pending';
-  const now = new Date();
-  // When the worker acted, if the client recorded it. Only trusted for actions
-  // that were genuinely queued offline, and never allowed to be in the future
-  // or older than the match itself — a client clock is not an authority.
-  const claimed = occurredAt ? new Date(occurredAt) : null;
-  const occurred =
-    queuedOffline &&
-    claimed &&
-    !Number.isNaN(claimed.getTime()) &&
-    claimed <= now &&
-    claimed >= match.createdAt
-      ? claimed
-      : null;
-  await match.update({
-    status,
-    // respondedAt means specifically "the worker answered". A client cancelling
-    // a pending match is a withdrawal, not a decline, and must not land in the
-    // denominator of the acceptance rate.
-    ...(wasPending && isWorker
-      ? {
-          respondedAt: now,
-          respondedOccurredAt: occurred ?? now,
-          wasQueuedOffline: Boolean(occurred),
-        }
-      : {}),
-    ...(status === 'accepted' ? { acceptedAt: now } : {}),
-    ...(status === 'cancelled' && declineReason ? { declineReason } : {}),
-    // Who called off a job already under way: the completion rate counts it
-    // against them, not against the other person.
-    ...(status === 'cancelled' && !wasPending ? { cancelledVia: isWorker ? ('worker' as const) : ('client' as const) } : {}),
-  });
-
-  if (status === 'accepted' && gig) {
-    await gig.update({ status: 'matched' });
-    // Anyone named on the lead's crew is now asked to join.
-    await teamService.inviteCrew(req, Object.assign(match, { gig }));
-
-    // The gig is now taken: withdraw the other invitations and applications.
-    // These carry no respondedAt, so they are excluded from acceptance-rate
-    // measurement rather than counting as declines.
-    const [siblingMatches, siblingApplications] = await Promise.all([
-      Match.findAll({
-        where: { gigId: match.gigId, status: 'pending', id: { [Op.ne]: match.id } },
-      }),
-      GigApplication.findAll({ where: { gigId: match.gigId, status: 'pending' } }),
-    ]);
-
-    await Promise.all([
-      ...siblingMatches.map(async (other) => {
-        await other.update({ status: 'cancelled' });
-        await notify(req, {
-          userId: other.workerId,
-          title: 'Gig already filled',
-          body: `"${gig.title}" was taken by another worker.`,
-        });
-      }),
-      ...siblingApplications.map(async (other) => {
-        await other.update({ status: 'rejected', rejectionReason: 'choseAnother' });
-        await notify(req, {
-          userId: other.workerId,
-          title: 'Application not selected',
-          body: `Your application for "${gig.title}" was not selected.`,
-        });
-      }),
-    ]);
-
-    await notify(req, {
-      userId: gig.clientId,
-      title: 'Worker confirmed',
-      body: `The worker confirmed they will take "${gig.title}".`,
-      category: 'outcome',
-    });
-  }
-
-  if (status === 'cancelled' && gig?.status === 'matched') {
-    // Siblings are still pending, so the gig goes back on the market intact.
-    await gig.update({ status: 'open' });
-    // The other person is told, never the one who acted.
-    if (isWorker) {
-      await notify(req, {
-        userId: gig.clientId,
-        title: wasPending ? 'Worker declined' : 'Match cancelled',
-        body: `"${gig.title}" is open again${declineReason ? `: ${declineReason}` : '.'}`,
-        // The client's gig just lost its worker and needs attention.
-        category: 'outcome',
-      });
-    } else {
-      await notify(req, {
-        userId: match.workerId,
-        title: wasPending ? 'Invitation withdrawn' : 'Job called off',
-        body: wasPending
-          ? `The client withdrew the invitation to "${gig.title}".`
-          : `The client called off "${gig.title}". Nothing is owed${declineReason ? `: ${declineReason}` : '.'}`,
-        category: 'outcome',
-      });
-    }
-  }
-
-  if (status === 'cancelled' && !wasPending) {
-    // Called off after acceptance: nothing is owed. Money paid in advance under
-    // the old escrow flow goes back to the client.
-    await completionService.settleLegacyHold(match.id, 'refunded');
-    await completionService.settleLiveDispute(match.id, 'refund');
-  }
-
-  // Abandonment feeds the trust score's completion rate, so it has to be
-  // recomputed here and not only when a review arrives.
-  if (status === 'cancelled') {
-    await trustScoreService.recalculate(match.workerId, { trigger: 'match:cancelled' });
-    if (gig) {
-      await trustScoreService.recalculate(gig.clientId, { trigger: 'match:cancelled' });
-    }
-  }
-
-  const updated = await Match.findByPk(match.id, { include: MATCH_INCLUDES });
-  res.json(updated);
+  const id = await matchStatusService.changeStatus(req, pathParam(req, 'id'), authed(req).id, req.body ?? {});
+  res.json(await Match.findByPk(id, { include: MATCH_INCLUDES }));
 };
 
 /**

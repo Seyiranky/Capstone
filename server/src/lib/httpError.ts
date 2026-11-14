@@ -13,10 +13,14 @@
 export class HttpError extends Error {
   readonly status: number;
 
-  constructor(message: string, status: number) {
+  /** Extra fields for the response body, such as a machine-readable `code`. */
+  readonly details?: Record<string, unknown>;
+
+  constructor(message: string, status: number, details?: Record<string, unknown>) {
     super(message);
     this.name = 'HttpError';
     this.status = status;
+    this.details = details;
   }
 }
 

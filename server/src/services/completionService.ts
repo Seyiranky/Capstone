@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import { Op } from 'sequelize';
+import { Op, type Transaction as SequelizeTransaction } from 'sequelize';
 import { Dispute, Gig, Match, Transaction, sequelize } from '../models';
 import * as payoutService from './payoutService';
 import * as trustScoreService from './trustScoreService';
@@ -27,10 +27,14 @@ export const hasLiveDispute = async (matchId: string): Promise<boolean> =>
   (await Dispute.count({ where: { matchId, status: LIVE_DISPUTE } })) > 0;
 
 /** Closes a live dispute the parties settled themselves (the job finished or called off). */
-export const settleLiveDispute = async (matchId: string, outcome: DisputeOutcome): Promise<void> => {
+export const settleLiveDispute = async (
+  matchId: string,
+  outcome: DisputeOutcome,
+  transaction?: SequelizeTransaction,
+): Promise<void> => {
   await Dispute.update(
     { status: 'settled', outcome, decidedBy: 'parties', decidedAt: new Date() },
-    { where: { matchId, status: LIVE_DISPUTE } },
+    { where: { matchId, status: LIVE_DISPUTE }, transaction },
   );
 };
 
@@ -40,8 +44,13 @@ export const settleLiveDispute = async (matchId: string, outcome: DisputeOutcome
  * pays it out (with a receipt), calling it off returns it, so none is left
  * held for ever.
  */
-export const settleLegacyHold = async (matchId: string, to: 'released' | 'refunded', share = 1) =>
-  sequelize.transaction(async (t) => {
+export const settleLegacyHold = async (
+  matchId: string,
+  to: 'released' | 'refunded',
+  share = 1,
+  outer?: SequelizeTransaction,
+) => {
+  const settle = async (t: SequelizeTransaction) => {
     const tx = await Transaction.findOne({ where: { matchId, status: 'confirmed', escrowStatus: 'held' }, lock: t.LOCK.UPDATE, transaction: t });
     if (!tx) return null;
     if (to === 'refunded') return tx.update({ escrowStatus: 'refunded', refundedAt: new Date() }, { transaction: t });
@@ -56,7 +65,10 @@ export const settleLegacyHold = async (matchId: string, to: 'released' | 'refund
     );
     await payoutService.createFor(tx, t);
     return tx;
-  });
+  };
+  // Inside a caller's transaction when given one, so the hold settles with the rest of their writes.
+  return outer ? settle(outer) : sequelize.transaction(settle);
+};
 
 /** What the worker is owed or was paid for a job: the agreed price, or the share a dispute decided. */
 export const priceOf = (match: Pick<Match, 'agreedAmount'>, gig: Pick<Gig, 'budget'>): number =>

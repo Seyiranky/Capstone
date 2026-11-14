@@ -43,5 +43,6 @@ export const errorHandler = (
   }
   // 4xx errors are raised deliberately (HttpError) with a message meant for the user.
   const message = err instanceof Error ? err.message : 'Request failed';
-  res.status(status).json({ message: message || 'Request failed' });
+  const details = err instanceof HttpError ? err.details : undefined;
+  res.status(status).json({ message: message || 'Request failed', ...details });
 };

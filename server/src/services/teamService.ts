@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, type Transaction as SequelizeTransaction } from 'sequelize';
 import type { Request } from 'express';
 import { Gig, GigApplication, Match, MatchMember, Payout, Skill, User, UserSkill } from '../models';
 import * as competenceService from './competenceService';
@@ -78,25 +78,38 @@ export const validateCrew = async (leadId: string, raw: unknown): Promise<CrewEn
 };
 
 /** Crew named on the approved application become invitations when the lead accepts. */
-export const inviteCrew = async (ctx: AppContext, match: MatchWithGig): Promise<void> => {
+export const createCrewInvites = async (match: Match, transaction?: SequelizeTransaction): Promise<MatchMember[]> => {
   const application = await GigApplication.findOne({
     where: { gigId: match.gigId, workerId: match.workerId, status: 'approved' },
+    transaction,
   });
-  if (!application?.crew?.length) return;
+  if (!application?.crew?.length) return [];
+  const invited: MatchMember[] = [];
   for (const member of application.crew) {
     const [row, created] = await MatchMember.findOrCreate({
       where: { matchId: match.id, userId: member.userId },
       defaults: { matchId: match.id, userId: member.userId, role: 'crew', sharePercent: member.sharePercent, joinedAt: null, endorsement: null, endorsementNote: null, endorsedAt: null },
+      transaction,
     });
-    if (created) {
-      await notify(ctx, {
-        userId: row.userId,
-        title: 'Join a crew',
-        body: `You were named on the crew for "${match.gig?.title}", for ${row.sharePercent}% of the pay. Join or decline.`,
-        category: 'outcome',
-      });
-    }
+    if (created) invited.push(row);
   }
+  return invited;
+};
+
+/** Tells each newly invited crew member. Sent after the invitations are committed. */
+export const notifyCrewInvites = async (ctx: AppContext, gigTitle: string | undefined, invited: MatchMember[]): Promise<void> => {
+  for (const row of invited) {
+    await notify(ctx, {
+      userId: row.userId,
+      title: 'Join a crew',
+      body: `You were named on the crew for "${gigTitle}", for ${row.sharePercent}% of the pay. Join or decline.`,
+      category: 'outcome',
+    });
+  }
+};
+
+export const inviteCrew = async (ctx: AppContext, match: MatchWithGig): Promise<void> => {
+  await notifyCrewInvites(ctx, match.gig?.title, await createCrewInvites(match));
 };
 
 const committedShares = async (matchId: string): Promise<number> =>
