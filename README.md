@@ -116,8 +116,11 @@ Isoko answers each of these:
 
 ## 3. Try it: demo accounts
 
-All demo accounts use the password **`password123`**. They exist on the live site and in any fresh
-local install, and their email addresses are already confirmed (phone numbers are not, so SMS stays off until a user confirms one in Settings).
+These accounts exist in any fresh local install, where they all use the seeded password
+**`password123`**, and their email addresses are already confirmed (phone numbers are not, so SMS stays
+off until a user confirms one in Settings). **On the live site the demo accounts have a different,
+private password**, given to examiners on request; to set it on a deployment, run
+`DEMO_PASSWORD='…' npm run demo:passwords` in the server (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)).
 
 | Role | Email | What to look at |
 |---|---|---|
@@ -193,7 +196,7 @@ The first start takes 1–3 minutes. Then open:
 | API base | http://localhost:4000/api |
 | PostgreSQL (for pgAdmin, DBeaver) | `localhost:5433`, user `isoko`, password `isoko`, database `isoko_talents_dev` |
 
-Sign in at http://localhost:5173 as `admin@isoko.demo` / `password123`.
+Sign in at http://localhost:5173 as `admin@isoko.demo` / `password123` (local install only).
 
 ### How the containers connect
 
@@ -631,6 +634,28 @@ Isoko follows Rwanda's Law 058/2021 on the protection of personal data:
 - **The live API is on a free tier.** The round trip from Rwanda to Frankfurt (~290 ms) is most of each request's time.
 - **One intermittent integration test** ("registers a client and a worker") fails about once in ten runs and passes on re-run. CI now captures its message.
 - **Firefox end-to-end runs were not recorded.** macOS blocked the test tool's Firefox. Run `npx playwright test --project=firefox` locally.
+
+---
+
+## Evidence for the technical report
+
+Where each result in Chapter 4 of the report can be checked or re-run:
+
+| Report claim | Evidence in this repository | How to reproduce |
+|---|---|---|
+| 596 server tests passing (31 Oct 2026; 599 after later fixes) | `server/tests/` (unit: no database; integration: real PostgreSQL) and every CI run in [GitHub Actions](https://github.com/Seyiranky/Capstone/actions) | `cd server && npm test` |
+| 23 web-app tests | `client/src/**/*.test.ts` | `cd client && npm test` |
+| 64 end-to-end runs (16 tests × 4 browser set-ups) | `client/e2e/`, results in [docs/evidence/testing.md](docs/evidence/testing.md); CI runs the Chromium set on every push | `cd client && npm run e2e` |
+| API response times; NFR-2 met locally, **not** on the free tier under load | `client/perf/api-latency.mjs`, raw results `docs/evidence/perf/api-local.json` and `api-live.json` | `node client/perf/api-latency.mjs` |
+| First paint 6.6 s → 3.5 s on a low-end phone profile | `client/perf/page-metrics.mjs`, raw results in `docs/evidence/perf/` | see [docs/evidence/perf](docs/evidence/perf/README.md) |
+| RQ4: 30 of 30 sandbox payments complete and matching MTN | `server/src/scripts/rq4SandboxCheck.ts`, results in [docs/evidence/rq4](docs/evidence/rq4/README.md) | `cd server && npm run rq4:check` (needs MTN sandbox keys) |
+| Usability test, 20 people, 6–11 Nov 2026 | anonymised answers in [docs/evidence/usability](docs/evidence/usability/README.md) | — (one-off study under REC SEPT26-BSE-003) |
+
+**CI history.** Of 41 runs, 38 passed. The three failures, all fixed: 21 Oct, the production image
+was refused because a container image name must be lowercase; 21 Oct, the server tests failed once
+on the intermittent test noted in [Known limitations](#17-known-limitations), and passed on the next
+run; 14 Nov, GitHub moved `ubuntu-latest` to Ubuntu 26, where Playwright could not install
+Chromium, so the runners are now pinned to Ubuntu 24.04.
 
 ---
 

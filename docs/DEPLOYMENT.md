@@ -88,12 +88,25 @@ safety alerts, disputes), and since those touch the database, Supabase does not 
 project for inactivity (it pauses free projects after 7 days without database activity).
 One service awake all month is about 744 hours, inside Render's 750 free hours.
 
+## 4b. Give the demo accounts a private password (1 minute)
+
+The seeders create every `@isoko.demo` account with the local default `password123`, which is
+published in the README. On a public deployment, replace it straight after seeding. In Render,
+open the API service › **Shell** and run:
+
+```bash
+DEMO_PASSWORD='a long private passphrase' npm run demo:passwords
+```
+
+It updates every demo account, ends their open sessions, and never prints the password. Keep the
+passphrase private and give it to examiners directly.
+
 ## 5. Check it works
 
 | Check | Expected |
 |---|---|
 | `https://isoko-api.onrender.com/health` | `{"status":"ok"}` |
-| Open `https://isoko-web.onrender.com`, sign in as `admin@isoko.demo` / `password123` | the admin dashboard |
+| Open `https://isoko-web.onrender.com`, sign in as `admin@isoko.demo` with the deployment's demo password | the admin dashboard |
 | As a worker, upload a profile picture; in Render, **Manual Deploy** › **Deploy latest commit**; reload | the picture is still there (it came back from Supabase) |
 | Two browsers, a client and a worker, send a chat message | it arrives at once (Socket.IO) |
 | As a client, mark a job done and pay with MTN MoMo | "Waiting for MTN to approve the test payment", then Paid, with a receipt |

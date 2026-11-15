@@ -1,11 +1,14 @@
 # Isoko — End-to-end manual test guide
 
-Every login below was verified against a running server on 2026-09-13. The
-password is the same for all fifteen seeded accounts:
+Every login below was verified against a running local server on 2026-09-13. On a
+local install the password is the same for all fifteen seeded accounts:
 
 ```
 password123
 ```
+
+This is the local seed only. The live site's demo accounts use a private password,
+given to examiners on request (see `npm run demo:passwords` in docs/DEPLOYMENT.md).
 
 ## Start the stack
 
@@ -141,7 +144,7 @@ Log in as **`grace@isoko.demo`**.
 ### 3. Peer reviewer — review, or step aside
 
 Log in as a peer reviewer: **`claudine@isoko.demo`**, **`eric@isoko.demo`**, **`aline@isoko.demo`**
-or **`jeanbosco@isoko.demo`** (all `password123`). A peer sees **Reviews** in the sidebar, with a
+or **`jeanbosco@isoko.demo`** (all `password123` locally). A peer sees **Reviews** in the sidebar, with a
 count, and a Reviews card on the Dashboard, only when a submission has been drawn for them.
 
 1. As a worker, submit a skill for verification (Dashboard › Skills › Add). The draw picks a

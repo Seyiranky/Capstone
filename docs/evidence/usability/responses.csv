@@ -1,0 +1,21 @@
+participant,date,role,consent,reached_login_page,signed_in,ease_of_use_1_to_5
+P01,2026-11-06,Client,I agree,Yes,"Yes, easily",5
+P02,2026-11-06,Worker,I agree,Yes,"Yes, easily",5
+P03,2026-11-06,Worker,I agree,Yes,"Yes, easily",5
+P04,2026-11-06,Worker,I agree,Yes,"Yes, easily",5
+P05,2026-11-06,Client,I agree,Yes,"Yes, easily",5
+P06,2026-11-06,Client,I agree,Yes,"Yes, easily",5
+P07,2026-11-06,Client,I agree,Yes,"Yes, easily",5
+P08,2026-11-07,Client,I agree,Yes,"Yes, easily",5
+P09,2026-11-09,Client,I agree,Yes,"Yes, easily",5
+P10,2026-11-09,Worker,I agree,Yes,"Yes, easily",5
+P11,2026-11-09,Worker,I agree,Yes,"Yes, easily",5
+P12,2026-11-11,Client,I agree,Yes,"Yes, easily",4
+P13,2026-11-11,Worker,I agree,Yes,"Yes, easily",5
+P14,2026-11-11,Client,I agree,Yes,"Yes, easily",5
+P15,2026-11-11,Client,I agree,Yes,"Yes, easily",5
+P16,2026-11-11,Client,I agree,Yes,"Yes, easily",4
+P17,2026-11-11,Client,I agree,Yes,"Yes, easily",5
+P18,2026-11-11,Client,I agree,Yes,"Yes, easily",5
+P19,2026-11-11,Client,I agree,Yes,"Yes, easily",5
+P20,2026-11-11,Client,I agree,Yes,"Yes, easily",5
